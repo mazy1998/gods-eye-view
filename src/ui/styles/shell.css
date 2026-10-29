@@ -1,0 +1,277 @@
+/* The rail and the one drawer (ShellRail.vue, ShellDrawer.vue). Token colours
+   only. The drawer frame is drawn here; only its header is a .gev-surface, so
+   the legacy panels it hosts keep the palette they inherit from :root. Both
+   rest on phones (the sheets take over) and in Cockpit. */
+:root {
+  --gev-rail-width: 88px;
+  --gev-drawer-width: 392px;
+  --gev-drawer-inset: 16px;
+  /* Below the title bar until the header takes its place. */
+  --gev-drawer-top: 104px;
+}
+
+.gev-rail {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  width: var(--gev-rail-width);
+  padding: var(--gev-space-4) 0;
+  box-sizing: border-box;
+}
+.gev-rail-items {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gev-space-2);
+}
+.gev-rail.gev-surface {
+  border-width: 0 1px 0 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.gev-rail[hidden],
+.gev-drawer[hidden] {
+  display: none;
+}
+.gev-rail-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gev-space-1);
+  padding: var(--gev-space-1) 0;
+  border: 0;
+  background: none;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  cursor: pointer;
+}
+/* Settings is anchored at the bottom, as in the design. */
+.gev-rail-item[data-destination='settings'] {
+  margin-top: auto;
+}
+.gev-rail-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  font-size: 26px;
+  line-height: 1;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.gev-rail-item:hover:not(:disabled) .gev-rail-icon {
+  background: var(--gev-control-bg-hover);
+}
+.gev-rail-item[aria-current='true'] {
+  color: var(--gev-accent-text);
+}
+.gev-rail-item[aria-current='true'] .gev-rail-icon {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+}
+.gev-rail-item[aria-current='true']::before {
+  position: absolute;
+  top: var(--gev-space-2);
+  bottom: var(--gev-space-2);
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--gev-radius-sm) var(--gev-radius-sm) 0;
+  background: var(--gev-accent);
+  content: '';
+}
+.gev-rail-item:disabled {
+  opacity: var(--gev-disabled-opacity);
+  cursor: default;
+}
+.gev-rail-item:focus-visible {
+  outline: none;
+}
+.gev-rail-item:focus-visible .gev-rail-icon {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+
+.gev-drawer {
+  position: fixed;
+  top: var(--gev-drawer-top);
+  bottom: var(--gev-drawer-inset);
+  left: calc(var(--gev-rail-width) + var(--gev-drawer-inset));
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  width: min(
+    var(--gev-drawer-width),
+    calc(100vw - var(--gev-rail-width) - 2 * var(--gev-drawer-inset))
+  );
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-lg);
+  background: var(--gev-surface-base);
+  box-shadow: var(--gev-elevation-2);
+  backdrop-filter: var(--gev-backdrop-blur);
+  /* No color-scheme here: hosted legacy controls keep the page's, as at
+     home; the header surface sets its own. */
+  overflow: hidden;
+}
+.gev-drawer-header.gev-surface {
+  flex: none;
+  padding: var(--gev-space-4) var(--gev-space-4) var(--gev-space-2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.gev-drawer-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 var(--gev-space-3) var(--gev-space-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--gev-border) transparent;
+  scrollbar-width: thin;
+}
+
+/* The legacy-skinned host: borrowed panels lay out as a column in the drawer
+   instead of their rail, stack or dock positions, and keep their own look.
+   Each is at most the drawer's height and keeps the scroller its stack gives
+   it, so code that scrolls or restores a panel's own scroller still moves
+   what is on screen; the drawer body scrolls from one panel to the next. */
+.gev-legacy-host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--gev-space-3);
+  min-height: 0;
+}
+.gev-legacy-host > * {
+  flex: none;
+}
+.gev-legacy-host
+  > :is(
+    #data-panel,
+    #weather-panel,
+    #recent-imagery-panel,
+    #radio-panel,
+    #global-context-panel,
+    #cctv-panel,
+    #street-level-panel,
+    #scene-panel
+  ):not(.collapsed) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+.gev-legacy-host
+  > :not(.collapsed)
+  > :is(
+    .data-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .radio-panel-inner,
+    .global-context-panel-inner,
+    .cctv-panel-inner,
+    .street-level-panel-inner,
+    .scene-panel-inner
+  ) {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+/* Context's sections share its scroller at their natural heights, so one
+   cannot be compressed and paint through the next, as in the right rail. */
+.gev-legacy-host
+  > #global-context-panel:not(.collapsed)
+  :is(.context-mode-view, #radio-panel) {
+  flex: 0 0 auto;
+}
+/* Layers scrolls its list inside the panel, as in the left stack. */
+.gev-legacy-host > #data-panel:not(.collapsed) > .data-panel-inner {
+  overflow: hidden;
+}
+.gev-legacy-host > #pp-toggles:not(.collapsed) {
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+/* Cyber scrolls the panels' bodies instead, as in its rail. */
+:root[data-ui-theme='cyber'] .gev-legacy-host > #pp-toggles:not(.collapsed) {
+  overflow: hidden;
+}
+:root[data-ui-theme='cyber']
+  .gev-legacy-host
+  > :is(#cctv-panel, #global-context-panel):not(.collapsed)
+  > :is(.cctv-panel-inner, .global-context-panel-inner) {
+  overflow: visible;
+}
+.gev-legacy-host
+  > :is(
+    #data-panel,
+    #weather-panel,
+    #recent-imagery-panel,
+    #radio-panel,
+    #global-context-panel,
+    #cctv-panel,
+    #street-level-panel,
+    #pp-toggles,
+    #scene-panel,
+    #corner-actions
+  ) {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  transform: none;
+}
+/* Context's compact Radio controls hang below its header, over the panels
+   Inspect hosts after it. */
+.gev-legacy-host > #global-context-panel {
+  z-index: 1;
+}
+
+/* While the rail is in use, the legacy stacks it replaced stay out of view;
+   their panels appear in the drawer. Cockpit and phones keep them. The
+   chrome along the left edge moves clear of the rail. */
+body:not(.mobile-shell):not(.cockpit-mode)
+  :is(#left-panel-stack, #right-context-rail) {
+  display: none;
+}
+body:not(.mobile-shell):not(.cockpit-mode) #title-bar {
+  left: calc(var(--gev-rail-width) + 24px);
+}
+body:not(.mobile-shell):not(.cockpit-mode) #intel-hud {
+  left: var(--gev-rail-width);
+  width: auto;
+  right: 0;
+}
+/* Required map attribution stays legible beside the rail. */
+body:not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
+    .recording-mode
+  )
+  #cesium-credits {
+  margin-left: var(--gev-rail-width);
+}
+
+/* Clean view and recording hide the working chrome, the rail included. */
+body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
+  display: none;
+}

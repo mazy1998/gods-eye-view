@@ -3,8 +3,8 @@ import { resolveImageryHost } from '../layers/weather/imageryHost.js';
 import { ShellFacade } from './shellFacade.js';
 import { AircraftDisplay } from './aircraftDisplay.js';
 import { LayerBindings } from './layerBindings.js';
-import { PanelChrome } from './panelChrome.js';
-import { initMobileShell } from './mobileShell.js';
+import { PanelChrome, SHARE_PANEL_STATE_SPECS } from './panelChrome.js';
+import { initMobileShell, MOBILE_SHELL_MEDIA_QUERY } from './mobileShell.js';
 import { VisualSettings } from './visualSettings.js';
 import { NavigationController } from './navigationController.js';
 import { ShareRestoration } from './shareRestoration.js';
@@ -21,6 +21,9 @@ import { mountView } from './mountView.js';
 import { createMapStackChannel } from './mapStackChannel.js';
 import StatusBadge from './primitives/StatusBadge.vue';
 import StyleIndicator from './StyleIndicator.vue';
+import ShellDrawer from './ShellDrawer.vue';
+import ShellRail from './ShellRail.vue';
+import { createDrawerNavigation } from './drawerNavigation.js';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountRadioView } from './radioView.js';
 import { RadioControls } from './radio.js';
@@ -151,7 +154,8 @@ export class StyleManager extends ShellFacade {
       readScrollRestoreOwner: () => this._displayPortalScrollRestoreOwner,
       readDisplayScrollTop: () => this._standardDisplayScrollTop,
       readSharedCollapsed: (panelId) =>
-        this._mobileShell?.sharedCollapsed(panelId),
+        this._mobileShell?.sharedCollapsed(panelId) ??
+        this._drawer?.sharedCollapsed(panelId),
     });
     this._feedback = new ShellFeedback({
       readLayers: () => this._dataManager?.getAll?.() || [],
@@ -444,8 +448,16 @@ export class StyleManager extends ShellFacade {
       readDataManager: () => this._dataManager,
       readContext: () => this.getContextModeState(),
       readActiveStyle: () => this.activeStyle,
-      enterPanels: () => this._panelChrome.enterCockpit(),
-      exitPanels: () => this._panelChrome.exitCockpit(),
+      // The drawer gives its borrowed panels back before Cockpit's entry
+      // snapshot and borrows again after its exit restoration.
+      enterPanels: () => {
+        this._drawer?.suspend();
+        this._panelChrome.enterCockpit();
+      },
+      exitPanels: () => {
+        this._panelChrome.exitCockpit();
+        this._drawer?.resume();
+      },
     });
 
     // Full-globe sun/moon ring. It is a crisp screen-space overlay above the
@@ -587,6 +599,7 @@ export class StyleManager extends ShellFacade {
         _syncShareState: (...args) => this._syncShareState(...args),
         _toggleOrbit: (...args) => this._toggleOrbit(...args),
         toggleCleanView: (...args) => this.toggleCleanView(...args),
+        toggleLayersDestination: () => this._drawer?.toggle('layers') ?? false,
         _toggleCctvEnabled: (...args) => this._toggleCctvEnabled(...args),
         _setBloomEnabled: (...args) => this._setBloomEnabled(...args),
         _setBloomIntensity: (...args) => this._setBloomIntensity(...args),
@@ -647,6 +660,7 @@ export class StyleManager extends ShellFacade {
     this._initModels3dToggle();
     this._applyGlobalPostDefaults();
     this._initStyleIndicator();
+    this._initDrawerNavigation();
     this._initOrbit();
     this._initRecordingOverlay();
     this._startAnimationLoop();
@@ -1240,6 +1254,34 @@ export class StyleManager extends ShellFacade {
         view.dispose();
       },
     };
+  }
+
+  /**
+   * The rail and the one drawer. Each destination hosts its legacy panels
+   * until a later step ports them; the drawer rests on phones and in Cockpit.
+   */
+  _initDrawerNavigation() {
+    this._drawer = createDrawerNavigation({
+      document,
+      panelChannel: this._panelChrome.channel,
+      setPanelCollapsed: (panelId, collapsed, options) =>
+        this._panelChrome.setPanelCollapsed(panelId, collapsed, options),
+      restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
+      phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
+    });
+    const props = { drawer: this._drawer };
+    const before = document.body.firstChild;
+    const views = [ShellRail, ShellDrawer].map((component) =>
+      this._mountView(component, { parent: document.body, before, props }),
+    );
+    // The rail and drawer paint each change before the operation that made
+    // it returns, so code that opens a destination (voice, Radio's reveal)
+    // can focus, scroll and measure its panels at once.
+    this._drawer.channel.subscribe(({ state }) => {
+      for (const view of views) view.update({ state });
+    });
+    // Panels left open by a stored preference open their destination.
+    this._drawer.followPanels();
   }
 
   /** The ACTIVE STYLE value follows the visual-settings channel. */
@@ -1877,6 +1919,7 @@ export class StyleManager extends ShellFacade {
     this._localePicker = null;
     this._recording.destroy();
     this._mobileShell?.destroy();
+    this._drawer?.destroy();
     this._panelChrome.destroy();
     this._feedback.destroy();
 

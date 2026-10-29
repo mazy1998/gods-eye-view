@@ -103,6 +103,8 @@
   box-shadow: 0 0 7px rgba(0, 212, 255, 0.22);
 }
 
+/* Panels hosted in the drawer keep the stacks' divider, at the same weight. */
+#gev-legacy-host [data-panel-id]:not(.collapsed) .panel-divider,
 #right-context-rail [data-panel-id]:not(.collapsed) .panel-divider {
   background: linear-gradient(
     90deg,

@@ -12,7 +12,9 @@ escape the guard. States include hover/active/focus/checked, `.active`,
 `.is-active`, `.selected`, `.current`, `.focused`, `.pinned`, and the ARIA
 pressed/checked/selected/current/expanded attributes. Its only exact static
 exceptions are the new switch's own track/thumb, which
-have no legacy Cyber state rules and need their on/off indication.
+have no legacy Cyber state rules and need their on/off indication, and the new
+destination rail's hover, current and focus states, which have no legacy
+control or Cyber rule (the browser audit pins their exact Cyber palette).
 
 Together with S6a's Cyber token block, the rule is: legacy Cyber owns the
 controls and states it styles; semantic tokens fill only the remaining new

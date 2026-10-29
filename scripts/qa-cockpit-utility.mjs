@@ -1796,7 +1796,8 @@ try {
     manager._setCockpitDisplayPortalActive(false);
     document.body.classList.remove('cockpit-mode');
     await waitFrames();
-    standard.classList.remove('collapsed');
+    // Expand through the owner, so the standard Display opens where it lives.
+    manager.setPanelCollapsed('pp-toggles', false, { persist: false, syncShare: false });
     standard.style.height = '120px';
     standard.style.maxHeight = '120px';
     standard.style.overflowY = 'auto';

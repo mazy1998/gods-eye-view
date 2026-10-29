@@ -75,7 +75,10 @@ export class DisplayBindings {
         },
         toggleOrbit: () => this._toggleOrbit(),
         toggleCleanView: () => this.toggleCleanView(),
+        // The Layers destination where the drawer is in use; the panel itself
+        // on phones and in Cockpit, where the drawer rests.
         toggleLayers: () =>
+          this.toggleLayersDestination?.() ||
           document.getElementById('data-panel').classList.toggle('active'),
         cycleDetection: () => {
           this.shareLinkManager?.claimRestoreLane?.('visual');

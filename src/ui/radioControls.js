@@ -74,28 +74,37 @@ export class RadioControls {
   }
 
   /**
-   * Reveal the newly enabled directory and transport inside Context without
+   * The scroller the Radio panel sits in: the Layers list while Layers hosts
+   * it (the drawer body if its group is missing), otherwise the expanded
+   * Context panel's (none while Context is closed).
+   */
+  _radioScroller() {
+    const hosted = this._radioPanel?.closest?.(
+      '.gev-drawer-body .data-toggle-list, .gev-drawer-body',
+    );
+    if (hosted) return hosted;
+    const contextPanel = document.getElementById('global-context-panel');
+    if (!contextPanel || contextPanel.classList.contains('collapsed'))
+      return null;
+    return (
+      (document.documentElement?.dataset.uiTheme === 'cyber' &&
+        contextPanel.querySelector('.cyber-panel-body')) ||
+      contextPanel.querySelector('.global-context-panel-inner')
+    );
+  }
+
+  /**
+   * Reveal the newly enabled directory and transport in Radio's scroller without
    * moving focus, the page, or the globe. Only the expanded Enable path calls
    * this helper.
    * @param {HTMLElement} trigger Initiating Radio Enable button.
    * @returns {Promise<boolean>} Whether the internal scroller moved.
    */
   async _revealRadioControlsAfterExplicitEnable(trigger) {
-    const contextPanel = document.getElementById('global-context-panel');
-    const scroller =
-      (document.documentElement?.dataset.uiTheme === 'cyber' &&
-        contextPanel?.querySelector('.cyber-panel-body')) ||
-      contextPanel?.querySelector('.global-context-panel-inner');
+    const scroller = this._radioScroller();
     const directory = this._radioPanel?.querySelector('.radio-directory-row');
     const transport = this._radioPanel?.querySelector('.radio-transport');
-    if (
-      !contextPanel ||
-      contextPanel.classList.contains('collapsed') ||
-      !scroller ||
-      !directory ||
-      !transport ||
-      !this._radioState?.enabled
-    )
+    if (!scroller || !directory || !transport || !this._radioState?.enabled)
       return false;
 
     await new Promise((resolve) =>
@@ -132,20 +141,14 @@ export class RadioControls {
   }
 
   /**
-   * Bring the embedded Radio section into the expanded Context scroller.
+   * Bring the Radio section into view in its scroller (Context, or Layers).
    * This never changes Radio power, playback, selection, or Context mode.
    * @param {{focusTarget?: HTMLElement|null}} [options]
    * @returns {Promise<boolean>} Whether the internal scroller moved.
    */
   async _revealRadioPanelInsideContext({ focusTarget = null } = {}) {
-    const contextPanel = document.getElementById('global-context-panel');
-    const scroller =
-      (document.documentElement?.dataset.uiTheme === 'cyber' &&
-        contextPanel?.querySelector('.cyber-panel-body')) ||
-      contextPanel?.querySelector('.global-context-panel-inner');
+    const scroller = this._radioScroller();
     if (
-      !contextPanel ||
-      contextPanel.classList.contains('collapsed') ||
       !scroller ||
       !this._radioPanel ||
       this._radioPanel.classList.contains('collapsed')
@@ -157,7 +160,7 @@ export class RadioControls {
     );
     if (
       this.destroyed ||
-      contextPanel.classList.contains('collapsed') ||
+      this._radioScroller() !== scroller ||
       this._radioPanel.classList.contains('collapsed')
     )
       return false;
@@ -204,7 +207,7 @@ export class RadioControls {
       const label = t(
         radioExpanded
           ? msg('Go to expanded Radio section')
-          : msg('Expand Radio section in Context'),
+          : msg('Show Radio in Layers'),
       );
       this._contextRadioToggleBtn.setAttribute('aria-label', label);
       this._contextRadioToggleBtn.title = label;

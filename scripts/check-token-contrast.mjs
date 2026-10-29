@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (path) => readFileSync(`${root}${path}`, 'utf8');
 
-export const THEMES = Object.freeze(['original', 'transparent-dark', 'light']);
+export const THEMES = Object.freeze(['original', 'transparent-dark', 'light', 'cyber']);
+const CYBER = ":root[data-ui-theme='cyber']";
 const SURFACES = ['--gev-surface-base', '--gev-surface-raised', '--gev-surface-overlay'];
 const TEXT = [
   '--gev-text',
@@ -50,10 +51,17 @@ function declarations(css, matches) {
 
 /** Resolved token map for one theme: legacy :root, token defaults, theme overrides. */
 export function themeTokens(theme) {
-  const legacy = declarations(read('src/ui/styles/foundation.css'), (s) => s === ':root');
+  // Cyber is the HUD style: its legacy palette and its token block apply on
+  // the same root, and the appearances stand aside.
+  const cyber = theme === 'cyber';
+  const legacy = {
+    ...declarations(read('src/ui/styles/foundation.css'), (s) => s === ':root'),
+    ...(cyber ? declarations(read('src/ui/styles/cyber.css'), (s) => s === CYBER) : {}),
+  };
   const tokens = read('src/ui/styles/tokens.css');
   const props = { ...legacy, ...declarations(tokens, (s) => s === ':root') };
-  if (theme !== 'original') {
+  if (cyber) Object.assign(props, declarations(tokens, (s) => s === CYBER));
+  else if (theme !== 'original') {
     const themed = declarations(tokens, (s) =>
       s.startsWith(`:root[data-gev-appearance='${theme}']`),
     );

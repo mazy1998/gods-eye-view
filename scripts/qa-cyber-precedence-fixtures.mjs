@@ -27,6 +27,25 @@ const weatherHtml = `<section class="weather-readout weather-controls gev-surfac
 const imageryHtml = `<section id="recent-imagery-panel"><div class="recent-imagery-panel-inner gev-surface"><div id="recent-imagery-panel-body"><section class="recent-imagery-readout"><div class="ri-actions-row rail-card-actions">${['select-box', 'use-view', 'clear', 'zoom-in'].map((x) => b(x, 'data-toggle-chip', x === 'select-box' ? 'data-state-active data-state-pressed' : '')).join('')}</div><div class="ri-strip" data-audit="imagery-strip" tabindex="0"><div class="ri-card" data-audit="imagery-card" tabindex="0"><div class="ri-card-chips">${b('pin-a', 'data-toggle-chip', 'data-state-active data-state-pressed')}${b('pin-b', 'data-toggle-chip', 'data-state-active data-state-pressed')}</div></div></div><div class="ri-selection">${['image', 'vs', 'ab'].map((x) => b(`mode-${x}`, 'ri-mode-btn data-toggle-chip', 'data-state-active data-state-checked')).join('')}${b('unpin-a', 'data-toggle-chip')}${b('unpin-b', 'data-toggle-chip')}</div>${input('imagery-opacity', 'gev-quantitative-slider', 'range')}${b('swap', 'data-toggle-chip', 'data-state-active data-state-pressed')}<div class="ri-exports rail-card-actions">${b('export-a', 'data-toggle-chip')}${b('export-b', 'data-toggle-chip')}</div><div class="ri-details rail-card">${b('imagery-details', 'rail-card-header')}<div class="rail-card-actions">${b('empty-days', 'data-toggle-chip')}</div></div></section></div></div></section>`;
 const radioHtml = `<section id="radio-panel"><div class="radio-panel-inner gev-surface">${b('radio-enable', 'panel-layer-toggle', 'id="radio-enable-btn" data-state-active data-state-pressed')}${select('radio-filter', 'gev-field', 'id="radio-filter"')}<div class="radio-tuner"><div class="radio-tuner-dial">${input('tuner', '', 'range', 'id="radio-tuner-slider"')}</div></div><div class="radio-transport">${['prev', 'play', 'next', 'stop'].map((x) => b(`radio-${x}`, '', `id="radio-${x}-btn" ${x === 'play' ? 'data-state-active' : ''}`)).join('')}</div>${input('radio-volume', 'gev-quantitative-slider', 'range', 'id="radio-volume"')}<div class="radio-links"><a data-audit="station-homepage" id="radio-station-homepage" href="#">Homepage</a></div><div class="sdr-radio-card">${['connect', 'locate', 'change-device', 'mode-fm', 'mode-adsb', 'tune', 'seek-back', 'seek-forward'].map((x) => b(`sdr-${x}`, x === 'connect' ? 'panel-layer-toggle' : '', `id="sdr-${x}-btn" data-state-active data-state-pressed`)).join('')}${select('sdr-gain', 'gev-field', 'id="sdr-gain-select"')}${input('sdr-frequency', 'gev-field', 'number', 'id="sdr-frequency-input"')}${input('sdr-volume', 'gev-quantitative-slider', 'range', 'id="sdr-volume"')}</div></div></section>`;
 
+// The rail and drawer, with Layers current as when it is open. Hosted legacy
+// controls inherit the legacy palette inside the drawer body.
+const railItem = ([id, icon], current) =>
+  b(
+    id,
+    'gev-rail-item',
+    `data-destination="${id}" aria-controls="gev-drawer" aria-expanded="${current}"${current ? ' aria-current="true"' : ''}${id === 'tools' ? ' disabled' : ''}`,
+    `<span class="gev-rail-icon material-symbols-outlined" aria-hidden="true" data-probe="icon">${icon}</span><span class="gev-rail-label" data-probe="label">${id}</span>`,
+  );
+const railItems = [
+  ['layers', 'layers'],
+  ['inspect', 'my_location'],
+  ['map', 'map'],
+  ['stories', 'movie'],
+  ['tools', 'construction'],
+  ['settings', 'settings'],
+];
+const shellHtml = `<nav class="gev-rail gev-surface" aria-label="Destinations"><div class="gev-rail-items" role="toolbar" aria-orientation="vertical" aria-label="Destinations">${railItems.map((item, i) => railItem(item, i === 0)).join('')}</div></nav><section id="gev-drawer" class="gev-drawer"><div class="gev-drawer-header gev-surface"><div class="gev-panel-header"><div class="gev-panel-header-text"><h2 class="gev-panel-header-title">Layers</h2></div><div class="gev-panel-header-actions">${b('close', 'gev-icon-button gev-icon-button--sm', 'aria-label="Close"', '<span class="material-symbols-outlined">close</span>')}</div></div></div><div class="gev-drawer-body"><div id="gev-legacy-host" class="gev-legacy-host">${b('hosted-action', 'scene-btn', '', 'Legacy action')}${input('hosted-input')}</div></div></section>`;
+
 // Exact new-control exceptions: removing primitives.css removes these controls'
 // own definitions and exposes browser defaults. None exempts a button's hover
 // or pressed/selected palette, or any inside/outside surface difference.
@@ -208,6 +227,53 @@ const layerEdges = [
       'New disclosure has an explicit Cyber glyph palette scoped to layer-browser in cyber.css; removing that context exposes UA defaults. Hover remains strict.',
   })),
 ];
+// The rail has no legacy control or Cyber rule, so removing shell.css exposes
+// browser button defaults. Each exception pins the Cyber token palette the
+// sheet paints, the current destination in Cyber's red; the drawer header and
+// the hosted legacy controls stay strict.
+const railReason =
+  'New rail destination control (with its icon and label): no legacy rail control or Cyber rail rule exists, so removing shell.css exposes browser defaults. The exact Cyber token palette is pinned.';
+const railInk = 'rgb(233, 240, 241)';
+const railMuted = 'rgba(226, 235, 236, 0.82)';
+const railPaint = (current, state, disabled) => ({
+  item: {
+    ...(state === 'hover'
+      ? {}
+      : {
+          color: current ? railInk : railMuted,
+          backgroundColor: 'rgba(0, 0, 0, 0)',
+        }),
+    ...allEdges('none'),
+  },
+  icon: {
+    ...(current ? { color: railInk } : {}),
+    backgroundColor:
+      state === 'hover' && !disabled
+        ? 'rgba(255, 255, 255, 0.09)'
+        : current
+          ? 'rgba(196, 84, 84, 0.2)'
+          : 'rgba(255, 255, 255, 0.06)',
+    ...allEdges(
+      `1px solid ${current ? 'rgba(196, 84, 84, 0.82)' : 'rgba(180, 198, 202, 0.58)'}`,
+    ),
+    ...(state === 'focus' ? { outline: '2px solid rgb(242, 245, 244)' } : {}),
+  },
+  label: state === 'hover' ? null : { color: current ? railInk : railMuted },
+});
+const railEdges = railItems.flatMap(([id], index) =>
+  plainStates.flatMap((state) =>
+    Object.entries(railPaint(index === 0, state, id === 'tools'))
+      .filter(([, expected]) => expected)
+      .map(([part, expected]) => ({
+        variant: part === 'item' ? id : `${id}/${part}`,
+        state,
+        comparison: 'sheet',
+        properties: Object.keys(expected),
+        expected,
+        reason: railReason,
+      })),
+  ),
+);
 export const fixtures = [
   {
     sheet: 'primitives',
@@ -243,4 +309,5 @@ export const fixtures = [
   },
   { sheet: 'recent-imagery-view', html: imageryHtml },
   { sheet: 'radio-views', html: radioHtml },
+  { sheet: 'shell', html: shellHtml, exceptions: railEdges },
 ];

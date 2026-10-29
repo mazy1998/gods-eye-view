@@ -35,7 +35,7 @@ test('original resolves the colors it shares with the legacy palette', () => {
 // A surface adopts the tokens for its foreground and background together when
 // it is ported; add its stylesheet here in that step. Only the first-level
 // @imports of style.css are followed; none import further.
-const PORTED = new Set(['tokens', 'primitives', 'location-views', 'tool-views', 'layer-browser', 'weather-controls', 'recent-imagery-view', 'radio-views'].map((name) => `./src/ui/styles/${name}.css`));
+const PORTED = new Set(['tokens', 'primitives', 'location-views', 'tool-views', 'layer-browser', 'weather-controls', 'recent-imagery-view', 'radio-views', 'shell'].map((name) => `./src/ui/styles/${name}.css`));
 const read = (path) => readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8');
 const stylesheets = [...read('style.css').matchAll(/@import '([^']+)'/g)].map((m) => m[1]);
 const withoutComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -114,7 +114,13 @@ const CYBER_STATE_EXCEPTIONS = new Map([
   ['.gev-toggle:hover:not(:disabled, [aria-busy=\'true\']) .gev-toggle-track', 'Native switch track hover; Cyber has no track state rule.'],
   ['.gev-toggle[aria-checked=\'true\'] .gev-toggle-track', 'Native switch on track uses the semantic accent; removing it erases the on/off indication.'],
   ['.gev-toggle[aria-checked=\'true\'] .gev-toggle-thumb', 'Native switch on thumb uses the paired on-accent colour for contrast.'],
-].map(([selector, reason]) => [`./src/ui/styles/primitives.css|${selector}`, reason]));
+].map(([selector, reason]) => [`./src/ui/styles/primitives.css|${selector}`, reason]).concat([
+  ['.gev-rail-item:hover:not(:disabled) .gev-rail-icon', 'New rail destination hover; there is no legacy rail control or Cyber rail rule.'],
+  ['.gev-rail-item[aria-current=\'true\']', 'New rail current destination label; Cyber has no rail rule, and removing it erases which destination is open.'],
+  ['.gev-rail-item[aria-current=\'true\'] .gev-rail-icon', 'New rail current destination icon; Cyber has no rail rule, and removing it erases which destination is open.'],
+  ['.gev-rail-item[aria-current=\'true\']::before', 'New rail current destination marker; Cyber has no rail rule.'],
+  ['.gev-rail-item:focus-visible .gev-rail-icon', 'New rail focus ring; removing it leaves keyboard focus unmarked.'],
+].map(([selector, reason]) => [`./src/ui/styles/shell.css|${selector}`, reason])));
 
 /** Split only selector-list commas, not commas in :is(), :where() or attributes. */
 function selectorList(value) {

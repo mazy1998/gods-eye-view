@@ -34,6 +34,7 @@ function fixture(theme = 'cyber') {
     _scheduleLeftPanelLayout() {}, _layoutRightPanels() {}, _syncCctvPanelViewport() {},
     _savePanelCollapsedState: (...args) => saved.push(args),
     shareLinkManager: { claimRestoreLane: (...args) => claimed.push(args), onPanelStateChange() {} },
+    channel: { publish() {} },
   };
   owner.setPanelCollapsed = PanelChrome.prototype.setPanelCollapsed.bind(owner);
   return { display, context, cctv, radio, owner, saved, claimed,

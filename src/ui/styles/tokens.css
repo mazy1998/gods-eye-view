@@ -121,3 +121,26 @@
   --gev-elevation-2: 0 12px 32px rgba(16, 32, 40, 0.18);
   --gev-color-scheme: light;
 }
+
+/* Cyber HUD: the semantic tokens take Cyber's own palette, so the drawer
+   frame and the token-native primitives match Cyber's panels. Every value
+   comes from Cyber's variables (cyber.css), chosen to keep WCAG AA: text
+   highlights use Cyber's near-white accent, indicators and fills its bright
+   red with dark text on them, and raised surfaces its dark instrument well.
+   Legacy-backed controls inside a surface already read Cyber's palette. */
+:root[data-ui-theme='cyber'] {
+  --gev-surface-base: var(--cyber-panel-surface);
+  --gev-surface-raised: var(--cyber-telemetry-fill);
+  --gev-surface-overlay: var(--cyber-telemetry-fill);
+  --gev-border: var(--text-dim);
+  --gev-border-subtle: var(--glass-border);
+  --gev-text-muted: var(--text-secondary);
+  --gev-accent: var(--cyber-red-bright);
+  --gev-accent-text: var(--accent);
+  --gev-accent-tint: var(--accent-dim);
+  --gev-accent-tint-border: var(--glass-border-hover);
+  --gev-on-accent: var(--bg-dark);
+  --gev-elevation-2: var(--cyber-panel-shadow);
+  --gev-radius-sm: var(--btn-radius);
+  --gev-font-sans: var(--font-mono);
+}

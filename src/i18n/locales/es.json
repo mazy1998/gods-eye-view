@@ -2434,7 +2434,7 @@
   "Exit cockpit to fly to a file": "Sal de la cabina para volar a un archivo",
   "Exit cockpit to fly to a scene": "Sal de la cabina para volar a una escena",
   "Go to expanded Radio section": "Ir a la sección de Radio expandida",
-  "Expand Radio section in Context": "Expandir la sección de Radio en Contexto",
+  "Show Radio in Layers": "Mostrar Radio en Capas",
   "New scene name": "Nombre de la nueva escena",
   "Delete scene \"{scene}\" and all shots?": "¿Eliminar la escena \"{scene}\" y todos sus planos?",
   "Detailed outline unavailable": "Contorno detallado no disponible",
@@ -3022,5 +3022,17 @@
   "Clear board": "Borrar pizarra",
   "Drop map files onto the globe": "Suelta archivos de mapas sobre el globo",
   "Session only — files clear when you reload": "Solo durante la sesión: los archivos se borran al recargar",
-  "Import scene": "Importar escena"
+  "Import scene": "Importar escena",
+  "Close": "Cerrar",
+  "Destinations": "Destinos",
+  "Choose what appears on the globe": "Elige qué aparece en el globo",
+  "Inspect": "Inspeccionar",
+  "Map": "Mapa",
+  "Map & Look": "Mapa y aspecto",
+  "Change the map style and image appearance": "Cambia el estilo del mapa y el aspecto de la imagen",
+  "Stories": "Historias",
+  "Watch a story or create your own": "Mira una historia o crea la tuya",
+  "Tools": "Herramientas",
+  "Import, draw, and plan routes": "Importa, dibuja y planifica rutas",
+  "Configure data providers and preferences.": "Configura los proveedores de datos y las preferencias."
 }

@@ -45,7 +45,8 @@ try {
       window.__qaSceneState.push(notification),
     );
   });
-  await page.click('[data-collapse-target="scene-panel"]');
+  // Scenes opens from its Stories destination.
+  await page.click('.gev-rail-item[data-destination="stories"]');
   await page.click('#scene-new-btn');
   await page.waitForFunction(
     () =>
@@ -238,14 +239,14 @@ try {
         !window.__godsEyeView.styleManager.getControlState().recording,
     ),
   );
-  // Escape can also collapse the Scene accordion. Reopen it through its
-  // installed disclosure before testing the next visible user action.
+  // Escape can also close the Stories destination. Reopen it from the rail
+  // before testing the next visible user action.
   if (
     await page.$eval('#scene-panel', (panel) =>
       panel.classList.contains('collapsed'),
     )
   )
-    await page.click('[data-collapse-target="scene-panel"]');
+    await page.click('.gev-rail-item[data-destination="stories"]');
   await page.waitForSelector('#scene-download-btn', { visible: true });
   await page.click('#scene-download-btn');
   const metadata = await page.evaluate(async () =>
@@ -329,9 +330,16 @@ try {
   await page.keyboard.press('Escape');
   await page.screenshot({ path: path.join(shots, 'desktop.png') });
   await page.setViewport({ width: 390, height: 844 });
-  // Phones present Scenes in the Layers tab's sheet.
+  // Phones present Scenes in the Layers tab's sheet. Stories only borrowed
+  // the panel on desktop, so open it there through its phone disclosure.
   await page.click('#mobile-tab-bar [data-mobile-sheet="layers"]');
   await new Promise((resolve) => setTimeout(resolve, 400));
+  if (
+    await page.$eval('#scene-panel', (panel) =>
+      panel.classList.contains('collapsed'),
+    )
+  )
+    await page.click('[data-collapse-target="scene-panel"]');
   await page.screenshot({ path: path.join(shots, 'narrow.png') });
   check(
     'Scene controls stay inside the narrow viewport',

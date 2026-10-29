@@ -401,6 +401,93 @@ try {
       mismatches.length === 0,
       mismatches.slice(0, 4),
     );
+    // Token-native primitives take Cyber's palette from the Cyber tokens:
+    // none paints the original cyan, and their texts meet 4.5:1 at rest and
+    // in forced states. Legacy-backed controls (badges, segmented, buttons,
+    // fields, sliders) are held to Cyber's own legacy look above instead.
+    const LEGACY_BACKED =
+      '.gev-status-badge, .gev-segmented, .gev-action-button, .scene-btn, .gev-field, .gev-quantitative-slider';
+    const label = `Cyber${appearance ? ` over ${appearance}` : ''}`;
+    // The surface frame takes Cyber's panel surface and shadow through the
+    // Cyber tokens, measured against a sample painted with Cyber's own
+    // variables.
+    const frame = await page.evaluate(() => {
+      const sample = document.createElement('div');
+      sample.style.background = 'var(--cyber-panel-surface)';
+      sample.style.boxShadow = 'var(--cyber-panel-shadow)';
+      document.body.append(sample);
+      const read = (el) => {
+        const cs = getComputedStyle(el);
+        return { background: cs.backgroundColor, shadow: cs.boxShadow };
+      };
+      const result = {
+        surface: read(document.getElementById('qa-surface')),
+        cyber: read(sample),
+      };
+      sample.remove();
+      return result;
+    });
+    check(
+      `${label}: the surface frame uses Cyber's panel surface and shadow`,
+      JSON.stringify(frame.surface) === JSON.stringify(frame.cyber),
+      frame,
+    );
+    const { nodeIds: controls } = await cdp.send('DOM.querySelectorAll', {
+      nodeId: root.nodeId,
+      selector: '#qa-surface :is(button, select, input)',
+    });
+    for (const state of [[], ['hover'], ['focus', 'focus-visible']]) {
+      for (const nodeId of controls)
+        await cdp.send('CSS.forcePseudoState', {
+          nodeId,
+          forcedPseudoClasses: state,
+        });
+      const cyan = await page.evaluate(
+        (legacy) =>
+          [...document.querySelectorAll('#qa-surface *')].flatMap((el) => {
+            if (el.closest(legacy)) return [];
+            const cs = getComputedStyle(el);
+            return [
+              'color',
+              'background-color',
+              'border-top-color',
+              'outline-color',
+            ]
+              .map((name) => cs.getPropertyValue(name))
+              .filter((value) =>
+                /^rgba?\((0, 212, 255|157, 239, 255)\b/.test(value),
+              )
+              .map(
+                (value) =>
+                  `${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]} ${value}`,
+              );
+          }),
+        LEGACY_BACKED,
+      );
+      const weak = (await page.evaluate(auditTexts)).filter(
+        (t) =>
+          t.ratio < 4.5 &&
+          !/^\w+\.(gev-status-badge|gev-segment|gev-action-button|scene-btn|gev-field|gev-quantitative-slider)\b/.test(
+            t.what,
+          ),
+      );
+      for (const nodeId of controls)
+        await cdp.send('CSS.forcePseudoState', {
+          nodeId,
+          forcedPseudoClasses: [],
+        });
+      const when = state.length ? `:${state.join(':')}` : 'at rest';
+      check(
+        `${label}: token-native primitives use Cyber's palette, not the original cyan, ${when}`,
+        cyan.length === 0,
+        cyan.slice(0, 6),
+      );
+      check(
+        `${label}: every text in the surface meets 4.5:1 ${when}`,
+        weak.length === 0,
+        weak.slice(0, 6),
+      );
+    }
   }
   await page.evaluate(() => delete document.documentElement.dataset.uiTheme);
 

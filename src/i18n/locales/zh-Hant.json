@@ -1844,7 +1844,7 @@
   "Station unavailable after directory refresh": "目錄刷新後該電臺不可用",
   "Radio could not {action} cleanly": "電臺未能正常{action}",
   "Go to expanded Radio section": "前往展開的電臺區域",
-  "Expand Radio section in Context": "在態勢面板中展開電臺區域",
+  "Show Radio in Layers": "在圖層中顯示電臺",
   "Close compact Radio controls": "關閉精簡電臺控件",
   "Open compact Radio controls": "打開精簡電臺控件",
   "SYNC": "同步",
@@ -2882,5 +2882,17 @@
   "Clear board": "清空畫板",
   "Drop map files onto the globe": "將地圖檔案拖放到地球上",
   "Session only — files clear when you reload": "僅限本次工作階段 — 重新載入後檔案將清除",
-  "Import scene": "匯入場景"
+  "Import scene": "匯入場景",
+  "Close": "關閉",
+  "Destinations": "目的地",
+  "Choose what appears on the globe": "選擇地球上顯示的內容",
+  "Inspect": "檢視",
+  "Map": "地圖",
+  "Map & Look": "地圖與外觀",
+  "Change the map style and image appearance": "更改地圖樣式和畫面外觀",
+  "Stories": "故事",
+  "Watch a story or create your own": "觀看故事或建立自己的故事",
+  "Tools": "工具",
+  "Import, draw, and plan routes": "匯入、繪製和規劃路線",
+  "Configure data providers and preferences.": "設定資料提供者和偏好設定。"
 }

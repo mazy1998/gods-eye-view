@@ -409,16 +409,33 @@ try {
       () => document.getElementById('recent-imagery-panel')?.hidden === false,
     ),
   );
+  // The panel's home is the Layers destination: it appears there after
+  // Weather, expanded and scrolled into view, with Layers current on the rail.
   const railPlacement = await page.evaluate(() => {
-    const rail = document.getElementById('right-context-rail');
+    const host = document.getElementById('gev-legacy-host');
     const panel = document.getElementById('recent-imagery-panel');
     const body = document.getElementById('recent-imagery-panel-body');
-    const order = [...rail.children].map((child) => child.id);
+    const order = [...(host?.children ?? [])].map((child) => child.id);
     const at = (id) => order.indexOf(id);
+    const rect = panel?.getBoundingClientRect();
+    const drawer = document
+      .querySelector('#gev-drawer .gev-drawer-body')
+      ?.getBoundingClientRect();
     return {
-      inRail: panel?.parentElement === rail,
-      beforeContext: at('recent-imagery-panel') < at('global-context-panel'),
-      afterWeather: at('weather-panel') < at('recent-imagery-panel'),
+      inLayers:
+        panel?.parentElement === host &&
+        document
+          .querySelector('.gev-rail-item[data-destination="layers"]')
+          ?.getAttribute('aria-current') === 'true',
+      afterWeather:
+        at('weather-panel') >= 0 &&
+        at('weather-panel') < at('recent-imagery-panel'),
+      headerOnScreen: Boolean(
+        rect &&
+        drawer &&
+        rect.top >= drawer.top - 1 &&
+        rect.top + 24 <= Math.min(drawer.bottom, innerHeight),
+      ),
       collapsed: panel?.classList.contains('collapsed'),
       scroller: body?.hasAttribute('data-rail-scroller'),
       readoutInBody: body?.firstElementChild?.classList.contains(
@@ -430,10 +447,10 @@ try {
     };
   });
   check(
-    'the panel sits in the rail after WEATHER and before CONTEXT, expanded on first appearance',
-    railPlacement.inRail &&
-      railPlacement.beforeContext &&
+    'the panel appears in Layers after WEATHER, expanded and on screen on first appearance',
+    railPlacement.inLayers &&
       railPlacement.afterWeather &&
+      railPlacement.headerOnScreen &&
       railPlacement.collapsed === false &&
       railPlacement.body > 0,
     JSON.stringify(railPlacement),
@@ -1373,18 +1390,38 @@ try {
     );
     if (imageryExpanded) await togglePanel(imageryPanel);
     await wait(400);
-    const onScreen = await page.evaluate(() =>
-      Object.fromEntries(
-        [
-          'pp-toggles',
-          'global-context-panel',
-          'recent-imagery-panel',
-          'cctv-panel',
-        ].map((id) => [id, window.__riQa.headerOnScreen(id)]),
-      ),
-    );
+    // Each panel's way back is its rail destination: every entry, and the
+    // drawer while open, sits fully on screen with everything collapsed.
+    const onScreen = await page.evaluate(() => {
+      const fully = (element) => {
+        const rect = element?.getBoundingClientRect();
+        return Boolean(
+          rect &&
+          rect.width > 0 &&
+          rect.height > 0 &&
+          rect.top >= 0 &&
+          rect.left >= 0 &&
+          rect.bottom <= innerHeight &&
+          rect.right <= innerWidth,
+        );
+      };
+      const entry = (destination) =>
+        fully(
+          document.querySelector(
+            `.gev-rail-item[data-destination="${destination}"]:not(:disabled)`,
+          ),
+        );
+      const drawer = document.getElementById('gev-drawer');
+      return {
+        'pp-toggles': entry('map'),
+        'global-context-panel': entry('inspect'),
+        'recent-imagery-panel': entry('layers'),
+        'cctv-panel': entry('inspect'),
+        drawer: Boolean(drawer?.hidden) || fully(drawer),
+      };
+    });
     check(
-      `DISPLAY, CONTEXT, CCTV and the imagery header are all on screen once everything is collapsed ${at}`,
+      `the rail entries for DISPLAY, CONTEXT, CCTV and imagery, and any open drawer, are all on screen once everything is collapsed ${at}`,
       Object.values(onScreen).every(Boolean),
       JSON.stringify(onScreen),
     );

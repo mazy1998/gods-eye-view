@@ -871,7 +871,12 @@
       "src/ui/InternetRadioView.vue",
       "src/ui/radioCardView.js",
       "src/ui/LocalSdrView.vue",
-      "src/sdr/gain.js"
+      "src/sdr/gain.js",
+      "src/ui/ShellRail.vue",
+      "src/ui/ShellDrawer.vue",
+      "src/ui/drawerNavigation.js",
+      "src/ui/primitives/IconButton.vue",
+      "src/ui/primitives/PanelHeader.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2723,7 +2728,12 @@
       "src/ui/radioView.js",
       "src/ui/InternetRadioView.vue",
       "src/ui/radioCardView.js",
-      "src/ui/LocalSdrView.vue"
+      "src/ui/LocalSdrView.vue",
+      "src/ui/ShellRail.vue",
+      "src/ui/ShellDrawer.vue",
+      "src/ui/drawerNavigation.js",
+      "src/ui/primitives/IconButton.vue",
+      "src/ui/primitives/PanelHeader.vue"
     ],
     "external": [
       "hls.js",

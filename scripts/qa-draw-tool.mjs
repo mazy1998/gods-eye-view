@@ -57,6 +57,20 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** A clip of the globe canvas, clear of the panels on every side. */
 const CANVAS_CLIP = { x: 340, y: 200, width: 560, height: 380 };
+/**
+ * How far right every globe position moves to stay clear of the panels: the
+ * open drawer (Map, where Draw lives) reaches past the clip's left edge. With
+ * the drawer closed it is 0.
+ */
+let globeDx = 0;
+async function clearOfDrawer() {
+  globeDx = await page.evaluate((left) => {
+    const drawer = document.getElementById('gev-drawer');
+    const rect = drawer?.getBoundingClientRect();
+    if (!rect || drawer.hidden || !rect.width) return 0;
+    return Math.max(0, Math.ceil(rect.right + 16 - left));
+  }, CANVAS_CLIP.x);
+}
 
 /**
  * How many amber pixels the clip contains. The drawn area's stroke and fill are
@@ -68,7 +82,7 @@ const CANVAS_CLIP = { x: 340, y: 200, width: 560, height: 380 };
  */
 async function amberPixels() {
   const shot64 = await page.screenshot({
-    clip: CANVAS_CLIP,
+    clip: { ...CANVAS_CLIP, x: CANVAS_CLIP.x + globeDx },
     type: 'png',
     encoding: 'base64',
   });
@@ -106,7 +120,7 @@ async function pressFinish() {
 
 /** One click on the globe canvas, the way a person makes one. */
 async function clickWorld(x, y, options = {}) {
-  await page.mouse.click(x, y, options);
+  await page.mouse.click(x + globeDx, y, options);
   await wait(options.settle ?? 140);
 }
 
@@ -203,12 +217,19 @@ try {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
+    // DISPLAY lives in the drawer's Map destination, which another expanded
+    // panel (Context after a selection) may hold: open Map from the rail.
+    const map = document.querySelector(
+      '.gev-rail-item[data-destination="map"]',
+    );
+    if (map && map.getAttribute('aria-current') !== 'true') map.click();
   });
   await page.waitForFunction(
     () =>
       document.getElementById('draw-toggle')?.getBoundingClientRect().width > 0,
     { timeout: 10_000 },
   );
+  await clearOfDrawer();
   check(
     'the Draw control is on the DISPLAY rail and starts off',
     await page.evaluate(() => {
@@ -361,7 +382,7 @@ try {
     areaVertices === 4,
     `${areaVertices} vertices`,
   );
-  await page.mouse.click(410, 500, { count: 2 });
+  await page.mouse.click(410 + globeDx, 500, { count: 2 });
   const areaLanded = await waitForMarks(3);
   await wait(900);
   const afterDoubleClick = await page.evaluate(() =>
@@ -440,6 +461,12 @@ try {
     );
     await page.evaluate(() => {
       window.__godsEyeView.viewer.selectedEntity = undefined;
+      // Selecting opened Context, whose Inspect replaces Map in the one
+      // drawer: go back to Map from the rail, as a user would, to draw again.
+      const map = document.querySelector(
+        '.gev-rail-item[data-destination="map"]',
+      );
+      if (map && map.getAttribute('aria-current') !== 'true') map.click();
     });
     await page.click('#draw-toggle');
     await page.click('.pp-mode-btn[data-shape="area"]');
@@ -485,12 +512,19 @@ try {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
+    // DISPLAY lives in the drawer's Map destination, which another expanded
+    // panel (Context after a selection) may hold: open Map from the rail.
+    const map = document.querySelector(
+      '.gev-rail-item[data-destination="map"]',
+    );
+    if (map && map.getAttribute('aria-current') !== 'true') map.click();
   });
   await page.waitForFunction(
     () =>
       document.getElementById('draw-toggle')?.getBoundingClientRect().width > 0,
     { timeout: 10_000 },
   );
+  await clearOfDrawer();
   // The reload built a new page context: re-capture the viewer's own click
   // actions so the identity comparisons below still mean something.
   await page.evaluate(() => {
@@ -834,7 +868,7 @@ async function findClickableTarget() {
 async function onScreen(belongs, timeout = 20_000) {
   return page
     .waitForFunction(
-      (belongsSource) => {
+      (belongsSource, dx) => {
         // eslint-disable-next-line no-new-func
         const belongsTo = new Function(`return (${belongsSource})`)();
         const viewer = window.__godsEyeView.viewer;
@@ -855,19 +889,21 @@ async function onScreen(belongs, timeout = 20_000) {
             const window2d = scene.cartesianToCanvasCoordinates(position);
             if (!window2d) continue;
             const { x, y } = window2d;
-            if (!(x > 300 && x < 900 && y > 180 && y < 600)) continue;
+            if (!(x > 300 + dx && x < 900 + dx && y > 180 && y < 600)) continue;
             // Projecting into the window is not the same as being clickable:
             // the entity may be beyond the horizon or behind a building. Only a
             // spot where the scene actually picks it proves the control case.
             const hit = scene.pick({ x: Math.round(x), y: Math.round(y) });
             if (!hit?.id || !belongsTo(hit.id)) continue;
-            return { x: Math.round(x), y: Math.round(y) };
+            // In the frame clickWorld() shifts clear of the drawer.
+            return { x: Math.round(x) - dx, y: Math.round(y) };
           }
         }
         return false;
       },
       { timeout, polling: 500 },
       belongs.toString(),
+      globeDx,
     )
     .then(
       (handle) => handle.jsonValue(),

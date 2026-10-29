@@ -2873,3 +2873,10 @@
     padding: 10px 12px 18px 18px;
   }
 }
+
+/* The drawer takes the clipped Cyber panel frame; its surface and shadow
+   come from the Cyber tokens. */
+:root[data-ui-theme='cyber'] .gev-drawer {
+  border-radius: 0;
+  clip-path: var(--cyber-panel-frame);
+}

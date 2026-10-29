@@ -554,9 +554,9 @@ async function main() {
       gev.styleManager.setPanelCollapsed('global-context-panel', false);
       gev.styleManager.setPanelCollapsed('radio-panel', false);
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const scroller = document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const radio = document.getElementById('radio-panel');
-      scroller.scrollTop = Math.max(0, radio.offsetTop - scroller.clientHeight + 70);
+      scroller.scrollTop = Math.max(0, scroller.scrollTop + radio.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientHeight + 70);
       const camera = gev.viewer.camera.positionWC;
       return {
         scrollTop: scroller.scrollTop,
@@ -625,7 +625,7 @@ async function main() {
     await page.waitForFunction(() => window.__godsEyeView.dataManager.isEnabled('radio'));
     await page.evaluate(() => window.__qaRestoreRadioEnable?.());
     await page.waitForFunction(() => {
-      const scroller = document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const viewport = scroller.getBoundingClientRect();
       const directory = document.querySelector('#radio-panel .radio-directory-row').getBoundingClientRect();
       const play = document.getElementById('radio-play-btn').getBoundingClientRect();
@@ -634,7 +634,7 @@ async function main() {
     }, { timeout: 10_000 });
     const explicitRevealAfter = await page.evaluate(() => {
       const gev = window.__godsEyeView;
-      const scroller = document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const viewport = scroller.getBoundingClientRect();
       const directory = document.querySelector('#radio-panel .radio-directory-row').getBoundingClientRect();
       const play = document.getElementById('radio-play-btn').getBoundingClientRect();
@@ -1584,6 +1584,16 @@ async function main() {
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
     check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Play nearest radio station');
 
+    // The Radio launcher sits in Context's header, which the drawer's Inspect
+    // destination hosts: open it and collapse Context there, as the launcher
+    // checks start from.
+    await page.evaluate(() => {
+      const inspect = document.querySelector('.gev-rail-item[data-destination="inspect"]');
+      if (inspect.getAttribute('aria-current') !== 'true') inspect.click();
+      const context = document.getElementById('global-context-panel');
+      if (!context.classList.contains('collapsed'))
+        context.querySelector('[data-collapse-target="global-context-panel"]').click();
+    });
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
       if (button.getAttribute('aria-expanded') === 'true') button.click();
@@ -1897,30 +1907,123 @@ async function main() {
 
       return result;
     });
+    // One drawer replaces the stack lanes; the same intents, asserted against
+    // it: an open destination's expanded panel sits inside the viewport and
+    // owns its scroll; the latest-opened destination keeps the screen through
+    // a HUD change while the panel it replaced leaves it, hidden from assistive
+    // technology too; Display open leaves CCTV and Context off screen,
+    // reachable from the rail; and the panels, storage and focus end as they
+    // began. The drawer paints with each change, so only the legacy stacks'
+    // layout passes are waited for, as the lane checks above do.
+    const drawerLanes = await page.evaluate(async () => {
+      const manager = window.__godsEyeView.styleManager;
+      const drawer = manager._drawer;
+      const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const fully = (element) => {
+        const rect = element?.getBoundingClientRect();
+        return Boolean(rect && rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0
+          && rect.bottom <= innerHeight && rect.right <= innerWidth);
+      };
+      const hidden = (id) => {
+        const panel = document.getElementById(id);
+        const rect = panel?.getBoundingClientRect();
+        return Boolean(rect && rect.width === 0 && rect.height === 0 && !panel.checkVisibility());
+      };
+      const truthful = (id) => document.querySelector(`[data-collapse-target="${id}"]`)?.getAttribute('aria-expanded')
+        === String(!document.getElementById(id).classList.contains('collapsed'));
+      const railButton = (destination) => document.querySelector(`.gev-rail-item[data-destination="${destination}"]`);
+      const ids = ['data-panel', 'scene-panel', 'pp-toggles', 'global-context-panel', 'cctv-panel'];
+      const snapshot = () => Object.fromEntries(ids.map((id) => {
+        const panel = document.getElementById(id);
+        return [id, {
+          className: panel.className,
+          style: panel.getAttribute('style'),
+          ariaHidden: panel.getAttribute('aria-hidden'),
+          parent: panel.parentElement?.id,
+        }];
+      }));
+      const storage = () => JSON.stringify(Object.entries(localStorage).sort(([a], [b]) => a.localeCompare(b)));
+      drawer.close();
+      await frames();
+      const prior = {
+        panels: snapshot(),
+        storage: storage(),
+        focus: document.activeElement,
+        hudMode: manager.hud.getMode(),
+        hudVariant: manager.hud.getVariant(),
+      };
+      const result = { lanes: {} };
+      manager.hud.setMode('off');
+      manager._updateHudButtonState();
+      await frames();
+      for (const [destination, id, scroller] of [
+        ['layers', 'data-panel', '#data-panel .data-toggle-list'],
+        ['stories', 'scene-panel', '#scene-panel .scene-panel-inner'],
+        ['map', 'pp-toggles', '#pp-toggles'],
+        ['inspect', 'global-context-panel', '#global-context-panel .global-context-panel-inner'],
+      ]) {
+        railButton(destination).click();
+        const panel = document.getElementById(id).getBoundingClientRect();
+        const body = document.querySelector('#gev-drawer .gev-drawer-body').getBoundingClientRect();
+        result.lanes[destination] = {
+          open: drawer.channel.getSnapshot().destination === destination,
+          expanded: !document.getElementById(id).classList.contains('collapsed'),
+          drawerInside: fully(document.getElementById('gev-drawer')),
+          panelInside: panel.height > 0 && panel.top >= body.top - 1 && panel.bottom <= body.bottom + 1,
+          ownsScroll: getComputedStyle(document.querySelector(scroller)).overflowY === 'auto',
+        };
+      }
+      drawer.close();
+      await frames();
+      railButton('layers').click();
+      railButton('stories').click();
+      manager._setHudVariant('tactical');
+      manager.hud.setMode('on');
+      manager._updateHudButtonState();
+      await new Promise((resolve) => setTimeout(resolve, 360));
+      const data = document.getElementById('data-panel');
+      result.latest = {
+        destination: drawer.channel.getSnapshot().destination,
+        scenesShown: fully(document.querySelector('#scene-panel .panel-header')) && !document.getElementById('scene-panel').classList.contains('collapsed'),
+        dataHidden: hidden('data-panel'),
+        dataOwnState: data.className === prior.panels['data-panel'].className,
+        dataDisclosureTruthful: truthful('data-panel'),
+      };
+      railButton('map').click();
+      result.display = {
+        displayOpen: drawer.channel.getSnapshot().destination === 'map',
+        displayShown: fully(document.querySelector('#pp-toggles .pp-header-row')),
+        cctvHidden: hidden('cctv-panel'),
+        contextHidden: hidden('global-context-panel'),
+        contextDisclosureTruthful: truthful('global-context-panel'),
+        inspectReachable: fully(railButton('inspect')),
+      };
+      drawer.close();
+      manager._setHudVariant(prior.hudVariant);
+      manager.hud.setMode(prior.hudMode);
+      manager._updateHudButtonState();
+      await frames();
+      result.restoreDetails = {
+        panels: JSON.stringify(snapshot()) === JSON.stringify(prior.panels),
+        storage: storage() === prior.storage,
+        focus: document.activeElement === prior.focus,
+        hud: manager.hud.getMode() === prior.hudMode && manager.hud.getVariant() === prior.hudVariant,
+        closed: drawer.channel.getSnapshot().destination === null,
+      };
+      result.restored = Object.values(result.restoreDetails).every(Boolean);
+      return result;
+    });
     check(
-      'HUD-off desktop lanes keep Data plus Scenes and Display plus Context expanded inside the viewport corridor',
-      multiExpandedPanelLayout.independentLeft
-        && multiExpandedPanelLayout.independentRight
-        && multiExpandedPanelLayout.leftCountsAllExpanded
-        && multiExpandedPanelLayout.rightCountsAllExpanded
-        && multiExpandedPanelLayout.leftInsideCorridor
-        && multiExpandedPanelLayout.rightInsideCorridor
-        && multiExpandedPanelLayout.internalScrollOwned
-        && multiExpandedPanelLayout.restoredExactly,
-      JSON.stringify(multiExpandedPanelLayout),
+      'HUD-off desktop destinations open Data, Scenes, Display and Context expanded inside the viewport, each owning its scroll',
+      Object.values(drawerLanes.lanes).every((lane) => Object.values(lane).every(Boolean))
+        && drawerLanes.restored,
+      JSON.stringify({ lanes: drawerLanes.lanes, restored: drawerLanes.restoreDetails }),
     );
     check(
-      'HUD-off to Tactical preserves the latest-opened Scenes panel and hides its collapsed Data competitor',
-      multiExpandedPanelLayout.tacticalAutoCollapse.latestOpenedPanel === 'scene-panel'
-        && multiExpandedPanelLayout.tacticalAutoCollapse.scenesExpanded
-        && multiExpandedPanelLayout.tacticalAutoCollapse.dataCollapsed
-        && multiExpandedPanelLayout.tacticalAutoCollapse.dataHiddenWhileScenesOwnsLane
-        && multiExpandedPanelLayout.tacticalAutoCollapse.dataAriaExpanded === 'false'
-        && multiExpandedPanelLayout.tacticalAutoCollapse.displayExpanded
-        && multiExpandedPanelLayout.tacticalAutoCollapse.contextCollapsed
-        && multiExpandedPanelLayout.tacticalAutoCollapse.contextHiddenWhileDisplayOwnsLane
-        && multiExpandedPanelLayout.tacticalAutoCollapse.contextAriaExpanded === 'false',
-      JSON.stringify(multiExpandedPanelLayout.tacticalAutoCollapse),
+      'HUD-off to Tactical keeps the latest-opened Stories destination and takes Data, back in its own state, off screen',
+      drawerLanes.latest.destination === 'stories'
+        && Object.entries(drawerLanes.latest).every(([key, value]) => key === 'destination' || value),
+      JSON.stringify(drawerLanes.latest),
     );
     check(
       'closing Tactical lane owners restores eligible temporary siblings without changing disclosure truth',
@@ -1933,9 +2036,9 @@ async function main() {
       JSON.stringify(multiExpandedPanelLayout.tacticalAutoRestore),
     );
     check(
-      'Tactical Display hides ordinary collapsed CCTV and Context launchers',
-      Object.values(multiExpandedPanelLayout.tacticalDisplayExclusive).every(Boolean),
-      JSON.stringify(multiExpandedPanelLayout.tacticalDisplayExclusive),
+      'Display open leaves CCTV and Context off screen, reachable from the rail',
+      Object.values(drawerLanes.display).every(Boolean),
+      JSON.stringify(drawerLanes.display),
     );
     const parameterizedDisplayScroll = await page.evaluate(async () => {
       const manager = window.__godsEyeView.styleManager;
@@ -2711,6 +2814,9 @@ async function main() {
     );
     const manualPlayTarget = await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
+      // Context's header, with the compact Radio controls, shows in Inspect.
+      const inspect = document.querySelector('.gev-rail-item[data-destination="inspect"]');
+      if (inspect.getAttribute('aria-current') !== 'true') inspect.click();
       manager.setPanelCollapsed('global-context-panel', true);
       manager._setRadioDisclosure(true);
       const button = document.getElementById('context-radio-mini-play-btn');
@@ -4510,7 +4616,7 @@ async function main() {
 
     const expandedContextRadioBefore = await page.evaluate(() => {
       const gev = window.__godsEyeView;
-      const scroller = document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ (document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner'));
       scroller.scrollTop = 0;
       const camera = gev.viewer.camera.positionWC;
       return {
@@ -4524,19 +4630,21 @@ async function main() {
     await page.waitForFunction(() => !document.getElementById('radio-panel').classList.contains('collapsed'));
     await page.waitForFunction((priorScroll) => (
       document.activeElement?.getAttribute('data-collapse-target') === 'radio-panel'
-      && document.querySelector('#global-context-panel .global-context-panel-inner').scrollTop > priorScroll
+      && /* Radio's own scroller: Layers in the drawer, else Context */ (document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner')).scrollTop > priorScroll
     ), { timeout: 10_000 }, expandedContextRadioBefore.scrollTop);
     const expandedContextRadioAfter = await page.evaluate(() => {
       const gev = window.__godsEyeView;
       gev.styleManager._renderRadioState(gev.dataManager.layers.get('radio').module.getUIState());
       const launcher = document.getElementById('context-radio-toggle-btn');
       const radio = document.getElementById('radio-panel');
-      const scroller = document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ (document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner'));
       const camera = gev.viewer.camera.positionWC;
       return {
         ariaControls: launcher.getAttribute('aria-controls'),
         expanded: launcher.getAttribute('aria-expanded'),
         label: launcher.getAttribute('aria-label'),
+        contextExpanded: !document.getElementById('global-context-panel').classList.contains('collapsed'),
+        destination: document.querySelector('.gev-rail-item[aria-current="true"]')?.dataset.destination ?? null,
         radioCollapsed: radio.classList.contains('collapsed'),
         compactHidden: document.getElementById('context-radio-mini').hidden,
         scrollTop: scroller.scrollTop,
@@ -4553,10 +4661,15 @@ async function main() {
       expandedContextRadioAfter.camera.z - expandedContextRadioBefore.camera.z,
     );
     check(
-      'expanded Context Radio icon reveals and scrolls to embedded Radio without an overlay or playback/camera theft',
-      expandedContextRadioAfter.ariaControls === 'radio-panel'
-        && expandedContextRadioAfter.expanded === 'true'
-        && expandedContextRadioAfter.label === 'Go to expanded Radio section'
+      'expanded Context Radio icon reveals and scrolls to Radio in Layers, its launcher truthful for Context, without an overlay or playback/camera theft',
+      expandedContextRadioAfter.destination === 'layers'
+        && (expandedContextRadioAfter.contextExpanded
+          ? expandedContextRadioAfter.ariaControls === 'radio-panel'
+            && expandedContextRadioAfter.expanded === 'true'
+            && expandedContextRadioAfter.label === 'Go to expanded Radio section'
+          : expandedContextRadioAfter.ariaControls === 'context-radio-mini'
+            && expandedContextRadioAfter.expanded === 'false'
+            && expandedContextRadioAfter.label === 'Open compact Radio controls')
         && !expandedContextRadioAfter.radioCollapsed
         && expandedContextRadioAfter.compactHidden
         && expandedContextRadioAfter.scrollTop > expandedContextRadioBefore.scrollTop
@@ -4574,6 +4687,9 @@ async function main() {
 
     await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
+      // Context's header, with the compact Radio controls, shows in Inspect.
+      const inspect = document.querySelector('.gev-rail-item[data-destination="inspect"]');
+      if (inspect.getAttribute('aria-current') !== 'true') inspect.click();
       manager.setPanelCollapsed('global-context-panel', true);
       manager._setRadioDisclosure(true);
     });
@@ -4609,6 +4725,12 @@ async function main() {
       JSON.stringify(splitDetailActions),
     );
 
+    // The full-panel action shows Radio where it lives, in Layers; Context's
+    // mode buttons show in Inspect.
+    await page.evaluate(() => {
+      const inspect = document.querySelector('.gev-rail-item[data-destination="inspect"]');
+      if (inspect.getAttribute('aria-current') !== 'true') inspect.click();
+    });
     await page.click('#global-context-flights-btn');
     await page.waitForFunction(() => !document.getElementById('context-flights-view').hidden);
     const companionStack = await page.evaluate(() => {
@@ -4659,7 +4781,8 @@ async function main() {
     await page.screenshot({ path: path.join(SHOTS_DIR, 'desktop.png') });
     const desktop = await page.$eval('#radio-panel', (element) => {
       const rect = element.getBoundingClientRect();
-      const contextRect = element.closest('#global-context-panel').getBoundingClientRect();
+      // Radio's desktop host: Layers in the drawer, else Context.
+      const contextRect = (element.closest('.gev-drawer') ?? element.closest('#global-context-panel')).getBoundingClientRect();
       const tunerRect = element.querySelector('.radio-tuner').getBoundingClientRect();
       const innerRect = element.querySelector('.radio-panel-inner').getBoundingClientRect();
       return {
@@ -4672,7 +4795,7 @@ async function main() {
         tunerInside: tunerRect.left >= innerRect.left && tunerRect.right <= innerRect.right,
       };
     });
-    check('desktop Context host keeps Radio and its tuner contained', desktop.left >= 0 && desktop.right <= 1440 && desktop.top >= 0 && desktop.bottom <= 900 && desktop.radioInside && desktop.tunerInside, JSON.stringify(desktop));
+    check('desktop Layers host keeps Radio and its tuner contained', desktop.left >= 0 && desktop.right <= 1440 && desktop.top >= 0 && desktop.bottom <= 900 && desktop.radioInside && desktop.tunerInside, JSON.stringify(desktop));
 
     await page.click('#radio-play-btn');
     await page.waitForFunction(() => window.__godsEyeView.dataManager.layers.get('radio').module.getUIState().audioState === 'playing');

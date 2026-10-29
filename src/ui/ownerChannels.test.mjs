@@ -133,6 +133,7 @@ test('panel chrome publishes every panel when a collapse button syncs, and stops
         },
         'scene-panel': { collapsed: false, autoCollapsed: false, pinned: true },
       },
+      restoring: false,
     },
     change: { type: 'panel-changed', panelId: 'data-panel' },
   });

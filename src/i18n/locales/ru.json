@@ -2475,7 +2475,7 @@
   "Exit cockpit to fly to a file": "Выйдите из кабины, чтобы перелететь к файлу",
   "Exit cockpit to fly to a scene": "Выйдите из кабины, чтобы перелететь к сцене",
   "Go to expanded Radio section": "Перейти к развёрнутому разделу радио",
-  "Expand Radio section in Context": "Развернуть раздел «Радио» в панели «Контекст»",
+  "Show Radio in Layers": "Показать радио в «Слоях»",
   "New scene name": "Название новой сцены",
   "Delete scene \"{scene}\" and all shots?": "Удалить сцену «{scene}» и все кадры?",
   "Detailed outline unavailable": "Подробный контур недоступен",
@@ -3092,5 +3092,17 @@
   "Clear board": "Очистить доску",
   "Drop map files onto the globe": "Перетащите файлы карт на глобус",
   "Session only — files clear when you reload": "Только в этом сеансе — файлы удаляются при перезагрузке",
-  "Import scene": "Импортировать сцену"
+  "Import scene": "Импортировать сцену",
+  "Close": "Закрыть",
+  "Destinations": "Разделы",
+  "Choose what appears on the globe": "Выберите, что показывать на глобусе",
+  "Inspect": "Осмотр",
+  "Map": "Карта",
+  "Map & Look": "Карта и вид",
+  "Change the map style and image appearance": "Измените стиль карты и вид изображения",
+  "Stories": "Истории",
+  "Watch a story or create your own": "Смотрите историю или создайте свою",
+  "Tools": "Инструменты",
+  "Import, draw, and plan routes": "Импорт, рисование и маршруты",
+  "Configure data providers and preferences.": "Настройте источники данных и параметры."
 }

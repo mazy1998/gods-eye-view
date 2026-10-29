@@ -9,7 +9,7 @@ import {
   collapsePanelOnEscape,
   createHoverDisclosure,
 } from './panelDisclosure.js';
-const SHARE_PANEL_STATE_SPECS = Object.freeze([
+export const SHARE_PANEL_STATE_SPECS = Object.freeze([
   { id: 'control-panel', pinnable: true },
   { id: 'location-bar', pinnable: true },
   { id: 'data-panel' },
@@ -63,6 +63,7 @@ export class PanelChrome {
     // Views read panel state through this channel. Every collapse, layout
     // and position change ends by syncing the panel's collapse button.
     this.channel = createStateChannel(() => this._readPanelState());
+    this._restoringPanels = false;
     this._cockpitPanelRestore = null;
     this._cockpitContextCollapsedForDataPanel = false;
     this._panelPosition = new PanelPositionControls({
@@ -154,8 +155,11 @@ export class PanelChrome {
   }
 
   _collapsePanelOnEscape(event, panelId) {
-    // In a phone sheet, Escape closes the sheet (mobileShell.js), not a panel.
+    // In a phone sheet, Escape closes the sheet (mobileShell.js), not a panel;
+    // in the drawer, it closes the drawer.
     if (globalThis.document?.body?.hasAttribute?.('data-mobile-sheet'))
+      return false;
+    if (document.getElementById(panelId)?.closest?.('.gev-legacy-host'))
       return false;
     return collapsePanelOnEscape(event, {
       panel: document.getElementById(panelId),
@@ -391,7 +395,7 @@ export class PanelChrome {
         pinned: panel.classList.contains('dock-pinned'),
       };
     }
-    return { panels };
+    return { panels, restoring: this._restoringPanels };
   }
 
   _buildSharePanelState() {
@@ -421,24 +425,34 @@ export class PanelChrome {
   _restorePanelState(panelState) {
     if (!panelState || !Array.isArray(panelState.specs)) return;
     const specsById = new Map(panelState.specs.map((spec) => [spec.id, spec]));
-    for (const spec of SHARE_PANEL_STATE_SPECS) {
-      const state = specsById.get(spec.id);
-      if (!state || typeof state.collapsed !== 'boolean') continue;
-      if (spec.pinnable && typeof state.pinned === 'boolean') {
-        this._setCommandDockPanelPinState(spec.id, state.pinned, {
+    const panelIds = [];
+    // Views see the restored set once, not each panel on the way there.
+    this._restoringPanels = true;
+    try {
+      for (const spec of SHARE_PANEL_STATE_SPECS) {
+        const state = specsById.get(spec.id);
+        if (!state || typeof state.collapsed !== 'boolean') continue;
+        panelIds.push(spec.id);
+        if (spec.pinnable && typeof state.pinned === 'boolean') {
+          this._setCommandDockPanelPinState(spec.id, state.pinned, {
+            restore: true,
+            persist: false,
+            syncShare: false,
+          });
+        }
+        const nextCollapsed =
+          state.pinned && spec.pinnable ? false : state.collapsed;
+        this.setPanelCollapsed(spec.id, nextCollapsed, {
           restore: true,
           persist: false,
           syncShare: false,
         });
       }
-      const nextCollapsed =
-        state.pinned && spec.pinnable ? false : state.collapsed;
-      this.setPanelCollapsed(spec.id, nextCollapsed, {
-        restore: true,
-        persist: false,
-        syncShare: false,
-      });
+    } finally {
+      this._restoringPanels = false;
     }
+    // Hosts settle on the restored state before the share link reads it.
+    this.channel.publish({ type: 'panels-restored', panelIds });
     this.shareLinkManager?.onPanelStateChange?.();
   }
 
@@ -459,6 +473,13 @@ export class PanelChrome {
     if (explicit && !restore)
       this.shareLinkManager?.claimRestoreLane?.('panel', panelId);
     const nextCollapsed = Boolean(collapsed);
+    // An explicit request to show a panel is also a reveal, published even
+    // when it was already expanded: a panel in a drawer destination that is
+    // not open is expanded but not visible.
+    const reveal = () => {
+      if (explicit && !restore && !nextCollapsed)
+        this.channel.publish({ type: 'panel-revealed', panelId });
+    };
     const wasAutoCollapsed =
       panelEl.classList.contains('layout-auto-collapsed') ||
       panelEl.classList.contains('cyber-accordion-collapsed');
@@ -555,7 +576,7 @@ export class PanelChrome {
       if (priorRightOwner !== this._panelLayout._rightStackPreferredPanelId) {
         this._scheduleRightPanelLayout({ reconsiderAutoCollapse: true });
       }
-      return;
+      return reveal();
     }
     panelEl.classList.remove(
       'layout-auto-collapsed',
@@ -639,6 +660,7 @@ export class PanelChrome {
       reconsiderAutoCollapse: this._leftPanelStack?.contains(panelEl) === true,
     });
     if (syncShare) this.shareLinkManager?.onPanelStateChange?.();
+    reveal();
   }
 
   _layoutRightPanels() {

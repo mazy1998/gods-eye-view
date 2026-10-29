@@ -62,6 +62,7 @@ watch(
         v-for="group in groups"
         :key="group"
         v-show="visibleGroup(group)"
+        :data-layer-group="group"
       >
         <h3 class="data-layer-group-heading">{{ t(group) }}</h3>
         <LayerRow
