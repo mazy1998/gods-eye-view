@@ -767,3 +767,17 @@ attributes, while Weather owns coverage labels. The keyed rail-card owner keeps
 node identity, header focus, disclosure and teardown. The shared adapter never
 creates another state store or announces all card updates. A Vue view can replace
 this adapter and retain these presentation inputs and styles.
+
+`src/ui/StatusBadge.vue` is that view, with the same `label`, `appearance` and
+`hidden` inputs. Owner attributes (`id`, `data-*`, live-region policy) pass
+through to the badge. `src/ui/mountView.js` mounts a view in place of the DOM
+an owner used to build, without a wrapper, so mounted hooks see connected
+nodes. It returns synchronous `update()` and idempotent `dispose()`. The CCTV
+calibration chip is mounted this way: the shell owns the mount and its
+disposal, and `CctvControls` supplies the label and `data-cal-badge` through
+`update()`. The other badges keep the DOM adapter.
+
+Components (`.vue`) are renderers with inline JavaScript and HTML blocks. Their
+CSS lives in `src/ui/styles`, so `<style>` blocks are refused. `build/vue.js`
+holds this policy and the compiler options for the browser build, the boundary
+gate and the `node:test` hooks.

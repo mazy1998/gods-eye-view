@@ -3,12 +3,12 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { analyzeModule } from './module-analysis.mjs';
+import { analyzeSource } from './module-analysis.mjs';
 
 const builtins = new Set(
   builtinModules.flatMap((name) => [name, `node:${name}`]),
 );
-const code = /\.[mc]?js$/;
+const code = /\.(?:[mc]?js|vue)$/;
 const entry = (file) =>
   file === 'src/main.js' || file.startsWith('src/standalone/');
 const tests = (file) =>
@@ -20,6 +20,7 @@ const source = (file) =>
   file.startsWith('src/sources/') ||
   /^src\/layers\/[^/]+\/(?:source|bundledSource|flowSource)\.js$/.test(file);
 const renderer = (file) =>
+  file.endsWith('.vue') ||
   /^src\/(?:ui|app|standalone|overlays)\//.test(file) ||
   /^src\/layers\/[^/]+\/(?:index|rendering|snapshotRenderer|overlay|presentation|cards|controls)\.js$/.test(
     file,
@@ -87,7 +88,7 @@ export function checkImportDirections(root) {
     }
     let analysis;
     try {
-      analysis = analyzeModule(readFileSync(resolved, 'utf8'));
+      analysis = analyzeSource(file, readFileSync(resolved, 'utf8'));
     } catch (error) {
       report(file, error.message);
       return null;

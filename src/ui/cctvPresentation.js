@@ -1,4 +1,3 @@
-import { updateStatusBadge } from './statusBadge.js';
 import { t, tn } from '../i18n/index.js';
 import { cctvSourceLabelText, cctvSourceMessageText } from './cctvFrames.js';
 
@@ -128,7 +127,7 @@ export function _renderCctvState(state) {
     this._cctvProjectionBtn.disabled = !enabled;
   }
 
-  if (this._cctvQualityChip) {
+  if (this._cctvQualityBadge) {
     // CAL badge (cctv-v2 design §3b, amended by LOCKED §9.2 — panel-only,
     // no in-world tint): three states driven by cctv.js's deriveCalBadge,
     // no client-side scoring math. Casing is unified via _calBadgeLabel so
@@ -138,14 +137,14 @@ export function _renderCctvState(state) {
     // promotes to CALIBRATED, RESET CAL clears.
     const badge = activeCamera?.calBadge || null;
     const dirty = !!activeCamera?.calDirty;
-    updateStatusBadge(this._cctvQualityChip, {
+    this._cctvQualityBadge.update({
       label: dirty
         ? t('CAL · EDITED (UNSAVED)')
         : t('CAL · {badge}', {
             badge: this._calBadgeLabel(badge),
           }),
+      'data-cal-badge': dirty ? 'edited' : badge || '',
     });
-    this._cctvQualityChip.dataset.calBadge = dirty ? 'edited' : badge || '';
   }
 
   this._syncCctvCalReadout(enabled, activeCamera);

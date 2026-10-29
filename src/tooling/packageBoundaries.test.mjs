@@ -76,6 +76,86 @@ test('dynamic imports obey the same component ownership rule', async (t) => {
   await assert.rejects(checkPackageBoundaries(root), /unowned module.*startup/);
 });
 
+test('a component compiles inside its export and needs the same ownership', async (t) => {
+  const root = await fixture(
+    t,
+    "import Badge from './Badge.vue'; export { Badge };",
+  );
+  await writeFile(
+    path.join(root, 'Badge.vue'),
+    "<script setup>\nimport { label } from './label.js';\n</script>\n<template><span>{{ label }}</span></template>\n",
+  );
+  await writeFile(path.join(root, 'label.js'), "export const label = 'OK';");
+  const classify = (modules) =>
+    Promise.all([
+      writeFile(
+        path.join(root, 'package.json'),
+        JSON.stringify({
+          name: 'boundary-fixture',
+          type: 'module',
+          dependencies: { vue: '3.5.44' },
+          exports: { './feature': './entry.js' },
+        }),
+      ),
+      writeFile(
+        path.join(root, 'scripts/package-boundaries.json'),
+        JSON.stringify({
+          feature: { exports: ['./feature'], modules, external: ['vue'] },
+        }),
+      ),
+    ]);
+  await classify(['entry.js', 'Badge.vue']);
+  await assert.rejects(
+    checkPackageBoundaries(root),
+    /unowned module: label\.js/,
+  );
+  await classify(['entry.js', 'Badge.vue', 'label.js']);
+  assert.deepEqual(await checkPackageBoundaries(root), [
+    { name: 'feature', exports: 1, modules: 3 },
+  ]);
+});
+
+test('a template-only component builds with the compiler helper, and styles are refused', async (t) => {
+  const root = await fixture(
+    t,
+    "import Badge from './Badge.vue'; export { Badge };",
+  );
+  await writeFile(
+    path.join(root, 'package.json'),
+    JSON.stringify({
+      name: 'boundary-fixture',
+      type: 'module',
+      dependencies: { vue: '3.5.44' },
+      exports: { './feature': './entry.js' },
+    }),
+  );
+  await writeFile(
+    path.join(root, 'scripts/package-boundaries.json'),
+    JSON.stringify({
+      feature: {
+        exports: ['./feature'],
+        modules: ['entry.js', 'Badge.vue'],
+        external: ['vue'],
+      },
+    }),
+  );
+  await writeFile(
+    path.join(root, 'Badge.vue'),
+    '<template><span class="badge">OK</span></template>\n',
+  );
+  assert.deepEqual(await checkPackageBoundaries(root), [
+    { name: 'feature', exports: 1, modules: 2 },
+  ]);
+  await writeFile(
+    path.join(root, 'Badge.vue'),
+    '<template><span class="badge">OK</span></template>\n<style>\n.badge { color: red; }\n</style>\n',
+  );
+  await assert.rejects(
+    checkPackageBoundaries(root),
+    /keep their CSS in src\/ui\/styles.*Badge\.vue/,
+  );
+});
+
 test('a Node build export must be explicitly classified and scoped', async (t) => {
   const root = await fixture(t);
   await writeFile(

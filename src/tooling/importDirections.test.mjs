@@ -134,6 +134,35 @@ for (const [name, files, pattern] of [
     /Computed/,
   ],
   [
+    'source reaches a component anywhere in src',
+    {
+      'src/layers/demo/source.js': "import '../../data/Badge.vue';",
+      'src/data/Badge.vue': '<template><span /></template>',
+    },
+    /Source imports rendering\/application: src\/data\/Badge\.vue/,
+  ],
+  [
+    'component script imports Node',
+    {
+      'src/ui/Badge.vue':
+        "<script setup>\nimport { readFileSync } from 'node:fs';\n</script>\n<template><span /></template>",
+    },
+    /src\/ui\/Badge\.vue: Node builtin in browser module: node:fs/,
+  ],
+  [
+    'component loads a block from another file',
+    { 'src/ui/Badge.vue': '<template src="./badge.html"></template>' },
+    /Component blocks must be inline/,
+  ],
+  [
+    'component carries its own styles',
+    {
+      'src/ui/Badge.vue':
+        '<template><span /></template>\n<style>\nspan { color: red; }\n</style>',
+    },
+    /Badge\.vue: Components keep their CSS in src\/ui\/styles/,
+  ],
+  [
     'browser imports test helper',
     {
       'src/app/demo.js': "import '../testSupport/helper.js';",
@@ -148,6 +177,24 @@ for (const [name, files, pattern] of [
     assert.throws(() => checkImportDirections(root), pattern);
   });
 }
+
+test('components read both script blocks and follow their imports', (t) => {
+  const { root, write } = fixture(t);
+  write(
+    'src/ui/Badge.vue',
+    "<script>\nimport './kind.js';\n</script>\n<script setup>\nimport { label } from './label.js';\n</script>\n<template><span>{{ label }}</span></template>",
+  );
+  write('src/ui/kind.js', "import 'node:fs';");
+  write('src/ui/label.js', "import '../../server/helper.js';");
+  write('server/helper.js', '');
+  assert.throws(
+    () => checkImportDirections(root),
+    /src\/ui\/kind\.js: Node builtin[\s\S]*src\/ui\/label\.js: Browser imports server/,
+  );
+  write('src/ui/kind.js', '');
+  write('src/ui/label.js', "export const label = 'OK';");
+  assert.equal(checkImportDirections(root).modules, 5);
+});
 
 test('self package imports cannot evade portable ownership', (t) => {
   const { root, write } = fixture(t, { './view': './src/ui/view.js' });

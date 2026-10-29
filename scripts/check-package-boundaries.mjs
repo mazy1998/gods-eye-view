@@ -1,7 +1,11 @@
 import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import vue from '@vitejs/plugin-vue';
 import { build, normalizePath } from 'vite';
+import { vueCompilerOptions } from '../build/vue.js';
+
+const VUE_EXPORT_HELPER = '\0plugin-vue:export-helper';
 
 /** Build each browser or Node export group and reject imports outside its declared ownership. */
 export async function checkPackageBoundaries(root) {
@@ -99,9 +103,18 @@ export async function checkPackageBoundaries(root) {
       ssr: node ? { noExternal: true } : undefined,
       logLevel: 'silent',
       plugins: [
+        // Components compile as in the application build; ownership is checked
+        // on the compiled component module, under its own path.
+        vue({ template: { compilerOptions: vueCompilerOptions } }),
         {
           name: 'check-package-ownership',
           moduleParsed(info) {
+            // The compiler's own helper for components without a script.
+            if (info.id === VUE_EXPORT_HELPER) return;
+            if (/\.vue\?vue&type=style\b/.test(info.id))
+              throw new Error(
+                `Components keep their CSS in src/ui/styles, not in <style> blocks: ${path.relative(root, info.id.split('?')[0])}`,
+              );
             if (!allowed.has(info.id)) {
               throw new Error(
                 `Package boundary ${name} imports an unowned module: ${path.relative(root, info.id)}`,

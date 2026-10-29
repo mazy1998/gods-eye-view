@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
 import { createStatusBadge, updateStatusBadge } from './statusBadge.js';
+import StatusBadge from './StatusBadge.vue';
 import { createRailCards } from './railCards.js';
 import { railFixture } from './railTestFixture.mjs';
 
@@ -75,4 +78,50 @@ test('coverage badges keep keyed identity, hide empty coverage and never claim f
   view.destroy();
   view.update([card]);
   assert.equal(f.container.children.length, 0);
+});
+
+const renderBadge = (props) =>
+  renderToString(createSSRApp({ render: () => h(StatusBadge, props) }));
+const escapeText = (text) =>
+  text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
+test('the Vue badge renders the adapter markup: literal text, shared classes, no semantics of its own', async () => {
+  const { document } = railFixture();
+  const label = '<img src=x onerror=alert(1)> · НЕИЗВЕСТНО';
+  for (const appearance of ['pill', 'box', 'plain']) {
+    const legacy = createStatusBadge({
+      documentRef: document,
+      appearance,
+      className: 'feature-hook',
+      label,
+    });
+    assert.equal(
+      await renderBadge({ appearance, class: 'feature-hook', label }),
+      `<span class="${legacy.className}">${escapeText(label)}</span>`,
+    );
+  }
+  assert.equal(
+    await renderBadge({ label: '', hidden: true }),
+    '<span class="gev-status-badge" hidden></span>',
+  );
+});
+
+test('owner attributes reach the Vue badge unchanged, including live regions it never adds itself', async () => {
+  assert.equal(
+    await renderBadge({
+      id: 'cctv-quality-chip',
+      appearance: 'box',
+      label: 'CAL · CURATED',
+      'data-cal-badge': 'curated',
+    }),
+    '<span class="gev-status-badge gev-status-badge--box" id="cctv-quality-chip" data-cal-badge="curated">CAL · CURATED</span>',
+  );
+  assert.equal(
+    await renderBadge({
+      role: 'status',
+      'aria-live': 'polite',
+      label: 'SNAPSHOT · DEGRADED',
+    }),
+    '<span class="gev-status-badge" role="status" aria-live="polite">SNAPSHOT · DEGRADED</span>',
+  );
 });

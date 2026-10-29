@@ -116,7 +116,16 @@ test('runtime discovery includes new nested modules and respects Git and formatt
     'vendor/other.js',
   ])
     await writeFile(path.join(root, name), source);
-  const expected = ['adopted.js', 'src/module.mjs', 'src/nested/new.js'];
+  await writeFile(
+    path.join(root, 'src/nested/Badge.vue'),
+    '<template><span   class="badge">{{label}}</span></template>\n',
+  );
+  const expected = [
+    'adopted.js',
+    'src/module.mjs',
+    'src/nested/Badge.vue',
+    'src/nested/new.js',
+  ];
   assert.deepEqual(
     (await formatAdoptedFiles(root, '--check')).changed,
     expected,

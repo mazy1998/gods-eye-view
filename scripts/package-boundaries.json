@@ -37,12 +37,13 @@
     "exports": ["./build/vite", "./build/html"],
     "modules": [
       "build/vite.js",
+      "build/vue.js",
       "build/application-html.js",
       "build/allowedHosts.js",
       "build/embed-framing.js",
       "build/panel.js"
     ],
-    "external": ["vite-plugin-cesium"]
+    "external": ["vite-plugin-cesium", "@vitejs/plugin-vue"]
   },
   "live-providers": {
     "runtime": "node",
@@ -815,9 +816,11 @@
       "src/ui/layerNames.js",
       "src/ui/statusText.js",
       "src/ui/statusBadge.js",
+      "src/ui/StatusBadge.vue",
+      "src/ui/mountView.js",
       "src/scopeMaskPolicy.js"
     ],
-    "external": ["cesium"]
+    "external": ["cesium", "vue"]
   },
   "ui-styles": {
     "exports": ["./ui/styles"],
@@ -2629,6 +2632,8 @@
       "src/voice/geminiAudio.js",
       "src/voice/geminiCaptureWorklet.js",
       "src/ui/statusBadge.js",
+      "src/ui/StatusBadge.vue",
+      "src/ui/mountView.js",
       "src/sceneCommandRelease.js",
       "src/scopeMaskPolicy.js"
     ],
@@ -2641,7 +2646,8 @@
       "pbf",
       "satellite.js",
       "mapillary-js",
-      "@jtarrio/webrtlsdr"
+      "@jtarrio/webrtlsdr",
+      "vue"
     ]
   },
   "application-catalog": {

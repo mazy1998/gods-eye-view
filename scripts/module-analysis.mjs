@@ -1,4 +1,6 @@
 import { parsers } from 'prettier/plugins/babel.mjs';
+import { parse as parseSfc } from 'vue/compiler-sfc';
+import { componentBlockProblem } from '../build/vue.js';
 
 const browserGlobals = new Set([
   'window',
@@ -77,4 +79,19 @@ export function analyzeModule(source) {
 /** Return static imports, literal dynamic imports and re-exports. */
 export function moduleImports(source) {
   return analyzeModule(source).imports;
+}
+
+/** Analyze a module, or the inline script blocks of a single-file component. */
+export function analyzeSource(file, source) {
+  if (!file.endsWith('.vue')) return analyzeModule(source);
+  const { descriptor, errors } = parseSfc(source, { filename: file });
+  if (errors.length) throw new Error(String(errors[0].message ?? errors[0]));
+  const problem = componentBlockProblem(descriptor);
+  if (problem) throw new Error(problem);
+  const blocks = [descriptor.script, descriptor.scriptSetup].filter(Boolean);
+  const results = blocks.map((block) => analyzeModule(block.content));
+  return {
+    imports: results.flatMap((result) => result.imports),
+    browser: [...new Set(results.flatMap((result) => result.browser))],
+  };
 }

@@ -11,6 +11,7 @@ import {
   buildUnitTestPlan,
   discoverUnitTestFiles,
   isCalibratedAllocationRuntime,
+  parallelTestArgs,
 } from '../scripts/run-unit-tests.mjs';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -61,6 +62,11 @@ test('unit runner serializes only GC-bracketed allocation microbenchmarks', () =
     () => allocationTestArgs('src/data/radio.test.mjs'),
     /Not an allocation microbenchmark/,
   );
+  // Ordinary suites load component hooks; the calibrated probes run without them.
+  const [flag, hooks, ...rest] = parallelTestArgs(ordinary);
+  assert.equal(flag, '--import');
+  assert.match(hooks, /^file:.*\/scripts\/vue-sfc-hooks\.mjs$/);
+  assert.deepEqual(rest, ['--test', ...ordinary]);
 });
 
 test('the runner discovers every test file in the repository', () => {

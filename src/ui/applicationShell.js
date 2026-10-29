@@ -16,6 +16,8 @@ import { readShellElements } from './shellElements.js';
 import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
+import { mountView } from './mountView.js';
+import StatusBadge from './StatusBadge.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { RadioControls } from './radio.js';
 import { LocalSdrControls } from './localSdrControls.js';
@@ -1189,6 +1191,18 @@ export class StyleManager extends ShellFacade {
   _initCctvPanel() {
     const { cctvLayer } = this.services;
     this._cctvControls?.destroy();
+    // The calibration chip closes the projection row; CctvControls paints it.
+    const projectionRow = this._cctvProjectionBtn?.parentElement;
+    this._cctvQualityBadge ??= projectionRow
+      ? mountView(StatusBadge, {
+          parent: projectionRow,
+          props: {
+            id: 'cctv-quality-chip',
+            appearance: 'box',
+            label: t('CAL · {badge}', { badge: '--' }),
+          },
+        })
+      : null;
     this._cctvControls = new CctvControls({
       elements: {
         _cctvAdjustBtn: this._cctvAdjustBtn,
@@ -1208,7 +1222,7 @@ export class StyleManager extends ShellFacade {
         _cctvPanel: this._cctvPanel,
         _cctvPrevBtn: this._cctvPrevBtn,
         _cctvProjectionBtn: this._cctvProjectionBtn,
-        _cctvQualityChip: this._cctvQualityChip,
+        _cctvQualityBadge: this._cctvQualityBadge,
         _cctvSelect: this._cctvSelect,
         _cctvSourceBadge: this._cctvSourceBadge,
         _cctvSummary: this._cctvSummary,
@@ -1803,6 +1817,7 @@ export class StyleManager extends ShellFacade {
     this._cameraOrientationControls?.destroy();
     this._clearLayersControl?.destroy();
     this._cctvControls?.destroy();
+    this._cctvQualityBadge?.dispose();
     this.services?.streetLevelLayer?.attachNavigation?.(null);
     this._streetLevelControls?.destroy();
     this._radioControls?.destroy();

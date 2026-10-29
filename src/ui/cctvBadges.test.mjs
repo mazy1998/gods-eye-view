@@ -8,7 +8,13 @@ function fixture(t) {
   const { document } = railFixture();
   const controls = new CctvControls({
     elements: {
-      _cctvQualityChip: document.createElement('span'),
+      // The shell mounts the Vue chip; the owner supplies its inputs.
+      _cctvQualityBadge: {
+        props: {},
+        update(next) {
+          Object.assign(this.props, next);
+        },
+      },
       _cctvSourceBadge: document.createElement('div'),
     },
     cctv: {},
@@ -74,15 +80,15 @@ test('calibration labels follow supplied provenance and dirty/save/reset transit
       activeCameraId: 'a',
       activeCamera,
     });
-    assert.equal(controls._cctvQualityChip.textContent, label);
+    assert.equal(controls._cctvQualityBadge.props.label, label);
     assert.equal(
-      controls._cctvQualityChip.dataset.calBadge,
+      controls._cctvQualityBadge.props['data-cal-badge'],
       calDirty ? 'edited' : calBadge || '',
     );
   }
   controls._renderCctvState(null);
-  assert.equal(controls._cctvQualityChip.textContent, 'CAL · --');
-  assert.equal(controls._cctvQualityChip.dataset.calBadge, '');
+  assert.equal(controls._cctvQualityBadge.props.label, 'CAL · --');
+  assert.equal(controls._cctvQualityBadge.props['data-cal-badge'], '');
 });
 
 test('localization changes badge copy while preserving machine state ids', (testContext) => {
@@ -105,8 +111,8 @@ test('localization changes badge copy while preserving machine state ids', (test
     activeCamera: { id: 'a', calBadge: 'curated', calDirty: true },
   });
   assert.equal(
-    controls._cctvQualityChip.textContent,
+    controls._cctvQualityBadge.props.label,
     t('CAL · EDITED (UNSAVED)'),
   );
-  assert.equal(controls._cctvQualityChip.dataset.calBadge, 'edited');
+  assert.equal(controls._cctvQualityBadge.props['data-cal-badge'], 'edited');
 });

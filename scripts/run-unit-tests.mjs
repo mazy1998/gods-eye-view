@@ -71,6 +71,12 @@ export function allocationTestArgs(file) {
   return ['--expose-gc', '--test', '--test-concurrency=1', file];
 }
 
+/** Ordinary suites may import single-file components (see vue-sfc-hooks.mjs). */
+export function parallelTestArgs(files) {
+  const hooks = new URL('./vue-sfc-hooks.mjs', import.meta.url).href;
+  return ['--import', hooks, '--test', ...files];
+}
+
 function runTests(args) {
   const result = spawnSync(process.execPath, args, {
     cwd: process.cwd(),
@@ -83,7 +89,7 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests(['--test', ...plan.parallel]);
+  const parallelStatus = runTests(parallelTestArgs(plan.parallel));
   if (parallelStatus !== 0) return parallelStatus;
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on

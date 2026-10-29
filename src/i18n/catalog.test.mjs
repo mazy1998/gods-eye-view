@@ -7,6 +7,7 @@ import {
   findUnmarked,
   readCatalog,
   shippedLocales,
+  unmarkedComponent,
   unmarkedMarkup,
   unmarkedScript,
 } from '../../scripts/i18n.mjs';
@@ -109,6 +110,94 @@ test('unmarkedMarkup finds text and attributes without data-i18n*', () => {
     [],
   );
   assert.deepEqual(texts('<!-- Note --><span>— 42 —</span>'), []);
+});
+
+test('unmarkedComponent checks template text, attributes and script literals, not interpolations', () => {
+  const texts = (vue) => unmarkedComponent('f.vue', vue).map((f) => f.text);
+  assert.deepEqual(
+    texts(
+      "<script setup>\nimport { t } from '../i18n/index.js';\nconst hint = { label: 'Plain words' };\n</script>\n<template>\n  <button :title=\"t('Pin it')\" title=\"Pin it\">{{ t('Save keys') }}</button>\n  <p>Not marked</p>\n  <span>{{ count }} · {{ hint.label }}</span>\n</template>\n",
+    ),
+    ['Plain words', 'title="Pin it"', 'Not marked'],
+  );
+});
+
+test('unmarkedComponent finds literals in template expressions, not in styling, hooks or t()', () => {
+  const found = (vue) => unmarkedComponent('f.vue', vue);
+  const vue = [
+    '<template>',
+    "  <p>{{ open ? 'Yes please' : t('No thanks') }}</p>",
+    '  <button :aria-label="\'Close panel\'" v-text="\'Plain words here\'"></button>',
+    "  <Badge :label=\"state === 'ready now' ? t('Ready') : 'Waiting longer'\" />",
+    '  <div :class="{ \'panel open\': open }" :data-state="\'ready now\'" v-if="mode === \'light mode\'"></div>',
+    '</template>',
+  ].join('\n');
+  assert.deepEqual(
+    found(vue).map(({ where, text }) => `${where} ${text}`),
+    [
+      'f.vue:2 Yes please',
+      'f.vue:3 Close panel',
+      'f.vue:3 Plain words here',
+      'f.vue:4 Waiting longer',
+    ],
+  );
+});
+
+test('unmarkedComponent covers the review cases for templates', () => {
+  const t =
+    "<script setup>\nimport { t } from '../i18n/index.js';\n</script>\n";
+  for (const [source, expected] of [
+    ['<template><p>Loading data</p></template>', ['Loading data']],
+    [
+      '<template><button title="Close panel">x</button></template>',
+      ['title="Close panel"'],
+    ],
+    [
+      '<template><p v-if="a">Loading data</p><p v-else>Ready now</p></template>',
+      ['Loading data', 'Ready now'],
+    ],
+    [
+      `<template><button :title="'Close panel'">x</button></template>`,
+      ['Close panel'],
+    ],
+    [
+      `<template><button :aria-label="open ? 'Hide layers' : 'Show layers'">x</button></template>`,
+      ['Hide layers', 'Show layers'],
+    ],
+    [
+      `<template><span v-text="'Signal lost'"></span></template>`,
+      ['Signal lost'],
+    ],
+    [`<template><span>{{ 'Signal lost' }}</span></template>`, ['Signal lost']],
+    [
+      `<template><span>{{ on ? 'Turn off' : 'Turn on' }}</span></template>`,
+      ['Turn off', 'Turn on'],
+    ],
+    [
+      `<template><input v-bind:placeholder="'Find a layer'"></template>`,
+      ['Find a layer'],
+    ],
+    // A variable alone is exempt, as it is in other code.
+    [
+      "<script setup>\nconst label = 'Clear active';\n</script>\n<template><span>{{ label }}</span></template>",
+      [],
+    ],
+    [
+      `${t}<template><button :title="t('Close panel')">x</button></template>`,
+      [],
+    ],
+    [`${t}<template><span>{{ t('Signal lost') }}</span></template>`, []],
+    ['<template><p>Layers &amp; cameras</p></template>', ['Layers & cameras']],
+    [
+      '<template><slot>Nothing selected</slot></template>',
+      ['Nothing selected'],
+    ],
+  ])
+    assert.deepEqual(
+      unmarkedComponent('X.vue', source).map((found) => found.text),
+      expected,
+      source,
+    );
 });
 
 test('unmarkedScript finds literals that reach the page without t/tn/msg', () => {

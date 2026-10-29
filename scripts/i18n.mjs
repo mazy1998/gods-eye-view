@@ -7,11 +7,13 @@
 // A translation left as the English fails unless src/i18n/same-as-english.json
 // lists it.
 //
-// Messages are the English literals passed to t(), tn() and msg() in src/,
-// plus the markup opted in with data-i18n* in src/ui/templates and index.html.
+// Messages are the English literals passed to t(), tn() and msg() in src/
+// (component templates included), plus the markup opted in with data-i18n* in
+// src/ui/templates and index.html.
 // It also lists UI text that is not marked at all (see findUnmarked).
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -393,6 +395,73 @@ export function unmarkedScript(file, original) {
   return found;
 }
 
+// Bound attributes and component props that show their value, matching the
+// names JS_SINKS treats as UI text; v-text and v-html always do.
+const VISIBLE_BINDING =
+  /^(?:aria-[\w-]+|alt|label|title|tooltip|placeholder|hint|accessibility-label|caption|subtitle|kicker|empty-text|blurb|count-label|status|loading-label|status-message)$/;
+
+/** Interpolations and visible bindings, outside the subtrees markup skips. */
+function templateExpressions(node, found = []) {
+  const skipped = node.props?.some(
+    ({ type, name, value }) =>
+      type === 6 &&
+      ((name === 'translate' && value?.content === 'no') ||
+        (name === 'aria-hidden' && value?.content === 'true') ||
+        (name === 'class' && /material-symbols/.test(value?.content ?? ''))),
+  );
+  if (skipped) return found;
+  if (node.type === 5) found.push(node.content);
+  for (const prop of node.props ?? []) {
+    if (prop.type !== 7 || !prop.exp) continue;
+    const name = prop.arg?.isStatic
+      ? prop.arg.content.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+      : '';
+    if (
+      prop.name === 'text' ||
+      prop.name === 'html' ||
+      (prop.name === 'bind' && VISIBLE_BINDING.test(name))
+    )
+      found.push(prop.exp);
+  }
+  for (const child of node.children ?? []) templateExpressions(child, found);
+  return found;
+}
+
+/**
+ * Unmarked text in a single-file component: string literals in its scripts,
+ * template text and plain attributes, and literals that interpolations and
+ * visible bindings show without t(), tn() or msg(). Templates translate with
+ * those functions imported in <script setup>, not with data-i18n*.
+ */
+export function unmarkedComponent(file, source) {
+  // Loaded only for components, so the script still runs on its own.
+  const { parse } = createRequire(import.meta.url)('vue/compiler-sfc');
+  const template = parse(source, { filename: file }).descriptor.template;
+  const blank = (text) => text.replace(/[^\n]/g, ' ');
+  const { start, end } = template?.loc ?? {};
+  const scripts = template
+    ? source.slice(0, start.offset) +
+      blank(template.content) +
+      source.slice(end.offset)
+    : source;
+  const found = unmarkedScript(file, scripts);
+  if (!template) return found;
+  const markup = template.content.replace(/\{\{[\s\S]*?\}\}/g, blank);
+  const lineOffset = lineAt(source, start.offset) - 1;
+  for (const finding of unmarkedMarkup(file, markup)) {
+    const line = Number(finding.where.slice(file.length + 1)) + lineOffset;
+    found.push({ ...finding, where: `${file}:${line}` });
+  }
+  for (const expression of templateExpressions(template.ast)) {
+    for (const literal of valueLiterals(expression.content)) {
+      const text = visibleText(literal, false);
+      if (text)
+        found.push({ where: `${file}:${expression.loc.start.line}`, text });
+    }
+  }
+  return found;
+}
+
 /**
  * UI text that is not marked for translation: markup without data-i18n* and
  * string literals that reach the page without t(), tn() or msg().
@@ -407,10 +476,14 @@ export function findUnmarked() {
     );
   for (const file of sourceFiles().filter(
     (name) => !NOT_UI.some((pattern) => pattern.test(name)),
-  ))
+  )) {
+    const source = readFileSync(path.join(ROOT, file), 'utf8');
     found.push(
-      ...unmarkedScript(file, readFileSync(path.join(ROOT, file), 'utf8')),
+      ...(file.endsWith('.vue')
+        ? unmarkedComponent(file, source)
+        : unmarkedScript(file, source)),
     );
+  }
   const seen = new Set();
   return found.filter(({ where, text }) => {
     const key = `${where}\0${text}`;
@@ -430,6 +503,8 @@ function sourceFiles() {
     'src/*.mjs',
     'src/**/*.js',
     'src/**/*.mjs',
+    'src/*.vue',
+    'src/**/*.vue',
   ).filter(
     (file) =>
       !file.startsWith('src/i18n/') &&
