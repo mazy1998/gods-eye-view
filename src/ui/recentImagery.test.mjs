@@ -1,7 +1,9 @@
-import test from 'node:test';
+import test, { afterEach } from 'node:test';
+import '../testSupport/componentDom.mjs';
+import { JSDOM } from 'jsdom';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createRecentImageryPanel } from './recentImagery.js';
+const { createRecentImageryPanel } = await import('./recentImagery.js');
 import { createRecentImageryLayer } from '../layers/recentImagery/index.js';
 import {
   BOX,
@@ -18,186 +20,39 @@ const S18 = 'S30:2026-09-18';
 const L16 = 'L30:2026-09-16';
 const V21 = 'VIIRS:2026-09-21';
 
-// ---- a small DOM double ------------------------------------------------------
-class FakeClassList {
-  constructor(node) {
-    this.node = node;
-  }
-  get names() {
-    return new Set(
-      String(this.node.className || '')
-        .split(/\s+/)
-        .filter(Boolean),
-    );
-  }
-  contains(name) {
-    return this.names.has(name);
-  }
-  toggle(name, force) {
-    const names = this.names;
-    const on = force === undefined ? !names.has(name) : Boolean(force);
-    if (on) names.add(name);
-    else names.delete(name);
-    this.node.className = [...names].join(' ');
-    return on;
-  }
-  add(...list) {
-    for (const name of list) this.toggle(name, true);
-  }
-  remove(...list) {
-    for (const name of list) this.toggle(name, false);
-  }
-}
-
-function matches(node, selector) {
-  if (selector.startsWith('.'))
-    return node.classList.contains(selector.slice(1));
-  if (selector.startsWith('#')) return node.id === selector.slice(1);
-  const attr = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(selector);
-  if (!attr) return false;
-  const key = attr[1].startsWith('data-')
-    ? attr[1].slice(5).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-    : null;
-  const value = key ? node.dataset[key] : node.getAttribute(attr[1]);
-  return attr[2] === undefined ? value != null : value === attr[2];
-}
-
-class FakeElement {
-  constructor(tagName, ownerDocument) {
-    this.tagName = String(tagName).toUpperCase();
-    this.ownerDocument = ownerDocument;
-    this.children = [];
-    this.parentNode = null;
-    this.className = '';
-    this.dataset = {};
-    this.style = {};
-    this.attributes = new Map();
-    this.listeners = new Map();
-    this.hidden = false;
-    this.disabled = false;
-    this.id = '';
-    this.title = '';
-    this._text = '';
-    this.scrollTop = 0;
-    this.scrollLeft = 0;
-    this.focused = 0;
-    this.blurred = 0;
-  }
-  get classList() {
-    return new FakeClassList(this);
-  }
-  get textContent() {
-    return this.children.length
-      ? this.children.map((child) => child.textContent).join('')
-      : this._text;
-  }
-  set textContent(value) {
-    for (const child of this.children) child.parentNode = null;
-    this.children = [];
-    this._text = String(value);
-  }
-  setAttribute(name, value) {
-    this.attributes.set(name, String(value));
-  }
-  getAttribute(name) {
-    return this.attributes.get(name) ?? null;
-  }
-  removeAttribute(name) {
-    this.attributes.delete(name);
-  }
-  appendChild(child) {
-    return this.insertBefore(child, null);
-  }
-  insertBefore(child, reference) {
-    child.parentNode?.removeChild(child);
-    const index = reference ? this.children.indexOf(reference) : -1;
-    if (index < 0) this.children.push(child);
-    else this.children.splice(index, 0, child);
-    child.parentNode = this;
-    return child;
-  }
-  append(...children) {
-    for (const child of children) this.appendChild(child);
-  }
-  removeChild(child) {
-    this.children.splice(this.children.indexOf(child), 1);
-    child.parentNode = null;
-  }
-  remove() {
-    this.parentNode?.removeChild(this);
-  }
-  addEventListener(type, handler) {
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type).add(handler);
-  }
-  removeEventListener(type, handler) {
-    this.listeners.get(type)?.delete(handler);
-  }
-  /** Bubble an event from this node to the root. */
-  dispatch(type, init = {}) {
-    const event = {
-      type,
-      target: this,
-      defaultPrevented: false,
-      preventDefault() {
-        this.defaultPrevented = true;
-      },
-      ...init,
-    };
-    for (let node = this; node; node = node.parentNode)
-      for (const handler of [...(node.listeners.get(type) || [])])
-        handler(event);
+// Actual DOM and Vue; helpers retain the existing scenario assertions.
+const windows = [];
+const cleanups = [];
+afterEach(() => {
+  for (const cleanup of cleanups.splice(0)) cleanup();
+  for (const window of windows.splice(0)) window.close();
+});
+function installHelpers(prototype) {
+  if (prototype.find) return;
+  prototype.find = function (predicate) {
+    return [...this.querySelectorAll('*')].find(predicate);
+  };
+  prototype.findAll = function (predicate) {
+    return [...this.querySelectorAll('*')].filter(predicate);
+  };
+  prototype.dispatch = function (type, init = {}) {
+    const ctor = type.startsWith('key') ? KeyboardEvent : Event;
+    const event = new ctor(type, { bubbles: true, cancelable: true, ...init });
+    this.dispatchEvent(event);
     return event;
-  }
-  click() {
-    if (!this.disabled) this.dispatch('click');
-  }
-  matches(selector) {
-    return matches(this, selector);
-  }
-  closest(selector) {
-    for (let node = this; node; node = node.parentNode)
-      if (matches(node, selector)) return node;
-    return null;
-  }
-  querySelector(selector) {
-    return this.find((node) => matches(node, selector));
-  }
-  find(predicate) {
-    for (const child of this.children) {
-      if (predicate(child)) return child;
-      const inner = child.find(predicate);
-      if (inner) return inner;
-    }
-    return null;
-  }
-  findAll(predicate, out = []) {
-    for (const child of this.children) {
-      if (predicate(child)) out.push(child);
-      child.findAll(predicate, out);
-    }
-    return out;
-  }
-  focus(options) {
-    this.focused += 1;
-    this.focusOptions = options;
-  }
-  blur() {
-    this.blurred += 1;
-  }
-  listenerCount() {
-    return [...this.listeners.values()].reduce((n, set) => n + set.size, 0);
-  }
+  };
 }
+installHelpers(HTMLElement.prototype);
 
 /** The static rail panel skeleton from templates/context.html. */
 function fakeDocument() {
-  const document = {
-    documentElement: { clientWidth: 1200 },
-    createElement: (tag) => new FakeElement(tag, document),
-    getElementById: (id) => document.body.find((node) => node.id === id),
-  };
-  document.body = new FakeElement('body', document);
+  const { window } = new JSDOM(
+    '<!doctype html><html lang="en"><body></body></html>',
+    { url: 'http://localhost/', pretendToBeVisual: true },
+  );
+  windows.push(window);
+  const document = window.document;
+  installHelpers(window.HTMLElement.prototype);
   const panel = document.createElement('div');
   panel.id = 'recent-imagery-panel';
   panel.className = 'panel-collapsible collapsed';
@@ -293,6 +148,10 @@ function fixture({ fetchImpl, controller = fakeController() } = {}) {
     },
     revokeObjectUrl: (url) => urls.revoked.push(url),
   });
+  cleanups.push(() => {
+    readout.destroy();
+    layer.destroy();
+  });
   const root = readout.root;
   const byId = (id) => root.find((node) => node.id === id);
   const byAction = (id) => root.find((node) => node.dataset.actionId === id);
@@ -304,6 +163,19 @@ function fixture({ fetchImpl, controller = fakeController() } = {}) {
   const part = (node, name) =>
     node.find((child) => child.classList.contains(name));
   const strip = byId('ri-strip');
+  const focus = strip.focus.bind(strip);
+  const blur = strip.blur.bind(strip);
+  strip.focused = strip.blurred = 0;
+  strip.focus = (options) => {
+    strip.focused++;
+    strip.focusOptions = options;
+    focus(options);
+  };
+  strip.blur = () => {
+    strip.blurred++;
+    blur();
+  };
+
   const key = (name, extra = {}) =>
     strip.dispatch('keydown', { key: name, ...extra });
   /** Enable, select BOX and land the catalog. */
@@ -386,7 +258,7 @@ test('the readout mounts in the rail body, hides while the layer is off and open
 test('the body is a fixed stack of seven blocks in a fixed order, each with a fixed height in the stylesheet', () => {
   const f = fixture();
   assert.deepEqual(
-    f.root.children.map((node) => node.id || node.className),
+    [...f.root.children].map((node) => node.id || node.className),
     [
       'ri-actions',
       'ri-notice',
@@ -520,7 +392,7 @@ test('no control changes place in the tree, no block is hidden and every fixed-h
         /height: 22px/,
       ],
       'details header': [
-        f.root.children.at(-1) === f.byId('ri-details')
+        [...f.root.children].at(-1) === f.byId('ri-details')
           ? header?.find((node) => node.classList.contains('rail-card-title'))
           : null,
         'rail-card-nowrap',
@@ -582,7 +454,7 @@ test('no control changes place in the tree, no block is hidden and every fixed-h
       const path = [];
       for (let at = node; at && at !== f.root; at = at.parentNode) {
         assert.equal(at.hidden, false, `${name} is never hidden`);
-        path.unshift(`${at.tagName}${at.parentNode.children.indexOf(at)}`);
+        path.unshift(`${at.tagName}${[...at.parentNode.children].indexOf(at)}`);
       }
       out[name] = path.join('/');
     }
@@ -704,7 +576,7 @@ test('cards carry thumbnail, date, sensor, cloud, START HERE and PREVIEW; the ch
     ],
     ['A', 'B', false, false],
   );
-  assert.equal(a.parentNode.children.indexOf(a), 0);
+  assert.equal([...a.parentNode.children].indexOf(a), 0);
   assert.equal(b.getAttribute('aria-label'), 'Pin Sep 18 as B');
   // A day is one slot only: B moves it.
   b.click();
@@ -923,7 +795,7 @@ test('an oversized box offers ZOOM IN in a fixed slot at the end of the notice l
   const zoom = f.byId('ri-zoom-in');
   assert.equal(zoom.tagName, 'BUTTON');
   assert.equal(zoom.textContent, 'ZOOM IN');
-  assert.equal(notice.children.at(-1), zoom, 'the right end of the line');
+  assert.equal([...notice.children].at(-1), zoom, 'the right end of the line');
   const reserved = () => [
     zoom.classList.contains('is-reserved'),
     zoom.disabled,
@@ -1152,7 +1024,7 @@ test('opening DETAILS scrolls its card into view, and closing it does not scroll
   await f.ready();
   // The body is 100 px high and scrolled 40 px; the card opens 150 px down.
   f.body.scrollTop = 40;
-  f.body.clientHeight = 100;
+  Object.defineProperty(f.body, 'clientHeight', { value: 100 });
   f.body.getBoundingClientRect = () => ({ top: 0 });
   const header = f
     .byId('ri-details')
@@ -1178,11 +1050,58 @@ test('destroy returns every listener, the divider and the panel state', async ()
   const split = f.splits.at(-1);
   f.readout.destroy();
   assert.equal(split.destroyed, true);
-  assert.equal(f.root.listenerCount(), 0);
-  assert.equal(f.strip.listenerCount(), 0);
+  const before = f.snap().focusIndex;
+  f.key('ArrowRight');
+  f.byAction('select-box').click();
+  assert.equal(f.snap().focusIndex, before, 'detached keyboard cannot act');
+  assert.equal(f.tool.isActive(), false, 'detached controls cannot act');
   assert.equal(f.root.parentNode, null);
   assert.equal(f.document.getElementById('recent-imagery-panel').hidden, true);
   f.layer.setMode('ab');
   assert.equal(f.splits.length, 1, 'no renders after destroy');
   f.readout.destroy();
+});
+
+test('thumbnail paints retain the focused card button and literal provider text', async () => {
+  const f = fixture();
+  await f.ready();
+  const button = f.chip(S18, 'a');
+  button.focus();
+  assert.equal(f.document.activeElement, button);
+  f.thumbnails.probe(L16, 'present');
+  assert.equal(f.chip(S18, 'a'), button);
+  assert.equal(f.document.activeElement, button);
+  const payload = '<img src=x onerror=alert(1)>';
+  // Render an untrusted upstream failure through the real export path.
+  const g = fixture({
+    fetchImpl: async () => {
+      throw new Error(payload);
+    },
+  });
+  await g.ready();
+  await g.readout.exportImage('a');
+  assert.equal(
+    g.byId('ri-notice-text').textContent,
+    `Export failed · ${payload}`,
+  );
+  assert.equal(g.byId('ri-notice-text').querySelector('img'), null);
+});
+
+test('an export settling after teardown creates no download or late view', async () => {
+  let finish;
+  const f = fixture({
+    fetchImpl: () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  });
+  await f.ready();
+  const pending = f.readout.exportImage('a');
+  assert.equal(f.byAction('export-a').disabled, true);
+  assert.equal(await f.readout.exportImage('a'), false, 'one request per slot');
+  f.readout.destroy();
+  finish(response());
+  assert.equal(await pending, false);
+  assert.deepEqual(f.urls, { created: [], revoked: [] });
+  assert.equal(f.body.children.length, 0);
 });

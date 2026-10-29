@@ -2711,6 +2711,8 @@
       "src/ui/locationViews/MiniStatus.vue",
       "src/ui/toolViews/DrawControls.vue",
       "src/ui/toolViews/GeoImport.vue",
+      "src/ui/RecentImageryView.vue",
+      "src/ui/recentImageryPresentation.js",
       "src/ui/primitives/ActionButton.vue"
     ],
     "external": [

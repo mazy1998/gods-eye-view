@@ -1144,5 +1144,9 @@
   "src/ui/styles/layer-browser.css",
   "src/ui/layerPanel.dom.test.mjs",
   "src/data/managerPanel.dom.test.mjs",
-  "src/ui/styles/weather-controls.css"
+  "src/ui/styles/weather-controls.css",
+  "src/ui/recentImagery.js",
+  "src/ui/recentImageryPresentation.js",
+  "src/ui/RecentImageryView.vue",
+  "src/ui/styles/recent-imagery-view.css"
 ]

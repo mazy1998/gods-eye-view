@@ -1,0 +1,110 @@
+/* Preserve the fixed-height readout; only its surface palette changes. */
+:root:not([data-ui-theme='cyber']) .recent-imagery-panel-inner.gev-surface {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-color: var(--gev-border-subtle);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  .recent-imagery-readout {
+  --weather-card-border: var(--gev-border-subtle);
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel-body {
+  scrollbar-color: var(--gev-border) var(--gev-control-bg);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-card {
+  background: var(--gev-surface-raised);
+  color: var(--gev-text);
+  border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-card:hover {
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-card.focused {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent-tint);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-card.preview {
+  box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-card.pinned {
+  box-shadow: inset 0 0 0 1px var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-thumb {
+  background: var(--gev-control-bg);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  :is(.ri-card-date, .ri-slot.lit .ri-slot-value, .rail-card-title) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  :is(
+    .ri-card-sensor,
+    .ri-card-cloud,
+    .ri-slot-value,
+    .ri-slot[data-state='preview'] .ri-slot-value,
+    .rail-card-line,
+    .rail-card-compact
+  ) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  :is(.ri-card-flag, .ri-card-start) {
+  color: var(--gev-accent-text);
+  background: var(--gev-surface-overlay);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-slot-tag {
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  .ri-slot.lit
+  .ri-slot-tag {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .data-toggle-chip {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  .data-toggle-chip:hover:not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  .data-toggle-chip.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-notice.warn {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .ri-notice.info {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber']) #recent-imagery-panel .rail-card {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  .rail-card-header:hover {
+  background: var(--gev-control-bg-hover);
+}
+:root:not([data-ui-theme='cyber'])
+  #recent-imagery-panel
+  :is(button, input, .ri-strip):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}

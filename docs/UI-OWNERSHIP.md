@@ -115,3 +115,17 @@ and setting; existing layer owners still own model, units, field and opacity.
 Changed bounds, disabled controls, removed cards and disposal invalidate drafts.
 The factory keeps collapse preferences, open-card choice, scroll placement and
 its existing subscriptions; the views only paint and dispatch those operations.
+
+## Recent imagery view
+
+The existing imagery layer owns AOI, sources, candidates, preview, A/B pins,
+mode, opacity, divider position and map-stack restoration. `recentImagery.js`
+retains keyboard/pointer routing, scroll measurements, disclosure and export
+progress. `RecentImageryView.vue` renders the layer snapshot plus that local
+presentation state; `recentImageryPresentation.js` only formats it.
+
+The readout remains mounted in `#recent-imagery-panel-body` through the existing
+factory and disposal path. Synchronous `mountView.update()` keeps focus and
+visible-card measurements in the same turn. The shared `imagerySplit` still
+owns the map-wide divider outside the panel; the view does not create another
+imagery layer, thumbnail loader, map lease or download service.
