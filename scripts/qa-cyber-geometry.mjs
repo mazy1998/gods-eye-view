@@ -50,6 +50,12 @@ export function compare(reference, actual, tolerance) {
     ? Math.abs(reference - actual) <= tolerance
     : reference === actual;
 }
+function hidesContent(e) {
+  return (
+    ['visible', 'visibility', 'opacity'].includes(e.property) ||
+    (e.property === 'display' && [e.reference, e.actual].includes('none'))
+  );
+}
 export function matchingException(
   entries,
   fixture,
@@ -59,6 +65,7 @@ export function matchingException(
 ) {
   return entries.find(
     (e) =>
+      !hidesContent(e) &&
       e.fixture === fixture &&
       (e.profile ?? 'default') === profile &&
       e.node === difference.node &&
@@ -70,6 +77,7 @@ export function matchingException(
 export function validateExceptions(entries) {
   for (const e of entries) {
     if (
+      hidesContent(e) ||
       !['layers', 'stories', 'tools', 'voice'].includes(e.fixture) ||
       !e.node ||
       !e.property ||
@@ -126,7 +134,7 @@ export async function audit(options) {
         await page.setRequestInterception(true);
         page.on('request', (r) => r.abort());
         await page.setContent(
-          `<html data-ui-theme="cyber"><head><style>${sheet}</style><style>*{animation:none!important;transition:none!important}body{margin:0}button,input,select{font-family:monospace!important}</style></head><body>${fixture.html}</body></html>`,
+          `<html data-ui-theme="cyber"><head><style>${sheet}</style><style>*{animation:none!important;transition:none!important}body{margin:0}.stories-controls .material-symbols-outlined{font-size:0!important}button,input,select{font-family:monospace!important}</style></head><body>${fixture.html}</body></html>`,
         );
         snapshots.push(
           await page.evaluate(() =>

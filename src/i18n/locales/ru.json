@@ -800,7 +800,6 @@
   "RESET CAL": "СБРОСИТЬ КАЛИБР.",
   "CAPTURE SHOT": "СДЕЛАТЬ КАДР",
   "UPDATE SHOT": "ОБНОВИТЬ КАДР",
-  "START": "СТАРТ",
   "EXPORT PRESETS": "ЭКСПОРТ ПРЕСЕТОВ",
   "IMPORT": "ИМПОРТ",
   "RUN LOG": "ЖУРНАЛ ЗАПУСКОВ",
@@ -3122,5 +3121,6 @@
   "Search places": "Поиск мест",
   "Map controls": "Управление картой",
   "Map status": "Состояние карты",
-  "Share view": "Поделиться видом"
+  "Share view": "Поделиться видом",
+  "Playlist": "Плейлист"
 }

@@ -47,6 +47,20 @@ test('geometry exceptions cannot exempt other nodes, properties or values', () =
   assert.equal(matchingException([e], 'voice', e, 1), undefined);
   assert.throws(() => validateExceptions([{ ...e, reason: '' }]));
   assert.throws(() => validateExceptions([{ ...e, fixture: '*' }]));
+  for (const patch of [
+    { property: 'display', reference: 'none', actual: 'grid' },
+    { property: 'display', reference: 'block', actual: 'none' },
+    { property: 'visible', reference: true, actual: false },
+    { property: 'visibility', reference: 'visible', actual: 'hidden' },
+    { property: 'opacity', reference: 1, actual: 0 },
+  ]) {
+    const hidden = { ...e, ...patch };
+    assert.throws(() => validateExceptions([hidden]));
+    assert.equal(matchingException([hidden], 'layers', hidden, 1), undefined);
+  }
+  validateExceptions([
+    { ...e, property: 'display', reference: 'block', actual: 'grid' },
+  ]);
 });
 
 test('host fixtures retain real panel roots, bodies and measured ancestor chains', async () => {
@@ -110,4 +124,31 @@ test('finder expectations cannot mix plain and icon-wrapper geometry', () => {
     matchingException([e], 'layers', e, 1, 'icon-finder'),
     undefined,
   );
+});
+
+test('Stories geometry uses the shared content order and enough cards to exercise its cap', async () => {
+  const { createFixtures } =
+    await import('../../scripts/qa-cyber-geometry-fixtures.mjs');
+  const { readFileSync } = await import('node:fs');
+  const { JSDOM } = await import('jsdom');
+  const fixtures = createFixtures((file) =>
+    readFileSync(new URL('../../' + file, import.meta.url), 'utf8'),
+  );
+  const stories = fixtures.find((f) => f.id === 'stories');
+  assert.equal(stories.profile, 'playlist-cards');
+  assert.equal(stories.structuralExceptions.length, 6);
+  const dom = new JSDOM(stories.html);
+  const doc = dom.window.document;
+  assert.equal(doc.querySelectorAll('.stories-recipe').length, 6);
+  assert.ok(
+    doc
+      .querySelector('#scene-start-btn')
+      .compareDocumentPosition(doc.querySelector('.stories-authoring')) &
+      dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  assert.equal(
+    doc.querySelector('#scene-start-btn').textContent.trim(),
+    'Play',
+  );
+  dom.window.close();
 });

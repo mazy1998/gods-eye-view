@@ -19,19 +19,23 @@
 }
 .stories-library {
   display: grid;
+  grid-auto-rows: min-content;
+  align-content: start;
   gap: var(--gev-space-2);
-  max-height: 260px;
+  max-height: min(42vh, 360px);
   overflow: auto;
 }
 .stories-recipe {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gev-space-1);
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  text-align: left;
+  min-height: 84px;
+  text-align: start;
   padding: var(--gev-space-3);
   border: 1px solid;
-  border-radius: var(--gev-radius-sm);
+  border-radius: var(--gev-radius-md);
   cursor: pointer;
   font: inherit;
   overflow-wrap: anywhere;
@@ -50,7 +54,7 @@
 :where(:root:not([data-ui-theme='cyber'])) .stories-controls .stories-recipe {
   color: var(--gev-text);
   background: var(--gev-surface-raised);
-  border-color: var(--gev-border);
+  border-color: var(--gev-border-subtle);
 }
 :where(:root:not([data-ui-theme='cyber']))
   .stories-controls
@@ -64,7 +68,7 @@
   .stories-recipe.active {
   color: var(--gev-accent-text);
   background: var(--gev-accent-tint);
-  border-color: var(--gev-accent-tint-border);
+  border-color: var(--gev-accent);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
@@ -286,4 +290,197 @@
     min-width: 72px;
     min-height: 44px;
   }
+}
+
+.stories-recipe-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-recipe small,
+:where(:root:not([data-ui-theme='cyber'])) .stories-selected small {
+  font-size: var(--gev-font-size-sm);
+}
+.stories-recipe-art {
+  display: grid;
+  place-items: center;
+  height: 56px;
+  border-radius: var(--gev-radius-sm);
+}
+.stories-recipe-art > span {
+  font-size: 28px;
+}
+.stories-recipe-arrow {
+  font-size: 20px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-recipe-art {
+  background: var(--gev-control-bg);
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-recipe small,
+:where(:root:not([data-ui-theme='cyber'])) .stories-selected small {
+  color: var(--gev-text-muted);
+}
+.stories-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+.stories-controls #scene-start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 0 100%;
+  min-height: 44px;
+  border-radius: var(--gev-radius-sm);
+}
+.stories-controls #scene-start-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-controls #scene-start-btn {
+  background: var(--gev-accent);
+  color: var(--gev-on-accent);
+  border-color: var(--gev-accent);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  #scene-start-btn:hover:not(:disabled) {
+  background: var(--gev-accent-text);
+  color: var(--gev-on-accent);
+  border-color: var(--gev-accent-text);
+}
+.stories-authoring {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.stories-authoring h3 {
+  margin: 0;
+  font: inherit;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  :is(.scene-btn, #scene-select):not(#scene-start-btn) {
+  min-height: 32px;
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(
+    .stories-selected,
+    .stories-recipe,
+    .stories-authoring h3,
+    .stories-controls #scene-start-btn
+  ) {
+  font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  #scene-start-btn:disabled {
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border-subtle);
+}
+/* Borrowed content shares the drawer's material; standalone and collapsed
+   panels retain their own frame and disclosure. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner {
+  padding: 0 4px 8px;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner {
+  background: transparent;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner::before {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner
+  > .panel-header {
+  flex: none;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-end;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner
+  > .panel-header
+  > .panel-title,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner
+  > .panel-header
+  > .panel-divider {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  .stories-controls {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  .stories-controls {
+  background: transparent;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner
+  > .panel-header
+  > .panel-collapse-btn {
+  border-color: var(--gev-border);
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #scene-panel:not(.collapsed)
+  > .scene-panel-inner
+  > .panel-header
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+
+/* Taller story content must not compress the retained Cyber panel header. */
+:where(:root[data-ui-theme='cyber'])
+  #scene-panel
+  > .scene-panel-inner
+  > .panel-header {
+  flex: none;
 }

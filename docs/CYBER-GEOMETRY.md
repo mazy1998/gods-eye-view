@@ -52,7 +52,16 @@ They do not exempt the Layers/Stories frame padding, title visibility or collaps
 control geometry. No wildcard exemption exists. New exceptions require an
 intentional layout reason and exact expected values; do not copy an unexplained
 failure into the allowlist. A mismatch at a different node, property or value
-still fails.
+still fails. Visible display-mode changes, such as block to grid, can have exact
+reasoned exceptions. Changes to or from `display: none`, or to visibility/opacity
+hiding, cannot be exempted; validation and matching both enforce this boundary.
+
+Stories uses its shared art-card, playlist-summary and transport order. The
+fixture fills the library with six cards to exercise its height cap. Exact
+structure differences reference the same reason manifest as the palette audit;
+frame padding, header/title/divider and collapse geometry remain strict. Offline
+icon ligatures are normalized within Stories to avoid text wrapping when remote
+fonts are blocked; both compared snapshots use the same normalization.
 
 The fixtures intentionally keep stable representative content so frame changes
 are easy to diagnose. A frame's natural height can differ when newly added

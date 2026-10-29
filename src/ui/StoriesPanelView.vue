@@ -4,7 +4,7 @@ import TabList from './primitives/TabList.vue';
 import ActionButton from './primitives/ActionButton.vue';
 import SceneLibrary from './SceneLibrary.vue';
 import SceneShotsView from './SceneShotsView.vue';
-import { t } from '../i18n/index.js';
+import { t, tn } from '../i18n/index.js';
 const props = defineProps({
   library: Object,
   presentation: Object,
@@ -13,6 +13,9 @@ const props = defineProps({
   actions: Object,
   listRevision: Number,
 });
+const playlistShots = computed(() =>
+  props.library.scenes.reduce((count, scene) => count + scene.shots.length, 0),
+);
 const selectedScene = computed(() =>
   props.library.scenes.find((s) => s.id === props.library.selectedSceneId),
 );
@@ -42,41 +45,6 @@ const percentage = computed(() =>
       :label="t('Stories')"
       @update:model-value="actions.setTab"
     />
-    <div class="scene-controls">
-      <select
-        id="scene-select"
-        class="gev-field"
-        :aria-label="t('Scene recipe')"
-        :value="library.selectedSceneId"
-        :disabled="presentation.running"
-        @change="actions.selectScene($event.target.value)"
-      >
-        <option
-          v-for="scene in library.scenes"
-          :key="scene.id"
-          :value="scene.id"
-        >
-          {{ scene.title }}
-        </option>
-      </select>
-    </div>
-    <div class="scene-controls">
-      <ActionButton
-        id="scene-new-btn"
-        class="scene-btn"
-        :label="t('New scene')"
-        :disabled="presentation.running"
-        @click="actions.createScene"
-      />
-      <ActionButton
-        id="scene-delete-btn"
-        class="scene-btn scene-btn-danger"
-        variant="danger"
-        :label="t('Delete scene')"
-        :disabled="presentation.running"
-        @click="actions.deleteScene"
-      />
-    </div>
     <section
       id="stories-browse"
       role="tabpanel"
@@ -120,26 +88,20 @@ const percentage = computed(() =>
         :actions="actions"
       />
     </section>
-    <div class="scene-controls" data-director-authoring>
-      <ActionButton
-        class="scene-btn"
-        :label="t('EDIT DETAILS')"
-        @click="actions.edit"
-      />
-      <ActionButton
-        class="scene-btn"
-        :label="t('SHARE SCENE')"
-        @click="actions.share"
-      />
+    <div class="stories-selected">
+      <strong>{{ t('Playlist') }}</strong>
+      <small>{{ tn(playlistShots, '{count} shot', '{count} shots') }}</small>
     </div>
-    <div class="scene-controls">
+    <div class="scene-controls stories-transport">
       <ActionButton
         id="scene-start-btn"
         class="scene-btn"
-        :label="t('START')"
         :disabled="presentation.running"
         @click="actions.start"
-      />
+        ><svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z" /></svg
+        >{{ t('Play') }}</ActionButton
+      >
       <ActionButton
         id="scene-stop-btn"
         class="scene-btn scene-btn-danger"
@@ -164,35 +126,85 @@ const percentage = computed(() =>
       ></div>
     </div>
     <div id="scene-status">{{ presentation.status }}</div>
-    <div class="scene-controls">
-      <ActionButton
-        id="scene-export-btn"
-        class="scene-btn"
-        :label="t('EXPORT PRESETS')"
-        :disabled="presentation.running"
-        @click="actions.export"
-      />
-      <ActionButton
-        id="scene-import-btn"
-        class="scene-btn"
-        :label="t('IMPORT')"
-        :disabled="presentation.running"
-        @click="actions.import"
-      />
-      <ActionButton
-        id="scene-download-btn"
-        class="scene-btn"
-        :label="t('RUN LOG')"
-        :disabled="!presentation.hasRun"
-        @click="actions.download"
-      />
-      <input
-        id="scene-import-file"
-        type="file"
-        accept="application/json,.json"
-        hidden
-        @change="actions.importFile($event.target)"
-      />
-    </div>
+    <section class="stories-authoring" :aria-label="t('Scene recipe')">
+      <h3>{{ t('Scene recipe') }}</h3>
+      <div class="scene-controls">
+        <select
+          id="scene-select"
+          class="gev-field"
+          :aria-label="t('Scene recipe')"
+          :value="library.selectedSceneId"
+          :disabled="presentation.running"
+          @change="actions.selectScene($event.target.value)"
+        >
+          <option
+            v-for="scene in library.scenes"
+            :key="scene.id"
+            :value="scene.id"
+          >
+            {{ scene.title }}
+          </option>
+        </select>
+      </div>
+      <div class="scene-controls">
+        <ActionButton
+          id="scene-new-btn"
+          class="scene-btn"
+          :label="t('New scene')"
+          :disabled="presentation.running"
+          @click="actions.createScene"
+        />
+        <ActionButton
+          id="scene-delete-btn"
+          class="scene-btn scene-btn-danger"
+          variant="danger"
+          :label="t('Delete scene')"
+          :disabled="presentation.running"
+          @click="actions.deleteScene"
+        />
+      </div>
+      <div class="scene-controls" data-director-authoring>
+        <ActionButton
+          class="scene-btn"
+          :label="t('EDIT DETAILS')"
+          @click="actions.edit"
+        />
+        <ActionButton
+          class="scene-btn"
+          :label="t('SHARE SCENE')"
+          @click="actions.share"
+        />
+      </div>
+      <div class="scene-controls">
+        <ActionButton
+          id="scene-export-btn"
+          class="scene-btn"
+          :label="t('EXPORT PRESETS')"
+          :disabled="presentation.running"
+          @click="actions.export"
+        />
+        <ActionButton
+          id="scene-import-btn"
+          class="scene-btn"
+          :label="t('IMPORT')"
+          :disabled="presentation.running"
+          @click="actions.import"
+        />
+        <ActionButton
+          id="scene-download-btn"
+          class="scene-btn"
+          :label="t('RUN LOG')"
+          :disabled="!presentation.hasRun"
+          @click="actions.download"
+        />
+        <input
+          id="scene-import-file"
+          type="file"
+          accept="application/json,.json"
+          hidden
+          @change="actions.importFile($event.target)"
+        />
+      </div>
+    </section>
   </div>
 </template>

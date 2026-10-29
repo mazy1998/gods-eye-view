@@ -1,0 +1,45 @@
+[
+  {
+    "id": "recipe-art-cards",
+    "reason": "Story selection uses 84px cards with a decorative local art slot in every appearance. Cyber retains its own palette and mono typography, with normal-weight card titles.",
+    "expected": { "minimumHeight": 84, "columns": "56px minmax(0, 1fr) 18px" }
+  },
+  {
+    "id": "primary-transport",
+    "reason": "The existing start operation is presented as full-width Play with a 44px minimum target in every appearance; Stop and Next remain reachable.",
+    "expected": { "minimumHeight": 44, "flexBasis": "100%", "label": "Play" }
+  },
+  {
+    "id": "library-cap",
+    "reason": "The existing story scroller uses a larger capped height to show the selection cards; it retains the same scroll owner.",
+    "expected": {
+      "maximumHeight": "min(42vh, 360px)",
+      "previousMaximumHeight": "260px"
+    }
+  },
+  {
+    "id": "authoring-order",
+    "reason": "Recipe selection, New and Delete follow playback in the authoring section. Reading and Tab order follow that visual order for every appearance.",
+    "expected": {
+      "order": [
+        "stories-browse",
+        "stories-create",
+        "stories-selected",
+        "stories-transport",
+        "scene-progress",
+        "scene-status",
+        "stories-authoring"
+      ]
+    }
+  },
+  {
+    "id": "playlist-summary",
+    "reason": "A new summary names the playlist and counts all queued shots above Play, matching the unchanged start operation.",
+    "expected": { "label": "Playlist", "count": "all playlist shots" }
+  },
+  {
+    "id": "start-label",
+    "reason": "Play is the visible label of the existing start operation in all appearances. The operation and keyboard activation remain unchanged.",
+    "expected": { "previousLabel": "START", "label": "Play" }
+  }
+]

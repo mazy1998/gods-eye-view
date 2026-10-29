@@ -1,4 +1,7 @@
-import { fixtures as palettes } from './qa-cyber-precedence-fixtures.mjs';
+import {
+  fixtures as palettes,
+  storiesFixture,
+} from './qa-cyber-precedence-fixtures.mjs';
 import { JSDOM } from 'jsdom';
 /** Fixed content isolates CSS geometry from feeds, fonts and app startup. */
 const host = (html) =>
@@ -132,16 +135,52 @@ export function createFixtures(read) {
         rows.textContent = 'Layer rows';
         view.append(rows);
         mount.replaceChildren(view);
-      } else
-        root
-          .querySelector('#scene-controls-body')
-          .replaceChildren(original.content.querySelector('.stories-controls'));
+      } else {
+        const source = read('src/ui/StoriesPanelView.vue');
+        const markup = doc.createElement('template');
+        markup.innerHTML = source.slice(
+          source.indexOf('<template>') + 10,
+          source.lastIndexOf('</template>'),
+        );
+        if (markup.content.querySelector('.stories-authoring')) {
+          profile = 'playlist-cards';
+          const content = doc.createElement('template');
+          content.innerHTML = storiesFixture.html;
+          const view = content.content.querySelector('.stories-controls');
+          const probes = {
+            library: '.stories-library',
+            recipe: '.stories-recipe',
+            art: '.stories-recipe-art',
+            summary: '.stories-selected',
+            play: '#scene-start-btn',
+            select: '#scene-select',
+            authoring: '.stories-authoring',
+          };
+          for (const [name, selector] of Object.entries(probes))
+            view.querySelector(selector).dataset.geometry = name;
+          const library = view.querySelector('.stories-library');
+          for (let index = 0; index < 5; index++) {
+            const card = library.firstElementChild.cloneNode(true);
+            card.removeAttribute('data-geometry');
+            library.append(card);
+          }
+          root.querySelector('#scene-controls-body').replaceChildren(view);
+        } else
+          root
+            .querySelector('#scene-controls-body')
+            .replaceChildren(
+              original.content.querySelector('.stories-controls'),
+            );
+      }
     }
     return {
       id: sample.id,
       profile,
       html: host(root.outerHTML),
-      structuralExceptions,
+      structuralExceptions:
+        sample.id === 'stories' && profile === 'playlist-cards'
+          ? storiesFixture.structuralExceptions
+          : structuralExceptions,
     };
   });
   dom.window.close();
@@ -206,7 +245,7 @@ const existingExceptions = [
   reason: reasons[fixture],
 }));
 
-export const exceptions = [
+const portExceptions = [
   ...existingExceptions,
   ...[
     ['import-frame', 'height', 31, 64],
@@ -238,5 +277,53 @@ export const exceptions = [
     actual,
     reason:
       'The drawer hosts these existing padded tool cards at full width with 38px minimum button targets. These exact inset and target-size differences from the original stylesheet are intentional; visibility, display and frame modes are not exempted.',
+  })),
+];
+
+const structureReasons = Object.fromEntries(
+  storiesFixture.structuralExceptions.map((e) => [e.id, e.reason]),
+);
+export const exceptions = [
+  ...portExceptions,
+  ...[
+    ['library', 'display', 'block', 'grid', 'library-cap'],
+    ['recipe', 'display', 'inline-block', 'grid', 'recipe-art-cards'],
+    ['art', 'display', 'inline', 'grid', 'recipe-art-cards'],
+    ['summary', 'display', 'block', 'flex', 'playlist-summary'],
+    ['play', 'display', 'block', 'flex', 'primary-transport'],
+    ['authoring', 'display', 'block', 'flex', 'authoring-order'],
+    ['frame', 'height', 645.328125, 700, 'library-cap'],
+    ['library', 'width', 350, 332, 'library-cap'],
+    ['library', 'height', 38, 360, 'library-cap'],
+    ['recipe', 'width', 84.28125, 332, 'recipe-art-cards'],
+    ['recipe', 'height', 19, 84, 'recipe-art-cards'],
+    ['recipe', 'paddingTop', 0, 12, 'recipe-art-cards'],
+    ['recipe', 'paddingRight', 0, 12, 'recipe-art-cards'],
+    ['recipe', 'paddingBottom', 0, 12, 'recipe-art-cards'],
+    ['recipe', 'paddingLeft', 0, 12, 'recipe-art-cards'],
+    ['art', 'width', 0, 56, 'recipe-art-cards'],
+    ['art', 'height', 15, 56, 'recipe-art-cards'],
+    ['art', 'x', 2, 13, 'recipe-art-cards'],
+    ['art', 'y', 2, 14, 'recipe-art-cards'],
+    ['summary', 'width', 350, 332, 'playlist-summary'],
+    ['summary', 'height', 19, 50, 'playlist-summary'],
+    ['summary', 'x', 0, 9, 'playlist-summary'],
+    ['summary', 'y', 193, 561, 'playlist-summary'],
+    ['summary', 'paddingTop', 0, 12, 'playlist-summary'],
+    ['play', 'width', 111.328125, 332, 'primary-transport'],
+    ['play', 'height', 115.328125, 44, 'primary-transport'],
+    ['authoring', 'width', 350, 332, 'authoring-order'],
+    ['authoring', 'height', 183, 189, 'authoring-order'],
+    ['authoring', 'x', 0, 9, 'authoring-order'],
+    ['authoring', 'y', 372.328125, 776, 'authoring-order'],
+    ['select', 'width', 350, 332, 'authoring-order'],
+  ].map(([node, property, reference, actual, reason]) => ({
+    fixture: 'stories',
+    profile: 'playlist-cards',
+    node,
+    property,
+    reference,
+    actual,
+    reason: structureReasons[reason],
   })),
 ];

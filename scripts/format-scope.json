@@ -1191,5 +1191,6 @@
   "scripts/qa-cyber-geometry.mjs",
   "scripts/qa-cyber-geometry-fixtures.mjs",
   "src/tooling/cyberGeometry.test.mjs",
-  "scripts/qa-cyber-layers-structure.json"
+  "scripts/qa-cyber-layers-structure.json",
+  "scripts/qa-cyber-stories-structure.json"
 ]

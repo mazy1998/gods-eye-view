@@ -521,3 +521,33 @@ test('collapsed Scenes shows only its header and keeps the independent playback 
     f.restore();
   }
 });
+
+test('Play summary counts the playlist while starting from the selected scene', () => {
+  const f = fixture();
+  try {
+    f.state.scenes.push({
+      id: 'scene-b',
+      title: 'B',
+      shots: [
+        { id: 'b-1', title: 'B1', durationSec: 1, holdSec: 1, visual: {} },
+        { id: 'b-2', title: 'B2', durationSec: 1, holdSec: 1, visual: {} },
+      ],
+    });
+    f.state.selectedSceneId = 'scene-b';
+    f.state.selectedShotId = 'b-1';
+    f.owner.read = () => ({ ...f.state, scenes: [...f.state.scenes] });
+    f.publish('shots-changed');
+    assert.equal(
+      document.querySelector('.stories-selected strong').textContent,
+      'Playlist',
+    );
+    assert.equal(
+      document.querySelector('.stories-selected small').textContent.trim(),
+      '3 shots',
+    );
+    f.elements.start.click();
+    assert.deepEqual(f.calls, [['start', 'scene-b']]);
+  } finally {
+    f.restore();
+  }
+});

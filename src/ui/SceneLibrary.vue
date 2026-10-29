@@ -20,10 +20,20 @@ defineProps({
       :data-scene-recipe-id="scene.id"
       @click="select(scene.id)"
     >
-      <span>{{ scene.title }}</span>
-      <small>{{
-        tn(scene.shots.length, '{count} shot', '{count} shots')
-      }}</small>
+      <span class="stories-recipe-art" aria-hidden="true"
+        ><span class="material-symbols-outlined">movie</span></span
+      >
+      <span class="stories-recipe-copy"
+        ><span class="stories-recipe-title">{{ scene.title }}</span>
+        <small>{{
+          tn(scene.shots.length, '{count} shot', '{count} shots')
+        }}</small></span
+      >
+      <span
+        class="material-symbols-outlined stories-recipe-arrow"
+        aria-hidden="true"
+        >chevron_right</span
+      >
     </button>
   </div>
 </template>

@@ -2715,7 +2715,6 @@
   "Scene recipe": "场景方案",
   "CAPTURE SHOT": "保存镜头",
   "UPDATE SHOT": "更新镜头",
-  "START": "启动",
   "EXPORT PRESETS": "导出预设",
   "IMPORT": "导入",
   "RUN LOG": "运行日志",
@@ -2909,5 +2908,6 @@
   "Search places": "搜索地点",
   "Map controls": "地图控件",
   "Map status": "地图状态",
-  "Share view": "分享视图"
+  "Share view": "分享视图",
+  "Playlist": "播放列表"
 }

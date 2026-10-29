@@ -760,7 +760,6 @@
   "Scene recipe": "Receta de escena",
   "CAPTURE SHOT": "CAPTURAR PLANO",
   "UPDATE SHOT": "ACTUALIZAR PLANO",
-  "START": "INICIAR",
   "EXPORT PRESETS": "EXPORTAR PREAJUSTES",
   "IMPORT": "IMPORTAR",
   "RUN LOG": "REGISTRO DE EJECUCIÓN",
@@ -3051,5 +3050,6 @@
   "Search places": "Buscar lugares",
   "Map controls": "Controles del mapa",
   "Map status": "Estado del mapa",
-  "Share view": "Compartir vista"
+  "Share view": "Compartir vista",
+  "Playlist": "Lista de reproducción"
 }
