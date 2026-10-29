@@ -1,3 +1,4 @@
+import { flushViews } from '../ui/ownerState.js';
 import { interruptGlobeRotation } from '../cameraVerbs.js';
 import {
   layerSnapshot,
@@ -1049,7 +1050,7 @@ export function createGevActionRunner({
       setPanelOpen(styleManager, 'data-panel', true);
       const focusedLayer =
         layerId && dataManager.layers.has(layerId)
-          ? focusDataLayerRow(layerId)
+          ? await focusDataLayerRow(layerId)
           : null;
       return {
         ok: true,
@@ -3190,7 +3191,15 @@ function normalizeCockpitAction(value) {
   return null;
 }
 
-function focusDataLayerRow(layerId) {
+async function focusDataLayerRow(layerId) {
+  // A filter/tab reset paints on Vue's scheduler; wait for that paint before
+  // measuring and scrolling the row (K6).
+  document
+    .getElementById('data-toggles')
+    ?.dispatchEvent(
+      new CustomEvent('gev:focus-layer-row', { detail: layerId }),
+    );
+  await flushViews();
   const row = document.querySelector(
     `#data-toggles [data-layer-id="${CSS.escape(layerId)}"]`,
   );

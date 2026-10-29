@@ -1,0 +1,457 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { container } from '../testSupport/componentDom.mjs';
+
+const { LayerPanel } = await import('./layerPanel.js');
+const { createStateChannel } = await import('../app/stateChannel.js');
+
+function fixture(t, overrides = {}) {
+  const layers = [
+    {
+      id: 'flights',
+      name: 'Flights',
+      icon: '*',
+      source: 'Fixture',
+      enabled: false,
+      showInTogglePanel: true,
+      stats: {},
+    },
+  ];
+  const panel = new LayerPanel({
+    getLayers: () => layers,
+    isEnabled: (id) =>
+      Boolean(layers.find((layer) => layer.id === id)?.enabled),
+    setEnabled() {},
+    setLayerParams() {},
+    getRowControls: () => null,
+    hasRowControls: () => false,
+    subscribeRowControls() {},
+    ...overrides,
+  });
+  t.after(() => panel.destroy());
+  panel.mount(container);
+  return { panel, layers };
+}
+
+test('busy is synchronous and focusable, repeated activation is guarded, and detached controls are revoked', async (t) => {
+  let finish,
+    calls = 0;
+  const { panel } = fixture(t, {
+    setEnabled: () => {
+      calls++;
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    },
+  });
+  const button = container.querySelector('.data-toggle-btn');
+  button.focus();
+  button.click();
+  button.click();
+  assert.equal(calls, 1);
+  assert.equal(button.getAttribute('aria-busy'), 'true');
+  assert.equal(button.disabled, false);
+  assert.equal(button.textContent, 'OFF');
+  assert.equal(document.activeElement, button);
+  panel.mount(container);
+  button.click();
+  assert.equal(calls, 1);
+  finish();
+  await Promise.resolve();
+  const next = container.querySelector('.data-toggle-btn');
+  assert.equal(next.getAttribute('aria-busy'), 'false');
+  panel.destroy();
+  next.click();
+  assert.equal(calls, 1);
+});
+
+test('voice reveal makes filtered rows visible without changing their English name', async (t) => {
+  const { nextTick } = await import('vue');
+  fixture(t);
+  const input = container.querySelector('input[type=search]');
+  input.value = 'no such layer';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
+  const row = container.querySelector('[data-layer-id=flights]');
+  assert.equal(row.style.display, 'none');
+  container.dispatchEvent(
+    new CustomEvent('gev:focus-layer-row', { detail: 'flights' }),
+  );
+  await nextTick();
+  assert.notEqual(row.style.display, 'none');
+  assert.equal(row.dataset.layerName, 'Live Flights');
+  assert.equal(input.value, '');
+});
+
+test('My data uses the import owner channel and actions, without becoming a registered layer', async (t) => {
+  const { nextTick } = await import('vue');
+  const { panel, layers } = fixture(t);
+  let files = [
+    {
+      id: 'file-1',
+      name: 'Route.geojson',
+      format: 'GeoJSON',
+      entityCount: 2,
+      visible: true,
+    },
+  ];
+  const channel = createStateChannel(() => ({ files }));
+  const calls = [];
+  const search = container.querySelector('input[type=search]');
+  search.focus();
+  panel.attachImports({
+    channel,
+    list: () => files,
+    setVisible(id, visible) {
+      calls.push(['visible', id, visible]);
+      files = files.map((file) => ({ ...file, visible }));
+      channel.publish();
+    },
+    flyTo: (id) => calls.push(['fly', id]),
+    remove(id) {
+      calls.push(['remove', id]);
+      files = [];
+      channel.publish();
+    },
+  });
+  assert.equal(container.querySelector('input[type=search]'), search);
+  assert.equal(document.activeElement, search);
+  container.querySelectorAll('[role=tab]')[2].click();
+  await nextTick();
+  const imported = container.querySelector('[data-import-id=file-1]');
+  imported.querySelector('[role=switch]').click();
+  assert.deepEqual(calls[0], ['visible', 'file-1', false]);
+  assert.equal(
+    imported.querySelector('.gev-icon-button').getAttribute('aria-label'),
+    'Fly to Route.geojson',
+  );
+  imported.querySelector('.gev-icon-button').click();
+  imported.querySelector('.gev-action-button').click();
+  assert.deepEqual(calls.slice(1), [
+    ['fly', 'file-1'],
+    ['remove', 'file-1'],
+  ]);
+  assert.equal(container.querySelector('[data-import-id]'), null);
+  assert.equal(layers.length, 1);
+  panel.attachImports(null);
+  assert.equal(container.querySelector('input[type=search]'), search);
+  files = [{ id: 'stale', name: 'Detached.geojson' }];
+  channel.publish();
+  assert.equal(container.querySelector('[data-import-id]'), null);
+  panel.destroy();
+  channel.publish();
+  channel.destroy();
+});
+
+test('readout chevrons open the existing detail host and detached actions are revoked', (t) => {
+  const calls = [];
+  const { panel, layers } = fixture(t, {
+    getRowControls: () => ({ readout: true }),
+    openDetails: (id) => calls.push(id),
+  });
+  layers[0].id = 'weather-radar';
+  panel._refreshTogglePanel();
+  const details = container.querySelector('.layer-details');
+  assert.equal(details.getAttribute('aria-controls'), 'weather-panel');
+  assert.equal(details.hasAttribute('aria-expanded'), false);
+  assert.equal(details.disabled, true);
+  details.click();
+  assert.deepEqual(calls, []);
+  layers[0].enabled = true;
+  panel._refreshTogglePanel();
+  assert.equal(details.disabled, false);
+  details.click();
+  assert.deepEqual(calls, ['weather-panel']);
+  panel.destroy();
+  details.click();
+  assert.deepEqual(calls, ['weather-panel']);
+});
+
+test('descriptor refresh preserves focused chips and dispatches only the latest descriptor', (t) => {
+  let active = false,
+    changed,
+    invoked = 0;
+  const { panel, layers } = fixture(t, {
+    hasRowControls: () => true,
+    subscribeRowControls: (_id, callback) => {
+      changed = callback;
+      return () => {
+        changed = null;
+      };
+    },
+    getRowControls: () => ({
+      chips: [
+        {
+          id: 'choice',
+          label: active ? 'New' : 'Old',
+          onClick: () => {
+            invoked += active ? 10 : 1;
+          },
+        },
+      ],
+    }),
+  });
+  layers[0].enabled = true;
+  panel._refreshTogglePanel();
+  const chip = container.querySelector('[data-chip-id=choice]');
+  chip.focus();
+  active = true;
+  changed();
+  panel._flushRowControlsRefresh();
+  assert.equal(container.querySelector('[data-chip-id=choice]'), chip);
+  assert.equal(document.activeElement, chip);
+  chip.click();
+  assert.equal(invoked, 10);
+  panel.destroy();
+  assert.equal(changed, null);
+  chip.click();
+  assert.equal(invoked, 10);
+});
+
+test('readout rows contain only toggles and metadata; ordinary rows retain controls', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const f = {
+    document,
+    container,
+    find: (fn) => [...container.querySelectorAll('*')].find(fn),
+  };
+  const previousDocument = globalThis.document;
+  globalThis.document = f.document;
+  const ids = [
+    'wind',
+    'weather-radar',
+    'weather-satellite',
+    'weather-lightning',
+    'weather-cyclones',
+    'other',
+  ];
+  let refresh;
+  const layers = ids.map((id) => ({
+    id,
+    name: id,
+    icon: '*',
+    source: 'Source',
+    enabled: true,
+    showInTogglePanel: true,
+    stats: {},
+  }));
+  const calls = [];
+  const panel = new LayerPanel({
+    getLayers: () => layers,
+    isEnabled: () => true,
+    setEnabled: (...args) => calls.push(args),
+    setLayerParams: (...args) => calls.push(args),
+    hasRowControls: () => true,
+    subscribeRowControls: (_id, callback) => {
+      refresh = callback;
+    },
+    getRowControls: (id) => ({
+      readout: id !== 'other',
+      summary: { status: 'Loading' },
+      info: 'Detailed time',
+      chips: [{ id: 'config', label: 'Soft', params: { opacity: 'light' } }],
+      legend: [{ label: 'Rain', color: '#abcdef' }],
+      list: {
+        items: [{ id: 'storm', text: 'Storm', params: { focus: true } }],
+      },
+    }),
+  });
+  try {
+    panel.mount(f.container);
+    for (const id of ids.slice(0, -1)) {
+      const row = f.find((n) => n.dataset.layerId === id);
+      assert.equal(row.children.length, 2);
+      assert.ok(row.querySelector('.data-name'));
+      assert.ok(row.querySelector('.data-toggle-meta'));
+      for (const cls of [
+        'data-toggle-chip',
+        'data-count',
+        'data-toggle-controls',
+        'data-toggle-controls-status',
+        'data-row-list',
+      ])
+        assert.equal(row.querySelector(`.${cls}`), null);
+      row.querySelector('.data-toggle-btn').click();
+    }
+    assert.deepEqual(
+      calls.map(([id]) => id),
+      ids.slice(0, -1),
+    );
+    const ordinary = f.find((n) => n.dataset.layerId === 'other');
+    assert.equal(
+      ordinary.querySelector('.data-toggle-controls-info').textContent,
+      'Detailed time',
+    );
+    assert.ok(ordinary.querySelector('.data-toggle-legend-item'));
+    ordinary.querySelector('.data-toggle-chip').click();
+    assert.deepEqual(calls.at(-1), [
+      'other',
+      { opacity: 'light' },
+      { origin: 'user' },
+    ]);
+    assert.equal(typeof refresh, 'function');
+  } finally {
+    panel.destroy();
+    globalThis.document = previousDocument;
+  }
+});
+
+test('the Recent Imagery readout mounts in its rail body like the weather readout and is rebuilt or released with the panel', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const f = {
+    document,
+    container,
+    find: (fn) => [...container.querySelectorAll('*')].find(fn),
+  };
+  const body = f.document.createElement('div');
+  body.id = 'recent-imagery-panel-body';
+  document.body.append(body);
+  const previousDocument = globalThis.document;
+  globalThis.document = f.document;
+  const mounted = [];
+  const factory = (container) => {
+    const readout = {
+      container,
+      destroyed: false,
+      destroy() {
+        this.destroyed = true;
+      },
+    };
+    mounted.push(readout);
+    return readout;
+  };
+  const panel = new LayerPanel({
+    getLayers: () => [],
+    isEnabled: () => false,
+    setEnabled() {},
+    setLayerParams() {},
+    hasRowControls: () => false,
+    subscribeRowControls() {},
+    getRowControls: () => null,
+  });
+  try {
+    panel.attachRecentImagery(factory);
+    assert.equal(mounted.length, 0, 'no body before the panel mounts');
+    panel.mount(f.container);
+    assert.equal(mounted.length, 1);
+    assert.equal(mounted[0].container, body);
+    panel.mount(f.container);
+    assert.equal(mounted[0].destroyed, true, 'a remount rebuilds it');
+    assert.equal(mounted.length, 2);
+    panel.attachRecentImagery(null);
+    assert.equal(mounted[1].destroyed, true);
+    panel.attachRecentImagery(factory);
+    assert.equal(mounted.length, 3);
+    panel.destroy();
+    assert.equal(mounted[2].destroyed, true);
+    panel.attachRecentImagery(factory);
+    assert.equal(mounted.length, 3, 'a destroyed panel mounts nothing');
+  } finally {
+    panel.destroy();
+    globalThis.document = previousDocument;
+  }
+});
+
+test('the footer follows the one clear transaction synchronously from footer, legacy control and voice', async (t) => {
+  const { ContextControls } = await import('./contextControls.js');
+  const { bindClearLayersControl } = await import('./clearLayersControl.js');
+  let legacyControl,
+    settle,
+    calls = 0;
+  const owner = new ContextControls({
+    elements: {},
+    installations: {},
+    actions: {
+      getCockpit: () => null,
+      setClearBusy: (busy) => legacyControl?.setBusy(busy),
+      showToast() {},
+    },
+  });
+  owner._syncContextModeButtons = () => {};
+  owner._dataManager = {
+    clearSelectedLayers: () => {
+      calls++;
+      return new Promise((resolve) => {
+        settle = resolve;
+      });
+    },
+  };
+  const { panel } = fixture(t, {
+    clearChannel: owner.clearChannel,
+    clearSelectedLayers: () => owner.clearSelectedLayers(),
+  });
+  const legacy = document.body.appendChild(document.createElement('button'));
+  legacyControl = bindClearLayersControl(legacy, () =>
+    owner.clearSelectedLayers(),
+  );
+  t.after(() => {
+    legacyControl.destroy();
+    owner.stop();
+  });
+  const footer = container.querySelector('.layer-footer button');
+  for (const start of [
+    () => footer.click(),
+    () => legacy.click(),
+    () => owner.clearSelectedLayers(),
+  ]) {
+    footer.focus();
+    start();
+    const pending = owner._clearSelectedLayersPromise;
+    assert.equal(footer.getAttribute('aria-busy'), 'true');
+    assert.equal(footer.getAttribute('aria-disabled'), 'true');
+    assert.equal(legacy.getAttribute('aria-busy'), 'true');
+    assert.equal(footer.disabled, false);
+    assert.equal(document.activeElement, footer);
+    const before = calls;
+    footer.click();
+    assert.equal(owner.clearSelectedLayers(), pending);
+    assert.equal(calls, before);
+    settle({
+      targetIds: ['flights'],
+      clearedIds: ['flights'],
+      notClearedIds: [],
+    });
+    await pending;
+    assert.equal(footer.getAttribute('aria-busy'), 'false');
+    assert.equal(footer.getAttribute('aria-disabled'), 'false');
+    assert.equal(legacy.getAttribute('aria-busy'), 'false');
+  }
+  assert.equal(calls, 3);
+  panel.destroy();
+  footer.click();
+  assert.equal(calls, 3);
+});
+
+test('an already-current list item scrolls into view on mount and remount', async (t) => {
+  const { nextTick } = await import('vue');
+  const previous = HTMLElement.prototype.scrollIntoView;
+  const scrolled = [];
+  HTMLElement.prototype.scrollIntoView = function () {
+    scrolled.push(this.dataset.listItemId);
+  };
+  t.after(() => {
+    if (previous) HTMLElement.prototype.scrollIntoView = previous;
+    else delete HTMLElement.prototype.scrollIntoView;
+  });
+  const { panel } = fixture(t, {
+    getLayers: () => [
+      {
+        id: 'directions',
+        name: 'Directions',
+        enabled: true,
+        showInTogglePanel: true,
+        stats: {},
+      },
+    ],
+    getRowControls: () => ({
+      list: {
+        items: [{ id: 'step-2', current: true, text: 'Continue', lead: '2' }],
+      },
+    }),
+  });
+  await nextTick();
+  assert.deepEqual(scrolled, ['step-2']);
+  panel.mount(container);
+  await nextTick();
+  assert.deepEqual(scrolled, ['step-2', 'step-2']);
+});

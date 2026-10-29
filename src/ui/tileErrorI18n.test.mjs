@@ -5,13 +5,13 @@ import assert from 'node:assert/strict';
 import { setLocale } from '../i18n/index.js';
 import { createVectorTileSource } from '../sources/vectorTiles.js';
 
+const { LayerPanel } = await import('./layerPanel.js');
 globalThis.document ??= {
   getElementById: () => null,
   addEventListener() {},
   removeEventListener() {},
   hidden: false,
 };
-const { LayerPanel } = await import('./layerPanel.js');
 const { localizeLoadingPresentation } = await import('./shellFeedback.js');
 
 const row = (id, error) =>

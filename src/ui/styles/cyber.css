@@ -479,6 +479,19 @@
   font-family: var(--font-mono);
 }
 
+:root[data-ui-theme='cyber'] .layer-browser :is(.layer-footer, .layer-import) {
+  border-color: var(--glass-border);
+}
+
+/* The new Layers disclosure is a transparent glyph beside a row. Cyber's
+   generic button state rules below still own its hover/pressed treatment. */
+:root[data-ui-theme='cyber'] :where(.layer-browser .layer-details) {
+  color: var(--text-dim);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 :root[data-ui-theme='cyber']
   :where(
     button:hover,

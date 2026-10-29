@@ -28,6 +28,11 @@ export function createApplicationData({
   });
   const presentation = new LayerPresentation(dataManager, {
     weatherClock: catalog?.weatherClock,
+    channel: styleManager._layerBindings?.channel,
+    clearChannel: styleManager._contextControls?.clearChannel,
+    clearSelectedLayers: () => styleManager.clearSelectedLayers(),
+    openDetails: (panelId) =>
+      styleManager.setPanelCollapsed(panelId, false, { explicit: true }),
   });
   defer(() => presentation.destroy());
   onData?.(dataManager);

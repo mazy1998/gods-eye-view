@@ -74,6 +74,11 @@ search, results, mini-status and pin mounts before destroying the owners.
 The result's Fly to action reruns the existing lookup with its retained query;
 it does not bypass authority checks or navigate to raw provider data.
 
+The Layers footer reads `ContextControls.clearChannel` (`{busy}`), published
+synchronously at the existing clear transaction's `setClearBusy()` boundaries.
+Toolbar, footer and voice still use that owner's single clear promise. Busy
+presentation stays focusable; no view starts its own clear transaction or loop.
+
 ## Import and Draw views
 
 The existing `#geo-import-group` and `#draw-group` containers can move intact

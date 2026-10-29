@@ -68,6 +68,8 @@ export function createApplicationTools({
     subscribeMapSource: (listener) => mapStackController?.subscribe?.(listener),
   });
   defer(() => geoFileImport?.destroy());
+  data.presentation?.attachImports?.(geoFileImport);
+  defer(() => data.presentation?.attachImports?.(null));
   // DATA ▸ Recent Imagery: the box tool claims the pointer like Draw and the
   // panel lives on the right rail, so both belong to the application
   // lifetime. The tileset lets the layer drape while the globe is hidden.

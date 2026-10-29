@@ -1,5 +1,7 @@
-import { syncChipGroup } from './chipGroup.js';
-import { syncRowList } from './rowList.js';
+import { mountView } from './mountView.js';
+import LayerPanelView from './LayerPanelView.vue';
+import { setRowText } from './layerText.js';
+export { setRowText } from './layerText.js';
 import { layerFeedState } from '../data/feedState.js';
 export { layerFeedState } from '../data/feedState.js';
 import { GUIDANCE_STATUSES } from '../loadingFeedback.js';
@@ -39,9 +41,8 @@ function lifecycleStateLabel(lifecycleState) {
 // Presentation order is independent of catalog registration and startup order.
 const PANEL_GROUPS = [
   {
-    label: msg('Movement'),
+    label: msg('Transport'),
     ids: [
-      'satellites',
       'flights',
       'military',
       'local-adsb',
@@ -49,11 +50,24 @@ const PANEL_GROUPS = [
       'traffic',
       'transit',
       'bikeshare',
+      'directions',
+    ],
+  },
+  { label: msg('Space'), ids: ['satellites', 'rocket-launches'] },
+  {
+    label: msg('Environment'),
+    ids: [
+      'air-quality',
+      'wind',
+      'weather-radar',
+      'weather-satellite',
+      'weather-lightning',
+      'weather-cyclones',
     ],
   },
   {
-    label: msg('Cameras'),
-    ids: ['cctv', 'recent-imagery', 'street-level'],
+    label: msg('Imagery & cameras'),
+    ids: ['cctv', 'recent-imagery', 'street-level', 's2-ghostmaps'],
   },
   {
     label: msg('Infrastructure'),
@@ -66,31 +80,10 @@ const PANEL_GROUPS = [
     ],
   },
   {
-    label: msg('Events'),
-    ids: [
-      'rocket-launches',
-      'earthquakes',
-      'local-firms',
-      'fire-perimeters',
-      'gnss-integrity',
-      's2-ghostmaps',
-    ],
+    label: msg('Signals & events'),
+    ids: ['earthquakes', 'local-firms', 'fire-perimeters', 'gnss-integrity'],
   },
-  {
-    label: msg('Weather'),
-    ids: [
-      'air-quality',
-      'wind',
-      'weather-radar',
-      'weather-satellite',
-      'weather-lightning',
-      'weather-cyclones',
-    ],
-  },
-  {
-    label: msg('Utilities'),
-    ids: ['directions', 'radio'],
-  },
+  { label: msg('Audio'), ids: ['radio'] },
 ];
 const PANEL_ORDER = PANEL_GROUPS.flatMap(({ label, ids }) =>
   ids.map((id) => ({ id, label })),
@@ -98,6 +91,18 @@ const PANEL_ORDER = PANEL_GROUPS.flatMap(({ label, ids }) =>
 const PANEL_POSITIONS = new Map(
   PANEL_ORDER.map(({ id }, index) => [id, index]),
 );
+const DETAIL_PANELS = {
+  wind: 'weather-panel',
+  'air-quality': 'weather-panel',
+  'weather-radar': 'weather-panel',
+  'weather-satellite': 'weather-panel',
+  'weather-lightning': 'weather-panel',
+  'weather-cyclones': 'weather-panel',
+  'recent-imagery': 'recent-imagery-panel',
+  cctv: 'cctv-panel',
+  'street-level': 'street-level-panel',
+  radio: 'radio-panel',
+};
 
 function englishPanelLabel(layer) {
   return PANEL_LABELS[layer.id] || LAYER_NAME_KEYS[layer.id] || layer.name;
@@ -134,65 +139,6 @@ export function layerKeyRequirementTooltip(layer = {}) {
   );
 }
 
-const ROW_TEXT_SEPARATOR = ' · ';
-
-// A short Latin code joined by hyphens. Longer runs (a URL, a token in an
-// error) keep their break opportunities so they cannot overflow the rail.
-const HYPHENATED_CODE = /[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+/g;
-const HYPHENATED_CODE_MAX = 16;
-
-/** A span for one run of row text; `keep` stops the browser breaking inside it. */
-function rowTextSpan(text, keep) {
-  const span = document.createElement('span');
-  if (keep) span.className = 'data-keep';
-  span.textContent = text;
-  return span;
-}
-
-/**
- * Set a row's name, count or meta line so that a narrow column wraps it well
- * in every language: a Latin code with hyphens (ADS-B, RTL-SDR, GTFS-RT) never
- * splits at its hyphen, and a " · " separator stays at the end of the line it
- * closes, so no line starts with "·". The element's textContent is still the
- * plain string; text with neither feature is set directly.
- *
- * @param {HTMLElement} element
- * @param {string} text
- */
-export function setRowText(element, text) {
-  const value = String(text ?? '');
-  // Refreshes run every second; leave unchanged text (and its spans) alone.
-  if (element.textContent === value) return;
-  const codes = [...value.matchAll(HYPHENATED_CODE)].filter(
-    (match) => match[0].length <= HYPHENATED_CODE_MAX,
-  );
-  if (!codes.length && !value.includes(ROW_TEXT_SEPARATOR)) {
-    element.textContent = value;
-    return;
-  }
-  const spans = [];
-  const pushPlain = (from, to) => {
-    if (to <= from) return;
-    const pieces = value.slice(from, to).split(ROW_TEXT_SEPARATOR);
-    pieces.forEach((piece, index) => {
-      // The space before the dot belongs to a no-wrap span, so the only break
-      // opportunity around a separator is the space after it.
-      if (index > 0) spans.push(rowTextSpan(' ·', true));
-      const textPiece = index > 0 ? ` ${piece}` : piece;
-      if (textPiece) spans.push(rowTextSpan(textPiece, false));
-    });
-  };
-  let cursor = 0;
-  for (const match of codes) {
-    pushPlain(cursor, match.index);
-    spans.push(rowTextSpan(match[0], true));
-    cursor = match.index + match[0].length;
-  }
-  pushPlain(cursor, value.length);
-  element.textContent = '';
-  for (const span of spans) element.appendChild(span);
-}
-
 /** Layer row presentation over supplied state and actions; no layer imports. */
 export class LayerPanel {
   constructor({
@@ -205,8 +151,19 @@ export class LayerPanel {
     subscribeRowControls,
     onHiddenRefresh = () => {},
     weatherClock,
+    channel,
+    clearChannel,
+    clearSelectedLayers = () => {},
+    openDetails = () => {},
   }) {
     this.weatherClock = weatherClock;
+    this.channel = channel;
+    this.clearChannel = clearChannel;
+    this.clearSelectedLayers = clearSelectedLayers;
+    this.openDetails = openDetails;
+    this._pending = new Set();
+    this._imports = null;
+    this._files = [];
     this.getAll = getLayers;
     this.isEnabled = isEnabled;
     this.setEnabled = setEnabled;
@@ -235,6 +192,46 @@ export class LayerPanel {
     });
     this._mountRecentImagery();
     this._renderToggles();
+    if (this.channel)
+      this._removers.push(
+        this.channel.subscribe(() => this._refreshTogglePanel()),
+      );
+    this._subscribeImports();
+    if (this.clearChannel)
+      this._removers.push(
+        this.clearChannel.subscribe(({ state }) => {
+          this._clearState = state;
+          this._pushView();
+        }),
+      );
+    const reveal = (event) => {
+      this._reveal = {
+        id: event.detail,
+        serial: (this._reveal?.serial || 0) + 1,
+      };
+      this._pushView();
+    };
+    container?.addEventListener('gev:focus-layer-row', reveal);
+    this._removers.push(() =>
+      container?.removeEventListener('gev:focus-layer-row', reveal),
+    );
+  }
+  attachImports(handle) {
+    if (this._destroyed) return;
+    this._importsUnsubscribe?.();
+    this._importsUnsubscribe = null;
+    this._imports = handle;
+    this._files = handle?.list() || [];
+    if (this._view) this._subscribeImports();
+    this._pushView();
+  }
+  _subscribeImports() {
+    this._importsUnsubscribe = this._imports?.channel?.subscribe(
+      ({ state }) => {
+        this._files = state.files;
+        this._pushView();
+      },
+    );
   }
   /**
    * Host the Recent Imagery readout in its rail body, like the weather
@@ -256,12 +253,12 @@ export class LayerPanel {
     if (container && this._recentImageryFactory)
       this._recentImageryPanel = this._recentImageryFactory(container) || null;
   }
-  _bind(element, type, listener) {
-    element.addEventListener(type, listener);
-    this._removers.push(() => element.removeEventListener(type, listener));
-  }
   _releaseBindings() {
     this._generation++;
+    this._importsUnsubscribe?.();
+    this._importsUnsubscribe = null;
+    this._view?.dispose();
+    this._view = null;
     this._cancelRowControlsRefresh?.();
     this._cancelRowControlsRefresh = null;
     for (const remove of this._removers.splice(0)) remove();
@@ -279,153 +276,110 @@ export class LayerPanel {
   }
   _renderToggles() {
     if (this._destroyed || !this._toggleContainer) return;
-    this._releaseBindings();
-    this._toggleContainer.innerHTML = '';
-
     const generation = this._generation;
-    const layers = this.getAll()
-      .slice()
-      .sort(
-        (a, b) =>
-          (PANEL_POSITIONS.get(a.id) ?? PANEL_ORDER.length) -
-          (PANEL_POSITIONS.get(b.id) ?? PANEL_ORDER.length),
-      );
-    let previousGroup = '';
-    for (const layer of layers) {
-      if (!layer.showInTogglePanel) continue;
-      const group =
-        PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.label ??
-        msg('Other layers');
-      if (group && group !== previousGroup) {
-        const heading = document.createElement('h3');
-        heading.className = 'data-layer-group-heading';
-        heading.textContent = t(group);
-        this._toggleContainer.appendChild(heading);
-      }
-      previousGroup = group;
-      const row = document.createElement('div');
-      row.className = 'data-toggle-row';
-      row.dataset.layerId = layer.id;
-      // English name for voice tools, which must not receive translated text.
-      row.dataset.layerName = englishPanelLabel(layer);
-
-      const topRow = document.createElement('div');
-      topRow.className = 'data-toggle-top';
-
-      const left = document.createElement('div');
-      left.className = 'data-toggle-left';
-      const icon = document.createElement('span');
-      icon.className = 'data-icon';
-      icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = layer.icon;
-      const name = document.createElement('span');
-      name.className = 'data-name';
-      setRowText(name, panelLabel(layer));
-      left.appendChild(icon);
-      left.appendChild(name);
-
-      const right = document.createElement('div');
-      right.className = 'data-toggle-right';
-
-      const count = document.createElement('span');
-      count.className = 'data-count';
-      this._syncCount(row, count, layer.stats);
-
-      const toggle = document.createElement('button');
-      toggle.type = 'button';
-      toggle.className = `data-toggle-btn${layer.enabled ? ' active' : ''}`;
-      this._syncToggleButton(toggle, layer);
-      this._bind(toggle, 'click', async () => {
-        // Native `disabled` immediately evicts keyboard focus in Chromium. Keep
-        // the lifecycle control focusable while it is busy, and enforce the
-        // same single-flight interaction contract through ARIA instead.
-        if (
-          this._destroyed ||
-          this._generation !== generation ||
-          toggle.getAttribute('aria-disabled') === 'true'
-        )
-          return;
-        toggle.setAttribute('aria-disabled', 'true');
-        toggle.setAttribute('aria-busy', 'true');
-        try {
-          await this.setEnabled(layer.id, !this.isEnabled(layer.id), {
-            origin: 'user',
-          });
-        } catch (error) {
-          console.warn(`[Data] ${layer.id} toggle error:`, error);
-        } finally {
-          const current = this.getAll().find(({ id }) => id === layer.id);
-          if (!this._destroyed && current && this._generation === generation)
-            this._syncToggleButton(toggle, current);
-        }
-      });
-
-      const readout = Boolean(this._rowControlsFor(layer.id)?.readout);
-      if (!readout) right.appendChild(count);
-      right.appendChild(toggle);
-      topRow.appendChild(left);
-      topRow.appendChild(right);
-
-      const bottomRow = document.createElement('div');
-      bottomRow.className = 'data-toggle-meta';
-      setRowText(bottomRow, this._buildMetaText(layer));
-
-      row.appendChild(topRow);
-      row.appendChild(bottomRow);
-
-      // Optional per-layer sub-controls (chips + color legend). The click
-      // listener is delegated and attached once here, so it survives
-      // _refreshTogglePanel — which only rewrites the container's contents.
-      if (this.hasRowControls(layer.id)) {
-        // A layer whose controls settle asynchronously (a chunked catalog load
-        // that can also fail) pushes a re-render through this; nothing else
-        // would repaint the row before its next scheduled refresh.
-        const unsubscribe = this.subscribeRowControls(layer.id, () =>
-          this._scheduleRowControlsRefresh(),
-        );
-        if (unsubscribe) this._removers.push(unsubscribe);
-        if (!readout) {
-          const controls = document.createElement('div');
-          controls.className = 'data-toggle-controls';
-          this._bind(controls, 'click', (event) => {
-            const button = event.target?.closest?.('.data-toggle-chip');
-            if (!button || button.disabled) return;
-            // Re-read the live descriptor rather than trusting the rendered
-            // chip, so a stale row can never apply an inverted toggle.
-            const chip = this._rowControlsFor(layer.id)?.chips?.find(
-              (entry) => entry.id === button.dataset.chipId,
-            );
-            if (!chip || chip.disabled || !this.isEnabled(layer.id)) return;
-            if (typeof chip.onClick === 'function') chip.onClick();
-            else if (chip.params)
-              this.setLayerParams(layer.id, chip.params, { origin: 'user' });
-          });
-          row.appendChild(controls);
-          // An ordered list below the chips, for a layer whose row carries a
-          // sequence (turn-by-turn directions). Its own delegated listener, its
-          // own container — the chip row stays a chip row.
-          const list = document.createElement('ol');
-          list.className = 'data-row-list';
-          list.hidden = true;
-          this._bind(list, 'click', (event) => {
-            const button = event.target?.closest?.('.data-row-list-item');
-            if (!button || button.disabled) return;
-            const item = this._rowControlsFor(layer.id)?.list?.items?.find(
-              (entry) => entry.id === button.dataset.listItemId,
-            );
-            if (item?.params)
-              this.setLayerParams(layer.id, item.params, { origin: 'user' });
-          });
-          row.appendChild(list);
-          this._syncRowControls(controls, layer, list);
-        }
-      }
-
-      this._toggleContainer.appendChild(row);
-    }
+    this._listening = new Set();
+    const live = () => !this._destroyed && this._generation === generation;
+    this._view = mountView(LayerPanelView, {
+      parent: this._toggleContainer,
+      props: {
+        ...this._viewProps(),
+        toggle: (id) => live() && this._toggle(id),
+        chip: (id, chipId) => {
+          if (!live() || !this.isEnabled(id)) return;
+          const chip = this._rowControlsFor(id)?.chips?.find(
+            (item) => item.id === chipId,
+          );
+          if (!chip || chip.disabled) return;
+          if (typeof chip.onClick === 'function') chip.onClick();
+          else if (chip.params)
+            this.setLayerParams(id, chip.params, { origin: 'user' });
+        },
+        listItem: (id, itemId) => {
+          if (!live() || !this.isEnabled(id)) return;
+          const item = this._rowControlsFor(id)?.list?.items?.find(
+            (entry) => entry.id === itemId,
+          );
+          if (item?.params && !item.disabled)
+            this.setLayerParams(id, item.params, { origin: 'user' });
+        },
+        clear: () =>
+          live() && !this._clearState?.busy && this.clearSelectedLayers(),
+        details: (panelId) => live() && this.openDetails(panelId),
+        fileAction: (action, id, value) =>
+          live() && this._imports?.[action]?.(id, value),
+      },
+    });
     this._refreshWeatherPanel();
   }
-
+  _viewProps() {
+    const rows = this.getAll()
+      .filter((layer) => layer.showInTogglePanel)
+      .map((layer) => {
+        if (this.hasRowControls(layer.id) && !this._listening.has(layer.id)) {
+          this._listening.add(layer.id);
+          const remove = this.subscribeRowControls(layer.id, () =>
+            this._scheduleRowControlsRefresh(),
+          );
+          if (remove) this._removers.push(remove);
+        }
+        const descriptor = this._rowControlsFor(layer.id);
+        return {
+          id: layer.id,
+          icon: layer.icon,
+          enabled: layer.enabled,
+          name: panelLabel(layer),
+          englishName: englishPanelLabel(layer),
+          group:
+            PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.label ||
+            msg('Other layers'),
+          order: PANEL_POSITIONS.get(layer.id) ?? PANEL_ORDER.length,
+          count: this._layerCountText(layer.stats || {}),
+          countLine:
+            getLocale() !== 'en' &&
+            typeof layer.stats?.countLabel === 'string' &&
+            /\d/.test(layer.stats.countLabel),
+          meta: this._buildMetaText(layer),
+          toggle: this._toggleState(layer),
+          readout: Boolean(descriptor?.readout),
+          detailsPanel: DETAIL_PANELS[layer.id],
+          controls:
+            layer.enabled && !descriptor?.readout && descriptor
+              ? {
+                  ...descriptor,
+                  legend: descriptor.legend?.map((item) => ({
+                    ...item,
+                    countText:
+                      item.count == null ? null : this._formatCount(item.count),
+                  })),
+                }
+              : null,
+        };
+      })
+      .sort((a, b) => a.order - b.order);
+    return {
+      rows,
+      files: this._files,
+      reveal: this._reveal,
+      clearBusy: Boolean(this._clearState?.busy),
+    };
+  }
+  _pushView() {
+    if (this._view && !this._destroyed) this._view.update(this._viewProps());
+  }
+  async _toggle(id) {
+    const layer = this.getAll().find((layer) => layer.id === id);
+    if (!layer || this._toggleState(layer).blocked) return;
+    this._pending.add(id);
+    this._pushView();
+    try {
+      await this.setEnabled(id, !this.isEnabled(id), { origin: 'user' });
+    } catch (error) {
+      console.warn(`[Data] ${id} toggle error:`, error);
+    } finally {
+      this._pending.delete(id);
+      if (!this._destroyed) this._pushView();
+    }
+  }
   _scheduleRowControlsRefresh() {
     if (this._destroyed || this._cancelRowControlsRefresh) return;
     const refresh = () => {
@@ -472,123 +426,22 @@ export class LayerPanel {
     );
   }
 
-  /**
-   * Write a row's count. Outside English a count phrase ("24 nearby · 2 on
-   * screen") gets its own line, or it squeezes a longer translated name to a
-   * word per line. "—" is marked so a wide status chip can replace it
-   * (radio.css).
-   */
   _syncCount(row, count, stats) {
     const text = this._layerCountText(stats);
     setRowText(count, text);
-    const phrase =
+    row.classList.toggle(
+      'data-toggle-row--count-line',
       getLocale() !== 'en' &&
-      typeof stats.countLabel === 'string' &&
-      /\d/.test(stats.countLabel);
-    row.classList.toggle('data-toggle-row--count-line', phrase);
+        typeof stats.countLabel === 'string' &&
+        /\d/.test(stats.countLabel),
+    );
     count.classList.toggle('data-count-empty', text === '—');
   }
-
-  /** Qualify a loaded count when it does not mean items currently on screen. */
+  /** Preserve owner count labels rather than implying every count is visible. */
   _layerCountText(stats) {
     if (typeof stats.countLabel === 'string' && stats.countLabel.trim())
       return stats.countLabel;
     return stats.count ? this._formatCount(stats.count) : '—';
-  }
-
-  /**
-   * Render a layer's row chips and color legend, and keep the whole block
-   * hidden while the layer is off (or while a dependency owner has surrendered
-   * it) so a quiet row stays quiet.
-   *
-   * Chip BUTTONS are reconciled in place, keyed by chip id, rather than
-   * rebuilt: this runs on every panel refresh — including the one the chip's
-   * own click triggers — and replacing the node would drop keyboard focus
-   * mid-interaction. Legend entries are rebuilt only when their content changes;
-   * the info node is retained across refreshes.
-   * @param {HTMLElement|null} container The row's `.data-toggle-controls` node.
-   * @param {object} layer Registered layer entry.
-   * @param {HTMLElement|null} [listContainer] The row's `.data-row-list` node.
-   */
-  _syncRowControls(container, layer, listContainer = null) {
-    if (!container) return;
-    const controls = layer.enabled ? this._rowControlsFor(layer.id) : null;
-    if (controls?.readout) {
-      container.remove();
-      listContainer?.remove();
-      return;
-    }
-    const chips = controls?.chips || [];
-    const legend = controls?.legend || [];
-    const infoText = controls?.info;
-    this._syncRowList(listContainer, controls?.list || null);
-    container.hidden = chips.length === 0 && legend.length === 0 && !infoText;
-
-    const info = container._rowControlsInfo || null;
-    const firstLegend = container.querySelector('.data-toggle-legend-item');
-
-    syncChipGroup(container, chips, { before: firstLegend || info });
-
-    const legendSignature = JSON.stringify(
-      legend.map(({ label, color, count, blurb }) => [
-        label,
-        color,
-        count,
-        blurb,
-      ]),
-    );
-    if (container._legendSignature !== legendSignature) {
-      for (const node of [...container.children]) {
-        if (node.className === 'data-toggle-legend-item') node.remove();
-      }
-      for (const item of legend) {
-        const entry = document.createElement('span');
-        entry.className = 'data-toggle-legend-item';
-        if (item.blurb) entry.title = item.blurb;
-        const swatch = document.createElement('span');
-        swatch.className = 'data-toggle-legend-swatch';
-        swatch.style.background = item.color;
-        const text = document.createElement('span');
-        text.textContent =
-          item.count == null
-            ? String(item.label)
-            : `${item.label} ${this._formatCount(item.count)}`;
-        entry.append(swatch, text);
-        container.insertBefore(entry, info);
-      }
-      container._legendSignature = legendSignature;
-    }
-    if (infoText || info) {
-      const node = info || document.createElement('div');
-      if (!info) {
-        container.appendChild(node);
-        container._rowControlsInfo = node;
-      }
-      const className = 'data-toggle-controls-info';
-      if (node.className !== className) node.className = className;
-      const text = infoText ? String(infoText) : '';
-      const title = controls?.infoTitle || '';
-      if (node.textContent !== text) node.textContent = text;
-      if (node.title !== title) node.title = title;
-      const hidden = !text;
-      if (node.hidden !== hidden) node.hidden = hidden;
-    }
-  }
-
-  /**
-   * Render a row's ordered list (turn-by-turn directions).
-   *
-   * Each entry is a real `<button>` inside a real `<li>`, so Tab reaches it and
-   * Enter activates it with no key handling of our own, and the `<ol>` carries
-   * the ordering a screen reader announces. Items are reconciled in place,
-   * keyed by id, for the same reason chips are: this runs on every refresh —
-   * including the one a click on the list triggers — and replacing the node
-   * would drop keyboard focus mid-interaction.
-   * @param {HTMLElement|null} container The row's `.data-row-list` node.
-   * @param {{ariaLabel?: string, items?: Array<object>}|null} list Descriptor.
-   */
-  _syncRowList(container, list) {
-    syncRowList(container, list);
   }
 
   _refreshTogglePanel() {
@@ -599,33 +452,7 @@ export class LayerPanel {
       this.onHiddenRefresh();
       return;
     }
-    for (const layer of this.getAll()) {
-      const row = this._toggleContainer.querySelector(
-        `[data-layer-id="${layer.id}"]`,
-      );
-      if (!row) continue;
-
-      const btn = row.querySelector('.data-toggle-btn');
-      if (btn) {
-        this._syncToggleButton(btn, layer);
-      }
-
-      const count = row.querySelector('.data-count');
-      if (count) {
-        this._syncCount(row, count, layer.stats);
-      }
-
-      const meta = row.querySelector('.data-toggle-meta');
-      if (meta) {
-        setRowText(meta, this._buildMetaText(layer));
-      }
-
-      this._syncRowControls(
-        row.querySelector('.data-toggle-controls'),
-        layer,
-        row.querySelector('.data-row-list'),
-      );
-    }
+    this._pushView();
     this._refreshWeatherPanel();
   }
 
@@ -743,76 +570,64 @@ export class LayerPanel {
     return t('{source} · {ago}', { source, ago });
   }
 
-  _syncToggleButton(button, layer) {
+  _toggleState(layer) {
     const unavailable = layer.stats?.sourceUnavailable === true;
-    const feedState = unavailable
+    const transitioning =
+      layer.lifecycleState === 'enabling' ||
+      layer.lifecycleState === 'disabling';
+    const busy = transitioning || Boolean(this._pending?.has(layer.id));
+    const uncertain = Boolean(layer.lifecycleUncertain);
+    const feed = unavailable
       ? 'unavailable'
       : layer.enabled
         ? layerFeedState(layer.stats)
         : 'off';
-    const transitioning =
-      layer.lifecycleState === 'enabling' ||
-      layer.lifecycleState === 'disabling';
-    const uncertain = Boolean(layer.lifecycleUncertain);
-    button.classList.toggle('active', layer.enabled);
-    button.classList.toggle('transitioning', transitioning);
-    button.classList.toggle('enabling', layer.lifecycleState === 'enabling');
-    button.classList.toggle('disabling', layer.lifecycleState === 'disabling');
-    button.classList.toggle('lifecycle-uncertain', uncertain);
-    for (const state of Object.keys(FEED_STATE_LABEL_KEYS)) {
-      button.classList.toggle(
-        `feed-${state}`,
-        (layer.enabled || unavailable) && !uncertain && feedState === state,
-      );
-    }
-    button.dataset.feedState = transitioning
-      ? layer.lifecycleState
-      : uncertain
-        ? 'uncertain'
-        : feedState;
-    // A busy toggle remains the keyboard focus owner. `aria-disabled` plus the
-    // click guard above prevents repeat activation without the focus loss caused
-    // by native `disabled`.
-    button.disabled = false;
-    button.setAttribute(
-      'aria-disabled',
-      String(transitioning || (unavailable && !layer.enabled)),
-    );
-    button.setAttribute('aria-busy', String(transitioning));
-    const showsFeedState =
+    const showsFeed =
       !transitioning && !uncertain && (layer.enabled || unavailable);
     const stateText = transitioning
       ? lifecycleStateLabel(layer.lifecycleState)
       : uncertain
         ? t('UNCERTAIN')
-        : showsFeedState
-          ? t(FEED_STATE_LABEL_KEYS[feedState])
+        : showsFeed
+          ? t(FEED_STATE_LABEL_KEYS[feed])
           : t('OFF');
-    // The chip may abbreviate where a language's word is wider than the
-    // status column; the meta line and the accessible name keep the full word.
-    button.textContent =
-      showsFeedState && feedState === 'unavailable'
-        ? t('UNAVAILABLE', { context: 'status chip' })
-        : stateText;
-    const keyGuidance = unavailable
+    const title = unavailable
       ? String(
           translateFeedError(layer.stats.error) || t('Data source unavailable'),
         )
       : layerKeyRequirementTooltip(layer);
-    // Name the missing key on the control itself: a row reading KEY REQUIRED
-    // without saying WHICH key leaves a dead control and no next step. Empty
-    // when the layer needs no key, or already has one.
-    button.title = keyGuidance;
-    const ariaLabel = t('{name}: {state}', {
+    const label = t('{name}: {state}', {
       name: panelLabel(layer),
       state: stateText,
     });
-    button.setAttribute(
-      'aria-label',
-      keyGuidance ? `${ariaLabel}. ${keyGuidance}` : ariaLabel,
-    );
+    return {
+      busy,
+      blocked: busy || (unavailable && !layer.enabled),
+      feed: transitioning
+        ? layer.lifecycleState
+        : uncertain
+          ? 'uncertain'
+          : feed,
+      stateText,
+      title,
+      label: title ? `${label}. ${title}` : label,
+      classes: {
+        active: Boolean(layer.enabled),
+        transitioning,
+        enabling: layer.lifecycleState === 'enabling',
+        disabling: layer.lifecycleState === 'disabling',
+        'lifecycle-uncertain': uncertain,
+        ...Object.fromEntries(
+          Object.keys(FEED_STATE_LABEL_KEYS).map((state) => [
+            `feed-${state}`,
+            Boolean(
+              (layer.enabled || unavailable) && !uncertain && feed === state,
+            ),
+          ]),
+        ),
+      },
+    };
   }
-
   _formatCount(n) {
     if (n >= 1000)
       return `${formatNumber(n / 1000, {

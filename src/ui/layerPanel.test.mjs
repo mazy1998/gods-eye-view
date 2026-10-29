@@ -2,8 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { mount } from '../testSupport/componentDom.mjs';
+const { LayerPanel } = await import('./layerPanel.js');
+const { default: LayerRow } = await import('./LayerRow.vue');
 
-test('panel presentation places Transit between Street Traffic and Bike Share in Movement', () => {
+function renderToggle(layer) {
+  const row = (value) => ({
+    ...value,
+    name: value.name,
+    englishName: value.name,
+    count: '',
+    meta: '',
+    toggle: LayerPanel.prototype._toggleState(value),
+  });
+  const view = mount(LayerRow, { props: { row: row(layer) } });
+  return {
+    button: view.element.querySelector('.data-toggle-btn'),
+    update: (next = layer) => view.update({ row: row(next) }),
+  };
+}
+
+test('panel presentation places Transit between Street Traffic and Bike Share in Transport', () => {
   const source = readFileSync(
     new URL('./layerPanel.js', import.meta.url),
     'utf8',
@@ -18,9 +37,8 @@ test('panel presentation places Transit between Street Traffic and Bike Share in
     ),
   );
   assert.deepEqual(
-    order.filter(({ label }) => label === 'Movement').map(({ id }) => id),
+    order.filter(({ label }) => label === 'Transport').map(({ id }) => id),
     [
-      'satellites',
       'flights',
       'military',
       'local-adsb',
@@ -28,6 +46,7 @@ test('panel presentation places Transit between Street Traffic and Bike Share in
       'traffic',
       'transit',
       'bikeshare',
+      'directions',
     ],
   );
   assert.equal(order.filter(({ id }) => id === 'transit').length, 1);
@@ -35,13 +54,6 @@ test('panel presentation places Transit between Street Traffic and Bike Share in
 
 test('partial feed controls distinguish incomplete records from stale data and outages', async () => {
   const { LayerPanel, layerFeedState } = await import('./layerPanel.js');
-  const classes = new Map();
-  const attrs = new Map();
-  const button = {
-    classList: { toggle: (key, value) => classes.set(key, value) },
-    dataset: {},
-    setAttribute: (key, value) => attrs.set(key, value),
-  };
   const layer = {
     id: 'ais-live-vessels',
     name: 'Live Vessels',
@@ -57,12 +69,12 @@ test('partial feed controls distinguish incomplete records from stale data and o
     },
   };
   const panel = LayerPanel.prototype;
-  panel._syncToggleButton(button, layer);
+  const { button, update } = renderToggle(layer);
   assert.equal(button.textContent, 'PARTIAL');
   assert.equal(button.dataset.feedState, 'partial');
-  assert.equal(classes.get('feed-partial'), true);
-  assert.equal(classes.get('feed-stale'), false);
-  assert.match(attrs.get('aria-label'), /PARTIAL/);
+  assert.equal(button.classList.contains('feed-partial'), true);
+  assert.equal(button.classList.contains('feed-stale'), false);
+  assert.match(button.getAttribute('aria-label'), /PARTIAL/);
   assert.match(
     panel._buildMetaText(layer),
     /^PARTIAL · AISStream · 2 of 3 records accepted · /,
@@ -85,11 +97,11 @@ test('partial feed controls distinguish incomplete records from stale data and o
   );
   assert.equal(layerFeedState({ ...layer.stats, loading: true }), 'loading');
   layer.stats = { ...layer.stats, partial: false };
-  panel._syncToggleButton(button, layer);
+  update();
   assert.equal(button.textContent, 'ON');
-  assert.equal(classes.get('feed-partial'), false);
+  assert.equal(button.classList.contains('feed-partial'), false);
   layer.enabled = false;
-  panel._syncToggleButton(button, layer);
+  update();
   assert.equal(button.textContent, 'OFF');
 });
 
@@ -114,152 +126,8 @@ test('a stale row dates cached data by its oldest tile, not the last load', asyn
   assert.match(panel._buildMetaText(layer), /^STALE · TomTom · just now$/);
 });
 
-test('readout rows contain only toggles and metadata; ordinary rows retain controls', async () => {
-  const { LayerPanel } = await import('./layerPanel.js');
-  const { railFixture } = await import('./railTestFixture.mjs');
-  const f = railFixture();
-  const previousDocument = globalThis.document;
-  globalThis.document = f.document;
-  const ids = [
-    'wind',
-    'weather-radar',
-    'weather-satellite',
-    'weather-lightning',
-    'weather-cyclones',
-    'other',
-  ];
-  let refresh;
-  const layers = ids.map((id) => ({
-    id,
-    name: id,
-    icon: '*',
-    source: 'Source',
-    enabled: true,
-    showInTogglePanel: true,
-    stats: {},
-  }));
-  const calls = [];
-  const panel = new LayerPanel({
-    getLayers: () => layers,
-    isEnabled: () => true,
-    setEnabled: (...args) => calls.push(args),
-    setLayerParams: (...args) => calls.push(args),
-    hasRowControls: () => true,
-    subscribeRowControls: (_id, callback) => {
-      refresh = callback;
-    },
-    getRowControls: (id) => ({
-      readout: id !== 'other',
-      summary: { status: 'Loading' },
-      info: 'Detailed time',
-      chips: [{ id: 'config', label: 'Soft', params: { opacity: 'light' } }],
-      legend: [{ label: 'Rain', color: '#abcdef' }],
-      list: {
-        items: [{ id: 'storm', text: 'Storm', params: { focus: true } }],
-      },
-    }),
-  });
-  try {
-    panel.mount(f.container);
-    for (const id of ids.slice(0, -1)) {
-      const row = f.find((n) => n.dataset.layerId === id);
-      assert.equal(row.children.length, 2);
-      assert.ok(row.querySelector('.data-name'));
-      assert.ok(row.querySelector('.data-toggle-meta'));
-      for (const cls of [
-        'data-toggle-chip',
-        'data-count',
-        'data-toggle-controls',
-        'data-toggle-controls-status',
-        'data-row-list',
-      ])
-        assert.equal(row.querySelector(`.${cls}`), null);
-      row.querySelector('.data-toggle-btn').click();
-    }
-    assert.deepEqual(
-      calls.map(([id]) => id),
-      ids.slice(0, -1),
-    );
-    const ordinary = f.find((n) => n.dataset.layerId === 'other');
-    assert.equal(
-      ordinary.querySelector('.data-toggle-controls-info').textContent,
-      'Detailed time',
-    );
-    assert.ok(ordinary.querySelector('.data-toggle-legend-item'));
-    ordinary.querySelector('.data-toggle-chip').click();
-    assert.deepEqual(calls.at(-1), [
-      'other',
-      { opacity: 'light' },
-      { origin: 'user' },
-    ]);
-    assert.equal(typeof refresh, 'function');
-  } finally {
-    panel.destroy();
-    globalThis.document = previousDocument;
-  }
-});
-
-test('the Recent Imagery readout mounts in its rail body like the weather readout and is rebuilt or released with the panel', async () => {
-  const { LayerPanel } = await import('./layerPanel.js');
-  const { railFixture } = await import('./railTestFixture.mjs');
-  const f = railFixture();
-  const body = f.document.createElement('div');
-  f.document.getElementById = (id) =>
-    id === 'recent-imagery-panel-body' ? body : null;
-  const previousDocument = globalThis.document;
-  globalThis.document = f.document;
-  const mounted = [];
-  const factory = (container) => {
-    const readout = {
-      container,
-      destroyed: false,
-      destroy() {
-        this.destroyed = true;
-      },
-    };
-    mounted.push(readout);
-    return readout;
-  };
-  const panel = new LayerPanel({
-    getLayers: () => [],
-    isEnabled: () => false,
-    setEnabled() {},
-    setLayerParams() {},
-    hasRowControls: () => false,
-    subscribeRowControls() {},
-    getRowControls: () => null,
-  });
-  try {
-    panel.attachRecentImagery(factory);
-    assert.equal(mounted.length, 0, 'no body before the panel mounts');
-    panel.mount(f.container);
-    assert.equal(mounted.length, 1);
-    assert.equal(mounted[0].container, body);
-    panel.mount(f.container);
-    assert.equal(mounted[0].destroyed, true, 'a remount rebuilds it');
-    assert.equal(mounted.length, 2);
-    panel.attachRecentImagery(null);
-    assert.equal(mounted[1].destroyed, true);
-    panel.attachRecentImagery(factory);
-    assert.equal(mounted.length, 3);
-    panel.destroy();
-    assert.equal(mounted[2].destroyed, true);
-    panel.attachRecentImagery(factory);
-    assert.equal(mounted.length, 3, 'a destroyed panel mounts nothing');
-  } finally {
-    panel.destroy();
-    globalThis.document = previousDocument;
-  }
-});
-
 test('an omitted source is visibly unavailable and cannot be toggled on', async () => {
   const { LayerPanel } = await import('./layerPanel.js');
-  const attrs = new Map();
-  const button = {
-    classList: { toggle() {} },
-    dataset: {},
-    setAttribute: (key, value) => attrs.set(key, value),
-  };
   const layer = {
     id: 'flights',
     name: 'Flights',
@@ -270,13 +138,13 @@ test('an omitted source is visibly unavailable and cannot be toggled on', async 
       error: 'Data source not configured: flights',
     },
   };
-  LayerPanel.prototype._syncToggleButton(button, layer);
+  const { button, update } = renderToggle(layer);
   assert.equal(button.textContent, 'UNAVAILABLE');
-  assert.equal(attrs.get('aria-disabled'), 'true');
+  assert.equal(button.getAttribute('aria-disabled'), 'true');
   assert.match(button.title, /not configured/);
-  LayerPanel.prototype._syncToggleButton(button, { ...layer, enabled: true });
+  update({ ...layer, enabled: true });
   assert.equal(
-    attrs.get('aria-disabled'),
+    button.getAttribute('aria-disabled'),
     'false',
     'an active layer can always be switched off',
   );
@@ -334,13 +202,7 @@ test('row text keeps a hyphenated code whole and never starts a line with the se
 
 test('the unavailable chip may abbreviate, but its accessible name keeps the full state', async () => {
   const { LayerPanel } = await import('./layerPanel.js');
-  const attrs = new Map();
-  const button = {
-    classList: { toggle() {} },
-    dataset: {},
-    setAttribute: (key, value) => attrs.set(key, value),
-  };
-  LayerPanel.prototype._syncToggleButton(button, {
+  const { button } = renderToggle({
     id: 'local-firms',
     name: 'FIRMS Active Fires',
     enabled: false,
@@ -348,7 +210,10 @@ test('the unavailable chip may abbreviate, but its accessible name keeps the ful
   });
   assert.equal(button.textContent, 'UNAVAILABLE');
   assert.equal(button.dataset.feedState, 'unavailable');
-  assert.match(attrs.get('aria-label'), /^Active Fires: UNAVAILABLE\./);
+  assert.match(
+    button.getAttribute('aria-label'),
+    /^Active Fires: UNAVAILABLE\./,
+  );
 });
 
 test('the Weather readout receives enabled air-quality alongside weather layers', async () => {
@@ -376,5 +241,32 @@ test('the Weather readout receives enabled air-quality alongside weather layers'
       ['wind', 'wind'],
       ['air-quality', 'air-quality'],
     ],
+  );
+});
+
+test('uncertain lifecycle state overrides ordinary feed status without disabling reconciliation', () => {
+  const layer = {
+    id: 'radio',
+    name: 'Radio',
+    source: 'Radio Browser',
+    enabled: true,
+    lifecycleState: 'enabled',
+    lifecycleUncertain: true,
+    stats: { count: 750, lastUpdate: Date.now() },
+  };
+  const { button } = renderToggle(layer);
+  assert.equal(button.textContent, 'UNCERTAIN');
+  assert.equal(button.dataset.feedState, 'uncertain');
+  assert.equal(
+    button.disabled,
+    false,
+    'the lifecycle toggle remains available to reconcile authority',
+  );
+  assert.equal(button.getAttribute('aria-label'), 'Radio: UNCERTAIN');
+  assert.equal(button.classList.contains('lifecycle-uncertain'), true);
+  assert.equal(button.classList.contains('feed-nominal'), false);
+  assert.equal(
+    LayerPanel.prototype._buildMetaText(layer),
+    'UNCERTAIN · Radio Browser · lifecycle state requires reconciliation',
   );
 });

@@ -21,6 +21,7 @@ import {
   clearSelectedLayers,
 } from './contextActions.js';
 import { connectContextManager } from './contextSubscriptions.js';
+import { createStateChannel } from '../app/stateChannel.js';
 
 /** Own Context transactions and controls through explicit layer and presentation ports. */
 export class ContextControls {
@@ -45,13 +46,18 @@ export class ContextControls {
     this._userFacingContextNotificationTokens = new Set();
     this._clearSelectedLayersPromise = null;
     this._clearSelectedLayersManagerPromise = null;
+    this.clearBusy = false;
+    this.clearChannel = createStateChannel(() => ({ busy: this.clearBusy }));
     this._initGlobalContextPanel();
   }
   showToast(...args) {
     if (!this.destroyed) this.actions.showToast(...args);
   }
-  setClearBusy(...args) {
-    if (!this.destroyed) this.actions.setClearBusy(...args);
+  setClearBusy(busy) {
+    if (this.destroyed) return;
+    this.clearBusy = Boolean(busy);
+    this.clearChannel?.publish({ type: 'clear-busy-changed' });
+    this.actions.setClearBusy(busy);
   }
   get cockpitView() {
     return this.actions.getCockpit();
@@ -81,6 +87,7 @@ export class ContextControls {
     this.destroyed = true;
     this._contextModeGeneration++;
     this.listeners.abort();
+    this.clearChannel?.destroy();
   }
   async restoreForDisposal() {
     this._contextModeChanging = true;

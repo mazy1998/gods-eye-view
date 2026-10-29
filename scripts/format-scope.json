@@ -1131,5 +1131,17 @@
   "src/ui/mountView.test.mjs",
   "docs/COMPONENT-TESTS.md",
   "src/ui/styles/location-views.css",
-  "src/ui/styles/tool-views.css"
+  "src/ui/styles/tool-views.css",
+  "src/ui/LayerPanelView.vue",
+  "src/ui/LayerRow.vue",
+  "src/ui/LayerText.vue",
+  "src/ui/layerText.js",
+  "src/ui/mountView.js",
+  "src/ui/primitives/ToggleSwitch.vue",
+  "src/ui/primitives/TabList.vue",
+  "src/ui/primitives/ActionButton.vue",
+  "src/ui/segmentedControl.js",
+  "src/ui/styles/layer-browser.css",
+  "src/ui/layerPanel.dom.test.mjs",
+  "src/data/managerPanel.dom.test.mjs"
 ]

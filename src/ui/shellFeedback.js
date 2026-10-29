@@ -10,7 +10,7 @@ import {
 } from '../loadingFeedback.js';
 import { setSplitFlapText, disposeSplitFlap } from '../splitFlap.js';
 import { getLocale, t, msg } from '../i18n/index.js';
-import { localizeLayerName } from './layerPanel.js';
+import { localizeLayerName } from './layerNames.js';
 import { translateFeedError } from './statusText.js';
 
 // The server also loads loadingFeedback.js (through the HUD summary), so its

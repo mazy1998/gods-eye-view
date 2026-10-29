@@ -10,10 +10,18 @@ export class LayerPresentation {
       weatherClock,
       requestRender = governorRequestRender,
       invalidateDetection = markDetectionSourcesChanged,
+      channel,
+      clearChannel,
+      clearSelectedLayers,
+      openDetails,
     } = {},
   ) {
     this.manager = manager;
     this.weatherClock = weatherClock;
+    this.channel = channel;
+    this.clearChannel = clearChannel;
+    this.clearSelectedLayers = clearSelectedLayers;
+    this.openDetails = openDetails;
     this._panel = null;
     this.pendingVisible = false;
     this._unsubscribe = manager.subscribeActivity((change) => {
@@ -38,6 +46,10 @@ export class LayerPresentation {
     if (!this._panel)
       this._panel = new LayerPanel({
         weatherClock: this.weatherClock,
+        channel: this.channel,
+        clearChannel: this.clearChannel,
+        clearSelectedLayers: this.clearSelectedLayers,
+        openDetails: this.openDetails,
         getLayers: () => this.manager.getAll(),
         isEnabled: (id) => this.manager.isEnabled(id),
         setEnabled: (id, enabled, options) =>
@@ -65,7 +77,13 @@ export class LayerPresentation {
           this.pendingVisible = true;
         },
       });
+    if (this._imports && this._panel._imports !== this._imports)
+      this._panel.attachImports(this._imports);
     return this._panel;
+  }
+  attachImports(handle) {
+    this._imports = handle;
+    this._panel?.attachImports(handle);
   }
   mount(container) {
     this.panel.mount(container);

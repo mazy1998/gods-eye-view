@@ -1240,7 +1240,7 @@ test('Global Context uses its dedicated right rail without a duplicate Data Laye
     path.join(ROOT, 'src', 'ui', 'layerPanel.js'),
     'utf8',
   );
-  assert.match(panel, /if \(!layer\.showInTogglePanel\) continue;/);
+  assert.match(panel, /\.filter\(\(layer\) => layer\.showInTogglePanel\)/);
   assert.match(
     fs.readFileSync(
       path.join(ROOT, 'src', 'app', 'layerPresentation.js'),
