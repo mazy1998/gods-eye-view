@@ -8,7 +8,10 @@ import {
   rocketLaunchesProxy,
 } from '../../server/providers/space/launch-library.js';
 import { keySetupStatus } from '../keySetupCore.mjs';
-import { initKeySetup } from '../keySetup.js';
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import { createStateChannel } from '../app/stateChannel.js';
+import ProviderKeyRows from '../ui/settings/ProviderKeyRows.vue';
 
 test('LL2 requests from the same UTC minute share a cache key without mutating callers', () => {
   const first = new Date('2026-10-17T16:20:00.001Z');
@@ -57,65 +60,33 @@ test('LL2 headers identify the app and preserve optional server-only authorizati
 });
 
 test('actual setup rendering distinguishes optional paid LL2 from unrelated free keys', async () => {
-  const created = [];
-  const node = () => {
-    const value = {
-      dataset: {},
-      children: [],
-      append(...children) {
-        this.children.push(...children);
-      },
-      querySelector() {
-        return null;
-      },
-      querySelectorAll() {
-        return [];
-      },
-      addEventListener() {},
-      removeEventListener() {},
-      setAttribute() {},
-      remove() {},
-    };
-    created.push(value);
-    return value;
-  };
-  const rows = node();
-  const root = node();
-  root.querySelector = (selector) =>
-    selector === '[data-key-setup-rows]' ? rows : null;
-  const chip = node();
+  // The rows are a Vue view of the key-setup owner's status; render the real
+  // view from the real status payload.
   const status = keySetupStatus({});
   status.keys = status.keys.filter((key) =>
     ['launch-library', 'mapillary'].includes(key.id),
   );
-  const setup = await initKeySetup({
-    documentRef: {
-      getElementById: (id) => (id === 'key-setup-chip' ? chip : root),
-      createElement: node,
-      addEventListener() {},
-      removeEventListener() {},
-    },
-    fetchImpl: async () => ({ ok: true, json: async () => status }),
-  });
-  assert.ok(setup);
-  try {
-    const ll2 = rows.children.find(
-      (row) => row.dataset.keyId === 'launch-library',
-    );
-    const free = rows.children.find((row) => row.dataset.keyId === 'mapillary');
-    const tier = (row) =>
-      row.children[0].children.find(
-        (child) => child.className === 'key-setup-tier',
-      );
-    assert.match(tier(ll2).title, /optional paid token/i);
-    assert.match(ll2.children[1].textContent, /leave blank/i);
-    assert.match(ll2.children[1].textContent, /no key/i);
-    assert.equal(tier(free).title, 'Free key — register, paste, done');
-    const serialized = JSON.stringify(status);
-    assert.ok(!serialized.includes('owned-fixture-token'));
-  } finally {
-    setup.destroy();
-  }
+  const channel = createStateChannel(() => ({
+    status,
+    oauthBusy: false,
+    cloudVoiceAuth: 'api-key',
+    savedRevision: 0,
+  }));
+  const html = await renderToString(
+    createSSRApp({ render: () => h(ProviderKeyRows, { channel }) }),
+  );
+  const row = (id) =>
+    html.slice(html.indexOf(`data-key-id="${id}"`)).split('</section>')[0];
+  const tier = (id) =>
+    row(id).match(/class="key-setup-tier" title="([^"]*)"/)[1];
+  const unlocks = (id) =>
+    row(id).match(/<p class="key-setup-unlocks">([^<]*)<\/p>/)[1];
+  assert.match(tier('launch-library'), /optional paid token/i);
+  assert.match(unlocks('launch-library'), /leave blank/i);
+  assert.match(unlocks('launch-library'), /no key/i);
+  assert.equal(tier('mapillary'), 'Free key — register, paste, done');
+  const serialized = JSON.stringify(status);
+  assert.ok(!serialized.includes('owned-fixture-token'));
 });
 
 test('real LL2 proxy sends cacheable headers and bounds, retaining its memory cache', async (t) => {

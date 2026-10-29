@@ -2012,6 +2012,7 @@
       "src/hudPlaceLookup.js",
       "src/hudSummaryResponse.js",
       "src/keySetup.js",
+      "src/ui/settings/ProviderKeyRows.vue",
       "src/keySetupCore.mjs",
       "src/localRequestGate.mjs",
       "src/keylessGeocoder.js",
