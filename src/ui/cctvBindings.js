@@ -63,6 +63,7 @@ export function _initCctvPanel() {
     const generation = ++this._actionGeneration;
     const activeId = this._cctvState?.activeCameraId;
     const cameraId = this._cctvSelect.value;
+    this._selectedCameraId = cameraId;
     if (!cameraId) return;
     if (!(await this.actions.toggleEnabled(true))) return;
     if (
@@ -85,7 +86,7 @@ export function _initCctvPanel() {
   this.listen(this._cctvFocusBtn, 'click', async () => {
     const generation = ++this._actionGeneration;
     const activeId = this._cctvState?.activeCameraId;
-    const selected = this._cctvState?.activeCameraId || this._cctvSelect?.value;
+    const selected = this._cctvState?.activeCameraId || this._selectedCameraId;
     if (!selected) return;
     if (!(await this.actions.toggleEnabled(true))) return;
     if (

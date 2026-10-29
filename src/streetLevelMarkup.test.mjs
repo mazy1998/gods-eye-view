@@ -1,3 +1,7 @@
+import { createSSRApp } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import StreetLevelPanelView from './ui/StreetLevelPanelView.vue';
+import { presentStreetLevelPanel } from './ui/streetLevelPresentation.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,7 +13,22 @@ import { readStylesheet } from './testSupport/readStylesheet.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const html = expandApplicationHtml(read('index.html'));
+const view = presentStreetLevelPanel({
+  providers: [],
+  coverage: {},
+  sequence: {},
+  street: {},
+  filter: { pano: 'all' },
+});
+const html =
+  expandApplicationHtml(read('index.html')) +
+  (await renderToString(
+    createSSRApp(StreetLevelPanelView, {
+      view,
+      sinceIndex: 0,
+      sinceLabel: view.since.label,
+    }),
+  ));
 const css = readStylesheet(path.join(ROOT, 'style.css'));
 const panelCss = read('src/ui/styles/street-level.css');
 const panelChrome = read('src/ui/panelChrome.js');
@@ -65,7 +84,7 @@ test('the key gate holds every filter, with the error line outside it', () => {
   assert.match(gate, /id="sl-since"/);
   assert.ok(html.indexOf('id="sl-error"') < start);
   // The chips stay outside the gate, so their key tooltip is reachable.
-  assert.match(html, /<div id="sl-provider-chips" class="sl-chips"><\/div>/);
+  assert.match(html, /<div id="sl-provider-chips" class="sl-chips">/);
   assert.doesNotMatch(gate, /sl-provider-chips/);
   assert.match(html, /id="sl-error"[^>]*role="alert"/);
 });

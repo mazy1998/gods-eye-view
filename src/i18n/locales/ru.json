@@ -3104,5 +3104,6 @@
   "Watch a story or create your own": "Смотрите историю или создайте свою",
   "Tools": "Инструменты",
   "Import, draw, and plan routes": "Импорт, рисование и маршруты",
-  "Configure data providers and preferences.": "Настройте источники данных и параметры."
+  "Configure data providers and preferences.": "Настройте источники данных и параметры.",
+  "Coverage is estimated from the camera pose.": "Покрытие оценивается по положению и ориентации камеры."
 }

@@ -129,3 +129,11 @@ factory and disposal path. Synchronous `mountView.update()` keeps focus and
 visible-card measurements in the same turn. The shared `imagerySplit` still
 owns the map-wide divider outside the panel; the view does not create another
 imagery layer, thumbnail loader, map lease or download service.
+
+## Cameras and Street Level content
+
+`CctvControls` mounts `CctvPanelView` in the existing `cctv-controls-body`; `StreetLevelControls` mounts `StreetLevelPanelView` in `sl-body`. Their single layer subscriptions and operations remain the owners. The shell keeps panel chrome, collapse/layout and the grid-loading chip. Controls collect their own child nodes after synchronous mount; the shell does not cache those children.
+
+Camera calibration text, captured base pose/camera identity, search filter, advanced disclosure and typed summary belong to CctvControls. Native number inputs report intent; a detached editor cannot finish another draft. The two provenance badges render owner-supplied labels and machine states. The existing frame preloader and shared video surface retain stable media nodes, request tokens, retained-frame behavior and decoder ownership; Vue never writes their media state or recreates a decoder.
+
+Street Level's Since index/focus/preview belong to StreetLevelControls; filter/provider selection and imagery state stay with the layer. The viewer owner retains the stable `sl-viewer` child host across prop updates. Closing an image first returns focus to the header status control and exits expansion, then synchronous view paint hides the wrap. Fullscreen/popover, persisted fit/fill, observer-driven resizing and panel-hiding modes retain their existing lifetime. Destruction releases listeners/subscriptions, detaches the media host and disposes each view before late work can paint.

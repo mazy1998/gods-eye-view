@@ -1,32 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CctvControls } from './cctvControls.js';
+import { container } from '../testSupport/componentDom.mjs';
+const { CctvControls } = await import('./cctvControls.js');
 
-function element() {
-  const classes = new Set();
-  return {
-    dataset: {},
-    src: '',
-    removeAttribute(name) {
-      if (name === 'src') this.src = '';
-    },
-    classList: {
-      add(...values) {
-        values.forEach((value) => classes.add(value));
-      },
-      remove(...values) {
-        values.forEach((value) => classes.delete(value));
-      },
-      contains(value) {
-        return classes.has(value);
-      },
-      toggle(value, enabled) {
-        if (enabled) classes.add(value);
-        else classes.delete(value);
-      },
-    },
-  };
-}
 function fixture(t) {
   const prior = globalThis.Image;
   const requests = [];
@@ -38,10 +14,17 @@ function fixture(t) {
   t.after(() => {
     globalThis.Image = prior;
   });
+  const panel = document.createElement('section');
+  panel.innerHTML = '<div id="cctv-controls-body"></div>';
+  container.appendChild(panel);
   const controls = new CctvControls({
-    elements: { _cctvFrame: element(), _cctvFrameWrap: element() },
+    elements: { _cctvPanel: panel },
     cctv: {},
-    actions: { isEnabled: () => true },
+    actions: {
+      isEnabled: () => true,
+      syncViewport() {},
+      setPanelCollapsed() {},
+    },
   });
   t.after(() => controls.destroy());
   return { controls, requests };
@@ -55,7 +38,7 @@ test('a late image completion cannot replace a newer camera preview', (t) => {
   assert.equal(requests[0].onload, null);
   requests[1].onload();
   stale();
-  assert.equal(controls._cctvFrame.src, 'second.jpg');
+  assert.equal(controls._cctvFrame.getAttribute('src'), 'second.jpg');
   assert.equal(controls._cctvFrame.dataset.cameraId, 'b');
 });
 
@@ -65,10 +48,10 @@ test('failed refresh preserves settled pixels, but changing cameras clears them'
   requests[0].onload();
   controls._queueCctvFrame('refresh.jpg', 'a', false);
   requests[1].onerror();
-  assert.equal(controls._cctvFrame.src, 'first.jpg');
+  assert.equal(controls._cctvFrame.getAttribute('src'), 'first.jpg');
   assert.equal(controls._cctvFrameWrap.classList.contains('has-frame'), true);
   controls._queueCctvFrame('other.jpg', 'b', true);
-  assert.equal(controls._cctvFrame.src, '');
+  assert.equal(controls._cctvFrame.getAttribute('src'), null);
   assert.equal(controls._cctvFrameWrap.classList.contains('has-frame'), false);
 });
 
@@ -90,56 +73,30 @@ test('destroy invalidates image callbacks and releases each subscription once', 
   assert.equal(unsubscribed, 2);
   assert.equal(requests[0].onload, null);
   assert.equal(requests[0].onerror, null);
-  assert.equal(controls._cctvFrame.src, '');
+  assert.equal(controls._cctvFrame.getAttribute('src'), null);
   controls._queueCctvFrame('late.jpg', 'b', true);
   assert.equal(requests.length, 1);
 });
 
 function calibrationFixture(t) {
   const { controls } = fixture(t);
-  const prior = globalThis.document;
+  const chip = controls._cctvCalReadout.querySelector(
+    '[data-cal-field="heading"]',
+  );
   const inputs = [];
-  globalThis.document = {
-    createElement() {
-      const input = new EventTarget();
-      Object.assign(input, {
-        focus() {},
-        select() {},
-        setAttribute(name, value) {
-          this[name] = value;
-        },
-        remove() {
-          this.parent.input = null;
-        },
-      });
-      inputs.push(input);
-      return input;
-    },
-  };
-  t.after(() => {
-    globalThis.document = prior;
-  });
-  const chip = {
-    dataset: { calField: 'heading' },
-    textContent: '',
-    input: null,
-    appendChild(input) {
-      this.input = input;
-      input.parent = this;
-    },
-    querySelector() {
-      return this.input;
-    },
+  const begin = controls._beginCctvCalValueEdit.bind(controls);
+  controls._beginCctvCalValueEdit = (chip) => {
+    begin(chip);
+    inputs.push(chip.querySelector('input'));
   };
   const patches = [];
   controls.actions.setParams = (params) => patches.push(params);
   controls.actions.setPanelCollapsed = () => {};
-  controls._cctvCalReadout = { querySelectorAll: () => [chip] };
-  controls._cctvState = {
+  controls._renderCctvState({
     enabled: true,
     activeCameraId: 'a',
     activeCamera: { id: 'a', headingDeg: 30, basePose: { headingDeg: 20 } },
-  };
+  });
   const key = (name) =>
     Object.assign(new Event('keydown', { cancelable: true }), { key: name });
   return { controls, chip, inputs, patches, key };
@@ -149,6 +106,7 @@ test('calibration commits against the captured camera base and releases its edit
   const { controls, chip, inputs, patches, key } = calibrationFixture(t);
   controls._beginCctvCalValueEdit(chip);
   inputs[0].value = '100';
+  inputs[0].dispatchEvent(new Event('input'));
   controls._cctvState.activeCamera.basePose.headingDeg = 60;
   inputs[0].dispatchEvent(key('Enter'));
   inputs[0].dispatchEvent(new Event('blur'));
@@ -165,6 +123,7 @@ test('a camera switch cancels calibration before old blur can change the new cam
   const { controls, chip, inputs, patches } = calibrationFixture(t);
   controls._beginCctvCalValueEdit(chip);
   inputs[0].value = '100';
+  inputs[0].dispatchEvent(new Event('input'));
   controls._renderCctvState({
     enabled: true,
     activeCameraId: 'b',
@@ -172,7 +131,7 @@ test('a camera switch cancels calibration before old blur can change the new cam
   });
   inputs[0].dispatchEvent(new Event('blur'));
   assert.deepEqual(patches, []);
-  assert.equal(chip.input, null);
+  assert.equal(chip.querySelector('input'), null);
   assert.equal(chip.textContent, 'HDG 200.0°');
 });
 
@@ -180,12 +139,14 @@ test('Escape claims calibration cancellation and disposal prevents late commits'
   const { controls, chip, inputs, patches, key } = calibrationFixture(t);
   controls._beginCctvCalValueEdit(chip);
   inputs[0].value = '100';
+  inputs[0].dispatchEvent(new Event('input'));
   const escape = key('Escape');
   inputs[0].dispatchEvent(escape);
   inputs[0].dispatchEvent(new Event('blur'));
   assert.equal(escape.defaultPrevented, true);
   controls._beginCctvCalValueEdit(chip);
   inputs[1].value = '120';
+  inputs[1].dispatchEvent(new Event('input'));
   controls.destroy();
   inputs[1].dispatchEvent(new Event('blur'));
   assert.deepEqual(patches, []);
@@ -197,7 +158,10 @@ test('disposing during camera enable prevents the delayed focus and future click
   let enables = 0;
   let focuses = 0;
   const controls = new CctvControls({
-    elements: { _cctvPanel: {}, _cctvNextBtn: button },
+    elements: {
+      _cctvPanel: { querySelector: () => null },
+      _cctvNextBtn: button,
+    },
     cctv: {},
     actions: {
       isEnabled: () => true,
@@ -221,3 +185,117 @@ test('disposing during camera enable prevents the delayed focus and future click
   assert.equal(enables, 1);
   assert.equal(focuses, 0);
 });
+
+test('null camera selection stays empty and Focus is disabled with a populated catalog', (t) => {
+  const { controls } = fixture(t);
+  controls._renderCctvState({
+    enabled: true,
+    cameras: [{ id: 'a', city: 'City', name: 'Camera' }],
+  });
+  assert.equal(controls._cctvSelect.options.length, 1);
+  assert.equal(controls._cctvSelect.selectedIndex, -1);
+  assert.equal(controls._cctvFocusBtn.disabled, true);
+});
+
+test('camera search is owned, literal and preserves the active choice during notifications', (t) => {
+  const { controls } = fixture(t);
+  const cameras = [
+    {
+      id: 'a',
+      city: 'City',
+      name: '<img src=x onerror=alert(1)>',
+      sourceLabel: 'Network A',
+      sourceStatus: 'ok',
+    },
+    {
+      id: 'b',
+      city: 'City',
+      name: 'Bridge',
+      sourceLabel: 'Network B',
+      sourceStatus: 'degraded',
+    },
+    {
+      id: 'c',
+      city: 'City',
+      name: 'Junction',
+      sourceLabel: 'Network C',
+      sourceStatus: 'unknown',
+    },
+  ];
+  const state = {
+    enabled: true,
+    cameras,
+    activeCameraId: 'a',
+    activeCamera: cameras[0],
+  };
+  controls._renderCctvState(state);
+  const filter = controls._cctvPanel.querySelector('#cctv-camera-filter');
+  filter.value = 'network b';
+  filter.dispatchEvent(new Event('input', { bubbles: true }));
+  assert.equal(controls._pickerFilter, 'network b');
+  assert.deepEqual(
+    [...controls._cctvSelect.options].map((o) => o.value),
+    ['a', 'b'],
+  );
+  assert.match(controls._cctvSelect.options[0].textContent, /<img src=x/);
+  assert.match(
+    controls._cctvSelect.options[1].textContent,
+    /Network B · DEGRADED/,
+  );
+  assert.equal(controls._cctvSelect.querySelector('img'), null);
+  controls._renderCctvState({ ...state });
+  assert.equal(controls._cctvSelect.value, 'a');
+  assert.equal(filter.value, 'network b');
+});
+
+test('a detached calibration input cannot finish a newer editor', (t) => {
+  const { controls, chip, inputs, patches, key } = calibrationFixture(t);
+  controls._beginCctvCalValueEdit(chip);
+  const stale = inputs[0];
+  controls._calibrationEdit(false);
+  controls._beginCctvCalValueEdit(chip);
+  const current = inputs[1];
+  current.value = '120';
+  current.dispatchEvent(new Event('input'));
+  stale.dispatchEvent(new Event('blur'));
+  stale.dispatchEvent(key('Enter'));
+  assert.deepEqual(patches, []);
+  assert.equal(controls._calibrationDraft.value, '120');
+  assert.equal(chip.querySelector('input'), current);
+  current.dispatchEvent(key('Enter'));
+  assert.equal(patches[0].calibration.patch.headingDeg, 100);
+});
+
+test('ADJUST remains reachable while the advanced Calibration section is collapsed', (t) => {
+  const { controls, patches } = calibrationFixture(t);
+  controls._renderCctvState({ ...controls.getState(), calibrationMode: true });
+  const toggle = controls._cctvPanel.querySelector(
+    '[aria-controls="cctv-calibration-editor"]',
+  );
+  const editor = controls._cctvPanel.querySelector('#cctv-calibration-editor');
+  const adjust = controls._cctvAdjustBtn;
+  toggle.click();
+  assert.equal(editor.hidden, false);
+  toggle.click();
+  assert.equal(editor.hidden, true);
+  assert.equal(adjust.closest('[hidden]'), null);
+  assert.equal(adjust.disabled, false);
+  assert.equal(adjust.textContent.trim(), 'ADJUST ON');
+  adjust.click();
+  assert.deepEqual(patches, [{ calibrationMode: false }]);
+  controls._renderCctvState({ ...controls.getState(), calibrationMode: false });
+  assert.equal(adjust.textContent.trim(), 'ADJUST');
+  assert.equal(adjust.closest('[hidden]'), null);
+  assert.equal(editor.hidden, true);
+});
+
+for (const commit of ['Enter', 'blur'])
+  test(`calibration ${commit} adopts a native value without an input event`, (t) => {
+    const { controls, chip, inputs, patches, key } = calibrationFixture(t);
+    controls._beginCctvCalValueEdit(chip);
+    inputs[0].value = '100';
+    inputs[0].dispatchEvent(
+      commit === 'Enter' ? key('Enter') : new Event('blur'),
+    );
+    assert.equal(patches[0].calibration.patch.headingDeg, 80);
+  });

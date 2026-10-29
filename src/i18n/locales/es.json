@@ -3034,5 +3034,6 @@
   "Watch a story or create your own": "Mira una historia o crea la tuya",
   "Tools": "Herramientas",
   "Import, draw, and plan routes": "Importa, dibuja y planifica rutas",
-  "Configure data providers and preferences.": "Configura los proveedores de datos y las preferencias."
+  "Configure data providers and preferences.": "Configura los proveedores de datos y las preferencias.",
+  "Coverage is estimated from the camera pose.": "La cobertura se estima a partir de la posición y orientación de la cámara."
 }

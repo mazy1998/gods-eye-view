@@ -1,4 +1,3 @@
-import { updateStatusBadge } from './statusBadge.js';
 import { msg, t } from '../i18n/index.js';
 
 /**
@@ -164,30 +163,20 @@ export function _settleCctvFrame(token, src, ok) {
 }
 
 export function _syncCctvSourceBadge(activeCamera, enabled) {
-  if (!this._cctvSourceBadge) return;
-  if (!enabled || !activeCamera) {
-    updateStatusBadge(this._cctvSourceBadge, { label: t('SOURCE · UNKNOWN') });
-    this._cctvSourceBadge.dataset.frameState = 'idle';
-    return;
-  }
+  const show = (label, frameState) => {
+    this._sourceBadge = { label, frameState };
+    this._pushCctvView();
+  };
+  if (!enabled || !activeCamera) return show(t('SOURCE · UNKNOWN'), 'idle');
   const hasDisplayedFrame =
     this._cctvFrameWrap?.classList.contains('has-frame');
-  if (this._cctvFrame?.dataset.loading === 'true' && !hasDisplayedFrame) {
-    updateStatusBadge(this._cctvSourceBadge, { label: t('FRAME · LOADING') });
-    this._cctvSourceBadge.dataset.frameState = 'loading';
-    return;
-  }
-  if (this._cctvFrame?.dataset.error === 'true' && !hasDisplayedFrame) {
-    updateStatusBadge(this._cctvSourceBadge, {
-      label: t('FRAME · UNAVAILABLE'),
-    });
-    this._cctvSourceBadge.dataset.frameState = 'error';
-    return;
-  }
+  if (this._cctvFrame?.dataset.loading === 'true' && !hasDisplayedFrame)
+    return show(t('FRAME · LOADING'), 'loading');
+  if (this._cctvFrame?.dataset.error === 'true' && !hasDisplayedFrame)
+    return show(t('FRAME · UNAVAILABLE'), 'error');
   const kind = cctvSourceKindLabel(
     activeCamera.sourceKind || activeCamera.feedType || 'unknown',
   );
   const status = cctvSourceStatusLabel(activeCamera.sourceStatus || 'unknown');
-  updateStatusBadge(this._cctvSourceBadge, { label: `${kind} · ${status}` });
-  this._cctvSourceBadge.dataset.frameState = 'ready';
+  show(`${kind} · ${status}`, 'ready');
 }

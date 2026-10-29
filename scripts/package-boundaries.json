@@ -596,9 +596,15 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/ui/unitLabels.js",
-      "src/ui/statusBadge.js"
+      "src/ui/statusBadge.js",
+      "src/ui/CctvPanelView.vue",
+      "src/ui/mountView.js",
+      "src/ui/primitives/StatusBadge.vue",
+      "src/ui/primitives/NumberField.vue",
+      "src/ui/primitives/SelectField.vue",
+      "src/ui/primitives/DisclosureRow.vue"
     ],
-    "external": []
+    "external": ["vue"]
   },
   "context-controls": {
     "exports": ["./ui/context", "./ui/context/policy"],
@@ -878,7 +884,12 @@
       "src/ui/ShellDrawer.vue",
       "src/ui/drawerNavigation.js",
       "src/ui/primitives/IconButton.vue",
-      "src/ui/primitives/PanelHeader.vue"
+      "src/ui/primitives/PanelHeader.vue",
+      "src/ui/CctvPanelView.vue",
+      "src/ui/primitives/NumberField.vue",
+      "src/ui/primitives/SelectField.vue",
+      "src/ui/primitives/DisclosureRow.vue",
+      "src/ui/StreetLevelPanelView.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2738,7 +2749,12 @@
       "src/ui/ShellDrawer.vue",
       "src/ui/drawerNavigation.js",
       "src/ui/primitives/IconButton.vue",
-      "src/ui/primitives/PanelHeader.vue"
+      "src/ui/primitives/PanelHeader.vue",
+      "src/ui/CctvPanelView.vue",
+      "src/ui/primitives/NumberField.vue",
+      "src/ui/primitives/SelectField.vue",
+      "src/ui/primitives/DisclosureRow.vue",
+      "src/ui/StreetLevelPanelView.vue"
     ],
     "external": [
       "hls.js",

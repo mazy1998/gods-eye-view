@@ -1,5 +1,4 @@
 import { formatNumber, t, msg } from '../i18n/index.js';
-import { createNumberInput } from './formField.js';
 
 /** Shortest-wrap signed degrees, for heading offsets typed as absolute values. */
 const signedNormalizeDeg = (deg) => ((((deg + 180) % 360) + 360) % 360) - 180;
@@ -11,7 +10,7 @@ const signedNormalizeDeg = (deg) => ((((deg + 180) % 360) + 360) % 360) - 180;
  * against the frozen basePose. ΔN/ΔE stay offset-denominated (absolute lat/lon
  * typing is user-hostile).
  */
-const CCTV_CAL_FIELDS = {
+export const CCTV_CAL_FIELDS = {
   heading: {
     label: msg('HDG'),
     unit: '°',
@@ -67,6 +66,16 @@ const CCTV_CAL_FIELDS = {
   },
 };
 
+const FIELD_TITLES = {
+  heading: msg('Heading (compass °) — click to type'),
+  pitch: msg('Pitch (° up/down) — click to type'),
+  fov: msg('Horizontal FOV (°) — click to type'),
+  range: msg('Range / monitor-plane distance (m) — click to type'),
+  height: msg('Mount height above ground (m) — click to type'),
+  north: msg('North offset from catalog position (m) — click to type'),
+  east: msg('East offset from catalog position (m) — click to type'),
+};
+
 /** Chip text for one pose value: locale decimals, translated metre unit. */
 function calValueText(field, value) {
   const options = {
@@ -89,7 +98,7 @@ function calValueText(field, value) {
 }
 
 export function _activeCctvCameraId() {
-  return this._cctvState?.activeCameraId || this._cctvSelect?.value || '';
+  return this._cctvState?.activeCameraId || this._selectedCameraId || '';
 }
 
 export function _resetCctvCalibration() {
@@ -116,95 +125,61 @@ export function _beginCctvCalValueEdit(chip) {
   if (!field || !activeCamera?.basePose) return;
   const cameraId = this._activeCctvCameraId();
   const basePose = { ...activeCamera.basePose };
-  const editListeners = new AbortController();
-  const startValue = field.get(activeCamera);
-  const input = createNumberInput({
-    className: 'gev-field--inline cctv-cal-input',
-    step: field.decimals > 0 ? '0.1' : '1',
-    value: Number(startValue).toFixed(field.decimals),
-    ariaLabel: t(field.label),
-  });
-  chip.textContent = `${t(field.label)} `;
-  chip.appendChild(input);
-  input.focus();
-  input.select();
-
+  this._calibrationDraft = {
+    cameraId,
+    fieldId: chip.dataset.calField,
+    basePose,
+    value: Number(field.get(activeCamera)).toFixed(field.decimals),
+  };
   let finished = false;
-  const finish = (commit) => {
+  this._calibrationEdit = (commit) => {
     if (finished) return;
     finished = true;
-    editListeners.abort();
+    const typed = parseFloat(this._calibrationDraft?.value);
     this._calibrationEdit = null;
-    const typed = parseFloat(input.value);
-    input.remove();
+    this._calibrationDraft = null;
     if (
       commit &&
       !this.destroyed &&
       Number.isFinite(typed) &&
       this._cctvState?.enabled &&
       this.actions.isEnabled() &&
-      cameraId === this._activeCctvCameraId()
+      cameraId === this._activeCctvCameraId() &&
+      this.actions.setParams
     ) {
-      if (cameraId && this.actions.setParams) {
-        this.actions.setParams(
-          {
-            selectedCameraId: cameraId,
-            calibration: { cameraId, patch: field.toPatch(typed, basePose) },
-          },
-          { origin: 'user' },
-        );
-        return; // re-render restores the chip text from fresh state
-      }
+      this.actions.setParams(
+        {
+          selectedCameraId: cameraId,
+          calibration: { cameraId, patch: field.toPatch(typed, basePose) },
+        },
+        { origin: 'user' },
+      );
     }
-    this._syncCctvCalReadout(
-      !!this._cctvState?.enabled,
-      this._cctvState?.activeCamera || null,
-    );
+    this._pushCctvView();
   };
-  this._calibrationEdit = finish;
-  input.addEventListener(
-    'keydown',
-    (event) => {
-      if (event.key === 'Enter') finish(true);
-      else if (event.key === 'Escape') {
-        event.preventDefault();
-        finish(false);
-      }
-      event.stopPropagation();
-    },
-    { signal: editListeners.signal },
-  );
-  input.addEventListener('blur', () => finish(true), {
-    signal: editListeners.signal,
-  });
-  input.addEventListener('click', (event) => event.stopPropagation(), {
-    signal: editListeners.signal,
+  this._pushCctvView();
+  // Synchronous mountView paint creates the editor before focus/select.
+  const input = chip.querySelector('input');
+  input?.focus();
+  input?.select();
+}
+
+export function calibrationFields(enabled, activeCamera) {
+  return Object.entries(CCTV_CAL_FIELDS).map(([id, field]) => {
+    const value = enabled && activeCamera ? field.get(activeCamera) : null;
+    return {
+      id,
+      label: t(field.label),
+      title: t(FIELD_TITLES[id]),
+      step: field.decimals ? '0.1' : '1',
+      text: Number.isFinite(value)
+        ? calValueText(field, value)
+        : `${t(field.label)} --`,
+    };
   });
 }
 
 export function _syncCctvCalReadout(enabled, activeCamera) {
-  const canCalibrate = !!enabled && !!activeCamera;
-  if (this._cctvAdjustBtn) {
-    const adjustOn = !!this._cctvState?.calibrationMode;
-    this._cctvAdjustBtn.classList.toggle('active', adjustOn && canCalibrate);
-    this._cctvAdjustBtn.textContent = adjustOn ? t('ADJUST ON') : t('ADJUST');
-    this._cctvAdjustBtn.disabled = !canCalibrate;
-  }
-  if (this._cctvCalReadout) {
-    for (const chip of this._cctvCalReadout.querySelectorAll(
-      '.cctv-cal-value',
-    )) {
-      if (chip.querySelector('input')) continue; // an edit is in flight — don't clobber
-      const field = CCTV_CAL_FIELDS[chip.dataset.calField];
-      if (!field) continue;
-      const value = canCalibrate ? field.get(activeCamera) : null;
-      chip.textContent = Number.isFinite(value)
-        ? calValueText(field, value)
-        : `${t(field.label)} --`;
-      chip.disabled = !canCalibrate;
-    }
-  }
-  for (const el of [this._cctvCalibSaveBtn, this._cctvCalibResetBtn]) {
-    if (el) el.disabled = !canCalibrate;
-  }
+  this._calibrationFields = calibrationFields(enabled, activeCamera);
+  this._pushCctvView();
 }

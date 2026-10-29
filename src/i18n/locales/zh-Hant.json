@@ -2894,5 +2894,6 @@
   "Watch a story or create your own": "觀看故事或建立自己的故事",
   "Tools": "工具",
   "Import, draw, and plan routes": "匯入、繪製和規劃路線",
-  "Configure data providers and preferences.": "設定資料提供者和偏好設定。"
+  "Configure data providers and preferences.": "設定資料提供者和偏好設定。",
+  "Coverage is estimated from the camera pose.": "覆蓋範圍根據攝影機的位置和朝向估算。"
 }

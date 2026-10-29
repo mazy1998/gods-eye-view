@@ -1,3 +1,7 @@
+import { mountView } from './mountView.js';
+import CctvPanelView from './CctvPanelView.vue';
+import { presentCctvPanel } from './cctvPresentation.js';
+import { t } from '../i18n/index.js';
 import {
   _clearCctvFrame,
   _queueCctvFrame,
@@ -11,7 +15,6 @@ import {
   _syncCctvCalReadout,
 } from './cctvCalibration.js';
 import {
-  _calBadgeLabel,
   _renderCctvState,
   _typeCctvSummary,
   _updateCctvSyncChip,
@@ -36,7 +39,18 @@ export class CctvControls {
     this._cctvFrameRequestToken = 0;
     this._cctvFramePreloader = null;
     this._calibrationEdit = null;
+    this._calibrationDraft = null;
+    this._selectedCameraId = '';
     this._actionGeneration = 0;
+    this._pickerFilter = '';
+    this._calibrationOpen = false;
+    this._summaryText = t(
+      'Enable CCTV to start camera-linked intelligence summaries.',
+    );
+    this._sourceBadge = { label: t('SOURCE · UNKNOWN'), frameState: 'idle' };
+    this._presentation = presentCctvPanel(null, false);
+    this._calibrationFields = [];
+    this._mountCctvView();
     this._initCctvPanel();
     if (this._cctvVideo && typeof MutationObserver !== 'undefined') {
       this._videoVisibilityObserver = new MutationObserver(() =>
@@ -51,6 +65,77 @@ export class CctvControls {
         this._renderCctvState(this._cctvState),
       );
     }
+  }
+  _mountCctvView() {
+    const body = this._cctvPanel?.querySelector('#cctv-controls-body');
+    if (!body) return;
+    this._panelView = mountView(CctvPanelView, {
+      parent: body,
+      props: this._viewProps(),
+    });
+    const ids = {
+      _cctvAdjustBtn: 'cctv-adjust-btn',
+      _cctvAutoHopBtn: 'cctv-auto-hop-btn',
+      _cctvCalReadout: 'cctv-cal-readout',
+      _cctvCalibResetBtn: 'cctv-calib-reset-btn',
+      _cctvCalibSaveBtn: 'cctv-calib-save-btn',
+      _cctvCoverageBtn: 'cctv-coverage-btn',
+      _cctvEnableBtn: 'cctv-enable-btn',
+      _cctvFocusBtn: 'cctv-focus-btn',
+      _cctvFrame: 'cctv-frame',
+      _cctvFrameWrap: 'cctv-frame-wrap',
+      _cctvVideo: 'cctv-video',
+      _cctvNearestBtn: 'cctv-nearest-btn',
+      _cctvNextBtn: 'cctv-next-btn',
+      _cctvPrevBtn: 'cctv-prev-btn',
+      _cctvProjectionBtn: 'cctv-projection-btn',
+      _cctvSelect: 'cctv-camera-select',
+      _cctvSummary: 'cctv-summary',
+    };
+    for (const [key, id] of Object.entries(ids))
+      this[key] = body.querySelector(`#${id}`);
+    this.listen(body.querySelector('#cctv-camera-filter'), 'input', (event) => {
+      this._pickerFilter = event.target.value;
+      this._pushCctvView();
+    });
+  }
+  _viewProps() {
+    const edit = this._calibrationDraft;
+    const finish = (commit, event) => {
+      if (edit && edit === this._calibrationDraft) {
+        if (commit && typeof event?.target?.value === 'string')
+          edit.value = event.target.value;
+        this._calibrationEdit?.(commit);
+      }
+    };
+    return {
+      view: this._presentation,
+      source: this._sourceBadge,
+      fields: this._calibrationFields,
+      edit: this._calibrationDraft ? { ...this._calibrationDraft } : null,
+      summary: this._summaryText,
+      filter: this._pickerFilter,
+      calibrationOpen: this._calibrationOpen,
+      inputEdit: (value) => {
+        if (edit && edit === this._calibrationDraft) edit.value = value;
+      },
+      blurEdit: (event) => finish(true, event),
+      keyEdit: (event) => {
+        if (event.key === 'Enter') finish(true, event);
+        else if (event.key === 'Escape') {
+          event.preventDefault();
+          finish(false);
+        }
+        event.stopPropagation();
+      },
+      toggleCalibration: (open) => {
+        this._calibrationOpen = open;
+        this._pushCctvView();
+      },
+    };
+  }
+  _pushCctvView() {
+    if (!this.destroyed) this._panelView?.update(this._viewProps());
   }
   listen(target, type, handler, options = {}) {
     target?.addEventListener(type, handler, {
@@ -94,9 +179,6 @@ export class CctvControls {
   _syncCctvCalReadout(...args) {
     return _syncCctvCalReadout.call(this, ...args);
   }
-  _calBadgeLabel(...args) {
-    return _calBadgeLabel.call(this, ...args);
-  }
   _renderCctvState(...args) {
     return _renderCctvState.call(this, ...args);
   }
@@ -125,5 +207,6 @@ export class CctvControls {
     this._cctvSummaryTypingTimer = null;
     this._cctvChipHideTimer = null;
     this._cctvSyncChip?.classList.remove('visible');
+    this._panelView?.dispose();
   }
 }

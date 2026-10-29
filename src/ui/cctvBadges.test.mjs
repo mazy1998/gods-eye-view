@@ -1,27 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CctvControls } from './cctvControls.js';
-import { railFixture } from './railTestFixture.mjs';
+import { container } from '../testSupport/componentDom.mjs';
+const { CctvControls } = await import('./cctvControls.js');
 import { setLocale, t } from '../i18n/index.js';
 
 function fixture(t) {
-  const { document } = railFixture();
+  const panel = document.createElement('section');
+  panel.innerHTML = '<div id="cctv-controls-body"></div>';
+  container.appendChild(panel);
   const controls = new CctvControls({
-    elements: {
-      // The shell mounts the Vue chip; the owner supplies its inputs.
-      _cctvQualityBadge: {
-        props: {},
-        update(next) {
-          Object.assign(this.props, next);
-        },
-      },
-      _cctvSourceBadge: document.createElement('div'),
-    },
+    elements: { _cctvPanel: panel },
     cctv: {},
-    actions: { isEnabled: () => true, setPanelCollapsed() {} },
+    actions: {
+      isEnabled: () => true,
+      setPanelCollapsed() {},
+      syncViewport() {},
+    },
   });
+  controls._cctvSourceBadge = panel.querySelector('#cctv-source-badge');
+  const quality = panel.querySelector('#cctv-quality-chip');
   t.after(() => controls.destroy());
-  return { controls, document };
+  return { controls, document, quality };
 }
 
 test('source and frame states retain their distinct meanings, including retained pixels', (testContext) => {
@@ -63,7 +62,7 @@ test('source and frame states retain their distinct meanings, including retained
 });
 
 test('calibration labels follow supplied provenance and dirty/save/reset transitions without writes to the camera', (testContext) => {
-  const { controls } = fixture(testContext);
+  const { controls, quality } = fixture(testContext);
   const cases = [
     ['raw-prior', false, 'CAL · RAW PRIOR'],
     ['curated', false, 'CAL · CURATED'],
@@ -80,19 +79,19 @@ test('calibration labels follow supplied provenance and dirty/save/reset transit
       activeCameraId: 'a',
       activeCamera,
     });
-    assert.equal(controls._cctvQualityBadge.props.label, label);
+    assert.equal(quality.textContent, label);
     assert.equal(
-      controls._cctvQualityBadge.props['data-cal-badge'],
+      quality.dataset.calBadge,
       calDirty ? 'edited' : calBadge || '',
     );
   }
   controls._renderCctvState(null);
-  assert.equal(controls._cctvQualityBadge.props.label, 'CAL · --');
-  assert.equal(controls._cctvQualityBadge.props['data-cal-badge'], '');
+  assert.equal(quality.textContent, 'CAL · --');
+  assert.equal(quality.dataset.calBadge, '');
 });
 
 test('localization changes badge copy while preserving machine state ids', (testContext) => {
-  const { controls } = fixture(testContext);
+  const { controls, quality } = fixture(testContext);
   testContext.after(() => setLocale('en'));
   setLocale('ru');
   controls._syncCctvSourceBadge(
@@ -110,9 +109,6 @@ test('localization changes badge copy while preserving machine state ids', (test
     activeCameraId: 'a',
     activeCamera: { id: 'a', calBadge: 'curated', calDirty: true },
   });
-  assert.equal(
-    controls._cctvQualityBadge.props.label,
-    t('CAL · EDITED (UNSAVED)'),
-  );
-  assert.equal(controls._cctvQualityBadge.props['data-cal-badge'], 'edited');
+  assert.equal(quality.textContent, t('CAL · EDITED (UNSAVED)'));
+  assert.equal(quality.dataset.calBadge, 'edited');
 });

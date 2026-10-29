@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
-import { StreetLevelControls } from './streetLevelControls.js';
+import { container } from '../testSupport/componentDom.mjs';
+const { StreetLevelControls } = await import('./streetLevelControls.js');
 import { createStreetLevelLayer } from '../layers/streetLevel/index.js';
 import { createMapillaryProvider } from '../layers/streetLevel/providers/mapillary/index.js';
 import { DataLayerManager } from '../data/manager.js';
@@ -16,268 +17,88 @@ import {
   providerSnapshot,
 } from '../testSupport/streetLevelFakes.mjs';
 
-/* ── A small DOM: just what the panel controls touch ───────────────────── */
-
-/** Every write a page would see as a mutation, even one to the same value. */
-const mutations = { count: 0 };
-const REFLECTED = ['hidden', 'disabled', 'textContent', 'title', 'value'];
-
-class FakeNode {
-  constructor(document, tag, { id = null, dataset = {}, classes = [] } = {}) {
-    this.listeners = new Map();
-    this.ownerDocument = document;
-    this.tagName = tag.toUpperCase();
-    this.id = id;
-    this.dataset = { ...dataset };
-    this.children = [];
-    this.parent = null;
-    this.props = {
-      hidden: false,
-      disabled: false,
-      textContent: '',
-      title: '',
-      value: '',
-    };
-    for (const key of REFLECTED)
-      Object.defineProperty(this, key, {
-        get: () => this.props[key],
-        set: (value) => {
-          mutations.count++;
-          this.props[key] = value;
-        },
-      });
-    this.attributes = new Map();
-    const names = new Set(classes);
-    this.classList = {
-      contains: (name) => names.has(name),
-      toggle: (name, force) => {
-        const on = force ?? !names.has(name);
-        if (on) names.add(name);
-        else names.delete(name);
-        return on;
-      },
-    };
-    const style = {};
-    this.style = Object.assign(style, {
-      setProperty: (key, value) => {
-        style[key] = value;
-      },
-      removeProperty: (key) => {
-        delete style[key];
-      },
-    });
-    Object.defineProperty(this, 'className', {
-      get: () => [...names].join(' '),
-      set: (value) => {
-        mutations.count++;
-        names.clear();
-        for (const name of String(value).split(/\s+/).filter(Boolean))
-          names.add(name);
-      },
-    });
-  }
-  get childElementCount() {
-    return this.children.length;
-  }
-  setAttribute(key, value) {
-    mutations.count++;
-    this.attributes.set(key, String(value));
-  }
-  getAttribute(key) {
-    return this.attributes.get(key) ?? null;
-  }
-  removeAttribute(key) {
-    mutations.count++;
-    this.attributes.delete(key);
-  }
-  appendChild(child) {
-    child.parent = this;
-    this.children.push(child);
-    return child;
-  }
-  append(...nodes) {
-    for (const node of nodes) this.appendChild(node);
-  }
-  replaceChildren(...nodes) {
-    this.children = [];
-    this.append(...nodes);
-  }
-  contains(node) {
-    for (let current = node; current; current = current.parent)
-      if (current === this) return true;
-    return false;
-  }
-  closest(selector) {
-    for (let current = this; current; current = current.parent)
-      if (current.matches?.(selector)) return current;
-    return null;
-  }
-  insertBefore(child, before) {
-    child.parent?.children.splice(child.parent.children.indexOf(child), 1);
-    child.parent = this;
-    const at = before ? this.children.indexOf(before) : -1;
-    if (at === -1) this.children.push(child);
-    else this.children.splice(at, 0, child);
-    return child;
-  }
-  remove() {
-    this.parent?.children.splice(this.parent.children.indexOf(this), 1);
-    this.parent = null;
-  }
-  focus() {
-    this.ownerDocument.activeElement = this;
-  }
-  *walk() {
-    for (const child of this.children) {
-      yield child;
-      yield* child.walk();
-    }
-  }
-  querySelector(selector) {
-    return this.querySelectorAll(selector)[0] || null;
-  }
-  /** `#id`, `.class` or `[data-x]`. */
-  matches(selector) {
-    const byId = /^#(.+)$/.exec(selector);
-    if (byId) return this.id === byId[1];
-    const byClass = /^\.(.+)$/.exec(selector);
-    if (byClass) return this.classList.contains(byClass[1]);
-    const byData = /^\[data-([a-z-]+)\]$/.exec(selector);
-    return Boolean(
-      byData &&
-      byData[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase()) in this.dataset,
-    );
-  }
-  querySelectorAll(selector) {
-    return [...this.walk()].filter((node) => node.matches(selector));
-  }
-  addEventListener(type, listener, { signal } = {}) {
-    if (signal?.aborted) return;
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type).add(listener);
-    signal?.addEventListener('abort', () =>
-      this.listeners.get(type)?.delete(listener),
-    );
-  }
-  /** Deliver to this node, then bubble up with the same target. */
-  dispatchEvent(event) {
-    const delivered = {
-      type: event.type,
-      target: this,
-      key: event.key,
-      newState: event.newState,
-      stopped: false,
-      preventDefault() {},
-      stopPropagation() {
-        this.stopped = true;
-      },
-    };
-    for (
-      let node = this;
-      node && !delivered.stopped;
-      node = event.bubbles ? node.parent : null
-    )
-      for (const listener of [...(node.listeners.get(event.type) || [])])
-        listener(delivered);
-    return true;
-  }
-  click() {
-    this.dispatchEvent({ type: 'click', bubbles: true });
-  }
-}
-
-/**
- * The Street Level panel's body, as layer-panels.html lays it out, on a page
- * with the Fullscreen API unless `fullscreen` is false, and the Popover API
- * if `popover` is true (iPhone Safari: popovers, no element fullscreen).
- */
+/** Real DOM/Vue fixture with browser-only fullscreen/popover APIs supplied. */
 function panelDom({ fullscreen = true, popover = false } = {}) {
-  const document = new FakeNode(null, '#document');
-  Object.assign(document, {
-    ownerDocument: document,
-    activeElement: null,
-    fullscreenElement: null,
-    createElement: (tag) => new FakeNode(document, tag),
+  const root = document.createElement('section');
+  root.id = 'street-level-panel';
+  root.innerHTML = '<button id="sl-status"></button><div id="sl-body"></div>';
+  container.appendChild(root);
+  let fullscreenElement = null;
+  Object.defineProperty(document, 'fullscreenElement', {
+    configurable: true,
+    get: () => fullscreenElement,
   });
-  // The browser reports a change after the request settles.
   const fullscreenTo = (element) => {
-    document.fullscreenElement = element;
-    setTimeout(() => document.dispatchEvent({ type: 'fullscreenchange' }), 0);
+    fullscreenElement = element;
+    setTimeout(() => document.dispatchEvent(new Event('fullscreenchange')), 0);
   };
   document.exitFullscreen = async () => fullscreenTo(null);
-  document.body = document.appendChild(new FakeNode(document, 'body'));
-  const root = document.body.appendChild(
-    new FakeNode(document, 'section', { id: 'street-level-panel' }),
-  );
-  const add = (parent, tag, options) =>
-    parent.appendChild(new FakeNode(document, tag, options));
-  add(root, 'button', { id: 'sl-status' });
-  add(root, 'div', { id: 'sl-provider-chips' });
-  const wrap = add(root, 'div', { id: 'sl-viewer-wrap' });
-  if (fullscreen) wrap.requestFullscreen = async () => fullscreenTo(wrap);
-  if (popover) {
-    // `popover` reflects its attribute, as in the DOM.
-    Object.defineProperty(wrap, 'popover', {
-      get: () => wrap.getAttribute('popover'),
-      set: (value) => wrap.setAttribute('popover', value),
+  const proto = HTMLElement.prototype;
+  Object.defineProperties(proto, {
+    clientWidth: { configurable: true, get: () => 640 },
+    clientHeight: { configurable: true, get: () => 400 },
+  });
+  proto.requestFullscreen = fullscreen
+    ? async function () {
+        fullscreenTo(this);
+      }
+    : undefined;
+  proto.showPopover = popover
+    ? function () {
+        this.popoverOpen = true;
+        setTimeout(
+          () =>
+            this.dispatchEvent(
+              Object.assign(new Event('toggle'), { newState: 'open' }),
+            ),
+          0,
+        );
+      }
+    : undefined;
+  proto.hidePopover = popover
+    ? function () {
+        this.popoverOpen = false;
+        setTimeout(
+          () =>
+            this.dispatchEvent(
+              Object.assign(new Event('toggle'), { newState: 'closed' }),
+            ),
+          0,
+        );
+      }
+    : undefined;
+  if (!Object.getOwnPropertyDescriptor(proto, 'popover'))
+    Object.defineProperty(proto, 'popover', {
+      configurable: true,
+      get() {
+        return this.getAttribute('popover');
+      },
+      set(value) {
+        this.setAttribute('popover', value);
+      },
     });
-    // The browser fires `toggle` after the popover opens or closes.
-    const toggleTo = (newState) =>
-      setTimeout(() => wrap.dispatchEvent({ type: 'toggle', newState }), 0);
-    wrap.showPopover = () => {
-      wrap.popoverOpen = true;
-      toggleTo('open');
-    };
-    wrap.hidePopover = () => {
-      wrap.popoverOpen = false;
-      toggleTo('closed');
-    };
-  }
-  const expand = add(wrap, 'button', { id: 'sl-viewer-expand' });
-  add(expand, 'span', { classes: ['sl-btn-icon'] });
-  add(expand, 'span', { classes: ['sl-btn-text'] });
-  const fit = add(wrap, 'div', { classes: ['sl-seg'] });
-  for (const mode of ['letterbox', 'fill'])
-    add(fit, 'button', { dataset: { slRender: mode } });
-  add(wrap, 'button', { id: 'sl-viewer-close' });
-  for (const id of [
-    'sl-viewer-placeholder',
-    'sl-viewer',
-    'sl-image-by',
-    'sl-image-when',
-    'sl-image-link',
-  ])
-    add(wrap, id === 'sl-image-link' ? 'a' : 'div', { id });
-  const error = add(root, 'div', { id: 'sl-error' });
-  add(error, 'span', { id: 'sl-error-text' });
-  const controls = add(root, 'fieldset', { id: 'sl-controls' });
-  const panoRow = add(controls, 'div', { id: 'sl-pano-row' });
-  for (const pano of ['all', 'pano', 'flat'])
-    add(panoRow, 'button', { dataset: { slPano: pano } });
-  const sinceRow = add(controls, 'div', { id: 'sl-since-row' });
-  add(sinceRow, 'input', { id: 'sl-since' });
-  add(sinceRow, 'output', { id: 'sl-since-label' });
-  add(sinceRow, 'small', { id: 'sl-since-note' });
-  const metaRow = add(root, 'div', { classes: ['sl-meta-row'] });
-  add(metaRow, 'div', { id: 'sl-coverage-meta' });
-  add(metaRow, 'button', { id: 'sl-nearest-btn' });
-  return { document, root, wrap };
-}
-
-/** Run `fn` with the fake document and an immediate animation frame. */
-async function withDom(fn, options) {
-  const saved = {
-    document: globalThis.document,
-    requestAnimationFrame: globalThis.requestAnimationFrame,
+  let wrap;
+  return {
+    document,
+    root,
+    get wrap() {
+      return (wrap ||= root.querySelector('#sl-viewer-wrap'));
+    },
   };
-  const page = panelDom(options);
-  globalThis.document = page.document;
+}
+async function withDom(fn, options) {
+  const prior = globalThis.requestAnimationFrame;
   globalThis.requestAnimationFrame = (task) => setTimeout(task, 0);
+  const page = panelDom(options);
   try {
     return await fn(page);
   } finally {
-    globalThis.document = saved.document;
-    globalThis.requestAnimationFrame = saved.requestAnimationFrame;
+    globalThis.requestAnimationFrame = prior;
+    page.root.remove();
+    document.body.className = '';
+    delete HTMLElement.prototype.requestFullscreen;
+    delete HTMLElement.prototype.showPopover;
+    delete HTMLElement.prototype.hidePopover;
   }
 }
 
@@ -395,12 +216,39 @@ test('releasing the SINCE slider records the window in the share link', () =>
     coordinator.destroy();
   }));
 
+test('SINCE preview belongs to the controls and survives unrelated owner notifications', () =>
+  withDom(async (dom) => {
+    const state = uiState();
+    const { controls, layer, calls } = stubPanel(dom, state);
+    const range = dom.root.querySelector('#sl-since');
+    range.dispatchEvent(new Event('focus'));
+    range.value = '5';
+    range.dispatchEvent(new Event('input'));
+    assert.equal(controls._sinceIndex, 5);
+    layer.publish({ ...state });
+    assert.equal(range.value, '5');
+    assert.equal(
+      dom.root.querySelector('#sl-since-label').textContent,
+      'LAST YEAR',
+    );
+    assert.deepEqual(calls.setParams, []);
+    range.dispatchEvent(new Event('change'));
+    assert.deepEqual(calls.setParams, [
+      [{ sinceDays: 365 }, { origin: 'user' }],
+    ]);
+    range.dispatchEvent(new Event('blur'));
+    layer.publish({ ...state });
+    assert.equal(controls._sinceIndex, 0);
+    assert.equal(range.value, '0');
+    controls.destroy();
+  }));
+
 /* ── Render behaviour, against a stand-in layer ────────────────────────── */
 
 function stubLayer() {
   const listeners = new Set();
   let state = null;
-  const calls = { resize: 0 };
+  const calls = { resize: 0, hosts: [] };
   return {
     calls,
     publish(next) {
@@ -415,7 +263,9 @@ function stubLayer() {
     resizeViewer() {
       calls.resize++;
     },
-    attachViewerHost() {},
+    attachViewerHost(host) {
+      calls.hosts.push(host);
+    },
   };
 }
 
@@ -629,14 +479,26 @@ test('Esc in full screen shrinks the photo; the panel never sees it', () =>
     assert.equal(dom.document.fullscreenElement, dom.wrap);
     let panelEsc = 0;
     dom.root.addEventListener('keydown', () => panelEsc++);
-    expand.dispatchEvent({ type: 'keydown', key: 'Escape', bubbles: true });
+    expand.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     await settle();
     await settle();
     assert.equal(dom.document.fullscreenElement, null);
     assert.equal(panelEsc, 0, 'the panel stays open');
     assert.deepEqual(expandLabel(dom), ['EXPAND', 'false']);
     // Not expanded, Esc is the panel's again.
-    expand.dispatchEvent({ type: 'keydown', key: 'Escape', bubbles: true });
+    expand.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     assert.equal(panelEsc, 1);
     controls.destroy();
   }));
@@ -679,7 +541,13 @@ test('on iPhone (no element fullscreen) EXPAND opens the viewer as a popover ove
       // Esc shrinks the photo; the panel's own Esc (collapse) never sees it.
       let panelEsc = 0;
       dom.root.addEventListener('keydown', () => panelEsc++);
-      expand.dispatchEvent({ type: 'keydown', key: 'Escape', bubbles: true });
+      expand.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
       await settle();
       await settle();
       assert.equal(dom.wrap.popoverOpen, false);
@@ -818,11 +686,17 @@ test('a hidden (0×0) viewer is not resized, so no z=NaN tile request (P3)', () 
       await settle();
       const resizes = layer.calls.resize;
       const viewer = dom.root.querySelector('#sl-viewer');
-      Object.assign(viewer, { clientWidth: 0, clientHeight: 0 });
+      Object.defineProperties(viewer, {
+        clientWidth: { configurable: true, value: 0 },
+        clientHeight: { configurable: true, value: 0 },
+      });
       observers[0]();
       await settle();
       assert.equal(layer.calls.resize, resizes, 'skipped while 0×0');
-      Object.assign(viewer, { clientWidth: 640, clientHeight: 400 });
+      Object.defineProperties(viewer, {
+        clientWidth: { configurable: true, value: 640 },
+        clientHeight: { configurable: true, value: 400 },
+      });
       observers[0]();
       await settle();
       assert.equal(layer.calls.resize, resizes + 1, 'resized once it shows');
@@ -836,9 +710,16 @@ test('identical renders write nothing to the DOM (P3: rail MutationObserver)', (
   withDom(async (dom) => {
     const { layer, controls } = stubPanel(dom, uiState({ open: true }));
     layer.publish(uiState({ open: true }));
-    const before = mutations.count;
+    const observer = new MutationObserver(() => {});
+    observer.observe(dom.root, {
+      subtree: true,
+      attributes: true,
+      childList: true,
+      characterData: true,
+    });
     for (let i = 0; i < 10; i++) layer.publish(uiState({ open: true }));
-    assert.equal(mutations.count - before, 0);
+    assert.equal(observer.takeRecords().length, 0);
+    observer.disconnect();
     controls.destroy();
   }));
 
@@ -846,7 +727,9 @@ test('arrow keys move the selection within a radiogroup, which has one tab stop 
   withDom(async (dom) => {
     const { layer, calls, controls } = stubPanel(dom, uiState());
     const keydown = (target, key) =>
-      target.dispatchEvent({ type: 'keydown', bubbles: true, key });
+      target.dispatchEvent(
+        new KeyboardEvent('keydown', { bubbles: true, key, cancelable: true }),
+      );
     const [all, pano, flat] = dom.root.querySelectorAll('[data-sl-pano]');
     assert.deepEqual(
       [all, pano, flat].map((button) => button.getAttribute('tabindex')),
@@ -991,8 +874,12 @@ test('a note under SINCE says what date it compares, only while one is given', (
       new URL('./templates/layer-panels.html', import.meta.url),
       'utf8',
     );
-    assert.match(template, /<small id="sl-since-note"[^>]* hidden>/);
-    assert.match(template, /aria-describedby="sl-since-label sl-since-note"/);
+    assert.match(template, /id="sl-body"/);
+    assert.equal(note().hidden, true);
+    assert.equal(
+      dom.root.querySelector('#sl-since').getAttribute('aria-describedby'),
+      'sl-since-label sl-since-note',
+    );
   }));
 
 test('Street View lit hides the imagery filters; Mapillary lit shows them', () =>
@@ -1024,4 +911,37 @@ test('Street View lit hides the imagery filters; Mapillary lit shows them', () =
       since: true,
       controls: true,
     });
+  }));
+
+test('viewer DOM belongs to the imagery owner across filter, metadata and source paints', () =>
+  withDom(async (dom) => {
+    const state = uiState({ open: true });
+    const { controls, layer } = stubPanel(dom, state);
+    const host = dom.root.querySelector('#sl-viewer');
+    const image = document.createElement('canvas');
+    host.appendChild(image);
+    const next = {
+      ...state,
+      street: {
+        ...state.street,
+        creator: '<img onerror=alert(1)>',
+        license: '<script>bad</script>',
+        externalUrl: 'https://example.test/photo',
+        providerLabel: 'Provider',
+      },
+    };
+    layer.publish(next);
+    assert.equal(dom.root.querySelector('#sl-viewer'), host);
+    assert.equal(host.firstChild, image);
+    assert.match(
+      dom.root.querySelector('#sl-image-by').textContent,
+      /<img onerror/,
+    );
+    assert.equal(dom.root.querySelector('#sl-image-by img'), null);
+    const link = dom.root.querySelector('#sl-image-link');
+    assert.equal(link.rel, 'noopener noreferrer');
+    assert.equal(link.target, '_blank');
+    assert.equal(link.href, 'https://example.test/photo');
+    controls.destroy();
+    assert.equal(layer.calls.hosts.at(-1), null);
   }));

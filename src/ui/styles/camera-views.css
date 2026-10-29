@@ -1,0 +1,186 @@
+/* Theme the ported content; media owners retain the stable viewer nodes. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls) {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-radius: var(--gev-radius-md);
+  padding: var(--gev-space-2);
+  font: var(--gev-font-size-sm) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+  min-width: 0;
+}
+.camera-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  :is(#cctv-meta, #cctv-summary) {
+  color: var(--gev-text);
+  text-shadow: none;
+  font: var(--gev-font-size-xs) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls)
+  :is(
+    .camera-help,
+    .cctv-summary-label,
+    .sl-meta,
+    .sl-since-label,
+    .sl-since-note,
+    .sl-image-meta
+  ) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-xs) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+.camera-help {
+  margin: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  .cctv-calibration-block {
+  padding: var(--gev-space-2);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+.camera-controls .gev-disclosure-row {
+  margin-bottom: var(--gev-space-2);
+}
+.camera-controls .cctv-cal-input {
+  min-width: 64px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  .cctv-frame-wrap {
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  .cctv-frame-caption {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls)
+  :is(.scene-btn, .cctv-cal-value, .sl-viewer-x, .data-toggle-chip) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  box-shadow: none;
+  text-shadow: none;
+  font-size: var(--gev-font-size-xs);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls)
+  :is(.scene-btn, .cctv-cal-value, .sl-viewer-x, .data-toggle-chip):is(
+    :hover,
+    :focus-visible
+  ):not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls)
+  :is(.scene-btn.active, .data-toggle-chip.active) {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  :is(.camera-controls, .street-level-controls)
+  :is(button, input, select, a):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:is(.camera-controls, .street-level-controls) :disabled {
+  opacity: var(--gev-disabled-opacity);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .street-level-controls
+  .sl-error {
+  color: var(--gev-danger-text);
+  border-color: var(--gev-danger);
+  background: var(--gev-danger-tint);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .street-level-controls
+  .sl-image-link {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  :is(#cctv-quality-chip, #cctv-source-badge) {
+  --status-badge-color: var(--gev-text-muted);
+  --status-badge-border: var(--gev-border);
+  --status-badge-background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  #cctv-quality-chip[data-cal-badge='calibrated'] {
+  --status-badge-color: var(--gev-accent-text);
+  --status-badge-border: var(--gev-accent-tint-border);
+  --status-badge-background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  :is(
+    #cctv-quality-chip[data-cal-badge='curated'],
+    #cctv-quality-chip[data-cal-badge='edited'],
+    #cctv-source-badge[data-frame-state='loading']
+  ) {
+  --status-badge-color: var(--gev-warning-text);
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  #cctv-quality-chip[data-cal-badge='edited'] {
+  border-style: dashed;
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(#cctv-controls-body, #sl-body)
+  .camera-controls
+  #cctv-source-badge[data-frame-state='error'] {
+  --status-badge-color: var(--gev-danger-text);
+  --status-badge-border: var(--gev-danger);
+  --status-badge-background: var(--gev-danger-tint);
+}
+:is(.camera-controls, .street-level-controls) [hidden] {
+  display: none !important;
+}
+/* The media stage keeps its own pixels; its controls and captions share the
+   themed surface so Light never places dark text on a legacy black bar. */
+:where(:root:not([data-ui-theme='cyber']))
+  #sl-body
+  .street-level-controls
+  .sl-viewer-wrap {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #sl-body
+  .street-level-controls
+  :is(.sl-viewer-bar, .sl-image-meta, .sl-viewer-tools .sl-seg) {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}

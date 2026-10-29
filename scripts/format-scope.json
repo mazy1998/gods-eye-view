@@ -1159,5 +1159,6 @@
   "scripts/qa-cyber-precedence.mjs",
   "scripts/qa-cyber-precedence-fixtures.mjs",
   "src/ui/styles/cyberPrecedenceHarness.test.mjs",
-  "docs/CYBER-PRECEDENCE.md"
+  "docs/CYBER-PRECEDENCE.md",
+  "src/ui/styles/camera-views.css"
 ]

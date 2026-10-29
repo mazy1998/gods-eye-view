@@ -19,7 +19,6 @@ import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { mountView } from './mountView.js';
 import { createMapStackChannel } from './mapStackChannel.js';
-import StatusBadge from './primitives/StatusBadge.vue';
 import StyleIndicator from './StyleIndicator.vue';
 import ShellDrawer from './ShellDrawer.vue';
 import ShellRail from './ShellRail.vue';
@@ -1301,41 +1300,9 @@ export class StyleManager extends ShellFacade {
   _initCctvPanel() {
     const { cctvLayer } = this.services;
     this._cctvControls?.destroy();
-    // The calibration chip closes the projection row; CctvControls paints it.
-    const projectionRow = this._cctvProjectionBtn?.parentElement;
-    this._cctvQualityBadge ??= projectionRow
-      ? this._mountView(StatusBadge, {
-          parent: projectionRow,
-          props: {
-            id: 'cctv-quality-chip',
-            appearance: 'box',
-            label: t('CAL · {badge}', { badge: '--' }),
-          },
-        })
-      : null;
     this._cctvControls = new CctvControls({
       elements: {
-        _cctvAdjustBtn: this._cctvAdjustBtn,
-        _cctvAutoHopBtn: this._cctvAutoHopBtn,
-        _cctvCalReadout: this._cctvCalReadout,
-        _cctvCalibResetBtn: this._cctvCalibResetBtn,
-        _cctvCalibSaveBtn: this._cctvCalibSaveBtn,
-        _cctvCoverageBtn: this._cctvCoverageBtn,
-        _cctvEnableBtn: this._cctvEnableBtn,
-        _cctvFocusBtn: this._cctvFocusBtn,
-        _cctvFrame: this._cctvFrame,
-        _cctvFrameWrap: this._cctvFrameWrap,
-        _cctvVideo: this._cctvVideo,
-        _cctvMeta: this._cctvMeta,
-        _cctvNearestBtn: this._cctvNearestBtn,
-        _cctvNextBtn: this._cctvNextBtn,
         _cctvPanel: this._cctvPanel,
-        _cctvPrevBtn: this._cctvPrevBtn,
-        _cctvProjectionBtn: this._cctvProjectionBtn,
-        _cctvQualityBadge: this._cctvQualityBadge,
-        _cctvSelect: this._cctvSelect,
-        _cctvSourceBadge: this._cctvSourceBadge,
-        _cctvSummary: this._cctvSummary,
         _cctvSyncChip: this._cctvSyncChip,
         _cctvSyncLabel: this._cctvSyncLabel,
         _cctvSyncProgress: this._cctvSyncProgress,
