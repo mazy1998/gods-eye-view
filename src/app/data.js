@@ -35,7 +35,9 @@ export function createApplicationData({
     openDetails: (panelId) => {
       if (panelId === 'directions-controls-body') {
         if (!styleManager._drawer?.open('tools')) return false;
-        document.getElementById(panelId)?.focus({ preventScroll: true });
+        const section = document.getElementById(panelId);
+        section?.focus({ preventScroll: true });
+        section?.scrollIntoView?.({ block: 'nearest' });
         return true;
       }
       return styleManager.setPanelCollapsed(panelId, false, { explicit: true });

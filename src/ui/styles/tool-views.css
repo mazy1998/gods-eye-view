@@ -186,6 +186,9 @@
   outline-color: var(--gev-focus-ring);
 }
 .gev-tools #geo-import-scene {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gev-space-2);
   margin-top: var(--gev-space-3);
 }
 :where(:root:not([data-ui-theme='cyber']))
@@ -199,4 +202,194 @@
   min-height: 28px;
   padding: var(--gev-space-1) var(--gev-space-2);
   font-size: var(--gev-font-size-xs);
+}
+
+.gev-tools-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-3);
+  margin-bottom: var(--gev-space-3);
+}
+.gev-tools-header .gev-tools-title {
+  margin: 0;
+}
+.gev-tools-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+.gev-tools-count,
+.gev-tools-state {
+  margin-inline-start: auto;
+  padding: var(--gev-space-1) var(--gev-space-2);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  font-size: var(--gev-font-size-xs);
+  font-weight: 400;
+}
+.gev-tools-draw-header {
+  margin: 0;
+}
+.gev-tools-upload {
+  width: 32px;
+  height: 32px;
+  justify-self: center;
+}
+.gev-legacy-host > #geo-import-group .gev-tools-drop-guide {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--gev-space-2);
+  min-height: 188px;
+  box-sizing: border-box;
+  padding: var(--gev-space-4);
+}
+.gev-legacy-host > #geo-import-group .gev-tools-drop-guide p {
+  margin: 0;
+}
+.gev-legacy-host > #geo-import-group #geo-import-button {
+  min-height: 38px;
+  padding: var(--gev-space-2) var(--gev-space-3);
+}
+.gev-legacy-host > #geo-import-group #geo-import-scene {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gev-space-2);
+  width: fit-content;
+  align-self: flex-start;
+  margin-top: var(--gev-space-4);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > .gev-tools.gev-surface {
+  padding-inline: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host > #draw-group {
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host .gev-tools-title,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  .directions-header
+  h3 {
+  font-size: var(--gev-font-size-lg);
+  font-family: var(--gev-font-sans);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host #draw-toggle {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  #draw-toggle
+  .pp-label {
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host .gev-tools-prompt {
+  font-size: var(--gev-font-size-lg);
+  font-weight: 600;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  #geo-import-group
+  .gev-tools-meta {
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  .gev-tools-scene-link {
+  font-family: var(--gev-font-sans);
+  font-size: 14px;
+  padding-inline-start: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gev-accent-text);
+  box-shadow: none;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  .gev-tools-scene-link:hover {
+  color: var(--gev-accent-text);
+  background: transparent;
+  text-decoration-line: underline;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  :is(.gev-tools-count, .gev-tools-state) {
+  font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host #geo-import-button {
+  padding-inline: var(--gev-space-4);
+  font-family: var(--gev-font-sans);
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  #geo-import-button:hover:not(:disabled) {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent);
+  background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  .directions-view--hosted {
+  padding-inline: 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.directions-view--hosted .directions-header {
+  justify-content: flex-start;
+  gap: var(--gev-space-3);
+  margin-bottom: var(--gev-space-3);
+}
+.directions-view--hosted .gev-tools-route-toggle {
+  margin-inline-start: auto;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view--hosted
+  .gev-tools-route-toggle
+  .gev-toggle-label {
+  padding: var(--gev-space-1) var(--gev-space-2);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  font: 400 var(--gev-font-size-sm) var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  .directions-view--hosted
+  .data-toggle-meta {
+  font: 14px / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
 }

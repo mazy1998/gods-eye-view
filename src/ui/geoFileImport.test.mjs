@@ -10,6 +10,7 @@ import { toolDocument, instrument } from '../testSupport/toolDomFixture.mjs';
 const { initGeoFileImport, summarize } = await import('./geoFileImport.js');
 import { GeoImportError, MAX_IMPORTED_FILES } from '../data/geoFileImport.js';
 import { describeUnsavedWork } from '../i18n/index.js';
+import { fixtures as cyberFixtures } from '../../scripts/qa-cyber-precedence-fixtures.mjs';
 
 function setup({ load, navigation, flyToSource, subscribeMapSource } = {}) {
   const { document } = toolDocument('geo-import-group');
@@ -619,4 +620,34 @@ test('the map-object count in a row title keeps digit grouping', async () => {
   const [row] = rows(t.els);
   assert.match(row.children[1].title, /12,345 map objects/);
   t.tool.destroy();
+});
+
+test('the file chooser retains its compact Cyber skin and matches its audit fixture', () => {
+  const f = setup();
+  try {
+    const chooser = f.els['geo-import-button'];
+    assert.equal(
+      chooser.classList.contains('gev-action-button--compact'),
+      true,
+    );
+    const fixture = globalThis.document.createElement('template');
+    fixture.innerHTML = cyberFixtures.find(
+      (item) => item.sheet === 'tool-views',
+    ).html;
+    const sample = fixture.content.querySelector('#geo-import-button');
+    assert.equal(sample.className, chooser.className);
+    assert.ok(sample.closest('.gev-legacy-host > #geo-import-group'));
+    for (const selector of [
+      '.gev-tools-header .gev-tools-title',
+      '.gev-tools-count',
+      '.gev-tools-upload',
+      '.gev-tools-prompt',
+      '.gev-tools-scene-link',
+    ]) {
+      assert.ok(globalThis.document.querySelector(selector), selector);
+      assert.ok(fixture.content.querySelector(selector), selector);
+    }
+  } finally {
+    f.tool.destroy();
+  }
 });

@@ -53,9 +53,24 @@ watch(
     :tabindex="hosted ? -1 : undefined"
     :aria-label="t('Directions')"
   >
-    <header v-if="hosted" class="directions-header">
-      <h3>{{ t('Directions') }}</h3>
+    <header v-if="hosted" class="directions-header gev-tools-header">
+      <svg
+        class="gev-tools-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="6" r="3" />
+        <path d="M6 15V8a2 2 0 0 1 2-2h2m-1 12h7a2 2 0 0 0 2-2v-3" />
+      </svg>
+      <h3 class="gev-tools-title">{{ t('Directions') }}</h3>
       <ToggleSwitch
+        class="gev-tools-route-toggle"
         :model-value="enabled"
         :label="toggleState?.stateText"
         :busy="toggleState?.busy"

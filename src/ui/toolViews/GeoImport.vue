@@ -13,9 +13,40 @@ const description = (file) =>
 </script>
 
 <template>
-  <h3 class="gev-tools-title">{{ t('Import') }}</h3>
+  <header class="gev-tools-header">
+    <svg
+      class="gev-tools-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5" />
+    </svg>
+    <h3 class="gev-tools-title">{{ t('Import') }}</h3>
+    <span
+      class="gev-tools-count"
+      :title="`${t('Imported files')}: ${formatNumber(state.files.length)}`"
+      >{{ formatNumber(state.files.length) }}</span
+    >
+  </header>
   <div class="gev-tools-drop-guide">
-    <p>{{ t('Drop map files onto the globe') }}</p>
+    <svg
+      class="gev-tools-upload"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5" />
+    </svg>
+    <p class="gev-tools-prompt">{{ t('Drop map files onto the globe') }}</p>
     <p class="gev-tools-meta">{{ FORMATS.join(' · ') }}</p>
     <ActionButton
       id="geo-import-button"
@@ -114,7 +145,9 @@ const description = (file) =>
   >
   <ActionButton
     id="geo-import-scene"
+    class="gev-tools-scene-link"
     size="compact"
     :label="t('Import scene')"
-  />
+    >{{ t('Import scene') }}<span aria-hidden="true">→</span></ActionButton
+  >
 </template>

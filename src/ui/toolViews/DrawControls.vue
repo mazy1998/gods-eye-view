@@ -5,23 +5,38 @@ defineProps({ state: { type: Object, required: true } });
 </script>
 
 <template>
-  <button
-    id="draw-toggle"
-    class="pp-toggle-btn"
-    :class="{ active: state.active }"
-    type="button"
-    :aria-pressed="String(state.active)"
-    :title="
-      t(
-        'Draw on the world — click vertices, double-click or Enter to finish, Esc to cancel',
-      )
-    "
-  >
-    <span class="pp-icon material-symbols-outlined" aria-hidden="true"
-      >draw</span
+  <h3 class="gev-tools-title gev-tools-draw-header">
+    <button
+      id="draw-toggle"
+      class="pp-toggle-btn"
+      :class="{ active: state.active }"
+      type="button"
+      :aria-label="t('Draw')"
+      :aria-pressed="String(state.active)"
+      :title="
+        t(
+          'Draw on the world — click vertices, double-click or Enter to finish, Esc to cancel',
+        )
+      "
     >
-    <span class="pp-label">{{ t('Draw') }}</span>
-  </button>
+      <svg
+        class="pp-icon gev-tools-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m3 21 1-6L16 3l5 5L9 20l-6 1Zm10-15 5 5M4 15l5 5" />
+      </svg>
+      <span class="pp-label">{{ t('Draw') }}</span>
+      <span class="gev-tools-state" aria-hidden="true">{{
+        t(state.active ? 'ON' : 'OFF')
+      }}</span>
+    </button>
+  </h3>
   <div
     id="draw-mode-row"
     class="pp-slider-row"

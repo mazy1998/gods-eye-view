@@ -155,6 +155,15 @@ test('Tools has a named card and a shared, busy-guarded layer switch', () => {
   });
   const root = view.element;
   assert.equal(root.querySelector('h3').textContent, 'Directions');
+  assert.ok(
+    root.querySelector(
+      '.directions-header .gev-tools-icon[aria-hidden="true"]',
+    ),
+  );
+  assert.equal(
+    root.querySelector('.gev-tools-route-toggle .gev-toggle-label').textContent,
+    'OFF',
+  );
   root.focus();
   assert.equal(document.activeElement, root);
   const button = root.querySelector('[role=switch]');
@@ -170,6 +179,10 @@ test('Tools has a named card and a shared, busy-guarded layer switch', () => {
     },
   });
   assert.equal(button.getAttribute('aria-checked'), 'true');
+  assert.equal(
+    root.querySelector('.gev-tools-route-toggle .gev-toggle-label').textContent,
+    'ON',
+  );
   assert.equal(button.getAttribute('aria-busy'), 'true');
   assert.equal(button.disabled, false);
   button.click();

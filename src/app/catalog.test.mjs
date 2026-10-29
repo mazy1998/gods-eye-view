@@ -156,10 +156,16 @@ test('controls bind catalog instances rather than similarly named defaults', () 
 
 test('Directions details opens Tools without claiming the share-panel lane', async (t) => {
   const previous = globalThis.document;
-  let focused;
+  let focused, scrolled;
+  const order = [];
   const section = {
     focus: (options) => {
       focused = options;
+      order.push('focus');
+    },
+    scrollIntoView: (options) => {
+      scrolled = options;
+      order.push('scroll');
     },
   };
   globalThis.document = {
@@ -192,6 +198,8 @@ test('Directions details opens Tools without claiming the share-panel lane', asy
   presentation.panel.openDetails('directions-controls-body');
   assert.deepEqual(calls, [['drawer', 'tools']]);
   assert.deepEqual(focused, { preventScroll: true });
+  assert.deepEqual(scrolled, { block: 'nearest' });
+  assert.deepEqual(order, ['focus', 'scroll']);
   presentation.panel.openDetails('weather-panel');
   assert.deepEqual(calls[1], [
     'panel',
