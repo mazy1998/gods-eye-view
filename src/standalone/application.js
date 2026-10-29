@@ -1,3 +1,4 @@
+import { createStartupFeedback } from '../ui/startupFeedback.js';
 import { createStandaloneCatalog } from './catalog.js';
 import { createStandalonePlaceSearch } from './placeSearch.js';
 import { CITY_POIS } from '../cityPois.js';
@@ -35,10 +36,10 @@ export function createStandaloneApplication({
   applyDocumentLanguage(document, activeLocale);
   applyDocumentTranslations(document);
   const loadingScreen = document.getElementById('loading-screen');
-  const loaderStatus = loadingScreen.querySelector('.loader-status');
+  const loaderStatus = createStartupFeedback(loadingScreen);
   let placeSearch;
   let catalog;
-  return createApplication({
+  const application = createApplication({
     createScene: async (context) => {
       placeSearch = createStandalonePlaceSearch({
         // The bundled city and landmark data the offline name provider reads.
@@ -86,4 +87,8 @@ export function createStandaloneApplication({
     createTools: (context) =>
       createStandaloneTools({ ...context, loadingScreen, placeSearch, voice }),
   });
+  application.subscribe((state) => {
+    if (state.status === 'destroyed') loaderStatus.destroy();
+  });
+  return application;
 }

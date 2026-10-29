@@ -30,7 +30,8 @@ const TESTS = ['src/firstRunExperience.test.mjs', 'src/standalone/startupChrome.
 const FILES = {
   keyboard: path.join(ROOT, 'src', 'ui', 'surfaceKeyboard.js'),
   module: path.join(ROOT, 'src', 'firstRunExperience.js'),
-  html: path.join(ROOT, 'src', 'ui', 'templates', 'welcome.html'),
+  html: path.join(ROOT, 'src', 'ui', 'feedback', 'FirstRunContent.vue'),
+  welcomeHost: path.join(ROOT, 'src', 'ui', 'templates', 'welcome.html'),
   css: path.join(ROOT, 'src', 'ui', 'styles', 'first-run.css'),
   voiceInstructions: path.join(ROOT, 'server/providers/openai/instructions.js'),
   voiceDescriptions: path.join(
@@ -256,8 +257,8 @@ const MUTATIONS = [
   {
     defect: 'the tile stops promising the fires it actually turns on',
     file: 'html',
-    from: '<small>Live earthquakes and active fires, from USGS and NASA</small>',
-    to: '<small>Live earthquakes worldwide, straight from USGS</small>',
+    from: 'Live earthquakes and active fires, from USGS and NASA',
+    to: 'Live earthquakes worldwide, straight from USGS',
   },
   {
     defect: "the owner-authored first-run line is quietly rewritten",
@@ -343,9 +344,9 @@ const MUTATIONS = [
   // ── Accessibility and the transplant defects ──────────────────────────────
   {
     defect: 'disabling the focused tile drops the keyboard to <body> mid-flight',
-    file: 'module',
-    from: "    for (const button of buttons)\n      button.setAttribute('aria-disabled', String(next));",
-    to: '    for (const button of buttons) button.disabled = next;',
+    file: 'html',
+    from: ':aria-disabled="String(busy)"',
+    to: ':disabled="busy"',
   },
   {
     defect: 'Tab escapes into an app the visitor has not seen yet',
@@ -415,14 +416,14 @@ const MUTATIONS = [
   {
     defect: 'a mission tile is dropped from the menu',
     file: 'html',
-    from: '      <button type="button" data-first-run-choice="space-missions">',
-    to: '      <button type="button" data-first-run-choice-disabled="space-missions">',
+    from: 'data-first-run-choice="space-missions"',
+    to: 'data-first-run-choice-disabled="space-missions"',
   },
   {
     defect: 'the menu order stops matching the owner\'s',
     file: 'html',
-    from: '<button type="button" data-first-run-choice="environmental">',
-    to: '<button type="button" data-first-run-choice="zzz-environmental">',
+    from: 'data-first-run-choice="environmental"',
+    to: 'data-first-run-choice="zzz-environmental"',
   },
   {
     defect: 'the "don\'t show again" checkbox is removed',
@@ -433,12 +434,12 @@ const MUTATIONS = [
   {
     defect: 'the status line stops being a polite live region',
     file: 'html',
-    from: 'data-first-run-status role="status" aria-live="polite"',
+    from: 'data-first-run-status\n    role="status"\n    aria-live="polite"',
     to: 'data-first-run-status',
   },
   {
     defect: 'the launcher is no longer announced as a dialog',
-    file: 'html',
+    file: 'welcomeHost',
     from: '<aside id="first-run-launcher" role="dialog"',
     to: '<aside id="first-run-launcher"',
   },
@@ -497,7 +498,7 @@ for (const { defect, file, from, to } of MUTATIONS) {
   let red = false;
   let by = '';
   try {
-    execFileSync('node', ['--test', ...TESTS], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+    execFileSync('node', ['--import', './scripts/vue-sfc-hooks.mjs', '--test', ...TESTS], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
   } catch (error) {
     red = true;
     const failed = String(error.stdout || '').split('\n')

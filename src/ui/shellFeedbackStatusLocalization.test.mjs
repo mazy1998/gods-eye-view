@@ -10,16 +10,7 @@ import {
   reduceLoadingFeedback,
 } from '../loadingFeedback.js';
 
-const elements = {
-  'global-loading-status': { hidden: true, dataset: {} },
-  'global-loading-detail': { textContent: '' },
-};
-globalThis.document ??= {
-  getElementById: (id) => elements[id] ?? null,
-  addEventListener() {},
-  removeEventListener() {},
-  hidden: false,
-};
+import { container } from '../testSupport/componentDom.mjs';
 const { ShellFeedback, localizeLoadingPresentation } =
   await import('./shellFeedback.js');
 
@@ -35,10 +26,14 @@ function alprChipDetail(locale, retryInMs) {
       retryAt: Date.now() + retryInMs,
     },
   };
+  container.innerHTML =
+    '<div id="global-loading-status"><span id="global-loading-label"></span><span id="global-loading-detail"></span></div>';
   const feedback = new ShellFeedback({ readLayers: () => [layer] });
   feedback._armLoadingFeedbackTicker = () => {};
   feedback._updateGlobalLoadingFeedback(0);
-  return elements['global-loading-detail'].textContent;
+  const result = document.getElementById('global-loading-detail').textContent;
+  feedback.destroy();
+  return result;
 }
 
 test.afterEach(() => setLocale('en'));

@@ -8,7 +8,9 @@ import {
   reduceLoadingFeedback,
   reduceTrafficSyncFeedback,
 } from '../loadingFeedback.js';
-import { setSplitFlapText, disposeSplitFlap } from '../splitFlap.js';
+import { mountView } from './mountView.js';
+import FeedbackContent from './feedback/FeedbackContent.vue';
+import LiteralText from './feedback/LiteralText.vue';
 import { getLocale, t, msg } from '../i18n/index.js';
 import { localizeLayerName } from './layerNames.js';
 import { translateFeedError } from './statusText.js';
@@ -127,6 +129,7 @@ export class ShellFeedback {
       this._trafficChipTicker =
       this._toastTimer =
         null;
+    this._toastRevision = 0;
     this._loadingVisibilityHandler = null;
     this._lastLoadingFeedbackUpdateAt = 0;
     this._lastTrafficChipUpdateAt = 0;
@@ -134,16 +137,27 @@ export class ShellFeedback {
     this._globalLoadingStatus = document.getElementById(
       'global-loading-status',
     );
-    this._globalLoadingLabel = document.getElementById('global-loading-label');
-    this._globalLoadingDetail = document.getElementById(
-      'global-loading-detail',
-    );
     this._trafficSyncChip = document.getElementById('traffic-sync-chip');
-    this._trafficSyncLabel = document.getElementById('traffic-sync-label');
-    this._trafficSyncProgress = document.getElementById(
-      'traffic-sync-progress',
-    );
     this._toast = document.getElementById('toast');
+    const mount = (parent, component, props) => {
+      if (!parent) return null;
+      parent.replaceChildren();
+      parent.classList.add('gev-surface');
+      return mountView(component, { parent, props });
+    };
+    this._loadingView = mount(this._globalLoadingStatus, FeedbackContent, {
+      labelId: 'global-loading-label',
+      detailId: 'global-loading-detail',
+      label: t('LOADING LIVE DATA'),
+      detail: '',
+    });
+    this._trafficView = mount(this._trafficSyncChip, FeedbackContent, {
+      labelId: 'traffic-sync-label',
+      detailId: 'traffic-sync-progress',
+      label: t('syncing road network'),
+      detail: '0%',
+    });
+    this._toastView = mount(this._toast, LiteralText, { text: '' });
   }
   observeVisibility() {
     if (this.destroyed || this._loadingVisibilityHandler) return;
@@ -158,12 +172,7 @@ export class ShellFeedback {
   }
   _updateTrafficSyncChip(forceShow = false, now = performance.now()) {
     if (this.destroyed) return;
-    if (
-      !this._trafficSyncChip ||
-      !this._trafficSyncLabel ||
-      !this._trafficSyncProgress
-    )
-      return;
+    if (!this._trafficView) return;
     const layers = this.readLayers();
     const traffic = Array.isArray(layers)
       ? layers.find((layer) => layer.id === 'traffic')
@@ -178,24 +187,13 @@ export class ShellFeedback {
       now,
     );
     const presentation = this._trafficSyncFeedbackState;
-    // setSplitFlapText carries the same unchanged-text guard internally, and
-    // the flap keeps textContent equal to the settled label throughout, so
-    // this stays a no-op on the repeat ticks exactly as it did before.
-    if (presentation.label)
-      setSplitFlapText(
-        this._trafficSyncLabel,
-        localizeStatusLabel(presentation.label),
-        {
-          // Completion is a timing signal, not another animated loading stage.
-          immediate: !presentation.busy,
-        },
-      );
-    // Written on every change INCLUDING the empty settled value — the reducer
-    // clears the progress number once the sync lands, and a truthiness guard
-    // here would strand the last "..." beside the settled label.
-    if (this._trafficSyncProgress.textContent !== presentation.progressText) {
-      this._trafficSyncProgress.textContent = presentation.progressText;
-    }
+    this._trafficView.update({
+      ...(presentation.label
+        ? { label: localizeStatusLabel(presentation.label) }
+        : {}),
+      immediate: !presentation.busy,
+      detail: presentation.progressText,
+    });
     this._trafficSyncChip.classList.toggle('visible', presentation.visible);
   }
 
@@ -237,13 +235,10 @@ export class ShellFeedback {
       return;
     }
     this._globalLoadingStatus.dataset.state = presentation.state;
-    // Split-flap the LABEL only ("LOADING LIVE DATA" -> "LOAD COMPLETE").
-    // setSplitFlapText is a no-op when the text is unchanged, which matters
-    // here: this runs on every 60 ms and 500 ms tick. The detail line is the
-    // live layer roster inside an ellipsised, width-capped span — flapping a
-    // list that churns as layers join would be noise, not delight.
-    setSplitFlapText(this._globalLoadingLabel, localized.label);
-    this._globalLoadingDetail.textContent = localized.detail;
+    this._loadingView?.update({
+      label: localized.label,
+      detail: localized.detail,
+    });
   }
 
   _showGlobalStatusNotice(message, options = {}) {
@@ -307,7 +302,12 @@ export class ShellFeedback {
 
   _showToast(message) {
     if (this.destroyed) return;
-    this._toast.textContent = message;
+    // Each toast is a new announcement, even when its text repeats. Keep
+    // the live-region host and replace its text node on every occurrence.
+    this._toastView?.update({
+      key: ++this._toastRevision,
+      text: String(message ?? ''),
+    });
     this._toast.classList.add('visible');
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => {
@@ -327,8 +327,9 @@ export class ShellFeedback {
         this._loadingVisibilityHandler,
       );
     this._loadingVisibilityHandler = null;
-    disposeSplitFlap(this._globalLoadingLabel);
-    disposeSplitFlap(this._trafficSyncLabel);
+    this._loadingView?.dispose();
+    this._trafficView?.dispose();
+    this._toastView?.dispose();
     this._toast?.classList.remove('visible');
     if (this._globalLoadingStatus) this._globalLoadingStatus.hidden = true;
   }

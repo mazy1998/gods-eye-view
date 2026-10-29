@@ -1,0 +1,123 @@
+/* Only appearance paint changes here. Legacy geometry, yielding and lifetimes
+   stay in first-run/status/foundation; Cyber retains its existing cascade. */
+:root:not([data-ui-theme='cyber']) #first-run-launcher,
+:root:not([data-ui-theme='cyber']) #global-loading-status,
+:root:not([data-ui-theme='cyber']) #traffic-sync-chip,
+:root:not([data-ui-theme='cyber']) #toast,
+:root:not([data-ui-theme='cyber'])
+  .cesium-credit-lightbox[data-gev-credit-surface] {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-color: var(--gev-border);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-scanline {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-kicker, .first-run-arrow, .material-symbols-outlined),
+:root:not([data-ui-theme='cyber']) #global-loading-label,
+:root:not([data-ui-theme='cyber']) #global-loading-detail,
+:root:not([data-ui-theme='cyber']) #traffic-sync-label,
+:root:not([data-ui-theme='cyber']) #traffic-sync-progress {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(
+    .first-run-header,
+    .first-run-footer,
+    #first-run-description,
+    small,
+    .first-run-suppress,
+    .first-run-note
+  ) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-choices {
+  scrollbar-color: var(--gev-accent-tint-border) transparent;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-choices::-webkit-scrollbar-thumb {
+  background: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-choices
+  button {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-choices
+  button:is(:hover, :focus-visible) {
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-choices
+  button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-dismiss:is(:hover, :focus-visible),
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-suppress:hover {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-suppress
+  input {
+  accent-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher[data-state='loading']
+  .first-run-note {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #global-loading-status[data-state='error']
+  :is(#global-loading-label, #global-loading-detail) {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #global-loading-status:is([data-state='retry'], [data-state='cancelled'])
+  :is(#global-loading-label, #global-loading-detail) {
+  color: var(--gev-warning-text);
+}
+:root:not([data-ui-theme='cyber']) #loading-screen {
+  background: var(--gev-surface-base);
+}
+:root:not([data-ui-theme='cyber']) .loader-content :is(h2, .title-accent) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber']) .loader-status {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  .cesium-credit-lightbox[data-gev-credit-surface]
+  :is(a, .cesium-credit-lightbox-close) {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  .cesium-credit-lightbox[data-gev-credit-surface]
+  .cesium-credit-lightbox-title {
+  color: var(--gev-text);
+}
+/* Credits over the globe keep their existing backdrop/contrast and position. */
+:root:not([data-ui-theme='cyber']) #global-loading-status[data-state='error'] {
+  border-color: var(--gev-danger);
+}
+:root:not([data-ui-theme='cyber']) #global-loading-status[data-state='retry'] {
+  border-color: var(--gev-warning);
+}

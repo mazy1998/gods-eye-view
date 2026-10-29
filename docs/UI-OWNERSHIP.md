@@ -137,3 +137,27 @@ imagery layer, thumbnail loader, map lease or download service.
 Camera calibration text, captured base pose/camera identity, search filter, advanced disclosure and typed summary belong to CctvControls. Native number inputs report intent; a detached editor cannot finish another draft. The two provenance badges render owner-supplied labels and machine states. The existing frame preloader and shared video surface retain stable media nodes, request tokens, retained-frame behavior and decoder ownership; Vue never writes their media state or recreates a decoder.
 
 Street Level's Since index/focus/preview belong to StreetLevelControls; filter/provider selection and imagery state stay with the layer. The viewer owner retains the stable `sl-viewer` child host across prop updates. Closing an image first returns focus to the header status control and exits expansion, then synchronous view paint hides the wrap. Fullscreen/popover, persisted fit/fill, observer-driven resizing and panel-hiding modes retain their existing lifetime. Destruction releases listeners/subscriptions, detaches the media host and disposes each view before late work can paint.
+
+### First run and feedback (S22)
+
+`firstRunExperience` retains show policy, missions, suppression/session writes,
+keyboard arbitration, busy/sticky status and teardown. `FirstRunContent.vue`
+only paints its props in the existing launcher. Owner updates are synchronous,
+so focus and scroll measurements see the updated nodes before returning.
+`ShellFeedback` retains notice arbitration, delayed reveal/dwell, traffic polling
+and toast timers. `FeedbackContent.vue` owns the split-flap spans and releases
+the animation on unmount; `LiteralText.vue` never interprets messages as HTML.
+`startupFeedback` holds the startup message/error and accepts the existing
+scene/controls write-only `textContent` input as an owner setter, not a DOM node.
+
+Cesium still owns its required credit list, provider markup, links and lightbox
+show/hide. `CreditsHost.vue` supplies only its existing container, and
+`creditText` mounts our two localized control labels without replacing controls
+or their listeners. No provider HTML is copied or reinterpreted. The existing
+credit keyboard adapter still owns activation and focus restoration.
+
+Cesium replaces its lightbox `className` for mobile/desktop layout. Our credit
+appearance uses `data-gev-credit-surface`, which survives that operation; it
+never observes or rewrites Cesium's class list. The startup cover is already a
+surface and gets no nested card. Fatal startup text uses `--gev-error-text`:
+appearance danger text normally, the unchanged legacy `#ff4444` under Cyber.

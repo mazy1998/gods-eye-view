@@ -1,3 +1,4 @@
+import '../testSupport/componentDom.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { UiLifetime } from './uiLifetime.js';
@@ -5,6 +6,8 @@ import { PanelChrome } from './panelChrome.js';
 import { PanelLayoutController } from './panelLayoutController.js';
 import { ShellFeedback } from './shellFeedback.js';
 import { RecordingControls } from './recordingControls.js';
+
+const viewDocument = document;
 
 function fixture() {
   const saved = Object.fromEntries(
@@ -14,12 +17,15 @@ function fixture() {
       'localStorage',
       'requestAnimationFrame',
       'cancelAnimationFrame',
+      'MutationObserver',
       'setTimeout',
       'clearTimeout',
       'setInterval',
       'clearInterval',
     ].map((key) => [key, globalThis[key]]),
   );
+  // Non-view layout fixtures keep their original observer-free environment.
+  globalThis.MutationObserver = undefined;
   const frames = new Map(),
     timers = new Map();
   let next = 0;
@@ -60,7 +66,12 @@ function fixture() {
       'safe-frame-box',
       'hud-toggle',
       'hud-layout-select',
-    ].map((id) => [id, element()]),
+    ].map((id) => [
+      id,
+      ['toast', 'global-loading-status', 'global-loading-detail'].includes(id)
+        ? viewDocument.createElement('div')
+        : element(),
+    ]),
   );
   globalThis.document = Object.assign(new EventTarget(), {
     hidden: false,
@@ -181,13 +192,14 @@ test('feedback disposal clears toast and polling work and rejects retained notic
     owner._startTrafficChipTicker();
     owner._showToast('Saved');
     assert.equal(f.timers.size, 2);
+    assert.equal(f.nodes.get('toast').textContent, 'Saved');
     owner.destroy();
     owner._showToast('Late');
     owner._showGlobalStatusNotice('Late');
     owner._startTrafficChipTicker();
     document.dispatchEvent(new Event('visibilitychange'));
     assert.equal(f.timers.size, 0);
-    assert.equal(f.nodes.get('toast').textContent, 'Saved');
+    assert.equal(f.nodes.get('toast').textContent, '');
     assert.equal(f.nodes.get('toast').classList.contains('visible'), false);
     assert.equal(f.nodes.get('global-loading-status').hidden, true);
   } finally {

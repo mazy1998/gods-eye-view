@@ -1,4 +1,7 @@
-import { expandApplicationHtml } from '../build/application-html.js';
+import { h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import FirstRunContent from './ui/feedback/FirstRunContent.vue';
+import { expandApplicationHtml as expandShellHtml } from '../build/application-html.js';
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
 import { GEV_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
 import test from 'node:test';
@@ -18,6 +21,18 @@ import {
   setFirstRunSuppressed,
   shouldShowFirstRun,
 } from './firstRunExperience.js';
+
+const firstRunHtml = await renderToString(
+  h(FirstRunContent, {
+    environmentalTitle: environmentalLabel().title,
+    status: 'Tip: the GEV MIC button in the dock lets you talk to the map.',
+  }),
+);
+const expandApplicationHtml = (html) =>
+  expandShellHtml(html).replace(
+    /(<aside id="first-run-launcher"[^>]*>)(<\/aside>)/,
+    (_, open, close) => open + firstRunHtml + close,
+  );
 
 function memoryStorage(key, value = null) {
   const values = new Map(value == null ? [] : [[key, value]]);
@@ -814,8 +829,11 @@ test('markup, startup ordering and accessibility remain pinned', () => {
     html,
     /data-first-run-status[^>]*role="status"[^>]*aria-live="polite"/,
   );
-  assert.match(html, /<input type="checkbox" data-first-run-suppress \/>/);
-  assert.match(html, /<strong data-first-run-environmental-title>/);
+  assert.match(
+    html,
+    /<input type="checkbox" data-first-run-suppress(?:="")?\s*\/?>/,
+  );
+  assert.match(html, /<strong data-first-run-environmental-title(?:="")?>/);
   // Subcopy must name BOTH feeds the tile turns on — a tile that promised only
   // half of what it does is the defect this replaced. Only the VISIBLE <small>
   // text counts; the comment beside it naturally says the words too.
@@ -838,7 +856,7 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   // passing edit — changing it needs the owner, not a nicer-sounding rewrite.
   assert.ok(
     html.includes(
-      '<p id="first-run-description" data-i18n-runtime>It feels like a forbidden cockpit' +
+      '<p id="first-run-description">It feels like a forbidden cockpit' +
         '—then you realize the sources are public and the data is real.</p>',
     ),
     'the owner-authored first-run line must ship exactly as written',
@@ -929,10 +947,10 @@ test('the card closes without a keyboard: the ESC hint is a button, kept on phon
   );
   assert.match(
     footer,
-    /<button type="button" class="first-run-dismiss" data-first-run-dismiss>/,
+    /<button type="button" class="first-run-dismiss" data-first-run-dismiss(?:="")?>/,
   );
-  assert.match(footer, /data-i18n>ESC to dismiss</);
-  assert.match(footer, /data-i18n>DISMISS</);
+  assert.match(footer, />ESC to dismiss</);
+  assert.match(footer, />DISMISS</);
   // It closes the way ESC does, through the one dismiss path, so the session
   // flag and focus handling are the same.
   assert.match(
@@ -963,10 +981,22 @@ test('the launcher keeps focus, restores it, and never disables the focused butt
   // aria-disabled, never the `disabled` property: disabling a focused button
   // drops the keyboard to <body> and strands the visitor outside the launcher.
   assert.match(
-    module,
-    /button\.setAttribute\('aria-disabled', String\(next\)\)/,
+    fs.readFileSync(
+      new URL('./ui/feedback/FirstRunContent.vue', import.meta.url),
+      'utf8',
+    ),
+    /:aria-disabled="String\(busy\)"/,
   );
   assert.doesNotMatch(module, /button\.disabled = /);
+  const view = fs.readFileSync(
+    new URL('./ui/feedback/FirstRunContent.vue', import.meta.url),
+    'utf8',
+  );
+  assert.equal(
+    (view.match(/:aria-disabled="String\(busy\)"/g) || []).length,
+    4,
+  );
+  assert.doesNotMatch(view, /:disabled=/);
   // Tab is confined to the launcher, and ESC always releases it.
   const keyboard = fs.readFileSync(
     new URL('./ui/surfaceKeyboard.js', import.meta.url),

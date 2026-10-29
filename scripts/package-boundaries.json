@@ -889,7 +889,9 @@
       "src/ui/primitives/NumberField.vue",
       "src/ui/primitives/SelectField.vue",
       "src/ui/primitives/DisclosureRow.vue",
-      "src/ui/StreetLevelPanelView.vue"
+      "src/ui/StreetLevelPanelView.vue",
+      "src/ui/feedback/FeedbackContent.vue",
+      "src/ui/feedback/LiteralText.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2754,7 +2756,12 @@
       "src/ui/primitives/NumberField.vue",
       "src/ui/primitives/SelectField.vue",
       "src/ui/primitives/DisclosureRow.vue",
-      "src/ui/StreetLevelPanelView.vue"
+      "src/ui/StreetLevelPanelView.vue",
+      "src/ui/feedback/FeedbackContent.vue",
+      "src/ui/feedback/LiteralText.vue",
+      "src/ui/feedback/FirstRunContent.vue",
+      "src/ui/feedback/CreditsHost.vue",
+      "src/ui/creditText.js"
     ],
     "external": [
       "hls.js",

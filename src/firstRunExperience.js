@@ -1,3 +1,5 @@
+import { mountView } from './ui/mountView.js';
+import FirstRunContent from './ui/feedback/FirstRunContent.vue';
 import { createSurfaceKeyboard } from './ui/surfaceKeyboard.js';
 
 // First-run mission launcher.
@@ -354,33 +356,26 @@ export function initFirstRunExperience({
     return null;
   }
 
-  // The tile name is owner-switchable from one constant, so paint it from the
-  // module rather than trusting the markup to match. The description and the
-  // tile subcopy are data-i18n-runtime in welcome.html and translated here.
-  const environmentalTitle = root.querySelector(
-    '[data-first-run-environmental-title]',
+  const defaultStatus = t(
+    'Tip: the GEV MIC button in the dock lets you talk to the map.',
   );
-  if (environmentalTitle)
-    environmentalTitle.textContent = environmentalLabel().title;
-  const environmentalSub = root.querySelector(
-    '[data-first-run-environmental-title] + small',
-  );
-  if (environmentalSub)
-    environmentalSub.textContent = t(
-      'Live earthquakes and active fires, from USGS and NASA',
-    );
-  const description = root.querySelector('#first-run-description');
-  if (description)
-    description.textContent = t(
-      'It feels like a forbidden cockpit—then you realize the sources are public and the data is real.',
-    );
-
+  let stickyStatus = false;
+  let busy = false;
+  let closing = false;
+  let statusText = defaultStatus;
+  root.classList.add('gev-surface');
+  const view = mountView(FirstRunContent, {
+    parent: root,
+    props: {
+      environmentalTitle: environmentalLabel().title,
+      status: statusText,
+    },
+  });
+  const paint = () =>
+    view.update({ busy, sticky: stickyStatus, status: statusText });
   const status = root.querySelector('[data-first-run-status]');
   const suppressBox = root.querySelector('[data-first-run-suppress]');
   const buttons = [...root.querySelectorAll('[data-first-run-choice]')];
-  const defaultStatus = status?.textContent || '';
-  let busy = false;
-  let closing = false;
 
   /**
    * Is something painted OVER the card? A measurable box is not a visible card.
@@ -436,7 +431,10 @@ export function initFirstRunExperience({
     root.setAttribute('aria-hidden', 'true');
     globalThis.removeEventListener?.('resize', onViewportResize);
     surfaceObserver?.disconnect();
-    const remove = () => root.remove();
+    const remove = () => {
+      view.dispose();
+      root.remove();
+    };
     root.addEventListener('transitionend', remove, { once: true });
     // `transitionend` never fires under prefers-reduced-motion (no transition),
     // so a bounded fallback is what actually removes the node there.
@@ -450,24 +448,18 @@ export function initFirstRunExperience({
     busy = next;
     root.dataset.state = next ? 'loading' : 'ready';
     root.setAttribute('aria-busy', String(next));
-    // aria-disabled, not `disabled`: disabling the focused button drops focus to
-    // <body> mid-flight and strands a keyboard visitor outside the launcher.
-    for (const button of buttons)
-      button.setAttribute('aria-disabled', String(next));
-    if (!status) return;
+    // aria-disabled keeps the focused mission button in the tab order.
     if (next)
-      status.textContent = t(
-        FIRST_RUN_MISSIONS[choice]?.busyKey || msg('Working…'),
-      );
-    else if (status.dataset.sticky !== 'true')
-      status.textContent = defaultStatus;
+      statusText = t(FIRST_RUN_MISSIONS[choice]?.busyKey || msg('Working…'));
+    else if (!stickyStatus) statusText = defaultStatus;
+    paint();
   };
 
   const onChoice = async (event) => {
     if (busy || closing) return;
     const choice = event.currentTarget?.dataset?.firstRunChoice;
     if (!FIRST_RUN_MISSIONS[choice]) return;
-    if (status) delete status.dataset.sticky;
+    stickyStatus = false;
     setBusy(true, choice);
     let outcome = null;
     try {
@@ -507,8 +499,8 @@ export function initFirstRunExperience({
     const detail =
       Array.isArray(failed) && failed.length ? ` (${failed.join(', ')})` : '';
     if (status) {
-      status.dataset.sticky = 'true';
-      status.textContent = t(
+      stickyStatus = true;
+      statusText = t(
         'Could not open that mission{detail}. Retry or explore manually.',
         { detail },
       );
@@ -526,10 +518,11 @@ export function initFirstRunExperience({
     // truth is, and say why rather than leaving a control that undoes itself.
     if (box) box.checked = !wanted;
     if (!status) return;
-    status.dataset.sticky = 'true';
-    status.textContent = t(
+    stickyStatus = true;
+    statusText = t(
       'This browser is blocking storage, so that could not be saved.',
     );
+    paint();
   };
 
   const keyboard = createSurfaceKeyboard({
@@ -659,6 +652,7 @@ export function initFirstRunExperience({
     keyboard.destroy();
     globalThis.removeEventListener?.('resize', onViewportResize);
     surfaceObserver?.disconnect();
+    view.dispose();
     root.remove();
   };
   return { dismiss, isTopmost, destroy };

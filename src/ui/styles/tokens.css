@@ -32,6 +32,7 @@
   --gev-warning-text: #ffc777;
   --gev-danger: #ff7272;
   --gev-danger-text: #ff7272;
+  --gev-error-text: var(--gev-danger-text);
   --gev-danger-tint: rgba(255, 88, 88, 0.15);
   --gev-focus-ring: var(--text-primary);
   --gev-focus-ring-inner: #061014;
@@ -129,6 +130,8 @@
    red with dark text on them, and raised surfaces its dark instrument well.
    Legacy-backed controls inside a surface already read Cyber's palette. */
 :root[data-ui-theme='cyber'] {
+  /* Preserve the fatal startup error red formerly assigned inline by main. */
+  --gev-error-text: #ff4444;
   --gev-surface-base: var(--cyber-panel-surface);
   --gev-surface-raised: var(--cyber-telemetry-fill);
   --gev-surface-overlay: var(--cyber-telemetry-fill);

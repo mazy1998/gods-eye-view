@@ -205,19 +205,3 @@ test('English keeps Cesium attribution texts', () => {
   assert.equal(f.expand.textContent, 'Data attribution');
   assert.equal(f.title.textContent, 'Data provided by:');
 });
-
-for (const [locale, link, title] of [
-  ['ru', 'Источники данных', 'Данные предоставлены:'],
-  ['es', 'Atribución de datos', 'Datos proporcionados por:'],
-])
-  test(`${locale}: Cesium attribution link and lightbox title are translated`, () => {
-    setLocale(locale);
-    try {
-      const f = textFixture();
-      configureCreditKeyboardAccess(f.root);
-      assert.equal(f.expand.textContent, link);
-      assert.equal(f.title.textContent, title);
-    } finally {
-      setLocale('en');
-    }
-  });

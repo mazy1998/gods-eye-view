@@ -1,3 +1,6 @@
+import { h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import FirstRunContent from './ui/feedback/FirstRunContent.vue';
 import { expandApplicationHtml } from '../build/application-html.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -20,10 +23,11 @@ test('HUD sliders have descriptive explicit names', () => {
   }
 });
 
-test('the first-run checkbox keeps its native visible label', () => {
+test('the first-run checkbox keeps its native visible label', async () => {
+  const markup = await renderToString(h(FirstRunContent));
   // The span may carry a data-i18n extraction attribute; the native wrapping
   // label contract is what this guards.
-  assert.match(html, /<label\b[^>]*class="first-run-suppress"[^>]*>\s*<input type="checkbox" data-first-run-suppress \/>\s*<span\b[^>]*>Don't show this again<\/span>\s*<\/label>/);
+  assert.match(markup, /<label\b[^>]*class="first-run-suppress"[^>]*>\s*<input type="checkbox" data-first-run-suppress(?:="")?\s*\/?>\s*<span\b[^>]*>Don(?:'|&#39;)t show this again<\/span>\s*<\/label>/);
 });
 
 test('generated style sliders use the visible parameter label as their name', () => {

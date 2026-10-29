@@ -1,3 +1,6 @@
+import { mountView } from '../ui/mountView.js';
+import CreditsHost from '../ui/feedback/CreditsHost.vue';
+import { mountCreditText } from '../ui/creditText.js';
 import { createApplicationOperations } from './operations.js';
 import * as Cesium from 'cesium';
 import {
@@ -45,10 +48,9 @@ export async function createApplicationScene({
   }
   loaderStatus.textContent = t('Configuring viewer...');
   // Provider attribution stays visible, including clean-view and recording.
-  const creditContainer = document.createElement('div');
-  creditContainer.id = 'cesium-credits';
-  document.body.appendChild(creditContainer);
-  defer(() => creditContainer.remove());
+  const creditsView = mountView(CreditsHost, { parent: document.body });
+  const creditContainer = creditsView.element;
+  defer(() => creditsView.dispose());
   const viewer = createApplicationViewer({
     container: 'cesiumContainer',
     creditContainer,
@@ -60,6 +62,7 @@ export async function createApplicationScene({
   defer(installTrackpadPinchZoom(viewer));
   registerDataCredits(viewer, credits);
   configureCreditKeyboardAccess(document);
+  defer(mountCreditText(document));
   loaderStatus.textContent =
     googleApiKey || googleTokens || cesiumToken
       ? t('Loading Google 3D Tiles...')

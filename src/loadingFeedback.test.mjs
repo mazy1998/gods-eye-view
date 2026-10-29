@@ -550,7 +550,7 @@ test('the chip renderer clears the progress slot instead of stranding the last v
   assert.doesNotMatch(body, /if \(presentation\.progressText\s*\n?\s*&&/);
   assert.match(
     body,
-    /if \(this\._trafficSyncProgress\.textContent !== presentation\.progressText\) \{/,
+    /detail: presentation\.progressText/,
   );
   // …and the emptied slot must collapse rather than leave a min-width stub.
   assert.match(css, /#traffic-sync-progress:empty \{\s*display: none;\s*\}/);
