@@ -584,3 +584,106 @@ test('the Tools and Layers switches share one Directions transaction', async (t)
   tools.click();
   assert.equal(calls, 1);
 });
+
+test('collapse retains its node and listener while sharing the search row, and returns for Cyber or teardown', async () => {
+  const { mountView } = await import('./mountView.js');
+  const { default: LayerPanelView } = await import('./LayerPanelView.vue');
+  container.innerHTML =
+    '<div id="home"><div id="data-panel"><div class="data-panel-inner"><div class="panel-header"><button class="panel-collapse-btn">Collapse</button></div><div id="data-toggles"></div></div></div></div><div class="gev-legacy-host"></div>';
+  const panel = container.querySelector('#data-panel'),
+    header = panel.querySelector('.panel-header'),
+    button = header.querySelector('button'),
+    home = container.querySelector('#home'),
+    host = container.querySelector('.gev-legacy-host');
+  let clicks = 0;
+  button.addEventListener('click', () => clicks++);
+  const view = mountView(LayerPanelView, {
+    parent: panel.querySelector('#data-toggles'),
+    props: { rows: [], files: [] },
+  });
+  const flush = () => new Promise((resolve) => queueMicrotask(resolve));
+  try {
+    assert.equal(button.parentElement, header);
+    host.append(panel);
+    await flush();
+    assert.equal(button.parentElement, panel.querySelector('.layer-search'));
+    const input = panel.querySelector('.layer-filter');
+    assert.ok(
+      input.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    button.click();
+    assert.equal(clicks, 1);
+    document.documentElement.dataset.uiTheme = 'cyber';
+    await flush();
+    assert.equal(button.parentElement, header);
+    delete document.documentElement.dataset.uiTheme;
+    await flush();
+    assert.equal(button.parentElement, panel.querySelector('.layer-search'));
+    home.append(panel);
+    await flush();
+    assert.equal(button.parentElement, header);
+    host.append(panel);
+    await flush();
+    view.dispose();
+    assert.equal(button.parentElement, header);
+    button.click();
+    assert.equal(clicks, 2);
+  } finally {
+    view.dispose();
+  }
+});
+
+test('the real disclosure remains expandable and focused after collapse and theme moves', async () => {
+  const { mountView } = await import('./mountView.js');
+  const { bindPanelDisclosure } = await import('./panelDisclosure.js');
+  const { default: LayerPanelView } = await import('./LayerPanelView.vue');
+  container.innerHTML =
+    '<div class="gev-legacy-host"><div id="data-panel" class="panel-collapsible"><div class="data-panel-inner"><div class="panel-header"><button class="panel-collapse-btn" data-collapse-target="data-panel">−</button></div><div id="data-toggles"></div></div></div></div>';
+  const panel = container.querySelector('#data-panel');
+  const button = panel.querySelector('button');
+  const header = panel.querySelector('.panel-header');
+  let changes = 0;
+  const disclosure = bindPanelDisclosure({
+    panel,
+    buttons: [button],
+    onEscape() {},
+    onChange(collapsed) {
+      changes++;
+      panel.classList.toggle('collapsed', collapsed);
+      button.textContent = collapsed ? '+' : '−';
+      button.setAttribute('aria-expanded', String(!collapsed));
+    },
+  });
+  const view = mountView(LayerPanelView, {
+    parent: panel.querySelector('#data-toggles'),
+    props: { rows: [] },
+  });
+  const flush = () => new Promise((resolve) => queueMicrotask(resolve));
+  try {
+    for (let cycle = 0; cycle < 3; cycle++) {
+      button.focus();
+      button.click();
+      await flush();
+      assert.equal(panel.classList.contains('collapsed'), true);
+      assert.equal(button.parentElement, header);
+      assert.equal(document.activeElement, button);
+      button.click();
+      await flush();
+      assert.equal(panel.classList.contains('collapsed'), false);
+      assert.equal(button.parentElement, panel.querySelector('.layer-search'));
+      assert.equal(document.activeElement, button);
+    }
+    assert.equal(changes, 6, 'each activation invokes the existing owner once');
+    document.documentElement.dataset.uiTheme = 'cyber';
+    await flush();
+    assert.equal(button.parentElement, header);
+    assert.equal(document.activeElement, button);
+    delete document.documentElement.dataset.uiTheme;
+    await flush();
+    assert.equal(button.parentElement, panel.querySelector('.layer-search'));
+    assert.equal(document.activeElement, button);
+  } finally {
+    disclosure.destroy();
+    view.dispose();
+  }
+});

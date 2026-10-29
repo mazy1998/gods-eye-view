@@ -1190,5 +1190,6 @@
   "src/ui/statusReadout.js",
   "scripts/qa-cyber-geometry.mjs",
   "scripts/qa-cyber-geometry-fixtures.mjs",
-  "src/tooling/cyberGeometry.test.mjs"
+  "src/tooling/cyberGeometry.test.mjs",
+  "scripts/qa-cyber-layers-structure.json"
 ]

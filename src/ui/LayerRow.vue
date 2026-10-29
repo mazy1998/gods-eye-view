@@ -11,6 +11,41 @@ const props = defineProps({
   listItem: Function,
   details: Function,
 });
+// Icons belong to the view; custom catalog entries retain their supplied glyph.
+const icons = new Map(
+  Object.entries({
+    flights: 'flight',
+    military: 'flight',
+    'local-adsb': 'settings_input_antenna',
+    'ais-live-vessels': 'directions_boat',
+    traffic: 'directions_car',
+    transit: 'directions_bus',
+    bikeshare: 'pedal_bike',
+    directions: 'route',
+    satellites: 'satellite_alt',
+    'rocket-launches': 'rocket_launch',
+    'air-quality': 'air',
+    wind: 'air',
+    'weather-radar': 'radar',
+    'weather-satellite': 'cloud',
+    'weather-lightning': 'bolt',
+    'weather-cyclones': 'cyclone',
+    cctv: 'videocam',
+    'recent-imagery': 'satellite_alt',
+    'street-level': 'streetview',
+    's2-ghostmaps': 'layers',
+    'alpr-cameras': 'camera_alt',
+    'military-installations': 'shield',
+    'local-datacenters': 'dns',
+    'telegeography-submarine-cables': 'cable',
+    'local-dams': 'water',
+    earthquakes: 'earthquake',
+    'local-firms': 'local_fire_department',
+    'fire-perimeters': 'local_fire_department',
+    'gnss-integrity': 'gps_off',
+    radio: 'radio',
+  }),
+);
 const expanded = ref(true);
 const list = ref(null);
 watch(
@@ -36,7 +71,11 @@ watch(
   >
     <div class="data-toggle-top">
       <div class="data-toggle-left">
-        <span class="data-icon" aria-hidden="true">{{ row.icon }}</span
+        <span
+          class="data-icon"
+          :class="{ 'material-symbols-outlined': icons.get(row.id) }"
+          aria-hidden="true"
+          >{{ icons.get(row.id) || row.icon }}</span
         ><LayerText class="data-name" :text="row.name" />
       </div>
       <div class="data-toggle-right">

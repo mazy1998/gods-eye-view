@@ -1,3 +1,4 @@
+import { fixtures as palettes } from './qa-cyber-precedence-fixtures.mjs';
 import { JSDOM } from 'jsdom';
 /** Fixed content isolates CSS geometry from feeds, fonts and app startup. */
 const host = (html) =>
@@ -36,6 +37,14 @@ export function createFixtures(read) {
     return el;
   };
   const result = samples.map((sample) => {
+    const sheet = {
+      layers: 'layer-browser',
+      stories: 'stories',
+      tools: 'tool-views',
+      voice: 'voice-dock-view',
+    }[sample.id];
+    const structuralExceptions =
+      palettes.find((f) => f.sheet === sheet)?.structuralExceptions ?? [];
     if (sample.id === 'voice') return { ...sample, profile: 'default' };
     const original = doc.createElement('template');
     original.innerHTML = sample.html;
@@ -128,7 +137,12 @@ export function createFixtures(read) {
           .querySelector('#scene-controls-body')
           .replaceChildren(original.content.querySelector('.stories-controls'));
     }
-    return { id: sample.id, profile, html: host(root.outerHTML) };
+    return {
+      id: sample.id,
+      profile,
+      html: host(root.outerHTML),
+      structuralExceptions,
+    };
   });
   dom.window.close();
   return result;

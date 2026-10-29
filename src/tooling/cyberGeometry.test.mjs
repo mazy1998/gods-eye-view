@@ -60,7 +60,7 @@ test('host fixtures retain real panel roots, bodies and measured ancestor chains
   const cases = {
     layers: [
       '#data-panel.panel-collapsible > .data-panel-inner > .panel-header > .panel-title',
-      '#data-panel > .data-panel-inner > #data-toggles > section.layer-browser.gev-surface > .layer-filter',
+      '#data-panel > .data-panel-inner > #data-toggles > section.layer-browser.gev-surface > .layer-search > .layer-filter',
     ],
     stories: [
       '#scene-panel.panel-collapsible > .scene-panel-inner > .panel-header',

@@ -170,6 +170,7 @@ export async function audit(options) {
       const result = {
         fixture: fixture.id,
         profile: fixture.profile,
+        structuralExceptions: fixture.structuralExceptions ?? [],
         reference: snapshots[0],
         actual: snapshots[1],
         mismatches: [],

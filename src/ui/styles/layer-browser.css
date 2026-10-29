@@ -5,9 +5,9 @@
 }
 .layer-browser .layer-filter {
   display: block;
-  width: calc(100% - 24px);
-  margin: var(--gev-space-3);
-  padding: var(--gev-space-2);
+  width: 100%;
+  margin: 0;
+  padding: 9px 12px 9px 36px;
   border-width: 1px;
   border-style: solid;
   border-radius: var(--gev-radius-sm);
@@ -36,7 +36,7 @@
   color: var(--gev-text-muted);
 }
 .layer-browser .data-toggle-row {
-  padding: var(--gev-space-3);
+  padding: 6px 12px;
   border-radius: 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
@@ -77,8 +77,10 @@
 }
 .layer-browser .data-name {
   font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
 }
 :where(:root:not([data-ui-theme='cyber'])) .layer-browser .data-name {
+  font-size: 14px;
   color: var(--gev-text);
 }
 .layer-browser .data-count {
@@ -88,8 +90,8 @@
   color: var(--gev-accent-text);
 }
 .layer-browser .data-toggle-btn {
-  min-width: 36px;
-  width: 36px;
+  min-width: 40px;
+  width: 40px;
   padding: 0;
   border: 0;
 }
@@ -99,11 +101,15 @@
 }
 .layer-browser .data-toggle-meta {
   display: block;
-  margin-top: var(--gev-space-1);
+  margin-top: 2px;
+  margin-inline-start: 28px;
+  padding: 0;
+  letter-spacing: 0;
   font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
   overflow-wrap: anywhere;
 }
 :where(:root:not([data-ui-theme='cyber'])) .layer-browser .data-toggle-meta {
+  font-size: var(--gev-font-size-sm);
   color: var(--gev-text-muted);
 }
 .layer-browser .data-toggle-btn .gev-toggle-label {
@@ -275,4 +281,174 @@
 }
 .layer-browser [hidden] {
   display: none !important;
+}
+
+.layer-search {
+  position: relative;
+  margin: 12px;
+}
+.layer-search > .material-symbols-outlined {
+  position: absolute;
+  inset-inline-start: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  pointer-events: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) .layer-search > span {
+  color: var(--gev-text-muted);
+}
+.layer-browser .data-icon {
+  width: 20px;
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.layer-browser .data-toggle-btn .gev-toggle-track {
+  width: 40px;
+  height: 24px;
+}
+.layer-browser .data-toggle-btn .gev-toggle-thumb {
+  width: 18px;
+  height: 18px;
+}
+.layer-browser .data-toggle-right {
+  gap: 6px;
+}
+.layer-browser .data-count {
+  min-width: 24px;
+  text-align: end;
+}
+
+/* The drawer supplies the surface. Keep its borrowed panel and list scroller
+   intact, with the existing collapse action beside the search field. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed) {
+  flex: 1 0 auto;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  > .data-panel-inner {
+  padding: 0 0 53px;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  background: transparent;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  > .data-panel-inner
+  > .panel-header {
+  display: none;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  .layer-search {
+  margin: 4px 4px 8px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  #data-toggles {
+  padding: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  .layer-browser {
+  position: static;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  background: transparent;
+  box-shadow: none;
+}
+/* The 52px footer stays outside the list clip, with one extra pixel reserved
+   above its separator so subpixel hit-testing cannot cover a row control. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  .layer-footer {
+  position: absolute;
+  inset: auto 0 0;
+  height: 52px;
+  box-sizing: border-box;
+  padding: 8px 4px;
+  font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel
+  .layer-footer
+  .gev-action-button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--gev-accent-text);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel
+  .layer-footer
+  .gev-action-button:hover {
+  background: var(--gev-control-bg-hover);
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-footer
+  .gev-action-button {
+  font: inherit;
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  .layer-search
+  > .panel-collapse-btn {
+  border-color: var(--gev-border);
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel:not(.collapsed)
+  .layer-search
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel
+  .layer-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel
+  .layer-search
+  > .layer-filter {
+  flex: 1;
+  min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #data-panel
+  .layer-search
+  > .panel-collapse-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin: 0;
 }

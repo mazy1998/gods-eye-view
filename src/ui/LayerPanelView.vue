@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import TabList from './primitives/TabList.vue';
 import ToggleSwitch from './primitives/ToggleSwitch.vue';
 import ActionButton from './primitives/ActionButton.vue';
@@ -18,6 +18,46 @@ const props = defineProps({
   details: Function,
   fileAction: Function,
 });
+const search = ref(null);
+let restoreCollapse;
+onMounted(() => {
+  const panel = search.value.closest('#data-panel');
+  const header = panel?.querySelector(
+    ':scope > .data-panel-inner > .panel-header',
+  );
+  const button = header?.querySelector('.panel-collapse-btn');
+  if (!button || !panel.parentElement) return;
+  const home = button.ownerDocument.createComment('collapse control home');
+  button.before(home);
+  const place = () => {
+    const inSearch =
+      !panel.classList.contains('collapsed') &&
+      panel.closest('.gev-legacy-host') &&
+      button.ownerDocument.documentElement.dataset.uiTheme !== 'cyber';
+    const focused = button.ownerDocument.activeElement === button;
+    if (inSearch && button.parentElement !== search.value) {
+      search.value.append(button);
+      if (focused) button.focus({ preventScroll: true });
+    } else if (!inSearch && button.parentElement !== header) {
+      home.after(button);
+      if (focused) button.focus({ preventScroll: true });
+    }
+  };
+  const observer = new MutationObserver(place);
+  observer.observe(panel.parentElement, { childList: true });
+  observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  observer.observe(button.ownerDocument.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-ui-theme'],
+  });
+  restoreCollapse = () => {
+    observer.disconnect();
+    home.after(button);
+    home.remove();
+  };
+  place();
+});
+onBeforeUnmount(() => restoreCollapse?.());
 const tab = ref('all');
 const query = ref('');
 const groups = computed(() => [...new Set(props.rows.map((row) => row.group))]);
@@ -40,14 +80,17 @@ watch(
 </script>
 <template>
   <section class="gev-surface layer-browser" :aria-label="t('Layers')">
-    <input
-      :value="query"
-      @input="query = $event.target.value"
-      class="layer-filter"
-      type="search"
-      :placeholder="t('Find a layer')"
-      :aria-label="t('Find a layer')"
-    />
+    <div ref="search" class="layer-search">
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <input
+        :value="query"
+        @input="query = $event.target.value"
+        class="layer-filter"
+        type="search"
+        :placeholder="t('Find a layer')"
+        :aria-label="t('Find a layer')"
+      />
+    </div>
     <TabList
       v-model="tab"
       :label="t('Layers')"

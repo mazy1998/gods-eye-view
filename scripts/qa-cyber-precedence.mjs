@@ -309,6 +309,7 @@ export async function audit(options) {
       const measure = () => page.evaluate(snapshotStyles, PROPERTIES);
       const result = {
         sheet: fixture.sheet,
+        structuralExceptions: fixture.structuralExceptions ?? [],
         variants,
         samples: [],
         mismatches: [],

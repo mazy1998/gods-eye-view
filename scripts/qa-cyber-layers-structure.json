@@ -1,0 +1,32 @@
+[
+  {
+    "id": "search-glyph",
+    "reason": "The existing finder gains a leading search glyph and a wrapper in every appearance; the input keeps its owner and behavior.",
+    "expected": { "glyph": "search", "wrapper": "layer-search" }
+  },
+  {
+    "id": "layer-icons",
+    "reason": "Known layer rows use monochrome local outline glyphs, while custom layers retain their supplied icon. Labels, catalog and feed semantics stay unchanged.",
+    "expected": { "iconWidth": 20 }
+  },
+  {
+    "id": "row-spacing",
+    "reason": "Rows use compact padding and a shared separator layout in every appearance. Cyber retains its original 12px names and 10px metadata.",
+    "expected": { "padding": "6px 12px" }
+  },
+  {
+    "id": "switch-shape",
+    "reason": "The existing layer switch has a 40 by 24px track and an 18px thumb in every appearance; state and activation semantics remain shared.",
+    "expected": { "trackWidth": 40, "trackHeight": 24, "thumbSize": 18 }
+  },
+  {
+    "id": "metadata-indent",
+    "reason": "Metadata aligns with names after the 20px icon and its gap; Cyber keeps its existing type size and palette.",
+    "expected": { "indent": 28 }
+  },
+  {
+    "id": "footer-spacing",
+    "reason": "The existing count and Clear controls share the compact footer spacing. Cyber keeps the scrolling footer and 9px Clear label; only other appearances anchor it outside the row clip.",
+    "expected": { "cyberClearFontSize": 9 }
+  }
+]
