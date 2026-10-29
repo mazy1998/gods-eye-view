@@ -1,5 +1,6 @@
 import { formatUtcDayMonth, t } from '../i18n/index.js';
 import { createSlider } from './slider.js';
+import { createRailTimelineState } from './railTimelineState.js';
 const set = (node, key, value) => {
   if (node[key] !== value) node[key] = value;
 };
@@ -80,134 +81,64 @@ export function createRailTimeline({
   root.appendChild(row);
   root.appendChild(controls);
   container.appendChild(root);
-  let props = {
-    ticks: [],
-    index: 0,
-    mode: 'latest',
-    playing: false,
-    readout: '',
-    disabled: true,
-  };
-  let ticks = [];
-  let dragging = false;
-  let timer = null;
-  let pending = null;
-  let destroyed = false;
-  const cancel = () => {
-    if (timer !== null) clearTimeout(timer);
-    timer = null;
-  };
-  const valueText = (tick) => {
-    const value = utc(tick);
-    if (slider.getAttribute('aria-valuetext') !== value)
-      slider.setAttribute('aria-valuetext', value);
-  };
-  const commit = () => {
-    cancel();
-    const value = pending;
-    pending = null;
-    if (!destroyed && value && !props.disabled)
-      onCommit(value.tick, value.index);
-  };
-  const update = (nextProps) => {
-    if (destroyed) return;
-    props = nextProps;
-    if (props.disabled) {
-      cancel();
-      pending = null;
-      dragging = false;
-    }
-    if (!dragging) {
-      ticks = [...props.ticks];
-      set(slider, 'max', String(Math.max(0, ticks.length - 1)));
+  const owner = createRailTimelineState({
+    onCommit,
+    onPreview,
+    onStep,
+    onLatest,
+    onPlay,
+  });
+  const unsubscribe = owner.channel.subscribe(
+    ({ state }) => {
+      set(slider, 'max', String(Math.max(0, state.ticks.length - 1)));
+      set(slider, 'value', String(state.index));
+      const value = utc(state.ticks[state.index]);
+      if (slider.getAttribute('aria-valuetext') !== value)
+        slider.setAttribute('aria-valuetext', value);
+      set(oldest, 'textContent', utcClock(state.ticks[0]));
+      set(newest, 'textContent', utcClock(state.ticks.at(-1)));
+      set(readout, 'textContent', state.readout);
+      for (const node of [slider, latest, play])
+        set(node, 'disabled', state.disabled);
+      set(previous, 'disabled', state.previousDisabled);
+      set(next, 'disabled', state.nextDisabled);
       set(
-        slider,
-        'value',
-        String(Math.max(0, Math.min(props.index, ticks.length - 1))),
+        latest,
+        'className',
+        `data-toggle-chip${state.mode === 'latest' ? ' active' : ''}`,
       );
-      valueText(ticks[Number(slider.value)]);
-      set(oldest, 'textContent', utcClock(ticks[0]));
-      set(newest, 'textContent', utcClock(ticks.at(-1)));
-      set(readout, 'textContent', props.readout || '');
-    }
-    for (const node of [slider, latest, play])
-      set(node, 'disabled', Boolean(props.disabled));
-    set(previous, 'disabled', Boolean(props.disabled || props.index <= 0));
-    set(
-      next,
-      'disabled',
-      Boolean(props.disabled || props.index >= props.ticks.length - 1),
-    );
-    set(
-      latest,
-      'className',
-      `data-toggle-chip${props.mode === 'latest' ? ' active' : ''}`,
-    );
-    set(play, 'className', `data-toggle-chip${props.playing ? ' active' : ''}`);
-    set(play, 'textContent', props.playing ? t('Pause') : t('Play'));
-    for (const [node, active] of [
-      [latest, props.mode === 'latest'],
-      [play, props.playing],
-    ]) {
-      if (node.getAttribute('aria-pressed') !== String(active))
-        node.setAttribute('aria-pressed', String(active));
-    }
-  };
-  const preview = () => {
-    if (props.disabled) return;
-    dragging = true;
-    const index = Number(slider.value);
-    const tick = ticks[index];
-    if (!tick) return;
-    pending = { tick, index };
-    valueText(tick);
-    const value = onPreview(tick, index);
-    if (typeof value === 'string') set(readout, 'textContent', value);
-    if (timer === null) timer = setTimeout(commit, 150);
-  };
-  const change = () => {
-    if (props.disabled) return;
-    pending = {
-      tick: ticks[Number(slider.value)],
-      index: Number(slider.value),
-    };
-    dragging = false;
-    commit();
-    update(props);
-  };
-  const reset = () => {
-    cancel();
-    pending = null;
-    dragging = false;
-    update(props);
-  };
-  const act = (fn) => () => {
-    reset();
-    if (!props.disabled) fn();
-  };
+      set(
+        play,
+        'className',
+        `data-toggle-chip${state.playing ? ' active' : ''}`,
+      );
+      set(play, 'textContent', state.playing ? t('Pause') : t('Play'));
+      for (const [node, active] of [
+        [latest, state.mode === 'latest'],
+        [play, state.playing],
+      ])
+        if (node.getAttribute('aria-pressed') !== String(active))
+          node.setAttribute('aria-pressed', String(active));
+    },
+    { emitCurrent: false },
+  );
   const bindings = [
-    [slider, 'input', preview],
-    [slider, 'change', change],
-    [slider, 'pointercancel', reset],
-    [
-      slider,
-      'blur',
-      () => {
-        if (dragging) change();
-      },
-    ],
-    [previous, 'click', act(() => onStep(-1))],
-    [next, 'click', act(() => onStep(1))],
-    [latest, 'click', act(onLatest)],
-    [play, 'click', act(onPlay)],
+    [slider, 'input', () => owner.preview(slider.value)],
+    [slider, 'change', () => owner.change(slider.value)],
+    [slider, 'pointercancel', owner.reset],
+    [slider, 'blur', owner.blur],
+    [previous, 'click', () => owner.step(-1)],
+    [next, 'click', () => owner.step(1)],
+    [latest, 'click', owner.latest],
+    [play, 'click', owner.play],
   ];
   for (const [node, event, handler] of bindings)
     node.addEventListener(event, handler);
   return {
-    update,
+    update: owner.update,
     destroy() {
-      destroyed = true;
-      cancel();
+      unsubscribe();
+      owner.destroy();
       for (const [node, event, handler] of bindings)
         node.removeEventListener(event, handler);
       root.remove();

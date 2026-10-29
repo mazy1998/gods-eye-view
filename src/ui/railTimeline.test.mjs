@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRailTimeline } from './railTimeline.js';
+import { createRailTimelineState } from './railTimelineState.js';
 import { railFixture } from './railTestFixture.mjs';
 const ticks = [
   '2026-09-22T01:00:00Z',
@@ -115,4 +116,39 @@ test('observed history label and endpoint times track the advertised tick range'
   view.update({ ...props, ticks: ticks.slice(1) });
   assert.equal(endpoints.children[0].textContent, '01:05 UTC');
   view.destroy();
+});
+
+test('a late observer receives the owned drag even after a commit timer and a clock refresh', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const commits = [];
+  const owner = createRailTimelineState({
+    onPreview: (tick) => `Preview ${tick}`,
+    onCommit: (tick) => commits.push(tick),
+  });
+  owner.update(props);
+  owner.preview(1);
+  t.mock.timers.tick(150);
+  owner.update({
+    ...props,
+    ticks: ticks.slice(1),
+    index: 0,
+    readout: 'Refresh',
+  });
+  let shown;
+  const unsubscribe = owner.channel.subscribe(({ state }) => {
+    shown = state;
+  });
+  assert.deepEqual(shown.ticks, ticks);
+  assert.equal(shown.index, 1);
+  assert.equal(shown.readout, `Preview ${ticks[1]}`);
+  assert.equal(Object.isFrozen(shown.ticks), true);
+  owner.blur();
+  assert.deepEqual(commits, [ticks[1], ticks[1]]);
+  assert.deepEqual(shown.ticks, ticks.slice(1));
+  assert.equal(shown.index, 0);
+  owner.preview(1);
+  unsubscribe();
+  owner.destroy();
+  t.mock.timers.tick(150);
+  assert.equal(commits.length, 2, 'destroy cancels a pending draft');
 });

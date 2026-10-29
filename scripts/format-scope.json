@@ -1143,5 +1143,6 @@
   "src/ui/segmentedControl.js",
   "src/ui/styles/layer-browser.css",
   "src/ui/layerPanel.dom.test.mjs",
-  "src/data/managerPanel.dom.test.mjs"
+  "src/data/managerPanel.dom.test.mjs",
+  "src/ui/styles/weather-controls.css"
 ]

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setLocale } from '../i18n/index.js';
-import { createWeatherPanel } from './weatherPanel.js';
-import { railFixture } from './railTestFixture.mjs';
+import '../testSupport/componentDom.mjs';
+const { createWeatherPanel } = await import('./weatherPanel.js');
 import { createAirQualityLayer } from '../layers/airQuality/index.js';
 const ticks = ['2026-09-22T01:00:00Z', '2026-09-22T01:05:00Z'];
 const wind = {
@@ -21,22 +21,38 @@ const radar = {
   summary: { label: 'Rain radar', coverage: 'CONUS' },
 };
 function fixture(onWrite) {
-  const f = railFixture(onWrite);
-  const panel = f.document.createElement('div');
-  const count = f.document.createElement('span');
-  let collapsed = true;
-  let clicks = 0;
+  const doc = document.implementation.createHTMLDocument('Weather fixture');
+  const panel = doc.body.appendChild(doc.createElement('section'));
+  panel.id = 'weather-panel';
+  panel.classList.add('collapsed');
   panel.hidden = true;
-  panel.classList = { contains: () => collapsed };
-  const collapse = {
-    click() {
-      collapsed = !collapsed;
-      clicks++;
+  const count = panel.appendChild(doc.createElement('span'));
+  count.id = 'weather-panel-count';
+  const collapse = panel.appendChild(doc.createElement('button'));
+  collapse.dataset.collapseTarget = 'weather-panel';
+  let clicks = 0;
+  collapse.addEventListener('click', () => {
+    panel.classList.toggle('collapsed');
+    clicks++;
+  });
+  const container = panel.appendChild(doc.createElement('div'));
+  container.id = 'weather-panel-body';
+  const observer = new MutationObserver(() => {});
+  observer.observe(container, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+  });
+  const f = {
+    document: doc,
+    container,
+    find: (predicate, root = container) =>
+      [root, ...root.querySelectorAll('*')].find(predicate) || null,
+    flushWrites: () => {
+      for (const record of observer.takeRecords()) onWrite?.(record.type);
     },
   };
-  panel.querySelector = (selector) =>
-    selector === '#weather-panel-count' ? count : collapse;
-  f.container.closest = () => panel;
   const listeners = new Set();
   const calls = [];
   let state = {
@@ -112,7 +128,7 @@ test('ordered articles omit Controls and retain history labels, forecast dates a
   view.update([radar, wind]);
   const windCard = card(f, 'wind');
   assert.equal(windCard.tagName, 'ARTICLE');
-  assert.equal(windCard.parent.children[0], windCard);
+  assert.equal(windCard.parentElement.children[0], windCard);
   assert.equal(
     f.find((n) => n.dataset.weatherOpen),
     null,
@@ -186,7 +202,9 @@ test('cyclone readout retains advisory, position, intensity, geometry, coverage,
     line(f, cyclone.id, 'geometry').textContent,
     /awaiting advisory 10/,
   );
-  const link = f.find((n) => n.textContent === 'Official advisory ↗');
+  const link = f.find(
+    (n) => n.tagName === 'A' && n.textContent === 'Official advisory ↗',
+  );
   assert.equal(link.href, cyclone.summary.actions[0].href);
   assert.equal(link.tagName, 'A');
   assert.equal(link.rel, 'noopener');
@@ -202,15 +220,28 @@ test('identical updates write nothing and status keeps its line through loading 
   const f = fixture(() => writes++);
   const view = createWeatherPanel(f);
   for (const entries of [
-    [wind, radar],
+    [
+      {
+        ...wind,
+        legend: [
+          { color: '#123456', label: '-10' },
+          { color: '#ffffff', label: '0' },
+          { color: '#abcdef', label: '10' },
+        ],
+        summary: { ...wind.summary, units: '°C' },
+      },
+      radar,
+    ],
     [{ ...wind, summary: { ...wind.summary, status: 'Loading' } }],
     [wind],
     [],
   ]) {
     view.update(entries);
     const status = entries.length ? line(f, 'wind', 'status') : null;
+    f.flushWrites();
     writes = 0;
     view.update(entries);
+    f.flushWrites();
     assert.equal(writes, 0);
     if (status) {
       assert.equal(status.hidden, false);
@@ -256,7 +287,7 @@ test('count, hidden-empty and first-appearance expansion survive remount and own
 test('a stored or shared collapse choice is not overridden on first appearance', () => {
   for (const preference of ['stored', 'share']) {
     const f = fixture();
-    f.panel.dataset = { collapsedPreference: preference };
+    f.panel.dataset.collapsedPreference = preference;
     const view = createWeatherPanel(f);
     view.update([radar]);
     assert.equal(f.panel.hidden, false);
@@ -268,7 +299,7 @@ test('a stored or shared collapse choice is not overridden on first appearance',
     view.destroy();
   }
   const f = fixture();
-  f.panel.dataset = { collapsedPreference: 'default' };
+  f.panel.dataset.collapsedPreference = 'default';
   const view = createWeatherPanel(f);
   view.update([radar]);
   assert.equal(f.clicks(), 1, 'a default state still expands once');
@@ -326,7 +357,7 @@ test('settings, reading and footer actions pass the layer id, params and user or
   assert.equal(header.children[1].textContent, '×');
   assert.equal(header.children[1].getAttribute('aria-label'), 'Clear reading');
   assert.deepEqual(
-    result.children[1].children[0].children.map((n) => [
+    Array.from(result.children[1].children[0].children).map((n) => [
       n.dataset.lineId,
       n.textContent,
     ]),
@@ -348,7 +379,7 @@ test('settings, reading and footer actions pass the layer id, params and user or
   layer.destroy();
   const body = card(f, 'wind').children[1];
   assert.deepEqual(
-    body.children.map((n) => n.dataset.blockId),
+    Array.from(body.children).map((n) => n.dataset.blockId),
     ['details', 'settings', 'actions', 'reading'],
   );
   view.destroy();
@@ -395,7 +426,7 @@ test('cyclones lead, and observed history owns one bordered group with only acti
   view.update([lightning, radar, wind, cyclone, satellite]);
   const root = f.container.children[0];
   assert.deepEqual(
-    root.children[0].children.map((n) => n.dataset.cardId),
+    Array.from(root.children[0].children).map((n) => n.dataset.cardId),
     ['weather-cyclones', 'wind'],
   );
   const group = f.find((n) => n.className === 'weather-observed-group');
@@ -407,7 +438,7 @@ test('cyclones lead, and observed history owns one bordered group with only acti
   );
   assert.equal(group.children[2], timelineHost(f));
   assert.deepEqual(
-    group.children[3].children.map((n) => n.dataset.cardId),
+    Array.from(group.children[3].children).map((n) => n.dataset.cardId),
     ['weather-radar', 'weather-satellite', 'weather-lightning'],
   );
   assert.deepEqual(opened(f), ['weather-cyclones']);
@@ -579,7 +610,7 @@ test('all five headers retain descriptor icons and disclosure state when opened 
   view.destroy();
 });
 
-test('a change of open card scrolls its header into view once; refreshes never move the body', () => {
+test('a change of open card scrolls its header into view once; refreshes never move the body', (t) => {
   const f = fixture();
   const body = f.container;
   const writes = [];
@@ -594,19 +625,19 @@ test('a change of open card scrolls its header into view once; refreshes never m
       scrollTop = value;
     },
   });
-  body.clientHeight = 200;
+  Object.defineProperty(body, 'clientHeight', { value: 200 });
   body.getBoundingClientRect = () => ({ top: 100, height: 200 });
-  const create = f.document.createElement;
-  f.document.createElement = (tag) => {
-    const node = create(tag);
-    node.getBoundingClientRect = function () {
-      return rects.get(this.dataset.cardId) || { top: 0, height: 0 };
-    };
-    node.scrollIntoView = function () {
-      intoView.push(this.dataset.cardId);
-    };
-    return node;
+  t.mock.method(HTMLElement.prototype, 'getBoundingClientRect', function () {
+    return rects.get(this.dataset.cardId) || { top: 0, height: 0 };
+  });
+  const scrollIntoView = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = function () {
+    intoView.push(this.dataset.cardId);
   };
+  t.after(() => {
+    if (scrollIntoView) HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    else delete HTMLElement.prototype.scrollIntoView;
+  });
   // Rectangles are viewport coordinates; the body's visible top is at 100.
   const place = (id, top, height) => rects.set(id, { top: 100 + top, height });
   const view = createWeatherPanel(f);
@@ -666,7 +697,7 @@ test('history time keeps the hour whatever the length of the localized date', ()
       view.update([wind, radar]);
       const ends = f.find((n) => n.className === 'rail-timeline-endpoints');
       assert.deepEqual(
-        ends.children.map((n) => n.textContent),
+        Array.from(ends.children).map((n) => n.textContent),
         ['01:00 UTC', '01:05 UTC'],
         locale,
       );
@@ -734,7 +765,7 @@ test('air-quality readout renders its band legend, Canada coverage and worst-fir
   const entries = f.find((n) => n.className === 'rail-card-legend-entries', aq);
   assert.equal(entries.hidden, false);
   assert.deepEqual(
-    entries.children.map((entry) => entry.children[1].textContent),
+    Array.from(entries.children).map((entry) => entry.children[1].textContent),
     ['Low', 'Moderate', 'High', 'Very High'],
   );
   assert.equal(
@@ -744,11 +775,73 @@ test('air-quality readout renders its band legend, Canada coverage and worst-fir
   const list = f.find((n) => n.dataset.blockId === 'list', aq);
   assert.equal(list.hidden, false);
   assert.deepEqual(
-    list.children.map((item) =>
-      item.children[0].children.map((part) => part.textContent).join(' '),
+    Array.from(list.children).map((item) =>
+      Array.from(item.children[0].children)
+        .map((part) => part.textContent)
+        .join(' '),
     ),
     ['AQHI 8 Hamilton · high risk', 'AQHI 2 Toronto · low risk'],
   );
   view.destroy();
   layer.destroy();
+});
+
+test('opacity drafts survive clock paint, commit once on change and expire on changed bounds', () => {
+  const f = fixture();
+  const calls = [];
+  const view = createWeatherPanel({
+    ...f,
+    setLayerParams: (...args) => calls.push(args),
+  });
+  const range = {
+    id: 'opacity',
+    param: 'opacity',
+    min: 0,
+    max: 100,
+    step: 1,
+    value: 55,
+    unit: '%',
+    commitOnChange: true,
+  };
+  const entry = (patch = {}) => ({
+    ...radar,
+    summary: {
+      ...radar.summary,
+      settings: [
+        { id: 'opacity', label: 'Opacity', range: { ...range, ...patch } },
+      ],
+    },
+  });
+  view.update([entry()]);
+  const input = f.find((node) => node.dataset.rangeId === 'opacity');
+  input.value = '72';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  assert.deepEqual(calls, []);
+  assert.equal(input.getAttribute('aria-valuetext'), '72%');
+  f.state({ mode: 'history', target: ticks[0] });
+  view.update([entry()]);
+  assert.equal(input.value, '72');
+  assert.equal(
+    f.find((node) => node.dataset.rangeId === 'opacity'),
+    input,
+  );
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  assert.deepEqual(calls, [[radar.id, { opacity: 72 }, { origin: 'user' }]]);
+  view.update([entry({ value: 72 })]);
+  input.value = '90';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  view.update([entry({ value: 50, max: 60 })]);
+  assert.equal(
+    input.value,
+    '50',
+    'new owner bounds invalidate the older draft',
+  );
+  view.update([entry({ value: 50, max: 60, disabled: true })]);
+  input.value = '60';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  assert.equal(calls.length, 1);
+  view.destroy();
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  assert.equal(calls.length, 1, 'detached controls cannot commit');
 });

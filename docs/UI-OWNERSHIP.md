@@ -98,3 +98,20 @@ Backspace undo, Escape and Clear board still use the same drawing session,
 pointer claim and annotation engine. A view never constructs map geometry.
 Both views paint channel updates synchronously through `mountView.update()`,
 so import focus restoration and drawing-control reads need no deferred DOM wait.
+
+## Observed timeline drafts
+
+`createRailTimelineState` owns the observed-history slider draft, the tick mapping
+held during a drag, and its existing 150 ms commit timer. Its channel publishes
+plain, frozen presentation state. Native and Vue timeline views read that state;
+only input/change events pass a native value into the owner. Blur, cancellation,
+transport actions and destruction use owner state without reading a slider.
+
+`createWeatherPanel` remains the single Environment readout owner/factory inside
+`weather-panel-body`. It maps existing layer descriptors and the shared observed
+clock into synchronous Vue props. Forecast and advisory content stays separate
+from the observed timeline. Its range drafts are presentation state keyed by card
+and setting; existing layer owners still own model, units, field and opacity.
+Changed bounds, disabled controls, removed cards and disposal invalidate drafts.
+The factory keeps collapse preferences, open-card choice, scroll placement and
+its existing subscriptions; the views only paint and dispatch those operations.

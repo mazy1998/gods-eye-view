@@ -1,0 +1,182 @@
+/* Environment owns its coverage badges and readout controls. */
+.weather-controls {
+  border: 0;
+  border-radius: var(--gev-radius-md);
+  padding: var(--gev-space-1);
+  font: var(--gev-font-size-sm) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls {
+  --weather-card-border: var(--gev-border-subtle);
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  box-shadow: none;
+}
+.weather-controls .rail-card {
+  border-radius: var(--gev-radius-md);
+  margin-bottom: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .rail-card {
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .rail-card.is-open {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-surface-raised);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .rail-card:is(:hover, :focus-within) {
+  border-color: var(--gev-border);
+}
+.weather-controls .rail-card-header {
+  padding: var(--gev-space-3) var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .rail-card-header {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  :is(
+    .rail-card-title,
+    .rail-card-heading .data-icon,
+    .rail-card-result [data-line-id='wind']
+  ) {
+  color: var(--gev-text);
+}
+.weather-controls :is(.rail-card-title, .rail-card-compact) {
+  font-family: var(--gev-font-sans);
+  font-size: var(--gev-font-size-sm);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  :is(
+    .panel-title,
+    .rail-card-line,
+    .rail-card-scale,
+    .rail-timeline-readout,
+    .rail-card-compact,
+    .rail-card-disclosure,
+    .weather-observed-scope,
+    .rail-card-setting-label,
+    .rail-card-setting-range-label,
+    .rail-card-setting-range-value,
+    .rail-card-action-hint
+  ) {
+  color: var(--gev-text-muted);
+}
+.weather-controls
+  :is(
+    .rail-card-line,
+    .rail-card-scale,
+    .rail-timeline-readout,
+    .rail-card-setting-label,
+    .rail-card-setting-range-label,
+    .rail-card-setting-range-value,
+    .rail-card-action-hint
+  ) {
+  font-size: var(--gev-font-size-xs);
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  :is(.rail-card-compact.status, [data-line-id='status']) {
+  color: var(--gev-accent-text);
+}
+.weather-controls .rail-card-body {
+  padding: 0 var(--gev-space-2) var(--gev-space-3);
+}
+.weather-controls .weather-observed-group {
+  border-radius: var(--gev-radius-md);
+  padding: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .weather-observed-group {
+  border-color: var(--gev-border-subtle);
+}
+.weather-controls .weather-coverage {
+  font-size: var(--gev-font-size-xs);
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .weather-coverage {
+  color: var(--gev-text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.weather-controls .rail-card-setting {
+  grid-template-columns: minmax(56px, max-content) minmax(0, 1fr);
+  gap: var(--gev-space-2);
+}
+.weather-controls .data-toggle-chip {
+  font-size: var(--gev-font-size-xs);
+  min-height: 28px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .data-toggle-chip {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-toggle-chip:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-toggle-chip.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+.weather-controls .data-row-list-item {
+  font-size: var(--gev-font-size-xs);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-row-list-item {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-row-list-item:is(:hover, :focus-visible):not(:disabled),
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-row-list-item.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .data-row-list-lead {
+  color: inherit;
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .rail-card-result {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) .weather-controls .rail-card-zero {
+  border-color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  .rail-card-zero::after {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .weather-controls
+  :is(button, a, input):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+.weather-controls :disabled {
+  opacity: var(--gev-disabled-opacity);
+}

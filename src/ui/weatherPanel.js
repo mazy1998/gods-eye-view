@@ -1,6 +1,8 @@
 import { formatUtcDayMonth, t } from '../i18n/index.js';
-import { createRailCards } from './railCards.js';
-import { createRailTimeline, utcClock } from './railTimeline.js';
+import { utcClock } from './railTimeline.js';
+import { createRailTimelineState } from './railTimelineState.js';
+import { mountView } from './mountView.js';
+import WeatherPanelView from './WeatherPanelView.vue';
 
 // Remounting controls must not reopen a panel the user already collapsed.
 const appearedDocuments = new WeakSet();
@@ -14,6 +16,7 @@ const ORDER = [
   'air-quality',
 ];
 const OBSERVED = new Set(ORDER.slice(2, 5));
+let nextPanelId = 0;
 const utc = (time) =>
   Number.isFinite(Date.parse(time))
     ? `${formatUtcDayMonth(time)} ${utcClock(time)}`
@@ -69,66 +72,130 @@ export function createWeatherPanel({
 } = {}) {
   const document = container?.ownerDocument;
   if (!document?.createElement) return null;
-  const root = document.createElement('section');
-  root.className = 'weather-readout';
-  root.hidden = true;
-  root.setAttribute('aria-label', t('Active weather'));
-  const timelineHost = document.createElement('div');
-  timelineHost.className = 'weather-timeline-block';
-  timelineHost.hidden = true;
-  const cardsHost = document.createElement('div');
-  cardsHost.className = 'weather-cards';
-  const observedGroup = document.createElement('section');
-  observedGroup.className = 'weather-observed-group';
-  observedGroup.setAttribute('aria-label', t('Observed history'));
-  const heading = document.createElement('h3');
-  heading.className = 'panel-title';
-  heading.textContent = t('Observed history');
-  const scope = document.createElement('div');
-  scope.className = 'weather-observed-scope';
-  const observedCardsHost = document.createElement('div');
-  observedCardsHost.className = 'weather-cards';
-  observedGroup.append(heading, scope, timelineHost, observedCardsHost);
-  root.append(cardsHost, observedGroup);
-  container.appendChild(root);
   const panel = container.closest?.('#weather-panel');
   const count = panel?.querySelector('#weather-panel-count');
+  const panelId = ++nextPanelId;
   let entries = [];
+  let models = [];
+  let scopeText = '';
+  let showTimeline = false;
+  let hidden = true;
+  let view = null;
+  let rendering = false;
+  const drafts = new Map();
+  const rangeKey = (id, settingId) => JSON.stringify([id, settingId]);
+  const rangeFor = (id, settingId) =>
+    models
+      .find((card) => card.id === id)
+      ?.blocks.find((block) => block.type === 'settings')
+      ?.settings.find((setting) => setting.id === settingId)?.range;
+  const validRange = (range, value) =>
+    range?.param &&
+    !range.disabled &&
+    Number.isFinite(value) &&
+    value >= Number(range.min) &&
+    value <= Number(range.max);
+  const projectRanges = (cards) =>
+    cards.map((card) => ({
+      ...card,
+      blocks: card.blocks.map((block) =>
+        block.type === 'settings'
+          ? {
+              ...block,
+              settings: block.settings.map((setting) => {
+                const range = setting.range;
+                const draft = drafts.get(rangeKey(card.id, setting.id));
+                if (!range) return setting;
+                const candidate = Number(draft?.value ?? range.value);
+                const value = Math.min(
+                  Number(range.max),
+                  Math.max(
+                    Number(range.min),
+                    Number.isFinite(candidate) ? candidate : Number(range.min),
+                  ),
+                );
+                return { ...setting, range: { ...range, value } };
+              }),
+            }
+          : block,
+      ),
+    }));
   let destroyed = false;
   let previousIds = null;
   let hasAppeared = false;
   let openId = openDocuments.get(document) || null;
   // Open card as last shown; null until cards are on screen.
   let shownOpenId = null;
-  const timeline = createRailTimeline({
-    container: timelineHost,
-    document,
-    sliderClassName: 'weather-timeline',
-    heading: false,
+  const timeline = createRailTimelineState({
     onCommit: (tick) => clock?.setTarget(tick),
     onPreview: historyTime,
     onStep: (direction) => clock?.step(direction),
     onLatest: () => clock?.latest(),
     onPlay: () => clock?.togglePlay(),
   });
-  const cardOptions = {
-    document,
-    cardClassName: 'weather-card',
-    badgeClassName: 'weather-coverage',
-    onParams: (id, params) => setLayerParams(id, params, { origin: 'user' }),
-    onOpen: (id) => {
-      openId = id;
-      openDocuments.set(document, id);
-      render();
-    },
+  let timelineState = timeline.channel.getSnapshot();
+  const pushView = () => {
+    if (destroyed || rendering) return;
+    const cards = projectRanges(models);
+    view?.update({
+      cards: cards.filter(({ id }) => !OBSERVED.has(id)),
+      observed: cards.filter(({ id }) => OBSERVED.has(id)),
+      scope: scopeText,
+      timeline: timelineState,
+      showTimeline,
+      hidden,
+    });
   };
-  const cards = createRailCards({ ...cardOptions, container: cardsHost });
-  const observedCards = createRailCards({
-    ...cardOptions,
-    container: observedCardsHost,
+  const unsubscribeTimeline = timeline.channel.subscribe(({ state }) => {
+    timelineState = state;
+    pushView();
+  });
+  const activate = (id, action) => {
+    if (destroyed || !action || action.disabled) return;
+    if (action.params) setLayerParams(id, action.params, { origin: 'user' });
+    else action.onClick?.();
+  };
+  view = mountView(WeatherPanelView, {
+    parent: container,
+    props: {
+      cards: [],
+      observed: [],
+      scope: '',
+      timeline: timelineState,
+      hidden: true,
+      showTimeline: false,
+      timelineActions: timeline,
+      open: (id) => {
+        if (destroyed) return;
+        openId = id;
+        openDocuments.set(document, id);
+        render();
+      },
+      activate,
+      rangeInput: (id, settingId, rawValue) => {
+        if (destroyed) return;
+        const range = rangeFor(id, settingId);
+        const value = Number(rawValue);
+        if (!validRange(range, value)) return;
+        drafts.set(rangeKey(id, settingId), { range, value });
+        pushView();
+        if (!range.commitOnChange)
+          setLayerParams(id, { [range.param]: value }, { origin: 'user' });
+      },
+      rangeChange: (id, settingId, rawValue) => {
+        if (destroyed) return;
+        const range = rangeFor(id, settingId);
+        if (!range?.commitOnChange) return;
+        drafts.delete(rangeKey(id, settingId));
+        const value = Number(rawValue);
+        if (validRange(range, value))
+          setLayerParams(id, { [range.param]: value }, { origin: 'user' });
+      },
+    },
   });
   const render = () => {
     if (destroyed) return;
+    rendering = true;
     const state = clock?.getState() || {
       mode: 'latest',
       timeline: [],
@@ -138,15 +205,13 @@ export function createWeatherPanel({
       .filter(({ summary }) => summary)
       .sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
     const observed = active.filter(({ id }) => OBSERVED.has(id));
-    const showTimeline = observed.length > 0;
-    set(observedGroup, 'hidden', !showTimeline);
+    showTimeline = observed.length > 0;
     const names = {
       'weather-radar': t('Rain radar'),
       'weather-satellite': t('Satellite clouds'),
       'weather-lightning': t('Lightning density'),
     };
-    set(scope, 'textContent', observed.map(({ id }) => names[id]).join(' · '));
-    set(timelineHost, 'hidden', !showTimeline);
+    scopeText = observed.map(({ id }) => names[id]).join(' · ');
     const index =
       state.mode === 'latest'
         ? state.timeline.length - 1
@@ -167,7 +232,7 @@ export function createWeatherPanel({
           ? t('LATEST · newest per product')
           : historyTime(state.target),
     });
-    const models = active.map((entry) => {
+    models = active.map((entry) => {
       const { id, icon, summary, legend = [], list } = entry;
       // Discrete classes (storm geometry, AQHI bands) list swatches, not a ramp.
       const categorical = entry.legendCategorical === true;
@@ -232,6 +297,7 @@ export function createWeatherPanel({
       ];
       return {
         id,
+        bodyId: `weather-card-body-${panelId}-${id}`,
         icon,
         title: summary.label,
         badge: summary.coverage,
@@ -246,18 +312,30 @@ export function createWeatherPanel({
         blocks,
       };
     });
-    cards.update(models.filter(({ id }) => !OBSERVED.has(id)));
-    observedCards.update(models.filter(({ id }) => OBSERVED.has(id)));
+    for (const [key, draft] of drafts) {
+      const [id, settingId] = JSON.parse(key);
+      const range = rangeFor(id, settingId);
+      if (
+        !range ||
+        range.disabled ||
+        !range.commitOnChange ||
+        ['id', 'param', 'min', 'max', 'step', 'value'].some(
+          (field) => range[field] !== draft.range[field],
+        )
+      )
+        drafts.delete(key);
+    }
+    hidden = active.length === 0;
+    rendering = false;
+    pushView();
     // Only a change of open card moves the scroll position; refreshes leave it.
     if (shownOpenId !== null && openId !== shownOpenId) {
-      const open = [...cardsHost.children, ...observedCardsHost.children].find(
-        (node) => node.dataset?.cardId === openId,
-      );
+      const open = [
+        ...(view.element?.querySelectorAll('[data-card-id]') || []),
+      ].find((node) => node.dataset.cardId === openId);
       revealCard(container, open);
     }
     shownOpenId = active.length ? openId : null;
-    const hidden = active.length === 0;
-    set(root, 'hidden', hidden);
     if (count) set(count, 'textContent', String(active.length));
     if (panel) set(panel, 'hidden', hidden);
     if (!hidden && panel && !appearedDocuments.has(document)) {
@@ -275,6 +353,7 @@ export function createWeatherPanel({
   const unsubscribe = clock?.subscribe(render);
   return {
     update(nextEntries) {
+      if (destroyed) return;
       entries = nextEntries.filter(({ summary }) => summary);
       const ids = new Set(entries.map(({ id }) => id));
       const ordered = [...entries].sort(
@@ -301,12 +380,13 @@ export function createWeatherPanel({
       render();
     },
     destroy() {
+      if (destroyed) return;
       destroyed = true;
       unsubscribe?.();
       timeline.destroy();
-      cards.destroy();
-      observedCards.destroy();
-      root.remove();
+      unsubscribeTimeline();
+      drafts.clear();
+      view.dispose();
       if (panel) set(panel, 'hidden', true);
       if (count) set(count, 'textContent', '0');
     },
