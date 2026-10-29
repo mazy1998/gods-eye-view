@@ -177,7 +177,15 @@ const readSceneChrome = () =>
         contains(eyeBox),
       leftAligned:
         !rect(subtitle) || Math.abs(plate.left - rect(subtitle).left) <= 0.5,
-      colors: [getComputedStyle(subtitle).color, getComputedStyle(label).color],
+      // Labels over the globe: the style label, and the title's tagline
+      // while the title floats (phones, Cockpit). In the shell's header the
+      // title sits on a surface that carries its legibility.
+      colors: [
+        ...(title.closest('#gev-header')
+          ? []
+          : [getComputedStyle(subtitle).color]),
+        getComputedStyle(label).color,
+      ],
       dim,
       secondary,
     };

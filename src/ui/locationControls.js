@@ -29,6 +29,7 @@ export class LocationControls {
     onSearch,
     onSearchEdit,
     onSearchOpen,
+    isSearchAlwaysShown,
     onReset,
     doc = document,
     requestFrame = (callback) => requestAnimationFrame(callback),
@@ -74,7 +75,8 @@ export class LocationControls {
       onToggle: () => {
         if (this.destroyed) return;
         onSearchOpen?.();
-        field.toggle();
+        if (isSearchAlwaysShown?.()) field.open();
+        else field.toggle();
       },
       onSubmit: (query) => {
         if (this.destroyed) return;
@@ -102,7 +104,10 @@ export class LocationControls {
     this.removers.push(
       field.subscribe(({ state }) => {
         views.search.update(state);
-        views.results.update({ error: state.error });
+        views.results.update({
+          error: state.error,
+          dismissed: state.resultDismissed,
+        });
       }),
     );
     this.bind(doc, 'keydown', (event) => {

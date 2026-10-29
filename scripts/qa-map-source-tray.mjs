@@ -1331,8 +1331,9 @@ try {
     window.__qaLocationFocus = probe;
   });
   try {
-    await page.focus('#gev-voice-button');
-    const locationTab = await tabTo('#location-bar-toggle', { backwards: true, limit: 8 });
+    // The Location toggle sits beside search in the header.
+    await page.focus('#location-search');
+    const locationTab = await tabTo('#location-bar-toggle', { limit: 8 });
     const locationClosed = await locationState();
     check('Location: native disclosure semantics and closed Tab focus without opening',
       locationTab.reached && hasVisibleControlFocus(locationClosed)
@@ -1386,7 +1387,7 @@ try {
         && JSON.stringify(locationSpaceUp.voice) === JSON.stringify(voiceBeforeLocationSpace),
       JSON.stringify({ down: locationSpaceDown, repeat: locationSpaceRepeat, up: locationSpaceUp }));
 
-    const searchTab = await tabTo('#search-toggle', { limit: 30 });
+    const searchTab = await tabTo('#search-toggle', { backwards: true, limit: 30 });
     await page.keyboard.press('Enter');
     await page.keyboard.type('focus cleanup'); // no submission or navigation
     const typedSearch = await page.$eval('#location-search', (input) => ({
@@ -1453,8 +1454,8 @@ try {
         manager.setPanelCollapsed('control-panel', true, { persist: false, syncShare: false });
         manager.setPanelCollapsed('location-bar', true, { persist: false, syncShare: false });
       });
-      await page.focus('#gev-voice-button');
-      const closedTab = await tabTo('#location-bar-toggle', { backwards: true, limit: 8 });
+      await page.focus('#location-search');
+      const closedTab = await tabTo('#location-bar-toggle', { limit: 8 });
       const closed = await locationState();
       check(`Location: ${width} px closed Tab ring is visible without opening`,
         closedTab.reached && hasVisibleControlFocus(closed) && closed.locationExpanded === 'false', JSON.stringify(closed));

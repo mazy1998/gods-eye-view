@@ -3113,5 +3113,14 @@
   "Create": "Создать",
   "New scene": "Новая сцена",
   "Delete scene": "Удалить сцену",
-  "Delete shot": "Удалить кадр"
+  "Delete shot": "Удалить кадр",
+  "Appearance": "Оформление",
+  "Original": "Исходное",
+  "Transparent dark": "Прозрачное тёмное",
+  "Light": "Светлое",
+  "The Cyber HUD layout uses its own colors.": "Макет HUD Cyber использует собственные цвета.",
+  "Search places": "Поиск мест",
+  "Map controls": "Управление картой",
+  "Map status": "Состояние карты",
+  "Share view": "Поделиться видом"
 }

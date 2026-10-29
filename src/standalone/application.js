@@ -10,6 +10,7 @@ import { createStandaloneTools } from './tools.js';
 import { resolveLocale, applyDocumentLanguage } from '../i18n/locale.js';
 import { applyDocumentTranslations, setLocale } from '../i18n/index.js';
 import { createGoogleTokenSource } from '../maps/googleTokens.js';
+import { createAppearance } from '../ui/appearance.js';
 
 // The existing controls and layer catalog contain page-scoped state.
 let constructed = false;
@@ -35,6 +36,8 @@ export function createStandaloneApplication({
   setLocale(activeLocale);
   applyDocumentLanguage(document, activeLocale);
   applyDocumentTranslations(document);
+  // The stored appearance applies before the shell renders.
+  const appearance = createAppearance();
   const loadingScreen = document.getElementById('loading-screen');
   const loaderStatus = createStartupFeedback(loadingScreen);
   let placeSearch;
@@ -81,6 +84,7 @@ export function createStandaloneApplication({
         loaderStatus,
         placeSearch,
         catalog,
+        appearance,
       }),
     createData: (context) =>
       createStandaloneData({ ...context, allowQaRegistration, catalog }),
@@ -88,7 +92,9 @@ export function createStandaloneApplication({
       createStandaloneTools({ ...context, loadingScreen, placeSearch, voice }),
   });
   application.subscribe((state) => {
-    if (state.status === 'destroyed') loaderStatus.destroy();
+    if (state.status !== 'destroyed') return;
+    loaderStatus.destroy();
+    appearance.destroy();
   });
   return application;
 }

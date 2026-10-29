@@ -4,10 +4,11 @@
    rest on phones (the sheets take over) and in Cockpit. */
 :root {
   --gev-rail-width: 88px;
+  --gev-header-height: 52px;
   --gev-drawer-width: 392px;
   --gev-drawer-inset: 16px;
-  /* Below the title bar until the header takes its place. */
-  --gev-drawer-top: 104px;
+  --gev-status-height: 32px;
+  --gev-map-control-size: 40px;
 }
 
 .gev-rail {
@@ -22,12 +23,38 @@
   padding: var(--gev-space-4) 0;
   box-sizing: border-box;
 }
+/* The brand mark at the top of the rail, as in the design. */
+.gev-rail-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: var(--gev-space-4);
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-sm) / 1 var(--gev-font-sans);
+  letter-spacing: 1.5px;
+  user-select: none;
+}
+.gev-rail-mark-logo {
+  width: 40px;
+  height: 40px;
+}
 .gev-rail-items {
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: stretch;
   gap: var(--gev-space-2);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* Short windows give the items the mark's room (the header still names the
+   app); shorter still, the items scroll. */
+@media (max-height: 620px) {
+  .gev-rail-mark {
+    display: none;
+  }
 }
 .gev-rail.gev-surface {
   border-width: 0 1px 0 0;
@@ -106,8 +133,8 @@
 
 .gev-drawer {
   position: fixed;
-  top: var(--gev-drawer-top);
-  bottom: var(--gev-drawer-inset);
+  top: calc(var(--gev-header-height) + var(--gev-drawer-inset));
+  bottom: calc(var(--gev-status-height) + var(--gev-space-2));
   left: calc(var(--gev-rail-width) + var(--gev-drawer-inset));
   z-index: 120;
   display: flex;
@@ -144,6 +171,27 @@
   overscroll-behavior: contain;
   scrollbar-color: var(--gev-border) transparent;
   scrollbar-width: thin;
+}
+
+/* Views a destination renders itself sit above its hosted panels. */
+.gev-appearance-settings.gev-surface {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+  margin-bottom: var(--gev-space-3);
+  padding: var(--gev-space-3);
+  box-shadow: none;
+}
+.gev-appearance-heading {
+  margin: 0;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+}
+.gev-appearance-note {
+  margin: 0;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
 }
 
 /* The legacy-skinned host: borrowed panels lay out as a column in the drawer
@@ -242,6 +290,25 @@
   margin: 0;
   transform: none;
 }
+/* Settings hosts the corner row near the drawer's top, so the language
+   list opens downward there instead of above its button. */
+.gev-legacy-host > #corner-actions .locale-picker-popup {
+  inset-block-start: calc(100% + 0.4rem);
+  inset-block-end: auto;
+}
+/* Import and Draw are Tools' own, at full drawer width as in the Display
+   panel; the Display panel Map hosts no longer shows them. */
+.gev-legacy-host > :is(#geo-import-group, #draw-group) {
+  width: auto;
+}
+.gev-legacy-host > :is(#geo-import-group, #draw-group) .pp-toggle-btn {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+.gev-legacy-host > #pp-toggles :is(#geo-import-group, #draw-group) {
+  display: none;
+}
 /* Context's compact Radio controls hang below its header, over the panels
    Inspect hosts after it. */
 .gev-legacy-host > #global-context-panel {
@@ -263,15 +330,479 @@ body:not(.mobile-shell):not(.cockpit-mode) #intel-hud {
   width: auto;
   right: 0;
 }
-/* Required map attribution stays legible beside the rail. */
-body:not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
-    .recording-mode
-  )
-  #cesium-credits {
-  margin-left: var(--gev-rail-width);
-}
 
 /* Clean view and recording hide the working chrome, the rail included. */
 body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   display: none;
+}
+
+/* The header, map controls and status bar (ShellHeader.vue,
+   ShellMapControls.vue, ShellStatusBar.vue). Today's chrome moves into their
+   slots while the shell is in use (shellChrome.js), so these rules key on the
+   slots and stop applying the moment a node returns home. */
+.gev-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--gev-rail-width);
+  z-index: 121;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--gev-space-4);
+  height: var(--gev-header-height);
+  padding: 0 var(--gev-space-4);
+  box-sizing: border-box;
+}
+.gev-header.gev-surface {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.gev-header[hidden],
+.gev-map-controls[hidden],
+.gev-status-bar[hidden] {
+  display: none;
+}
+.gev-header-brand,
+.gev-header-end {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.gev-header-end {
+  justify-content: flex-end;
+  gap: var(--gev-space-3);
+}
+.gev-header-center {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  gap: var(--gev-space-2);
+  width: min(100%, 640px);
+  min-width: 0;
+}
+.gev-header-count {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  white-space: nowrap;
+}
+
+/* The wordmark: today's title, set as one line. */
+#gev-header-brand > #title-bar {
+  position: relative;
+  top: auto;
+  left: auto;
+}
+#gev-header-brand > #title-bar :is(.title-glow, .subtitle) {
+  display: none;
+}
+#gev-header-brand > #title-bar h1 {
+  gap: var(--gev-space-2);
+  margin: 0;
+  color: var(--gev-text);
+  font: 600 15px / 1 var(--gev-font-sans);
+  letter-spacing: 3px;
+  white-space: nowrap;
+}
+#gev-header-brand > #title-bar .title-accent {
+  color: inherit;
+  text-shadow: none;
+}
+#gev-header-brand > #title-bar .title-logo {
+  width: 28px;
+  height: 28px;
+}
+
+/* Search: the field with its search button, and its results below it. */
+#gev-header-search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+#gev-header-search > .gev-location-search.gev-surface {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-1);
+  height: 36px;
+  padding: 0 var(--gev-space-2) 0 var(--gev-space-1);
+  border-radius: var(--gev-radius-md);
+  box-shadow: none;
+}
+#gev-header-search .search-toggle-btn {
+  width: 28px;
+  height: 28px;
+}
+:root:not([data-ui-theme='cyber']) #gev-header-search .search-toggle-btn {
+  border-color: transparent;
+  background: transparent;
+}
+/* Always shown here: the dock's open and closed widths do not apply. */
+#gev-header-search #location-search {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+}
+#gev-header-search > .gev-location-results {
+  position: absolute;
+  top: calc(100% + var(--gev-space-1));
+  right: 0;
+  left: 0;
+  padding: var(--gev-space-2);
+  border-radius: var(--gev-radius-md);
+}
+#gev-header-search
+  > .gev-location-results:not(
+    :has(.gev-location-result, .location-search-error:not(:empty))
+  ) {
+  display: none;
+}
+#gev-header-search .location-search-error {
+  margin: 0;
+}
+
+/* Places: the rest of the location tray, as a disclosure beside search. */
+#gev-header-places > #location-bar {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  max-width: none;
+  transform: none;
+}
+#gev-header-places > #location-bar .location-inner {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--gev-space-2);
+  padding: 0;
+  border-radius: var(--gev-radius-md);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-header-places
+  > #location-bar
+  .location-inner {
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+}
+/* As in the design, the header shows no tray summary or dock glyph; the
+   open tray lists the places. */
+#gev-header-places
+  > #location-bar
+  :is(.location-mini-status, .dock-label-icon) {
+  display: none;
+}
+#gev-header-places > #location-bar .location-toolbar {
+  margin: 0;
+  padding: 0;
+}
+#gev-header-places > #location-bar #location-bar-toggle {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 var(--gev-space-3);
+  border-radius: var(--gev-radius-md);
+  cursor: pointer;
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-header-places
+  > #location-bar
+  #location-bar-toggle {
+  border: 1px solid var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-header-places
+  > #location-bar
+  #location-bar-toggle
+  .location-toolbar-label {
+  color: var(--gev-text);
+  font: 500 12px / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+#gev-header-places > #location-bar #location-bar-toggle:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 1px;
+}
+#gev-header-places > #location-bar .location-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-1);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+#gev-header-places > #location-bar #location-bar-popover > .dock-pin-btn {
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+}
+#gev-header-places > #location-bar .location-pills {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+/* The landmarks wrap under the places as they do; the dock scrolls them in
+   one row instead. */
+#gev-header-places > #location-bar .poi-row-container.expanded {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  max-height: none;
+}
+#gev-header-places > #location-bar .panel-collapse-btn {
+  display: none;
+}
+#gev-header-places > #location-bar .location-mini-status {
+  padding: 0;
+}
+#gev-header-places > #location-bar.collapsed #location-bar-popover {
+  display: none;
+}
+#gev-header-places > #location-bar:not(.collapsed) #location-bar-popover {
+  position: absolute;
+  top: calc(100% + var(--gev-space-1));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+  width: min(420px, calc(100vw - var(--gev-rail-width) - 32px));
+  padding: var(--gev-space-3);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-md);
+}
+
+/* Globe actions: Clear selected layers and Share view. */
+#gev-header-actions > #top-center-actions {
+  position: static;
+  transform: none;
+}
+:root:not([data-ui-theme='cyber']) #gev-header-actions #share-btn {
+  gap: var(--gev-space-2);
+  width: auto;
+  padding: 0 var(--gev-space-3);
+  border-radius: var(--gev-radius-md);
+  font: var(--gev-font-size-sm) / 1 var(--gev-font-sans);
+}
+/* On the header's surface the actions take its tokens; Cyber keeps its
+   hexagons. */
+:root:not([data-ui-theme='cyber'])
+  #gev-header-actions
+  #top-center-actions
+  button {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  backdrop-filter: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-header-actions
+  #top-center-actions
+  button:is(:hover, :focus-visible) {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg-hover);
+}
+
+/* Map controls: North, Tilt and Home, stacked at the bottom right above the
+   corner row. */
+.gev-map-controls {
+  position: fixed;
+  right: var(--gev-drawer-inset);
+  bottom: calc(var(--gev-status-height) + 3.25rem);
+  z-index: 121;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-1);
+  padding: var(--gev-space-1);
+}
+.gev-map-controls.gev-surface {
+  border-radius: var(--gev-radius-pill);
+}
+#gev-map-controls > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--gev-map-control-size);
+  height: var(--gev-map-control-size);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+  color: var(--gev-text);
+  cursor: pointer;
+}
+:root:not([data-ui-theme='cyber']) #gev-map-controls > button:hover {
+  background: var(--gev-control-bg-hover);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-map-controls
+  > button[aria-pressed='true'] {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber']) #gev-map-controls > button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 1px;
+}
+#gev-map-controls > button:disabled {
+  cursor: wait;
+  opacity: var(--gev-disabled-opacity);
+}
+#gev-map-controls .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* Status bar: position and clock, then the provider attribution. */
+.gev-status-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--gev-rail-width);
+  z-index: 119;
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-3);
+  max-width: calc(100vw - var(--gev-rail-width));
+  min-height: var(--gev-status-height);
+  padding: 0 var(--gev-space-3);
+  box-sizing: border-box;
+  font: var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gev-status-credits {
+  min-width: 0;
+}
+#gev-status-bar #gev-status-credits .cesium-widget-credits {
+  position: static;
+}
+#gev-status-bar #gev-status-credits > #cesium-credits {
+  position: static;
+  width: auto !important;
+  max-width: none;
+  text-align: left;
+}
+
+/* The command dock sits above the status bar while the shell is in use, and
+   toasts keep their gap above the dock. */
+body:not(.mobile-shell):not(.cockpit-mode) #command-dock {
+  bottom: calc(var(--gev-status-height) + var(--gev-space-2));
+}
+body:not(.mobile-shell):not(.cockpit-mode) #toast {
+  bottom: calc(100px + var(--gev-status-height));
+}
+
+/* Centred notices and toasts sit over the map beside an open drawer: centred
+   between the drawer and the map controls, and no wider than that space. */
+body:has(#gev-drawer:not([hidden]))
+  :is(#global-loading-status, #traffic-sync-chip, #cctv-sync-chip, #toast) {
+  left: calc(
+    50vw +
+      (
+        var(--gev-rail-width) + var(--gev-drawer-inset) +
+          min(
+            var(--gev-drawer-width),
+            100vw - var(--gev-rail-width) - 2 * var(--gev-drawer-inset)
+          ) -
+          var(--gev-map-control-size) - 3 * var(--gev-drawer-inset)
+      ) /
+      2
+  );
+  max-width: calc(
+    100vw - var(--gev-rail-width) - var(--gev-map-control-size) - 6 *
+      var(--gev-drawer-inset) -
+      min(
+        var(--gev-drawer-width),
+        100vw - var(--gev-rail-width) - 2 * var(--gev-drawer-inset)
+      )
+  );
+  box-sizing: border-box;
+}
+
+/* Clean view and recording keep the attribution and hide the rest. */
+body:is(.ui-clean-view, .recording-mode)
+  :is(.gev-header, .gev-map-controls, .gev-status-item) {
+  display: none;
+}
+body:is(.ui-clean-view, .recording-mode) .gev-status-bar {
+  left: 36px;
+  bottom: 36px;
+  padding: 0;
+}
+/* Scene playback hides North, Tilt and Home; their stack goes with them. */
+body.scene-playback-mode .gev-map-controls {
+  display: none;
+}
+/* The style readout and the HUD frame sit inside the header, map controls
+   and status bar. The width query, the phone layout's own negated, drops
+   them in the same frame as a resize to a phone, before its class arrives. */
+@media not all and (max-width: 720px) {
+  body:not(.mobile-shell):not(.cockpit-mode) #style-indicator {
+    top: calc(var(--gev-header-height) + 24px);
+  }
+  body:not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
+      .recording-mode
+    )
+    #intel-hud {
+    top: var(--gev-header-height);
+    right: calc(var(--gev-map-control-size) + 3 * var(--gev-drawer-inset));
+    bottom: var(--gev-status-height);
+  }
+  /* Cyber's HUD corners are fixed to the viewport: they clear the rail and
+     the map controls themselves. */
+  body:not(.mobile-shell):not(.cockpit-mode)
+    #intel-hud[data-variant='cyber']
+    :is(.hud-top-left, .hud-bottom-left) {
+    left: calc(var(--gev-rail-width) + 24px);
+  }
+  body:not(.mobile-shell):not(.cockpit-mode)
+    #intel-hud[data-variant='cyber']
+    :is(.hud-top-right, .hud-bottom-right) {
+    right: calc(var(--gev-map-control-size) + 3 * var(--gev-drawer-inset));
+  }
+}
+
+/* The Share button shows its label beside the icon on wider desktops; under
+   Cyber and at 960px and below the label stays its name, read, not shown. */
+@media not all and (max-width: 960px) {
+  :root:not([data-ui-theme='cyber']) #gev-header-actions .share-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+/* Narrower desktops keep search usable: the count, the share label and the
+   wordmark's text give way. */
+@media (max-width: 960px) {
+  .gev-header-count,
+  #gev-header-brand > #title-bar h1 > [translate='no'] {
+    display: none;
+  }
+  :root:not([data-ui-theme='cyber']) #gev-header-actions #share-btn {
+    width: 36px;
+    padding: 0;
+  }
+}
+
+/* The compass needle points north in the design's red. */
+:root:not([data-ui-theme='cyber'])
+  #gev-map-controls
+  #north-up-view
+  .camera-compass-needle {
+  color: var(--gev-danger);
+}
+:root:not([data-ui-theme='cyber']) #gev-map-controls .camera-compass-n {
+  color: var(--gev-text);
+}
+/* Status groups are divided as in the design. */
+.gev-status-item + .gev-status-item,
+.gev-status-item + .gev-status-credits {
+  padding-left: var(--gev-space-3);
+  border-left: 1px solid currentColor;
 }

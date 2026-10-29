@@ -178,6 +178,17 @@ html:not([lang='en']) #global-loading-detail {
   line-height: 1;
 }
 
+/* The share button is named by its label, which shows in the header
+   (shell.css) and is read, not shown, here. */
+.share-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 #traffic-sync-chip,
 #cctv-sync-chip {
   position: fixed;

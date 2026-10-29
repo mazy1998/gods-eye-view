@@ -24,7 +24,7 @@ defineProps({
       :aria-expanded="expanded"
       @click="onToggle?.()"
     >
-      <span aria-hidden="true">⌕</span>
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
     </button>
     <input
       id="location-search"

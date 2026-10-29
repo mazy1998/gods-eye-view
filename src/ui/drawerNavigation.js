@@ -38,7 +38,8 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Map'),
       title: msg('Map & Look'),
       subtitle: msg('Change the map style and image appearance'),
-      // The dock's hover trays (visual presets, location) stay in the dock.
+      // Visual Presets stays in the dock; Location moves to the header
+      // (shellChrome.js).
       panels: ['pp-toggles'],
       opens: ['param-slider-panel'],
     },
@@ -55,6 +56,8 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Tools'),
       subtitle: msg('Import, draw, and plan routes'),
       panels: [],
+      // Import and Draw leave the Display panel for here; Map hides them.
+      elements: ['geo-import-group', 'draw-group'],
     },
     {
       id: 'settings',
@@ -121,6 +124,7 @@ export function createDrawerNavigation({
   ]);
   let current = null;
   let resumeAfterCockpit = null;
+  let resumeAfterPhone = null;
   let cockpit = doc.body?.classList.contains('cockpit-mode') ?? false;
   let destroyed = false;
   // What the open destination changed: the state found and the state set.
@@ -262,7 +266,25 @@ export function createDrawerNavigation({
     panelChannel.subscribe(({ state, change }) => {
       const previous = panels;
       panels = state.panels ?? {};
-      if (moving || !isActive() || state.restoring) return;
+      if (moving || state.restoring) return;
+      if (!isActive()) {
+        // A panel the user expands on the phone, or a share or history
+        // restore there, picks the destination back at desktop width, over
+        // the one open when the phone layout began.
+        if (
+          change?.type === 'panel-revealed' ||
+          change?.type === 'panels-restored' ||
+          Object.entries(panels).some(
+            ([id, next]) =>
+              destinationOf.has(id) &&
+              previous[id]?.collapsed &&
+              !previous[id].autoCollapsed &&
+              !next.collapsed,
+          )
+        )
+          resumeAfterPhone = null;
+        return;
+      }
       if (change?.type === 'panels-restored') {
         // A restore sets the panels' own state: a borrowed panel now is what
         // it shows, not what the drawer found when it borrowed it.
@@ -325,13 +347,32 @@ export function createDrawerNavigation({
     removers.push(() => observer.disconnect());
   }
 
-  // Back at desktop width the drawer shows what the panels show, as at
-  // startup. The phone shell's query was created first, so its sheet has
-  // already given its panels back.
+  // Back at desktop width the drawer reopens the destination it showed when
+  // the phone layout took over, as Cockpit's exit does; with none open then,
+  // it shows what the panels show, as at startup. The phone shell's query was
+  // created first, so its sheet has already given its panels back. Back at
+  // desktop width in Cockpit, Cockpit's exit restores its own state, and the
+  // destination from before the phone layout is forgotten.
+  // A resize through the phone width and back can deliver both changes after
+  // it ends, each reading the width it ended at: only an actual change of
+  // layout moves the drawer.
+  let phoneLayout = phone?.matches ?? false;
   const onPhone = () => {
-    if (!isActive()) close();
+    if (phone.matches === phoneLayout) return;
+    phoneLayout = phone.matches;
+    if (phoneLayout) {
+      resumeAfterPhone = current;
+      close();
+    }
     channel.publish({ type: 'active-changed' });
-    if (isActive()) followPanels();
+    if (!isActive()) {
+      if (!phoneLayout) resumeAfterPhone = null;
+      return;
+    }
+    const resumed = resumeAfterPhone;
+    resumeAfterPhone = null;
+    if (resumed) open(resumed);
+    else followPanels();
   };
   if (phone?.addEventListener) {
     phone.addEventListener('change', onPhone);

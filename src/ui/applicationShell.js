@@ -23,6 +23,12 @@ import { createMapStackChannel } from './mapStackChannel.js';
 import StyleIndicator from './StyleIndicator.vue';
 import ShellDrawer from './ShellDrawer.vue';
 import ShellRail from './ShellRail.vue';
+import ShellHeader from './ShellHeader.vue';
+import ShellMapControls from './ShellMapControls.vue';
+import ShellStatusBar from './ShellStatusBar.vue';
+import { createShellChrome } from './shellChrome.js';
+import { createStatusReadout } from './statusReadout.js';
+import AppearancePicker from './settings/AppearancePicker.vue';
 import { createDrawerNavigation } from './drawerNavigation.js';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountRadioView } from './radioView.js';
@@ -93,9 +99,12 @@ export class StyleManager extends ShellFacade {
       services,
       requestServices,
       initialShareCode = null,
+      appearance = null,
     } = {},
   ) {
     super();
+    // The appearance owner the entry module applied before the shell rendered.
+    this._appearance = appearance;
     const {
       IntelHUD,
       ShareLinkManager,
@@ -347,10 +356,16 @@ export class StyleManager extends ShellFacade {
         _locationMiniPoi: this._locationMiniPoi,
       },
       operations: {
-        _openLocationSearch: () =>
+        // The header shows its search field at all times; the tray opens
+        // for search where the field is in it (phones).
+        _openLocationSearch: () => {
+          if (this._locationSearch?.closest('#gev-header')) return;
           this._panelChrome.setPanelCollapsed('location-bar', false, {
             explicit: true,
-          }),
+          });
+        },
+        _locationSearchAlwaysShown: () =>
+          !!this._locationSearch?.closest('#gev-header'),
         _beginDeferredNavigation: (...args) =>
           this._beginDeferredNavigation(...args),
         _reassertNavigationHandoff: (...args) =>
@@ -1220,7 +1235,16 @@ export class StyleManager extends ShellFacade {
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
     });
-    const props = { drawer: this._drawer };
+    // Settings renders the appearance picker above its hosted controls.
+    const destinationViews = this._appearance
+      ? {
+          settings: {
+            component: AppearancePicker,
+            props: { appearance: this._appearance },
+          },
+        }
+      : {};
+    const props = { drawer: this._drawer, views: destinationViews };
     const before = document.body.firstChild;
     const views = [ShellRail, ShellDrawer].map((component) =>
       this._mountView(component, { parent: document.body, before, props }),
@@ -1231,8 +1255,101 @@ export class StyleManager extends ShellFacade {
     this._drawer.channel.subscribe(({ state }) => {
       for (const view of views) view.update({ state });
     });
+    this._initShellChrome();
     // Panels left open by a stored preference open their destination.
     this._drawer.followPanels();
+  }
+
+  /**
+   * The header, map controls and status bar around the rail. Today's chrome
+   * moves into them while the shell is in use and returns home while it
+   * rests, on phones and in Cockpit, as the drawer does.
+   */
+  _initShellChrome() {
+    this._statusReadout = createStatusReadout({ camera: this.viewer?.camera });
+    const after = document.getElementById('gev-drawer')?.nextSibling ?? null;
+    const views = [
+      this._mountView(ShellHeader, {
+        parent: document.body,
+        before: document.querySelector('.gev-rail'),
+        props: {
+          layers: this._layerBindings.channel,
+          onSearchKeydown: (event) => this._escapeHeaderSearch(event),
+        },
+      }),
+      this._mountView(ShellMapControls, {
+        parent: document.body,
+        before: after,
+      }),
+      this._mountView(ShellStatusBar, {
+        parent: document.body,
+        before: after,
+        props: { readout: this._statusReadout.channel },
+      }),
+    ];
+    this._drawer.channel.subscribe(({ state }) => {
+      for (const view of views) view.update({ state });
+    });
+    const byId = (id) => () => document.getElementById(id);
+    const { search, results } = this._locationViews;
+    this._shellChrome = createShellChrome({
+      channel: this._drawer.channel,
+      placements: [
+        [byId('title-bar'), byId('gev-header-brand')],
+        // Search and its results leave the location tray for the header; the
+        // rest of the tray follows them as the places disclosure beside it.
+        [() => search.element, byId('gev-header-search')],
+        [() => results.element, byId('gev-header-search')],
+        [byId('location-bar'), byId('gev-header-places')],
+        [byId('top-center-actions'), byId('gev-header-actions')],
+        [byId('north-up-view'), byId('gev-map-controls')],
+        [byId('tilt-map-view'), byId('gev-map-controls')],
+        [byId('reset-globe-view'), byId('gev-map-controls')],
+        [byId('cesium-credits'), byId('gev-status-credits')],
+      ],
+    });
+    const dismissResult = (event) => this._dismissHeaderSearchResult(event);
+    this._lifetime.listen(document, 'pointerdown', dismissResult, true);
+    this._lifetime.listen(document, 'focusin', dismissResult, true);
+  }
+
+  /**
+   * The header's search is always shown, so a found result under it is put
+   * away by a click or focus anywhere outside search (and by Escape, see
+   * _escapeHeaderSearch) until the next search, never left over the map.
+   */
+  _dismissHeaderSearchResult(event) {
+    const slot = document.getElementById('gev-header-search');
+    const field = this._navigation.locationField;
+    if (
+      !slot?.contains(this._locationViews.results.element) ||
+      slot.contains(event.target) ||
+      field.getState().resultDismissed
+    )
+      return;
+    field.set({ resultDismissed: true });
+  }
+
+  /**
+   * Escape in the header's search clears it and puts its result away, closes
+   * the places tray if it is open and focuses the tray's toggle, as it did
+   * when the field and result were in the tray.
+   */
+  _escapeHeaderSearch(event) {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this._navigation.locationField.set({ resultDismissed: true });
+    this._navigation.locationField.close();
+    if (
+      !document.getElementById('location-bar')?.classList.contains('collapsed')
+    )
+      this._panelChrome.setPanelCollapsed('location-bar', true, {
+        explicit: true,
+      });
+    document
+      .getElementById('location-bar-toggle')
+      ?.focus({ preventScroll: true });
   }
 
   /** The ACTIVE STYLE value follows the visual-settings channel. */
@@ -1834,6 +1951,8 @@ export class StyleManager extends ShellFacade {
     this._localePicker = null;
     this._recording.destroy();
     this._mobileShell?.destroy();
+    this._shellChrome?.destroy();
+    this._statusReadout?.destroy();
     this._drawer?.destroy();
     this._panelChrome.destroy();
     this._feedback.destroy();

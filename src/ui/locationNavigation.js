@@ -85,6 +85,7 @@ export class LocationNavigation {
     if (change.type === 'started') {
       this._activeLocationSearchGeneration = change.generation;
       this._setLocationSearchError(null);
+      this.navigation.locationField.set({ resultDismissed: false });
     } else if (change.type === 'found') {
       this._searchedLocationLabel = state.destination.label || state.query;
       this._setActiveLocation(null);
@@ -165,6 +166,7 @@ export class LocationNavigation {
       onSearch: (query) => this._locationLookup.run(query),
       onSearchEdit: () => this._setLocationSearchError(null),
       onSearchOpen: () => this._openLocationSearch(),
+      isSearchAlwaysShown: () => this._locationSearchAlwaysShown(),
       onReset: () => this.resetToGlobeView(),
     });
   }

@@ -3042,5 +3042,14 @@
   "Create": "Crear",
   "New scene": "Nueva escena",
   "Delete scene": "Eliminar escena",
-  "Delete shot": "Eliminar toma"
+  "Delete shot": "Eliminar toma",
+  "Appearance": "Apariencia",
+  "Original": "Original",
+  "Transparent dark": "Oscuro transparente",
+  "Light": "Claro",
+  "The Cyber HUD layout uses its own colors.": "El diseño HUD Cyber usa sus propios colores.",
+  "Search places": "Buscar lugares",
+  "Map controls": "Controles del mapa",
+  "Map status": "Estado del mapa",
+  "Share view": "Compartir vista"
 }

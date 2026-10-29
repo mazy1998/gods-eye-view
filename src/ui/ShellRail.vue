@@ -12,6 +12,10 @@ const props = defineProps({
   state: { type: Object, default: null },
 });
 const list = ref(null);
+// The brand mark at the top of the rail: a public file and the product's
+// short name, which is never translated.
+const LOGO = '/logo.svg';
+const MARK = 'GEV';
 const items = DRAWER_DESTINATIONS.map((destination) => ({
   ...destination,
   value: destination.id,
@@ -41,6 +45,10 @@ function navigate(event, from) {
     :aria-label="t('Destinations')"
     :hidden="!state?.active"
   >
+    <div class="gev-rail-mark" aria-hidden="true">
+      <img class="gev-rail-mark-logo" :src="LOGO" alt="" />
+      <span class="gev-rail-mark-name" translate="no">{{ MARK }}</span>
+    </div>
     <!-- A toolbar announces that arrows move between its buttons. -->
     <div
       ref="list"

@@ -880,6 +880,7 @@
   opacity: 0.72;
 }
 
+:root[data-ui-theme='cyber'] #gev-map-controls > button,
 :root[data-ui-theme='cyber'] #top-center-actions button {
   --cyber-action-edge: rgba(226, 235, 236, 0.34);
   --cyber-action-fill: rgba(14, 20, 23, 0.94);
@@ -902,6 +903,7 @@
   box-shadow: none;
 }
 
+:root[data-ui-theme='cyber'] #gev-map-controls > button::before,
 :root[data-ui-theme='cyber'] #top-center-actions button::before {
   position: absolute;
   z-index: -1;
@@ -912,6 +914,9 @@
   pointer-events: none;
 }
 
+:root[data-ui-theme='cyber'] #gev-map-controls > button:hover,
+:root[data-ui-theme='cyber'] #gev-map-controls > button:focus-visible,
+:root[data-ui-theme='cyber'] #gev-map-controls > button[aria-pressed='true'],
 :root[data-ui-theme='cyber'] #top-center-actions button:hover,
 :root[data-ui-theme='cyber'] #top-center-actions button:focus-visible,
 :root[data-ui-theme='cyber'] #top-center-actions button[aria-pressed='true'] {

@@ -2900,5 +2900,14 @@
   "Create": "创作",
   "New scene": "新建场景",
   "Delete scene": "删除场景",
-  "Delete shot": "删除镜头"
+  "Delete shot": "删除镜头",
+  "Appearance": "外观",
+  "Original": "原始",
+  "Transparent dark": "透明深色",
+  "Light": "浅色",
+  "The Cyber HUD layout uses its own colors.": "Cyber HUD 布局使用自己的配色。",
+  "Search places": "搜索地点",
+  "Map controls": "地图控件",
+  "Map status": "地图状态",
+  "Share view": "分享视图"
 }

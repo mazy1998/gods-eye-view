@@ -196,10 +196,14 @@ const RECOGNIZED = new Set([
   "body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minimal'].active) #cesium-credits",
   'body.ui-clean-view #cesium-credits',
   'body.recording-mode #cesium-credits',
+  // credit in the shell's status bar (see the shell test below)
+  '#gev-status-bar #gev-status-credits > #cesium-credits',
   // dock
   '#command-dock',
   '#command-dock:has(#location-bar:not(.collapsed))',
   '#command-dock:has(#control-panel:not(.collapsed))',
+  // dock lifted above the shell's status bar (see the shell test below)
+  'body:not(.mobile-shell):not(.cockpit-mode) #command-dock',
   // rail
   '#right-context-rail',
   '#right-context-rail.layout-focus',
@@ -620,4 +624,35 @@ test('the credit line is never suppressed to make room', () => {
 test('OSM-derived layers never force the desktop credit row into a stack', () => {
   assert.doesNotMatch(css, /body:has\([^)]*alpr-cameras[^}]*#cesium-credits/);
   assert.doesNotMatch(css, /#cesium-credits\s+\.cesium-credit-expand-link\s*\{[^}]*display:\s*block/);
+});
+
+test('in the shell, the credit rides in the status bar below the lifted dock', () => {
+  // While the shell is in use (desktop, outside Cockpit), shellChrome.js
+  // moves #cesium-credits into the status bar at the viewport's bottom edge,
+  // and the dock (with every tray above it) sits on top of that bar. The
+  // rules above model the credit at home, where phones and Cockpit keep it.
+  const shell = readStylesheet(path.join(ROOT, 'src/ui/styles/shell.css'));
+  const rules = flattenRules(shell);
+  const own = (selector) => rules.find((rule) => rule.parts.includes(selector));
+  const value = (rule, prop) => rule?.decls.find((decl) => decl.prop === prop)?.value;
+  const height = /--gev-status-height:\s*(\d+)px/.exec(shell);
+  const space = /--gev-space-2:\s*(\d+)px/.exec(fs.readFileSync(path.join(ROOT, 'src/ui/styles/tokens.css'), 'utf8'));
+  assert.ok(height && space, 'the status bar height and the gap token are plain pixels');
+  const bar = own('.gev-status-bar');
+  assert.equal(value(bar, 'position'), 'fixed');
+  assert.equal(value(bar, 'bottom'), '0');
+  assert.equal(value(bar, 'min-height'), 'var(--gev-status-height)');
+  assert.equal(value(own('#gev-status-bar #gev-status-credits > #cesium-credits'), 'position'), 'static');
+  const lifted = 'body:not(.mobile-shell):not(.cockpit-mode) #command-dock';
+  assert.equal(value(own(lifted), 'bottom'), 'calc(var(--gev-status-height) + var(--gev-space-2))');
+  assert.ok(Number(space[1]) >= MIN_CLEARANCE_PX, 'the dock clears the status bar by the credit clearance');
+  // The lifted dock outranks every desktop dock anchor the model resolves.
+  const anchors = RULES.flatMap((rule) => rule.decls.some((decl) => decl.prop === 'bottom')
+    ? rule.parts.filter((part) => part !== lifted && /#command-dock$/.test(part) && !part.includes('mobile-shell'))
+    : []);
+  assert.ok(anchors.length > 0);
+  for (const part of anchors)
+    assert.ok(compareSpecificity(specificity(lifted), specificity(part)) > 0, `${part} outranks the lifted dock`);
+  // Clean view and recording keep the bar for the credit alone.
+  assert.doesNotMatch(shell, /:is\([^)]*\.gev-status-bar[^)]*\)\s*\{\s*display:\s*none/);
 });

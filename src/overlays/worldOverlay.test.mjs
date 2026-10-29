@@ -1316,6 +1316,91 @@ test('UI exclusions stay per-rect: overlapping chrome never merges into a boundi
   env.cleanup();
 });
 
+test('the shell around the map keeps placements clear of it', () => {
+  // Synthetic shell rectangles exercise each exclusion independently: rail,
+  // header, an open drawer, the map controls and the status bar, all fixed
+  // above the host.
+  const shell = {
+    '.gev-rail': { left: 0, top: 0, width: 40, height: 300 },
+    '#gev-header': { left: 40, top: 0, width: 360, height: 30 },
+    '#gev-drawer': { left: 48, top: 38, width: 120, height: 200 },
+    '#gev-map-controls': { left: 352, top: 150, width: 40, height: 100 },
+    '#gev-status-bar': { left: 40, top: 280, width: 360, height: 20 },
+  };
+  const env = installMockEnvironment({
+    width: 400,
+    height: 300,
+    dpr: 1,
+    occluders: Object.entries(shell).map(([selector, rect]) => ({
+      selector,
+      rect,
+      style: { position: 'fixed', zIndex: '120' },
+    })),
+  });
+  initWorldOverlay(env.viewer);
+  let uiRects = null;
+  registerWorldOverlayPaintLane('detection', (frame) => {
+    uiRects = frame.uiRects.slice(0, frame.uiRectCount)
+      .map(({ x, y, w, h }) => ({ x, y, w, h }));
+  }, { id: 'detection', active: true, target: 'detection' });
+  setOverlayEntries('ambient', [selectedEntry('UNDER-THE-HEADER', {
+    position: positionAtScreen(260, 40),
+  })]);
+  env.postRender.raise();
+  assert.deepEqual(
+    uiRects,
+    Object.values(shell).map(({ left, top, width, height }) => ({
+      x: left - 6, y: top - 6, w: width + 12, h: height + 12,
+    })),
+    'each part of the shell is its own exclusion',
+  );
+  const painted = getOverlayPaintRect('ambient', 'UNDER-THE-HEADER');
+  assert.ok(painted, 'the entry published a paint rectangle');
+  for (const [selector, rect] of Object.entries(shell)) {
+    assert.equal(rectsIntersect(painted, inflatedRect(rect)), false,
+      `the placement steps clear of ${selector}`);
+  }
+  env.cleanup();
+});
+
+test('a drawer mounted closed after the overlay still excludes once it opens', () => {
+  const env = installMockEnvironment({ width: 400, height: 300, dpr: 1 });
+  initWorldOverlay(env.viewer);
+  let uiRects = null;
+  registerWorldOverlayPaintLane('detection', (frame) => {
+    uiRects = frame.uiRects.slice(0, frame.uiRectCount)
+      .map(({ x, y, w, h }) => ({ x, y, w, h }));
+  }, { id: 'detection', active: true, target: 'detection' });
+  // The shell mounts its drawer after the overlay host, closed.
+  const drawer = env.document.createElement('section');
+  drawer.id = 'gev-drawer';
+  drawer.hidden = true;
+  drawer._rect = { left: 48, top: 38, width: 200, height: 220 };
+  Object.assign(drawer.style, { position: 'fixed', zIndex: '120' });
+  env.document.body.appendChild(drawer);
+  env.mutationObservers[0].callback([{
+    type: 'childList', target: env.document.body, addedNodes: [drawer], removedNodes: [],
+  }]);
+  setOverlayEntries('ambient', [selectedEntry('UNDER-THE-DRAWER', {
+    position: positionAtScreen(150, 120),
+  })]);
+  env.postRender.raise();
+  assert.deepEqual(uiRects, [], 'the closed drawer excludes nothing');
+  // Opening a destination flips only the drawer's own `hidden`; a browser
+  // reports that only for an element the overlay observes.
+  const observed = env.mutationObservers
+    .flatMap((observer) => observer.observations)
+    .some(({ target }) => target === drawer);
+  assert.ok(observed, 'the closed drawer is observed so its opening is seen');
+  drawer.hidden = false;
+  env.mutationObservers[0].callback([{ type: 'attributes', target: drawer, attributeName: 'hidden' }]);
+  env.moveEnd.raise();
+  env.advanceTime(1000);
+  env.postRender.raise();
+  assert.deepEqual(uiRects, [{ x: 42, y: 32, w: 212, h: 232 }], 'the open drawer is an exclusion');
+  env.cleanup();
+});
+
 test('UI exclusions ignore chrome the user cannot see', () => {
   const env = installMockEnvironment({
     width: 400,

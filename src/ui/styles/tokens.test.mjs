@@ -120,6 +120,7 @@ const CYBER_STATE_EXCEPTIONS = new Map([
   ['.gev-rail-item[aria-current=\'true\'] .gev-rail-icon', 'New rail current destination icon; Cyber has no rail rule, and removing it erases which destination is open.'],
   ['.gev-rail-item[aria-current=\'true\']::before', 'New rail current destination marker; Cyber has no rail rule.'],
   ['.gev-rail-item:focus-visible .gev-rail-icon', 'New rail focus ring; removing it leaves keyboard focus unmarked.'],
+  ['#gev-header-places > #location-bar #location-bar-toggle:focus-visible', 'The location tray toggle in the header; Cyber styles it only in the dock, and removing it leaves keyboard focus unmarked.'],
 ].map(([selector, reason]) => [`./src/ui/styles/shell.css|${selector}`, reason])));
 
 /** Split only selector-list commas, not commas in :is(), :where() or attributes. */

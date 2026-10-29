@@ -31,6 +31,8 @@ through a copy of their state:
 | `PanelChrome.channel` | `{panels: {[id]: {collapsed, autoCollapsed, pinned}}}` | the collapse-button sync that ends every collapse, layout and position change, and pin changes |
 | `LayerBindings.channel` | `{layers: manager.getAll()}` of the attached manager, as plain data | the manager's `subscribe()` and `subscribeActivity()`, and manager replacement |
 | session import `channel` (`geoFileImport.js`) | `{files: list()}` | every change to the import list |
+| appearance `channel` (`appearance.js`) | `{appearance, cyber}` | `set()` with a new value, and Cyber turning on or off; the entry module applies the stored value to the root before the shell renders, outside share links, scenes and visual settings |
+| status readout `channel` (`statusReadout.js`) | `{coordinates, utc}` | its sampler, only when the camera's formatted position or the UTC minute changes |
 
 A view calls `useOwnerState(channel)` (`ownerState.js`) for a read-only ref of
 the frozen snapshot and calls the owner's operations to change anything.
@@ -59,9 +61,9 @@ that owner; submit then calls `LocationSearch.run()`. Typing never starts a look
 
 `locationViews/SearchField.vue` and `SearchResults.vue` are independent,
 stateless mounts. The shell mounts them before collecting element references,
-so navigation, lookup and the phone sheet all receive the same input. The header
-can move `styleManager._locationViews.search.element` and `.results.element`
-to separate containers without remounting or adding another input. If a host
+so navigation, lookup and the phone sheet all receive the same input. While the
+shell is in use, the header holds `styleManager._locationViews.search.element`
+and `.results.element` (see Shell chrome), with no remount or second input. If a host
 replaces the mounts instead, it must also rebind the owners' input references
 and dispose the old mounts; do not leave a hidden legacy copy.
 
@@ -206,3 +208,26 @@ with user origin. The view adds no request, pointer owner, application state,
 clock or listener to the layer. It scrolls current steps after Vue's paint and
 cancels pending scroll/action callbacks on disposal. Existing chip/list hooks
 and their explicit hidden state remain on the native nodes.
+
+## Shell chrome
+
+`shellChrome.js` places today's chrome in the shell's header, map controls and
+status bar (`ShellHeader.vue`, `ShellMapControls.vue`, `ShellStatusBar.vue`)
+while the drawer's channel says the shell is `active`, and returns every node
+to a placeholder at its home while it rests (phones, Cockpit). Nodes move with
+their ids, listeners and owners; nothing is cloned or re-mounted:
+
+| Node | Shell place |
+| --- | --- |
+| `#title-bar` | header wordmark |
+| The location views' SearchField and SearchResults roots | header search |
+| `#location-bar` (pin, POIs, city pills, mini status) | header places disclosure; on desktop the dock has no Location tray |
+| `#top-center-actions` (Clear selected layers, Share view) | header actions |
+| `#north-up-view`, `#tilt-map-view`, `#reset-globe-view` | map controls (the design's zoom buttons are not added) |
+| `#cesium-credits` | status bar |
+
+Code that reads these nodes' placement must not assume home: the tray opens
+for search only where the field is in it, the tray's Escape leaves the header
+field alone, and the voice dock reorders `#location-bar` only while it is in
+the dock. Tools hosts `#geo-import-group` and `#draw-group` through the
+drawer's `elements`.

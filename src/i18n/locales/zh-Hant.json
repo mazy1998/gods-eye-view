@@ -2900,5 +2900,14 @@
   "Create": "創作",
   "New scene": "新增場景",
   "Delete scene": "刪除場景",
-  "Delete shot": "刪除鏡頭"
+  "Delete shot": "刪除鏡頭",
+  "Appearance": "外觀",
+  "Original": "原始",
+  "Transparent dark": "透明深色",
+  "Light": "淺色",
+  "The Cyber HUD layout uses its own colors.": "Cyber HUD 版面使用自己的配色。",
+  "Search places": "搜尋地點",
+  "Map controls": "地圖控制項",
+  "Map status": "地圖狀態",
+  "Share view": "分享檢視"
 }

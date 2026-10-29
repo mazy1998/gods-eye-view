@@ -1179,5 +1179,15 @@
   "src/ui/styles/directions.css",
   "src/ui/directionsView.test.mjs",
   "src/ui/displayViews/ImageAdjustmentGroup.vue",
-  "src/ui/displayViews/StyleParametersView.vue"
+  "src/ui/displayViews/StyleParametersView.vue",
+  "src/ui/appearance.js",
+  "src/ui/appearance.test.mjs",
+  "src/ui/settings/AppearancePicker.vue",
+  "src/ui/ShellHeader.vue",
+  "src/ui/ShellMapControls.vue",
+  "src/ui/ShellStatusBar.vue",
+  "src/ui/shellChrome.js",
+  "src/ui/shellChrome.test.mjs",
+  "src/ui/headerSearch.test.mjs",
+  "src/ui/statusReadout.js"
 ]

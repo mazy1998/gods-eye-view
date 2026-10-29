@@ -915,7 +915,16 @@
       "src/ui/SceneLibrary.vue",
       "src/ui/SceneShotsView.vue",
       "src/ui/SceneShotRow.vue",
-      "src/ui/ScenePlaybackView.vue"
+      "src/ui/ScenePlaybackView.vue",
+      "src/ui/appearance.js",
+      "src/ui/settings/AppearancePicker.vue",
+      "src/ui/primitives/SegmentedControl.vue",
+      "src/ui/ShellHeader.vue",
+      "src/ui/ShellMapControls.vue",
+      "src/ui/ShellStatusBar.vue",
+      "src/ui/shellChrome.js",
+      "src/ui/statusReadout.js",
+      "src/search/coordinateParser.js"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2828,7 +2837,15 @@
       "src/ui/ScenePlaybackView.vue",
       "src/ui/SceneDialogView.vue",
       "src/ui/SceneDetailsView.vue",
-      "src/ui/SceneFileChooser.vue"
+      "src/ui/SceneFileChooser.vue",
+      "src/ui/appearance.js",
+      "src/ui/settings/AppearancePicker.vue",
+      "src/ui/primitives/SegmentedControl.vue",
+      "src/ui/ShellHeader.vue",
+      "src/ui/ShellMapControls.vue",
+      "src/ui/ShellStatusBar.vue",
+      "src/ui/shellChrome.js",
+      "src/ui/statusReadout.js"
     ],
     "external": [
       "hls.js",

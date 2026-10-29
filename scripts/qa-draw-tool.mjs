@@ -217,12 +217,12 @@ try {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
-    // DISPLAY lives in the drawer's Map destination, which another expanded
-    // panel (Context after a selection) may hold: open Map from the rail.
-    const map = document.querySelector(
-      '.gev-rail-item[data-destination="map"]',
+    // Draw lives in the drawer's Tools destination, which another expanded
+    // panel (Context after a selection) may hold: open Tools from the rail.
+    const tools = document.querySelector(
+      '.gev-rail-item[data-destination="tools"]',
     );
-    if (map && map.getAttribute('aria-current') !== 'true') map.click();
+    if (tools && tools.getAttribute('aria-current') !== 'true') tools.click();
   });
   await page.waitForFunction(
     () =>
@@ -461,12 +461,12 @@ try {
     );
     await page.evaluate(() => {
       window.__godsEyeView.viewer.selectedEntity = undefined;
-      // Selecting opened Context, whose Inspect replaces Map in the one
-      // drawer: go back to Map from the rail, as a user would, to draw again.
-      const map = document.querySelector(
-        '.gev-rail-item[data-destination="map"]',
+      // Selecting opened Context, whose Inspect replaces Tools in the one
+      // drawer: go back to Tools from the rail, as a user would, to draw again.
+      const tools = document.querySelector(
+        '.gev-rail-item[data-destination="tools"]',
       );
-      if (map && map.getAttribute('aria-current') !== 'true') map.click();
+      if (tools && tools.getAttribute('aria-current') !== 'true') tools.click();
     });
     await page.click('#draw-toggle');
     await page.click('.pp-mode-btn[data-shape="area"]');
@@ -512,12 +512,12 @@ try {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
-    // DISPLAY lives in the drawer's Map destination, which another expanded
-    // panel (Context after a selection) may hold: open Map from the rail.
-    const map = document.querySelector(
-      '.gev-rail-item[data-destination="map"]',
+    // Draw lives in the drawer's Tools destination, which another expanded
+    // panel (Context after a selection) may hold: open Tools from the rail.
+    const tools = document.querySelector(
+      '.gev-rail-item[data-destination="tools"]',
     );
-    if (map && map.getAttribute('aria-current') !== 'true') map.click();
+    if (tools && tools.getAttribute('aria-current') !== 'true') tools.click();
   });
   await page.waitForFunction(
     () =>

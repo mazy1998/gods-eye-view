@@ -131,6 +131,22 @@ test('Location Escape clears a hidden draft search before restoring disclosure f
   assert.equal(fixture.focused(), true);
 });
 
+test("Location Escape leaves the header's search field to its own owner", () => {
+  const fixture = panelFixture({ id: 'location-bar' });
+  const location = locationFixture();
+  location.field.set({ query: 'kept draft', expanded: true });
+  const input = location.elements.search;
+  const header = document.createElement('header');
+  header.id = 'gev-header';
+  header.append(input);
+  document.body.append(header);
+  fixture.manager._locationSearch = input;
+  fixture.manager.closeLocationSearch = () => location.field.close();
+  assert.equal(fixture.manager._collapsePanelOnEscape(fixture.event, 'location-bar'), true);
+  assert.equal(location.field.getState().query, 'kept draft');
+  header.remove();
+});
+
 test('panel chrome wires Escape for every declared collapse target', () => {
   const init = method('_initPanelChrome', '_collapsePanelOnEscape');
   assert.match(init, /for \(const \[targetId, buttons\] of targets\)/);

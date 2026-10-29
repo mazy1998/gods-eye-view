@@ -274,6 +274,11 @@ try {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
+    // Import lives in the drawer's Tools destination: open it from the rail.
+    const tools = document.querySelector(
+      '.gev-rail-item[data-destination="tools"]',
+    );
+    if (tools && tools.getAttribute('aria-current') !== 'true') tools.click();
   });
   await page.waitForFunction(
     () =>

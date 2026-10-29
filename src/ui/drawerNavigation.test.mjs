@@ -24,7 +24,7 @@ function fixture({ phone = false, chrome = false } = {}) {
        <div id="scene-panel" data-panel-id="scene-panel" class="panel-collapsible collapsed"></div>
      </div>
      <aside id="right-context-rail">
-       <div id="pp-toggles" data-panel-id="pp-toggles" class="panel-collapsible collapsed"><div id="param-slider-panel"></div></div>
+       <div id="pp-toggles" data-panel-id="pp-toggles" class="panel-collapsible collapsed"><div id="param-slider-panel"></div><div id="draw-group"></div><div id="geo-import-group"></div></div>
        <div id="cctv-panel" data-panel-id="cctv-panel" class="panel-collapsible collapsed"></div>
        <div id="weather-panel" data-panel-id="weather-panel" class="panel-collapsible" hidden></div>
        <div id="global-context-panel" data-panel-id="global-context-panel" class="panel-collapsible collapsed">
@@ -139,6 +139,29 @@ test('opening moves the very same panels into the drawer, expanded, and closing 
   );
   assert.deepEqual(hosted(drawer), []);
   assert.equal(document.querySelectorAll('#data-panel').length, 1);
+});
+
+test('Tools hosts Import, then Draw, moved out of the Display panel and back', (t) => {
+  const { drawer, calls } = fixture();
+  t.after(() => drawer.destroy());
+  const draw = document.getElementById('draw-group');
+  assert.equal(drawer.open('tools'), true);
+  assert.deepEqual(hosted(drawer), ['geo-import-group', 'draw-group']);
+  assert.equal(
+    document.getElementById('draw-group'),
+    draw,
+    'moved, not cloned',
+  );
+  assert.deepEqual(calls, [], 'no panel state changes');
+  // Map borrows the Display panel with both groups back in their home.
+  drawer.open('map');
+  assert.deepEqual(hosted(drawer), ['pp-toggles']);
+  assert.deepEqual(
+    [...document.getElementById('pp-toggles').children].map((node) => node.id),
+    ['param-slider-panel', 'draw-group', 'geo-import-group'],
+  );
+  drawer.close();
+  assert.equal(draw.parentElement.id, 'pp-toggles');
 });
 
 test('a change the user makes inside the drawer survives closing and is what share writes', (t) => {
@@ -370,6 +393,75 @@ test('an expanded Radio shows Layers at startup and back at desktop width, not t
   assert.equal(destination(drawer), 'layers');
   restore(['radio-panel', 'global-context-panel']);
   assert.equal(destination(drawer), 'layers', 'a restore picks it too');
+});
+
+test('back at desktop width the drawer reopens what it showed before the phone layout', (t) => {
+  const { drawer, media, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  // Display is expanded, so the panels alone would show Map.
+  setPanelCollapsed('pp-toggles', false, { explicit: true });
+  drawer.open('tools');
+  media.set(true);
+  assert.equal(destination(drawer), null);
+  assert.equal(
+    document.getElementById('draw-group').parentElement.id,
+    'pp-toggles',
+  );
+  media.set(false);
+  assert.equal(destination(drawer), 'tools');
+  assert.ok(drawer.host.contains(document.getElementById('draw-group')));
+  // With nothing open when the phone layout took over, the panels decide.
+  drawer.close();
+  media.set(true);
+  media.set(false);
+  assert.equal(destination(drawer), 'map');
+  // A resize through the phone width delivered after it ends moves nothing.
+  drawer.open('tools');
+  media.set(false);
+  media.set(false);
+  assert.equal(destination(drawer), 'tools');
+});
+
+test('a share or history restore on the phone picks the destination back at desktop width', (t) => {
+  const { drawer, media, restore } = fixture();
+  t.after(() => drawer.destroy());
+  drawer.open('tools');
+  media.set(true);
+  assert.equal(destination(drawer), null);
+  // Back or Forward restores an expanded Data panel on the phone.
+  restore(['data-panel']);
+  media.set(false);
+  assert.equal(destination(drawer), 'layers', 'the first expanded panel');
+  // A restore that expands nothing leaves the drawer closed.
+  drawer.open('tools');
+  media.set(true);
+  restore([]);
+  media.set(false);
+  assert.equal(destination(drawer), null);
+});
+
+test('a phone layout that ends in Cockpit leaves no destination to reopen later', (t) => {
+  const { drawer, media } = fixture();
+  t.after(() => drawer.destroy());
+  const cockpit = (active) => {
+    document.body.classList.toggle('cockpit-mode', active);
+    window.dispatchEvent(
+      new CustomEvent('gev:cockpit-mode-changed', { detail: { active } }),
+    );
+  };
+  drawer.open('tools');
+  media.set(true);
+  cockpit(true);
+  media.set(false); // widened in Cockpit
+  cockpit(false);
+  // Nothing was open when Cockpit began, so its exit opens nothing.
+  assert.equal(destination(drawer), null);
+  drawer.open('layers');
+  drawer.close();
+  media.set(true);
+  media.set(false);
+  // Nothing was open when this phone layout began and no panel is shown.
+  assert.equal(destination(drawer), null);
 });
 
 test('stored or restored state never opens a destination for a panel that is not shown', (t) => {

@@ -18,6 +18,7 @@ export function createApplicationControls({
   placeSearch,
   defer,
   initialShareCode = null,
+  appearance = null,
 }) {
   // Initialize the style manager (post-processing, HUD, locations, share links)
   const styleManager = new Controls(viewer, {
@@ -34,6 +35,7 @@ export function createApplicationControls({
     placeSearch,
     // A share code to open at start-up instead of the page's address.
     initialShareCode,
+    appearance,
   });
   defer(() => styleManager.orbitController.stop());
   defer(() => styleManager.hud.destroy());

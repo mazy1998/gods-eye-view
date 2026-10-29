@@ -3,6 +3,7 @@ import { t } from '../../i18n/index.js';
 defineProps({
   state: Object,
   error: { type: String, default: '' },
+  dismissed: Boolean,
   onFly: Function,
 });
 </script>
@@ -12,7 +13,10 @@ defineProps({
     <p id="location-search-error" class="location-search-error" role="alert">
       {{ error }}
     </p>
-    <div v-if="state?.status === 'found'" class="gev-location-result">
+    <div
+      v-if="state?.status === 'found' && !dismissed"
+      class="gev-location-result"
+    >
       <span class="gev-location-result-label">{{
         state.destination?.label || state.query
       }}</span>

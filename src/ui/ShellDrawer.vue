@@ -1,6 +1,7 @@
 <script setup>
-// The one drawer: the open destination's heading and close button, and the
-// drawer's host for the legacy panels that destination borrows.
+// The one drawer: the open destination's heading and close button, the views
+// a destination renders itself, and the drawer's host for the legacy panels
+// that destination borrows.
 import { computed, onMounted, ref } from 'vue';
 import { t } from '../i18n/index.js';
 import { DRAWER_DESTINATIONS } from './drawerNavigation.js';
@@ -11,10 +12,15 @@ const props = defineProps({
   drawer: { type: Object, required: true },
   // The drawer's snapshot, painted with each change (see the shell).
   state: { type: Object, default: null },
+  // Views by destination id, { component, props }, rendered while it is open.
+  views: { type: Object, default: () => ({}) },
 });
 const body = ref(null);
 const destination = computed(() =>
   DRAWER_DESTINATIONS.find((item) => item.id === props.state?.destination),
+);
+const view = computed(() =>
+  props.state?.active ? props.views[props.state?.destination] : null,
 );
 
 onMounted(() => body.value.append(props.drawer.host));
@@ -54,6 +60,8 @@ function onKeydown(event) {
         </template>
       </PanelHeader>
     </div>
-    <div ref="body" class="gev-drawer-body"></div>
+    <div ref="body" class="gev-drawer-body">
+      <component :is="view.component" v-if="view" v-bind="view.props" />
+    </div>
   </section>
 </template>

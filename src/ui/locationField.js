@@ -9,6 +9,8 @@ export class LocationField {
       expanded: !!input?.classList.contains('expanded'),
       busy: false,
       error: '',
+      // The found result is put away until the next search starts.
+      resultDismissed: false,
     };
     this.channel = createStateChannel(() => this.state);
     this.disposed = false;
@@ -26,6 +28,15 @@ export class LocationField {
   }
   edit(query) {
     this.set({ query });
+  }
+  /**
+   * Open and focus the field. Where the field is always shown, its button
+   * does only this.
+   */
+  open() {
+    if (this.disposed) return;
+    this.set({ expanded: true });
+    this.input?.focus();
   }
   toggle() {
     if (this.disposed) return;

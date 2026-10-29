@@ -166,7 +166,13 @@ export class PanelChrome {
       onChange: (collapsed, options) =>
         this.setPanelCollapsed(panelId, collapsed, options),
       beforeCollapse: () => {
-        if (panelId !== 'location-bar' || !this._locationSearch) return;
+        // The header's search field is not the tray's to clear.
+        if (
+          panelId !== 'location-bar' ||
+          !this._locationSearch ||
+          this._locationSearch.closest?.('#gev-header')
+        )
+          return;
         this.closeLocationSearch();
       },
     });

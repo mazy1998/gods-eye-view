@@ -120,6 +120,13 @@ export const WORLD_OVERLAY_OCCLUDER_SELECTORS = Object.freeze([
   '#space-mission-panel-host',
   '#military-awareness-panel',
   '#bhote-koshi-event-panel',
+  // The shell around the map. The header, map controls and status bar hold
+  // today's title, actions, camera buttons and credits while it is in use.
+  '.gev-rail',
+  '#gev-header',
+  '#gev-drawer',
+  '#gev-map-controls',
+  '#gev-status-bar',
   // Cockpit: solid backdrop-filled windows only (both bounded to
   // `min(340px, 28vw)` wide and `min(42vh, 410px)` tall, both `hidden` until
   // toggled). Every other cockpit selector was removed — see the block comment.
@@ -1464,13 +1471,16 @@ function refreshUiOccluders(timestamp, force = false) {
       document.querySelectorAll?.(selector) ||
       [document.querySelector?.(selector)].filter(Boolean);
     for (const element of matches) {
-      if (seen.has(element) || !elementIsVisible(element)) continue;
-      seen.add(element);
+      // Observe before the visibility skip: chrome mounted hidden (a closed
+      // drawer) opens by flipping its own attributes, and only an observed
+      // element reports that.
       if (_resizeObserver && !_observedOccluderElements.has(element)) {
         _resizeObserver.observe(element);
         _mutationObserver?.observe?.(element, OCCLUDER_ATTRIBUTE_OBSERVATION);
         _observedOccluderElements.add(element);
       }
+      if (seen.has(element) || !elementIsVisible(element)) continue;
+      seen.add(element);
       const rect = element.getBoundingClientRect?.();
       if (!rect || rect.width <= 0 || rect.height <= 0) continue;
       pushUiOcclusionRect(rect, canvasRect, !occluderStacksAboveHost(element));

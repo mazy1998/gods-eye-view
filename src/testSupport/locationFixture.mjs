@@ -15,6 +15,7 @@ export function locationFixture({
     b: { name: 'City B', pois: [{ name: 'Elsewhere' }] },
   },
   expandedCity = 'a',
+  isSearchAlwaysShown,
 } = {}) {
   container.innerHTML = `
     <template data-location-view="search"></template>
@@ -54,6 +55,7 @@ export function locationFixture({
     onSearchOpen: () => {
       elements.search.dataset.openedByOwner = 'true';
     },
+    isSearchAlwaysShown,
     onSearchEdit: () => {
       calls.push(['edit']);
       field.set({ error: '' });
