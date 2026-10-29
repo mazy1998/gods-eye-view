@@ -11,6 +11,9 @@
  * marks the active option.
  */
 
+import { mountView } from './mountView.js';
+import LocalePickerView from './settings/LocalePickerView.vue';
+import { createStateChannel } from '../app/stateChannel.js';
 import { t } from '../i18n/index.js';
 import { LOCALES, LOCALE_NAMES } from '../i18n/locale.js';
 
@@ -19,11 +22,6 @@ export const LOCALE_SEARCH_THRESHOLD = 8;
 
 /** Type-ahead keystrokes closer together than this extend one prefix. */
 export const TYPEAHEAD_RESET_MS = 500;
-
-const CHINESE_LABELS = {
-  'zh-CN': 'Chinese (Simplified)',
-  'zh-Hant': 'Chinese (Traditional)',
-};
 
 /**
  * Text folded for search: no diacritics, lower case. 'Español' → 'espanol',
@@ -229,6 +227,16 @@ export function createLocalePickerModel({
   let active = -1;
   let typed = '';
   let typedAt = -Infinity;
+  // Views read the picker here (src/ui/ownerState.js); every change publishes.
+  const channel = createStateChannel(() => ({
+    current,
+    searchable,
+    open,
+    query,
+    visible: visible.map((option) => option.code),
+    activeCode: visible[active]?.code ?? null,
+  }));
+  const changed = () => channel.publish();
 
   const activateSelected = () => {
     const selected = visible.findIndex((option) => option.selected);
@@ -239,6 +247,7 @@ export function createLocalePickerModel({
     current,
     options,
     searchable,
+    channel,
     get open() {
       return open;
     },
@@ -260,19 +269,25 @@ export function createLocalePickerModel({
       visible = options;
       typed = '';
       activateSelected();
+      changed();
     },
     closeList() {
       open = false;
       typed = '';
+      changed();
     },
     setQuery(text) {
       query = String(text ?? '');
       visible = filterLocaleOptions(options, query);
       // The current language stays active while it matches; else the first.
       activateSelected();
+      changed();
     },
     setActive(index) {
-      if (index >= 0 && index < visible.length) active = index;
+      if (index >= 0 && index < visible.length) {
+        active = index;
+        changed();
+      }
     },
     /**
      * @param {{key: string, altKey?: boolean, ctrlKey?: boolean, metaKey?: boolean}} event
@@ -293,6 +308,7 @@ export function createLocalePickerModel({
       const moved = moveActiveIndex(key, active, visible.length);
       if (moved !== null) {
         active = moved;
+        changed();
         return { handled: true };
       }
       const printable =
@@ -303,63 +319,16 @@ export function createLocalePickerModel({
       typed = time - typedAt > TYPEAHEAD_RESET_MS ? key : typed + key;
       typedAt = time;
       const match = typeaheadIndex(visible, typed, active);
-      if (match >= 0) active = match;
+      if (match >= 0) {
+        active = match;
+        changed();
+      }
       return { handled: true };
     },
   };
 }
 
 /* ── DOM ───────────────────────────────────────────────────────────────── */
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/** Thin-line globe, check mark and caret, drawn in currentColor. */
-const ICONS = Object.freeze({
-  globe: {
-    stroke: [
-      'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z',
-      'M12 3c-2.6 2.5-3.9 5.5-3.9 9s1.3 6.5 3.9 9',
-      'M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9',
-      'M3 12h18',
-      'M4.3 7.5h15.4',
-      'M4.3 16.5h15.4',
-    ],
-  },
-  check: { stroke: ['M5 12.5l4.3 4.3L19 7'] },
-  caret: { fill: ['M7 10h10l-5 5.5Z'] },
-});
-
-function icon(documentRef, name, className) {
-  const svg = documentRef.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  svg.setAttribute('class', className);
-  const { stroke = [], fill = [] } = ICONS[name];
-  for (const d of stroke) {
-    const path = documentRef.createElementNS(SVG_NS, 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', 'currentColor');
-    path.setAttribute('stroke-width', '1.4');
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('stroke-linejoin', 'round');
-    svg.append(path);
-  }
-  for (const d of fill) {
-    const path = documentRef.createElementNS(SVG_NS, 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('fill', 'currentColor');
-    svg.append(path);
-  }
-  return svg;
-}
-
-function element(documentRef, tag, className) {
-  const node = documentRef.createElement(tag);
-  if (className) node.className = className;
-  return node;
-}
 
 /**
  * Render the picker into `root` and wire it.
@@ -400,124 +369,34 @@ export function mountLocalePicker({
 
   root.textContent = '';
   root.classList.add('locale-picker');
-
-  const button = element(documentRef, 'button', 'locale-picker-button');
-  button.type = 'button';
-  button.setAttribute('aria-haspopup', 'listbox');
-  button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-controls', ids.popup);
-  button.setAttribute(
-    'aria-label',
-    t('Language: {language}', {
-      language: nativeNames[current] || current,
-    }),
+  // The view renders the model's state; this controller keeps the keyboard,
+  // pointer and focus behaviour and repaints it synchronously on each change.
+  const view = mountView(LocalePickerView, {
+    parent: root,
+    props: {
+      state: model.channel.getSnapshot(),
+      options: model.options,
+      current,
+      currentName: nativeNames[current] || current,
+      searchable: model.searchable,
+      ids: { ...ids, option: `${id}-option-` },
+    },
+  });
+  const unsubscribeView = model.channel.subscribe(
+    ({ state }) => view.update({ state }),
+    { emitCurrent: false },
   );
-  button.title = t('Change the interface language');
-  const code = element(documentRef, 'span', 'locale-picker-code');
-  code.setAttribute('translate', 'no');
-  code.setAttribute('aria-hidden', 'true');
-  code.textContent = current.toUpperCase();
-  button.append(
-    icon(documentRef, 'globe', 'locale-picker-globe'),
-    code,
-    icon(documentRef, 'caret', 'locale-picker-caret'),
-  );
-
-  const popup = element(documentRef, 'div', 'locale-picker-popup');
-  popup.id = ids.popup;
-  popup.hidden = true;
-  const heading = element(documentRef, 'div', 'locale-picker-heading');
-  heading.id = ids.heading;
-  heading.textContent = t('Interface language');
-  popup.append(heading);
-
-  const listbox = element(documentRef, 'ul', 'locale-picker-list');
-  listbox.id = ids.listbox;
-  listbox.setAttribute('role', 'listbox');
-  listbox.setAttribute('aria-labelledby', ids.heading);
-  listbox.tabIndex = -1;
-
-  let search = null;
-  if (model.searchable) {
-    search = element(documentRef, 'input', 'locale-picker-search');
-    search.type = 'search';
-    search.autocomplete = 'off';
-    search.spellcheck = false;
-    search.setAttribute('role', 'combobox');
-    search.setAttribute('aria-autocomplete', 'list');
-    search.setAttribute('aria-expanded', 'true');
-    search.setAttribute('aria-controls', ids.listbox);
-    search.setAttribute('aria-label', t('Search languages'));
-    search.placeholder = t('Search languages');
-    popup.append(search);
-  }
-  popup.append(listbox);
-  const empty = element(documentRef, 'p', 'locale-picker-empty');
-  empty.setAttribute('role', 'status');
-  empty.textContent = t('No matching languages');
-  empty.hidden = true;
-  popup.append(empty);
-  root.append(button, popup);
-
-  const optionNodes = new Map();
-  for (const option of model.options) {
-    const item = element(documentRef, 'li', 'locale-picker-option');
-    item.id = ids.option(option.code);
-    item.setAttribute('role', 'option');
-    item.setAttribute('aria-selected', String(option.selected));
-    item.lang = option.code;
-    item.dataset.locale = option.code;
-    const name = element(documentRef, 'span', 'locale-picker-native');
-    name.textContent = option.nativeName;
-    // Chinese variants are distinguished by script rather than region.
-    const meta = element(documentRef, 'span', 'locale-picker-meta');
-    const codeLabel = element(documentRef, 'span', 'locale-picker-option-code');
-    codeLabel.setAttribute('translate', 'no');
-    codeLabel.textContent =
-      CHINESE_LABELS[option.code] || option.code.toUpperCase();
-    if (CHINESE_LABELS[option.code]) codeLabel.lang = 'en';
-    meta.append(codeLabel);
-    const text = element(documentRef, 'span', 'locale-picker-text');
-    text.append(name, meta);
-    item.append(text);
-    if (option.selected)
-      item.append(icon(documentRef, 'check', 'locale-picker-check'));
-    optionNodes.set(option.code, item);
-  }
-
+  const button = root.querySelector('.locale-picker-button');
+  const listbox = root.querySelector('.locale-picker-list');
+  const search = root.querySelector('.locale-picker-search');
   const focusTarget = () => search || listbox;
-
-  const render = () => {
-    const visible = new Set(model.visible.map((option) => option.code));
-    listbox.replaceChildren(
-      ...model.visible.map((option) => optionNodes.get(option.code)),
-    );
-    for (const [localeCode, item] of optionNodes) {
-      item.classList.toggle(
-        'is-active',
-        visible.has(localeCode) && model.activeOption?.code === localeCode,
-      );
-    }
-    empty.hidden = model.visible.length > 0;
-    const activeNode = model.activeOption
-      ? optionNodes.get(model.activeOption.code)
-      : null;
-    if (activeNode) {
-      focusTarget().setAttribute('aria-activedescendant', activeNode.id);
-      activeNode.scrollIntoView?.({ block: 'nearest' });
-    } else {
-      focusTarget().removeAttribute('aria-activedescendant');
-    }
-  };
 
   let swallowSpaceKeyup = false;
 
   const close = ({ restoreFocus = false } = {}) => {
     if (!model.open) return;
     model.closeList();
-    popup.hidden = true;
     root.classList.remove('is-open');
-    button.setAttribute('aria-expanded', 'false');
     windowRef?.removeEventListener('keydown', onWindowKeyDown, true);
     documentRef.removeEventListener('pointerdown', onDocumentPointerDown, true);
     if (restoreFocus) button.focus({ preventScroll: true });
@@ -531,11 +410,7 @@ export function mountLocalePicker({
   const open = () => {
     if (model.open) return;
     model.openList();
-    if (search) search.value = '';
-    popup.hidden = false;
     root.classList.add('is-open');
-    button.setAttribute('aria-expanded', 'true');
-    render();
     // Window capture runs before the document-level shortcut handlers
     // (cockpit, hotkeys, push-to-talk), so keys typed in the list stay here.
     windowRef?.addEventListener('keydown', onWindowKeyDown, true);
@@ -555,7 +430,7 @@ export function mountLocalePicker({
     else if (result.choose) {
       if (event.key === ' ') swallowSpaceKeyup = true;
       choose(result.choose);
-    } else render();
+    }
   }
 
   function onDocumentPointerDown(event) {
@@ -595,12 +470,10 @@ export function mountLocalePicker({
     model.setActive(
       model.visible.findIndex((option) => option.code === localeCode),
     );
-    render();
   };
 
   const onSearchInput = () => {
     model.setQuery(search.value);
-    render();
   };
 
   const onFocusOut = (event) => {
@@ -629,7 +502,8 @@ export function mountLocalePicker({
       listbox.removeEventListener('pointermove', onListPointerMove);
       search?.removeEventListener('input', onSearchInput);
       root.removeEventListener('focusout', onFocusOut);
-      root.textContent = '';
+      unsubscribeView();
+      view.dispose();
     },
   };
 }

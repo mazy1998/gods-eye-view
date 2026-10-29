@@ -1,3 +1,5 @@
+import { createStateChannel } from '../../app/stateChannel.js';
+
 export const VOICE_PREVIEW_STORAGE_KEY = 'godsEyeView.voice.previewEnabled';
 export const VOICE_TIMEOUT_STORAGE_KEY = 'godsEyeView.voice.inactivityMinutes';
 const PRESETS = ['3', '5', '10', '15'];
@@ -31,6 +33,8 @@ export function createVoicePreferences({ storage } = {}) {
     timeoutPersisted: null,
   };
   const snapshot = () => ({ ...state });
+  // Views read the preferences here (src/ui/ownerState.js).
+  const channel = createStateChannel(snapshot);
   function apply(field, status, key, value, serialized) {
     const changed = state[field] !== value;
     let persisted = false;
@@ -56,6 +60,7 @@ export function createVoicePreferences({ storage } = {}) {
       ...snapshot(),
     };
     for (const listener of [...listeners]) listener(snapshot());
+    channel.publish({ type: 'preferences-changed', field });
     return result;
   }
   const invalid = () => ({
@@ -68,6 +73,7 @@ export function createVoicePreferences({ storage } = {}) {
   });
   return {
     snapshot,
+    channel,
     setPreviewEnabled(value) {
       return typeof value === 'boolean'
         ? apply(
