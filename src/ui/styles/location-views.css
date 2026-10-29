@@ -1,9 +1,21 @@
 /* Location adopts colours as one surface, including the existing tray shell. */
-:is(#command-dock, body) #location-bar.gev-surface {
+/* New result edges have no legacy Cyber selector. Zero specificity leaves
+   Cyber's interactive border states in charge. */
+:where(:root[data-ui-theme='cyber'])
+  :where(
+    .gev-location-results .gev-location-result,
+    .gev-location-results button
+  ) {
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
+  #location-bar.gev-surface {
   color: var(--gev-text);
   color-scheme: var(--gev-color-scheme);
 }
-:is(#command-dock, body)
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
   #location-bar.gev-surface
   :is(.location-inner, .dock-popover-content) {
   background: var(--gev-surface-overlay);
@@ -18,7 +30,8 @@
   .dock-popover-content::after {
   display: none;
 }
-:is(#command-dock, body)
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
   #location-bar.gev-surface
   :is(
     .location-toolbar-label,
@@ -29,7 +42,10 @@
   color: var(--gev-text-muted);
   text-shadow: none;
 }
-:is(#command-dock, body) #location-bar.gev-surface .dock-label-icon {
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
+  #location-bar.gev-surface
+  .dock-label-icon {
   background: var(--gev-text-muted);
   filter: none;
 }
@@ -38,26 +54,46 @@
   :is(.location-pill, .poi-pill, .search-toggle-btn, .dock-pin-btn),
 .gev-location-search.gev-surface .search-toggle-btn,
 .gev-location-results.gev-surface button {
+  border-width: 1px;
+  border-style: solid;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(.location-pill, .poi-pill, .search-toggle-btn, .dock-pin-btn),
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  .search-toggle-btn,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-results.gev-surface
+  button {
   background: var(--gev-control-bg);
   color: var(--gev-text);
-  border: 1px solid var(--gev-border);
+  border-color: var(--gev-border);
   box-shadow: none;
   text-shadow: none;
 }
-:is(#command-dock, body)
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
   #location-bar.gev-surface
   :is(.location-pill, .poi-pill, .search-toggle-btn, .dock-pin-btn):hover,
-.gev-location-search.gev-surface .search-toggle-btn:hover,
-.gev-location-results.gev-surface button:hover {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  .search-toggle-btn:hover,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-results.gev-surface
+  button:hover {
   background: var(--gev-control-bg-hover);
   color: var(--gev-text);
   border-color: var(--gev-border);
   box-shadow: none;
 }
-:is(#command-dock, body)
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
   #location-bar.gev-surface
   :is(.location-pill, .poi-pill).active,
-:is(#command-dock, body)
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
   #location-bar.gev-surface
   .dock-pin-btn[aria-pressed='true'] {
   background: var(--gev-accent-tint);
@@ -65,20 +101,31 @@
   border-color: var(--gev-accent);
   box-shadow: none;
 }
-.gev-location-search.gev-surface #location-search {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  #location-search {
   color: var(--gev-text);
   background: var(--gev-control-bg);
   border-color: var(--gev-border);
   box-shadow: none;
 }
 .gev-location-search.gev-surface #location-search::placeholder {
-  color: var(--gev-text-muted);
   opacity: 1;
 }
-.gev-location-search.gev-surface #location-search.searching {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  #location-search::placeholder {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  #location-search.searching {
   border-color: var(--gev-accent);
 }
-:is(#command-dock, body) #location-bar.gev-surface .location-bar-divider {
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
+  #location-bar.gev-surface
+  .location-bar-divider {
   background: var(--gev-border-subtle);
 }
 :is(#command-dock, body)
@@ -86,10 +133,25 @@
   :is(button, input):focus-visible,
 .gev-location-search.gev-surface :is(button, input):focus-visible,
 .gev-location-results.gev-surface button:focus-visible {
-  outline: 2px solid var(--gev-focus-ring);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: -3px;
 }
-.gev-location-results.gev-surface .location-search-error {
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(button, input):focus-visible,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-search.gev-surface
+  :is(button, input):focus-visible,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-results.gev-surface
+  button:focus-visible {
+  outline-color: var(--gev-focus-ring);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-results.gev-surface
+  .location-search-error {
   color: var(--gev-danger-text);
   background: var(--gev-danger-tint);
   border-color: var(--gev-danger);
@@ -100,9 +162,15 @@
   gap: var(--gev-space-2);
   margin-top: var(--gev-space-2);
   padding-top: var(--gev-space-2);
-  border-top: 1px solid var(--gev-border-subtle);
-  color: var(--gev-text);
+  border-top-width: 1px;
+  border-top-style: solid;
   font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-location-results.gev-surface
+  .gev-location-result {
+  border-top-color: var(--gev-border-subtle);
+  color: var(--gev-text);
 }
 .gev-location-result-label {
   flex: 1;

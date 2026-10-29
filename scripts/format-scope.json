@@ -1155,5 +1155,9 @@
   "src/ui/radioCardView.js",
   "src/ui/styles/radio-views.css",
   "src/testSupport/radioDomFixture.mjs",
-  "src/ui/radioViews.dom.test.mjs"
+  "src/ui/radioViews.dom.test.mjs",
+  "scripts/qa-cyber-precedence.mjs",
+  "scripts/qa-cyber-precedence-fixtures.mjs",
+  "src/ui/styles/cyberPrecedenceHarness.test.mjs",
+  "docs/CYBER-PRECEDENCE.md"
 ]

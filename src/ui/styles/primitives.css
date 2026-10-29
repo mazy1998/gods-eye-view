@@ -27,10 +27,12 @@
   height: 32px;
   font-size: var(--gev-font-size-lg);
 }
-.gev-icon-button:hover:not(:disabled) {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-icon-button:hover:not(:disabled) {
   background: var(--gev-control-bg-hover);
 }
-.gev-icon-button[aria-pressed='true'] {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-icon-button[aria-pressed='true'] {
   border-color: var(--gev-accent-tint-border);
   background: var(--gev-accent-tint);
   color: var(--gev-accent-text);
@@ -39,10 +41,15 @@
   opacity: var(--gev-disabled-opacity);
   cursor: default;
 }
+
 /* Beats the app-wide ring's colour so it stays visible in every appearance. */
 .gev-icon-button:focus-visible {
-  outline: 2px solid var(--gev-focus-ring) !important;
+  outline-width: 2px !important;
+  outline-style: solid !important;
   outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-icon-button:focus-visible {
+  outline-color: var(--gev-focus-ring) !important;
 }
 
 /* On/off switch (ToggleSwitch.vue). The off track keeps a 3:1 boundary; the
@@ -108,9 +115,13 @@
   cursor: progress;
 }
 .gev-toggle:focus-visible {
-  outline: 2px solid var(--gev-focus-ring) !important;
+  outline-width: 2px !important;
+  outline-style: solid !important;
   outline-offset: 2px;
   border-radius: var(--gev-radius-sm);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-toggle:focus-visible {
+  outline-color: var(--gev-focus-ring) !important;
 }
 
 /* Tab list (TabList.vue): the selected tab carries accent text and a 2px
@@ -135,10 +146,10 @@
     color var(--transition-fast),
     border-color var(--transition-fast);
 }
-.gev-tab:hover:not(:disabled) {
+:where(:root:not([data-ui-theme='cyber'])) .gev-tab:hover:not(:disabled) {
   color: var(--gev-text);
 }
-.gev-tab[aria-selected='true'] {
+:where(:root:not([data-ui-theme='cyber'])) .gev-tab[aria-selected='true'] {
   border-bottom-color: var(--gev-accent);
   color: var(--gev-accent-text);
 }
@@ -147,8 +158,12 @@
   cursor: default;
 }
 .gev-tab:focus-visible {
-  outline: 2px solid var(--gev-focus-ring) !important;
+  outline-width: 2px !important;
+  outline-style: solid !important;
   outline-offset: -2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-tab:focus-visible {
+  outline-color: var(--gev-focus-ring) !important;
 }
 
 /* Disclosure row (DisclosureRow.vue): a 44px target whose chevron turns from
@@ -169,7 +184,8 @@
   cursor: pointer;
   transition: background-color var(--transition-fast);
 }
-.gev-disclosure-row:hover:not(:disabled) {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-disclosure-row:hover:not(:disabled) {
   background: var(--gev-control-bg-hover);
 }
 .gev-disclosure-row-icon {
@@ -211,8 +227,12 @@
   cursor: default;
 }
 .gev-disclosure-row:focus-visible {
-  outline: 2px solid var(--gev-focus-ring) !important;
+  outline-width: 2px !important;
+  outline-style: solid !important;
   outline-offset: -2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-disclosure-row:focus-visible {
+  outline-color: var(--gev-focus-ring) !important;
 }
 
 /* Panel heading (PanelHeader.vue): title, optional subtitle and actions. */
@@ -261,10 +281,10 @@
     border-color var(--transition-fast),
     color var(--transition-fast);
 }
-.gev-chip:hover:not(:disabled) {
+:where(:root:not([data-ui-theme='cyber'])) .gev-chip:hover:not(:disabled) {
   background: var(--gev-control-bg-hover);
 }
-.gev-chip[aria-pressed='true'] {
+:where(:root:not([data-ui-theme='cyber'])) .gev-chip[aria-pressed='true'] {
   border-color: var(--gev-accent-tint-border);
   background: var(--gev-accent-tint);
   color: var(--gev-accent-text);
@@ -278,8 +298,12 @@
   cursor: default;
 }
 .gev-chip:focus-visible {
-  outline: 2px solid var(--gev-focus-ring) !important;
+  outline-width: 2px !important;
+  outline-style: solid !important;
   outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-chip:focus-visible {
+  outline-color: var(--gev-focus-ring) !important;
 }
 
 /* Raised grouping surface (SurfaceCard.vue) inside a panel. */
@@ -383,6 +407,8 @@
   background: var(--gev-border);
 }
 /* Plain badges stay quiet text rather than taking the accent palette. */
-:where(:root:not([data-ui-theme='cyber']) .gev-surface .gev-status-badge--plain) {
+:where(
+  :root:not([data-ui-theme='cyber']) .gev-surface .gev-status-badge--plain
+) {
   --status-badge-color: var(--gev-text-muted);
 }

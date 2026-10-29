@@ -41,6 +41,10 @@
   border-bottom-width: 1px;
   border-bottom-style: solid;
 }
+/* The new row separator keeps Cyber glass ink instead of currentColor. */
+:where(:root[data-ui-theme='cyber']) :where(.layer-browser .data-toggle-row) {
+  border-bottom-color: var(--gev-border-subtle);
+}
 :where(:root:not([data-ui-theme='cyber'])) .layer-browser .data-toggle-row {
   border-bottom-color: var(--gev-border-subtle);
   background: transparent;
