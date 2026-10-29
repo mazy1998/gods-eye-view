@@ -1,7 +1,8 @@
 # Cyber precedence checks
 
-New surface palettes must not override Cyber's state colours. Keep layout rules
-unscoped, and wrap palette overrides in
+New surface palettes must not override Cyber's state colours. Share layout rules
+only when Cyber geometry is preserved; scope appearance-specific layout and
+palette overrides under
 `:where(:root:not([data-ui-theme='cyber'])) …`. Every selector in a comma-separated
 rule needs the condition. `tokens.test.mjs` checks every `PORTED` stylesheet for
 colour-bearing state rules, including custom-property assignments and
@@ -99,3 +100,7 @@ still compares without an exception. Layers row/footer/import separators have
 dedicated probes with exact glass edges. Other interactive foreground/background
 surface differences remain strict, and the original chip hover bug still fails
 both the reusable audit and the static guard.
+
+Use the complementary [geometry audit](CYBER-GEOMETRY.md) to check hosted frames,
+headers and control boxes against the original Cyber layout. Palette equality
+alone does not establish layout parity.

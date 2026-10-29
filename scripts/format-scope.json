@@ -1189,5 +1189,8 @@
   "src/ui/shellChrome.js",
   "src/ui/shellChrome.test.mjs",
   "src/ui/headerSearch.test.mjs",
-  "src/ui/statusReadout.js"
+  "src/ui/statusReadout.js",
+  "scripts/qa-cyber-geometry.mjs",
+  "scripts/qa-cyber-geometry-fixtures.mjs",
+  "src/tooling/cyberGeometry.test.mjs"
 ]
