@@ -23,4 +23,6 @@ export const displayDefaults = Object.freeze({
   scope: { enabled: true, featherPct: 100 },
   celestial: { enabled: false, eligible: true },
   cleanView: false,
+  bloom: { enabled: false, intensity: 0 },
+  sharpen: { enabled: false, intensity: 49 },
 });

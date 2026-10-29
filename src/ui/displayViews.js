@@ -4,6 +4,8 @@ import ModelsGroup from './displayViews/ModelsGroup.vue';
 import ScopeGroup from './displayViews/ScopeGroup.vue';
 import CelestialGroup from './displayViews/CelestialGroup.vue';
 import CleanViewToggle from './displayViews/CleanViewToggle.vue';
+import ImageAdjustmentGroup from './displayViews/ImageAdjustmentGroup.vue';
+import StyleParametersView from './displayViews/StyleParametersView.vue';
 
 const GROUPS = {
   hud: HudGroup,
@@ -30,6 +32,20 @@ export function mountDisplayViews(mount, doc = document) {
     wrapper.removeAttribute('data-display-group');
     views[name] = mount(component, { parent: wrapper });
   }
+  for (const kind of ['bloom', 'sharpen']) {
+    const wrapper = doc.querySelector(`[data-display-group="${kind}"]`);
+    if (!wrapper) continue;
+    wrapper.removeAttribute('data-display-group');
+    views[kind] = mount(ImageAdjustmentGroup, {
+      parent: wrapper,
+      props: { kind },
+    });
+  }
+  // The parameter rows render inside #param-sliders, which stays the
+  // styleManager's _sliderContainer inside the panel Cockpit's portal moves.
+  const sliders = doc.getElementById('param-sliders');
+  if (sliders)
+    views.styleParameters = mount(StyleParametersView, { parent: sliders });
   const seat = doc.querySelector('[data-display-view="clean-view"]');
   if (seat) {
     views.cleanView = mount(CleanViewToggle, {

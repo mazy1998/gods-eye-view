@@ -8,7 +8,6 @@ import {
   selectStyle,
   detectOn,
 } from '../../scripts/qa-transit-controls.mjs';
-import { createStyleParameters } from '../ui/styleParameters.js';
 import { bindDisplayControls } from '../ui/displayControls.js';
 import { thermalShader } from '../styles/thermal.js';
 import {
@@ -132,8 +131,27 @@ test('thermal controls wait for activation and use the real generated parameter 
   const container = new Element();
   container.ownerDocument = document;
   elements.set('param-sliders', container);
-  const parameters = createStyleParameters({ container });
-  t.after(() => parameters.destroy());
+  // The StyleParametersView row contract, on this fixture's elements: a
+  // label, then a slider named by that label that writes on input, then the
+  // value text.
+  const parameters = {
+    render({ uniforms, readValue, writeValue }) {
+      container.replaceChildren();
+      for (const [name, metadata] of Object.entries(uniforms)) {
+        const row = new Element();
+        const label = new Element();
+        label.textContent = metadata.label;
+        const slider = new Element();
+        slider.setAttribute('aria-label', metadata.label);
+        slider.value = String(readValue(name));
+        slider.addEventListener('input', () =>
+          writeValue(name, parseFloat(slider.value)),
+        );
+        row.append(label, slider, new Element());
+        container.appendChild(row);
+      }
+    },
+  };
   const values = Object.fromEntries(
     Object.entries(thermalShader.uniforms).map(([key, meta]) => [
       key,

@@ -10,7 +10,6 @@ import {
   STYLE_PRESET_DEFAULTS,
   MILITARY_DETECTION_PRESET,
 } from './effects.js';
-import { createStyleParameters } from './visualInput.js';
 import {
   BLOOM_SCALE_VERSION,
   clampBloomIntensity,
@@ -52,29 +51,25 @@ const DETECTION_ALLOCATION_STORAGE_KEY = 'gev:detection-allocation:v1';
  */
 export const DISPLAY_CONTROLS = Object.freeze({
   sharpenPct: {
-    slider: '_sharpenSlider',
     min: 0,
     max: 100,
     step: 1,
     value: 49,
   },
-  bloomPct: { slider: '_bloomSlider', min: 0, max: 200, step: 1, value: 0 },
+  bloomPct: { min: 0, max: 200, step: 1, value: 0 },
   densityPct: {
-    slider: null,
     min: 0,
     max: 100,
     step: 25,
     value: 50,
   },
   fadePct: {
-    slider: null,
     min: 0,
     max: 40,
     step: 1,
     value: 7,
   },
   outsideOpacityPct: {
-    slider: null,
     min: 0,
     max: 100,
     step: 1,
@@ -157,8 +152,6 @@ export class VisualSettings {
     if (typeof sharpenIntensity === 'number') {
       const pct = Math.max(0, Math.min(100, Math.round(sharpenIntensity)));
       this._setControlValue('sharpenPct', pct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
     }
     if (typeof bloom === 'boolean') this._setBloomEnabled(bloom);
@@ -516,21 +509,12 @@ export class VisualSettings {
     return this._controls;
   }
 
-  /** Store a Display value as its slider would hold it, and paint the slider. */
+  /** Store a Display value as its slider would hold it; the views show it. */
   _setControlValue(name, value) {
     const spec = DISPLAY_CONTROLS[name];
     const next = sanitizeRangeValue(value, spec);
     this._controlStore()[name] = next;
-    if (this[spec.slider]) this[spec.slider].value = String(next);
     return next;
-  }
-
-  /** Adopt what the user set in these sliders (their input events). */
-  _readControlInputs(...names) {
-    for (const name of names) {
-      const slider = this[DISPLAY_CONTROLS[name].slider];
-      if (slider) this._setControlValue(name, slider.value);
-    }
   }
 
   _initBloomSharpen() {
@@ -550,8 +534,6 @@ export class VisualSettings {
     governorRequestRender('bloom');
     const clamped = clampBloomIntensity(intensity);
     this._setControlValue('bloomPct', clamped);
-    if (this._bloomSliderValue)
-      this._bloomSliderValue.textContent = `${clamped}%`;
     this._applyBloomIntensity(clamped);
     if (syncShare) this._syncShareState();
   }
@@ -565,8 +547,6 @@ export class VisualSettings {
     governorRequestRender('bloom');
     this._visualEffects.setBloomEnabled(enabled);
     this._syncBloomStageEnabled();
-    this._bloomBtn.classList.toggle('active', this.bloomEnabled);
-    this._bloomSliderRow.classList.toggle('visible', this.bloomEnabled);
     if (this.bloomEnabled) {
       this._applyBloomIntensity(this._getBloomIntensity());
     }
@@ -582,10 +562,6 @@ export class VisualSettings {
     const { governorRequestRender } = this.services;
     governorRequestRender('sharpen');
     this._visualEffects.setSharpenEnabled(enabled);
-    this._sharpenBtn.classList.toggle('active', this.sharpenEnabled);
-    if (this._sharpenSliderRow) {
-      this._sharpenSliderRow.classList.toggle('visible', this.sharpenEnabled);
-    }
     if (this.sharpenEnabled) {
       this._applySharpenIntensity(this._controlValue('sharpenPct') / 100);
     }
@@ -788,8 +764,6 @@ export class VisualSettings {
         Math.min(100, Math.round(sharpenInput.intensity)),
       );
       this._setControlValue('sharpenPct', sharpenPct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof sharpenInput.enabled === 'boolean') {
@@ -844,8 +818,6 @@ export class VisualSettings {
         Math.min(100, Math.round(defaults.sharpen.intensity)),
       );
       this._setControlValue('sharpenPct', sharpenPct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof defaults.sharpen?.enabled === 'boolean') {
@@ -1169,8 +1141,6 @@ export class VisualSettings {
     if (intensityPct !== undefined) {
       const pct = Math.round(Math.max(0, Math.min(100, intensityPct)));
       this._setControlValue('sharpenPct', pct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
       this._syncShareState();
     }
@@ -1327,8 +1297,6 @@ export class VisualSettings {
         Math.min(100, Math.round(sharpenState.intensity)),
       );
       this._setControlValue('sharpenPct', pct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
     }
     if (typeof sharpenState.enabled === 'boolean') {
@@ -1461,8 +1429,6 @@ export class VisualSettings {
         Math.min(100, Math.round(sharpenInput.intensity)),
       );
       this._setControlValue('sharpenPct', sharpenPct);
-      if (this._sharpenSliderValue)
-        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof sharpenInput.enabled === 'boolean') {
@@ -1508,37 +1474,39 @@ export class VisualSettings {
     this._syncShareState();
   }
 
+  /**
+   * The parameter panel follows the active style: the StyleParameters view
+   * renders the rows from the published style and values; this owner keeps
+   * the panel's own active state, layout and reveal.
+   */
   _updateSliderPanel(styleName, { reveal = false } = {}) {
-    const { governorRequestRender } = this.services;
-    this._styleParameters ||= createStyleParameters({
-      container: this._sliderContainer,
-    });
-    this._styleParameters.clear();
     const shader = STYLES[styleName];
-
-    if (!shader || !shader.uniforms || styleName === 'normal') {
+    const shown = !!shader?.uniforms && styleName !== 'normal';
+    this.publishState();
+    if (!shown) {
       this._sliderPanel.classList.remove('active');
       this._scheduleRightPanelLayout();
       return;
     }
-
-    this._styleParameters.render({
-      uniforms: shader.uniforms,
-      readValue: (uName) => this.stages[styleName].uniforms[uName],
-      writeValue: (uName, val) => {
-        this.shareLinkManager?.claimRestoreLane?.('visual');
-        this.stages[styleName].uniforms[uName] = val;
-      },
-      onChange: () => {
-        // Uniform writes need an explicit render under the idle governor.
-        governorRequestRender('style-param-slider');
-        this._syncShareState();
-      },
-    });
-
     this._sliderPanel.classList.add('active');
     this._scheduleRightPanelLayout();
     if (reveal) this._revealStyleParameters();
+  }
+
+  /**
+   * Set one parameter of a style, as its slider does: claims the visual lane,
+   * writes the uniform, asks the idle governor for a frame and syncs share.
+   */
+  setStyleParam(styleName, name, value) {
+    const uniforms = this.stages?.[styleName]?.uniforms;
+    if (!uniforms || !(name in uniforms) || !Number.isFinite(value))
+      return false;
+    this.shareLinkManager?.claimRestoreLane?.('visual');
+    uniforms[name] = value;
+    // Uniform writes need an explicit render under the idle governor.
+    this.services.governorRequestRender('style-param-slider');
+    this._syncShareState();
+    return true;
   }
 
   _revealStyleParameters() {

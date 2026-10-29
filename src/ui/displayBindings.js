@@ -79,21 +79,26 @@ export class DisplayBindings {
       },
     });
 
-    this._displayControls?.destroy();
-    this._displayControls = bindDisplayControls({
-      // HUD, sonar, detection, 3D models, scope, celestial and Clean UI are
-      // Display views calling displayActions (S11b-1); these stay native
-      // until the Look tab ports them.
+    // Rebinding replaces the native binder only; the views stay connected.
+    this._displayBinder?.destroy();
+    // The Display controls' one lifetime: destroying it releases the native
+    // binder and disconnects the Display views, whose controls then go inert.
+    const binder = (this._displayBinder = bindDisplayControls({
+      // The Display and Look groups are views calling displayActions
+      // (S11b-1, S11b-2); the dock's style buttons stay native until the Map
+      // & Look view takes them over (S11b-3), and the exit stays native.
       elements: {
         styleButtons: document.querySelectorAll('.style-btn'),
-        bloomButton: this._bloomBtn,
-        bloomSlider: this._bloomSlider,
-        sharpenButton: this._sharpenBtn,
-        sharpenSlider: this._sharpenSlider,
         cleanViewExitButton: this._cleanViewExitBtn,
       },
       actions: this.displayActions,
-    });
+    }));
+    this._displayControls = {
+      destroy: () => {
+        binder.destroy();
+        this.disconnectDisplayViews?.();
+      },
+    };
   }
 
   /**
@@ -131,11 +136,11 @@ export class DisplayBindings {
       setSharpenIntensity: (pct) => {
         this.shareLinkManager?.claimRestoreLane?.('visual');
         this._setControlValue('sharpenPct', pct);
-        if (this._sharpenSliderValue)
-          this._sharpenSliderValue.textContent = `${pct}%`;
         this._applySharpenIntensity(pct / 100);
         this._syncShareState();
       },
+      setStyleParam: (style, name, value) =>
+        this.setStyleParam(style, name, value),
       setHudLayout: (value) => {
         this.shareLinkManager?.claimRestoreLane?.('visual');
         this._setHudVariant(value, { applyVisualDefaults: true });

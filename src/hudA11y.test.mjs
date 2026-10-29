@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const html = await withDisplayViews(expandApplicationHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8')));
-const parameters = readFileSync(new URL('./ui/styleParameters.js', import.meta.url), 'utf8');
+const parameters = readFileSync(new URL('./ui/displayViews/StyleParametersView.vue', import.meta.url), 'utf8');
 
 // Focused markup guards; actual computed names are checked in Chromium.
 // Native labels and hidden inputs must not be treated as missing aria-labels.
@@ -32,6 +32,7 @@ test('the first-run checkbox keeps its native visible label', async () => {
 });
 
 test('generated style sliders use the visible parameter label as their name', () => {
-  assert.match(parameters, /label\.textContent\s*=\s*t\(metadata\.label\);/);
-  assert.match(parameters, /ariaLabel:\s*t\(metadata\.label\)/);
+  // The row's visible label and its slider's name are the same translated label.
+  assert.match(parameters, /<span class="param-label">\{\{ t\(row\.label\) \}\}<\/span>/);
+  assert.match(parameters, /:aria-label="t\(row\.label\)"/);
 });

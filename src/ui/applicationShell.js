@@ -226,19 +226,9 @@ export class StyleManager extends ShellFacade {
         setScopeMaskFeather: services.setScopeMaskFeather,
       },
       elements: {
-        // Read through DISPLAY_CONTROLS (this[spec.slider]); native until the
-        // Look tab ports bloom and sharpen.
-        _bloomSlider: this._bloomSlider,
-        _sharpenSlider: this._sharpenSlider,
-        _bloomBtn: this._bloomBtn,
-        _bloomSliderRow: this._bloomSliderRow,
-        _bloomSliderValue: this._bloomSliderValue,
         _cockpitDisplayToggleBtn: this._cockpitDisplayToggleBtn,
         _detectionDensityValue: this._detectionDensityValue,
         _ppToggles: this._ppToggles,
-        _sharpenBtn: this._sharpenBtn,
-        _sharpenSliderRow: this._sharpenSliderRow,
-        _sharpenSliderValue: this._sharpenSliderValue,
         _sliderContainer: this._sliderContainer,
         _sliderPanel: this._sliderPanel,
         _styleMiniValue: this._styleMiniValue,
@@ -540,16 +530,13 @@ export class StyleManager extends ShellFacade {
       },
       elements: {
         _locationSearch: this._locationSearch,
-        _bloomBtn: this._bloomBtn,
-        _bloomSlider: this._bloomSlider,
-        _sharpenBtn: this._sharpenBtn,
-        _sharpenSlider: this._sharpenSlider,
         _cleanViewExitBtn: this._cleanViewExitBtn,
-        _sharpenSliderValue: this._sharpenSliderValue,
       },
       operations: {
         closeLocationSearch: () => this._navigation.locationField.close(),
         setStyle: (...args) => this.setStyle(...args),
+        setStyleParam: (...args) => this._visualSettings.setStyleParam(...args),
+        disconnectDisplayViews: () => this._unsubscribeDisplayViews?.(),
         _updateHudButtonState: (...args) => this._updateHudButtonState(...args),
         _syncShareState: (...args) => this._syncShareState(...args),
         _toggleOrbit: (...args) => this._toggleOrbit(...args),
@@ -571,7 +558,6 @@ export class StyleManager extends ShellFacade {
         _applyDetectionFadeFromUi: (...args) =>
           this._applyDetectionFadeFromUi(...args),
         _setControlValue: (...args) => this._setControlValue(...args),
-        _readControlInputs: (...args) => this._readControlInputs(...args),
         setCelestialRingEnabled: (...args) =>
           this.setCelestialRingEnabled(...args),
         _setModels3dEnabled: (...args) => this._setModels3dEnabled(...args),
@@ -592,6 +578,14 @@ export class StyleManager extends ShellFacade {
       },
     });
     this._initUI();
+    // The parameter rows' lifetime, as the generated rows had: destroying it
+    // makes rows a caller still holds inert, then removes them.
+    this._visualSettings._styleParameters = {
+      destroy: () => {
+        this._displayViews.styleParameters?.update({ actions: null });
+        this._displayViews.styleParameters?.dispose();
+      },
+    };
     this._unsubscribeDisplayViews = connectDisplayViews(this._displayViews, {
       channel: this._visualSettings.channel,
       actions: this._displayBindings.displayActions,

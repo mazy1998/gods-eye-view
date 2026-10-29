@@ -11,9 +11,10 @@ import ModelsGroup from '../ui/displayViews/ModelsGroup.vue';
 import ScopeGroup from '../ui/displayViews/ScopeGroup.vue';
 import CelestialGroup from '../ui/displayViews/CelestialGroup.vue';
 import CleanViewToggle from '../ui/displayViews/CleanViewToggle.vue';
+import ImageAdjustmentGroup from '../ui/displayViews/ImageAdjustmentGroup.vue';
 
-const render = (component) =>
-  renderToString(createSSRApp({ render: () => h(component) }));
+const render = (component, props = {}) =>
+  renderToString(createSSRApp({ render: () => h(component, props) }));
 
 const GROUPS = {
   hud: HudGroup,
@@ -30,6 +31,12 @@ export async function withDisplayViews(html) {
     out = out.replace(
       `<div class="pp-toggle-group" data-display-group="${name}"></div>`,
       `<div class="pp-toggle-group">${await render(component)}</div>`,
+    );
+  }
+  for (const kind of ['bloom', 'sharpen']) {
+    out = out.replace(
+      `<div class="pp-toggle-group" data-display-group="${kind}"></div>`,
+      `<div class="pp-toggle-group">${await render(ImageAdjustmentGroup, { kind })}</div>`,
     );
   }
   return out.replace(

@@ -190,7 +190,6 @@
   "src/ui/panelRails.test.mjs",
   "src/panelStackLayout.js",
   "src/ui/applicationShortcuts.js",
-  "src/ui/styleParameters.js",
   "src/ui/visualInput.js",
   "src/ui/visualInput.test.mjs",
   "scripts/qa-visual-input.mjs",
@@ -1178,5 +1177,7 @@
   "src/voice/voiceCardCompat.test.mjs",
   "src/ui/styles/voice-card-view.css",
   "src/ui/styles/directions.css",
-  "src/ui/directionsView.test.mjs"
+  "src/ui/directionsView.test.mjs",
+  "src/ui/displayViews/ImageAdjustmentGroup.vue",
+  "src/ui/displayViews/StyleParametersView.vue"
 ]

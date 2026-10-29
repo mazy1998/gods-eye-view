@@ -9,6 +9,14 @@ export class ShellFacade {
     return this._navigation.subscribeCameraHandoff(listener);
   }
 
+  get _styleParameters() {
+    return this._visualSettings._styleParameters;
+  }
+
+  set _styleParameters(value) {
+    this._visualSettings._styleParameters = value;
+  }
+
   get _models3dEnabled() {
     return this._aircraftDisplay._models3dEnabled;
   }
@@ -429,14 +437,6 @@ export class ShellFacade {
     this._visualSettings._detectionAllocationPreference = value;
   }
 
-  get _styleParameters() {
-    return this._visualSettings._styleParameters;
-  }
-
-  set _styleParameters(value) {
-    this._visualSettings._styleParameters = value;
-  }
-
   get _irBoostActive() {
     return this._visualSettings._irBoostActive;
   }
@@ -697,10 +697,6 @@ export class ShellFacade {
 
   _setControlValue(name, value) {
     return this._visualSettings._setControlValue(...arguments);
-  }
-
-  _readControlInputs(...names) {
-    return this._visualSettings._readControlInputs(...arguments);
   }
 
   /**

@@ -23,26 +23,8 @@
     <div class="pp-toggle-group gev-tools gev-surface" id="geo-import-group"></div>
     <div class="pp-toggle-group" data-display-group="celestial"></div>
     <span data-display-view="clean-view" hidden></span>
-    <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="bloom-toggle" title="Bloom / Glow" data-i18n-title>
-        <span class="pp-icon">&#x2728;</span>
-        <span class="pp-label" data-i18n>Bloom</span>
-      </button>
-      <div class="pp-slider-row" id="bloom-slider-row">
-        <input type="range" class="gev-quantitative-slider pp-slider" id="bloom-intensity-slider" min="0" max="200" value="0" aria-label="Bloom intensity" data-i18n-aria-label />
-        <span class="pp-slider-value" id="bloom-intensity-value">0%</span>
-      </div>
-    </div>
-    <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="sharpen-toggle" title="Sharpening" data-i18n-title>
-        <span class="pp-icon">&#x1F50D;</span>
-        <span class="pp-label" data-i18n>Sharpen</span>
-      </button>
-      <div class="pp-slider-row" id="sharpen-slider-row">
-        <input type="range" class="gev-quantitative-slider pp-slider" id="sharpen-intensity-slider" min="0" max="100" value="49" aria-label="Sharpen intensity" data-i18n-aria-label />
-        <span class="pp-slider-value" id="sharpen-intensity-value">49%</span>
-      </div>
-    </div>
+    <div class="pp-toggle-group" data-display-group="bloom"></div>
+    <div class="pp-toggle-group" data-display-group="sharpen"></div>
   </div>
   </div>
   <button id="clean-view-exit" title="Return UI controls" data-i18n-title data-i18n>EXIT CLEAN VIEW</button>

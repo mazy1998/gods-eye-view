@@ -645,8 +645,9 @@ test('every explicit visual control facade claims restore authority before mutat
 
   const style = sourceBlock('  setStyle(styleName, {', '  _startTransition(styleName, fromValue, toValue) {');
   assertClaimsBefore(style, 'this.activeStyle = styleName', 'setStyle');
-  const sliders = sourceBlock('  _updateSliderPanel(styleName, { reveal = false } = {}) {', '  _revealStyleParameters() {');
-  assertClaimsBefore(sliders, 'this.stages[styleName].uniforms[uName] = val', 'style parameter slider');
+  // The parameter sliders write through VisualSettings.setStyleParam (S11b-2).
+  const sliders = sourceBlock('  setStyleParam(styleName, name, value) {', '  _revealStyleParameters() {');
+  assertClaimsBefore(sliders, 'uniforms[name] = value', 'style parameter slider');
 });
 
 test('public visual facades reject the complete invalid request before authority or mutation', () => {

@@ -63,18 +63,16 @@ test('a written value lands where its range input would put it', () => {
   assert.equal(sanitizeRangeValue(39.9, { min: 0, max: 39, step: 2 }), 38);
 });
 
-test('the owner keeps Display values and paints sliders only when they exist', (t) => {
-  const slider = { value: '49' };
-  const owner = visualOwner(t, { elements: { _sharpenSlider: slider } });
+test('the owner keeps Display values, sanitized as their sliders hold them', (t) => {
+  // The Display and Look views render these values (S11b-1, S11b-2); the
+  // owner no longer paints or reads any slider.
+  const owner = visualOwner(t);
   for (const [name, { value }] of Object.entries(DISPLAY_CONTROLS))
     assert.equal(owner._controlValue(name), value, `${name} starts at markup`);
   assert.equal(owner._setControlValue('sharpenPct', 73.4), 73);
-  assert.equal(slider.value, '73');
-  assert.equal(owner._setControlValue('fadePct', 55), 40, 'no slider: still kept');
-  slider.value = '12';
-  owner._readControlInputs('sharpenPct', 'fadePct');
-  assert.equal(owner._controlValue('sharpenPct'), 12, "adopts the user's input");
-  assert.equal(owner._controlValue('fadePct'), 40, 'absent slider: unchanged');
+  assert.equal(owner._controlValue('sharpenPct'), 73);
+  assert.equal(owner._setControlValue('fadePct', 55), 40, 'clamped to its range');
+  assert.equal(owner._controlValue('fadePct'), 40);
 });
 
 test('share state and detection state read the owner, with no slider in the page', (t) => {
