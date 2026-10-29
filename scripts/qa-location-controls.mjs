@@ -298,10 +298,12 @@ try {
     await page.evaluate(() => {
       const ui = window.__godsEyeView.styleManager;
       const count = window.__qaSearchRequests.length;
+      // Vue removes the pill on disposal; retain the same control to test its stale callback.
+      const cityButton = ui._locationPills.querySelector('button');
       ui._locationControls.destroy();
       ui._locationLookup.destroy();
       const before = ui._navigationGeneration;
-      ui._locationPills.querySelector('button').click();
+      cityButton.click();
       ui._resetGlobeBtn.click();
       ui._locationSearch.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),

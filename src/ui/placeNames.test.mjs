@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { setLocale } from '../i18n/index.js';
 import { CITY_POIS } from '../cityPois.js';
 import { KNOWN_PLACE_NAMES, localizePlaceName } from './placeNames.js';
-import { LocationControls } from './locationControls.js';
+import { locationFixture } from '../testSupport/locationFixture.mjs';
 
 test.afterEach(() => setLocale('en'));
 
@@ -33,47 +33,11 @@ for (const [locale, tokyo, losAngeles] of [
   });
 }
 
-function element() {
-  return {
-    children: [],
-    dataset: {},
-    textContent: '',
-    addEventListener() {},
-    removeEventListener() {},
-    appendChild(child) {
-      this.children.push(child);
-    },
-    replaceChildren() {
-      this.children = [];
-    },
-  };
-}
-
 test('ru: location pills and the mini-status show the translated city', () => {
   setLocale('ru');
-  const elements = {
-    pills: element(),
-    poiRow: element(),
-    divider: element(),
-    search: element(),
-    searchToggle: element(),
-    resetButtons: [],
-    statusCity: element(),
-    statusPoi: element(),
-  };
-  const doc = { ...element(), createElement: element };
-  const cities = { tokyo: CITY_POIS.tokyo };
-  const controls = new LocationControls({
-    elements,
-    cities,
-    getExpandedCity: () => null,
-    onCity() {},
-    onPoi() {},
-    onSearch() {},
-    onReset() {},
-    doc,
-    requestFrame: () => 0,
-    cancelFrame() {},
+  const { elements, controls } = locationFixture({
+    cities: { tokyo: CITY_POIS.tokyo },
+    expandedCity: null,
   });
   assert.equal(elements.pills.children[0].textContent, 'Токио');
   controls.renderStatus({ city: CITY_POIS.tokyo, currentPoi: null });

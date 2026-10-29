@@ -48,3 +48,28 @@ Source-contract tests follow both sides of delegated wiring. Lifecycle tests
 exercise pending reset cancellation, stale camera callbacks, replacement and
 idempotent teardown. Browser acceptance covers the composed application, including
 share restoration, scene commands, navigation, Cockpit, display and voice.
+
+## Location views
+
+`NavigationController.locationField` owns the unfinished query, expansion, busy
+state and announced error. Input and submit events commit their native value to
+that owner; submit then calls `LocationSearch.run()`. Typing never starts a lookup.
+`LocationSearch` still owns cancellation, request identity and provider outcomes;
+`LocationNavigation` still owns selection, orbit and camera handoff.
+
+`locationViews/SearchField.vue` and `SearchResults.vue` are independent,
+stateless mounts. The shell mounts them before collecting element references,
+so navigation, lookup and the phone sheet all receive the same input. The header
+can move `styleManager._locationViews.search.element` and `.results.element`
+to separate containers without remounting or adding another input. If a host
+replaces the mounts instead, it must also rebind the owners' input references
+and dispose the old mounts; do not leave a hidden legacy copy.
+
+`LocationControls` connects owner snapshots and actions to the views with
+synchronous `mountView.update()` calls. City/POI highlighting, field updates,
+error announcements and mini-status remain readable in the same turn. It owns
+the pill mounts, document shortcuts and pending expansion frame; destroying it
+revokes callbacks and removes those mounts. The shell owns and disposes the
+search, results, mini-status and pin mounts before destroying the owners.
+The result's Fly to action reruns the existing lookup with its retained query;
+it does not bypass authority checks or navigate to raw provider data.

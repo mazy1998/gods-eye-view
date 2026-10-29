@@ -703,7 +703,6 @@
   "Search languages": "Поиск языка",
   "No matching languages": "Подходящих языков нет",
   "Search location by name or coordinates": "Поиск места по названию или координатам",
-  "Search any location...": "Поиск любого места...",
   "Normal": "Обычный",
   "CRT": "CRT",
   "NVG": "NVG",
@@ -3073,5 +3072,7 @@
   "Preview is off.": "Предпросмотр отключён.",
   "Automatic stop is unavailable for this voice connection.": "Автоматическая остановка недоступна для этого голосового подключения.",
   "routing busy — too many routes at once": "сервис маршрутов занят: слишком много маршрутов одновременно",
-  "route proxy error": "ошибка прокси маршрутов"
+  "route proxy error": "ошибка прокси маршрутов",
+  "Search places or coordinates": "Поиск мест или координат",
+  "Fly to": "Перелёт"
 }

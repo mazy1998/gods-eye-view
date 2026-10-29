@@ -1129,5 +1129,6 @@
   "src/share/shareLinkPath.test.mjs",
   "src/testSupport/componentDom.mjs",
   "src/ui/mountView.test.mjs",
-  "docs/COMPONENT-TESTS.md"
+  "docs/COMPONENT-TESTS.md",
+  "src/ui/styles/location-views.css"
 ]

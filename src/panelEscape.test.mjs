@@ -1,3 +1,4 @@
+import { locationFixture } from './testSupport/locationFixture.mjs';
 import { readShellSource } from './testSupport/readShellSource.mjs';
 import { onKeyDown as cockpitKeyDown } from './ui/cockpitInput.js';
 import { readFileSync as readRadioSource } from 'node:fs';
@@ -116,17 +117,17 @@ test('a collapsed nested panel does not block the next Escape from closing its p
 
 test('Location Escape clears a hidden draft search before restoring disclosure focus', () => {
   const fixture = panelFixture({ id: 'location-bar' });
-  const removed = [];
-  let blurred = false;
-  fixture.manager._locationSearch = {
-    classList: { remove: (...names) => removed.push(...names) },
-    value: 'focus cleanup',
-    blur: () => { blurred = true; },
-  };
+  const location = locationFixture();
+  location.field.set({ query: 'focus cleanup', expanded: true });
+  const input = location.elements.search;
+  fixture.manager._locationSearch = input;
+  input.focus();
+  fixture.manager.closeLocationSearch = () => location.field.close();
   assert.equal(fixture.manager._collapsePanelOnEscape(fixture.event, 'location-bar'), true);
-  assert.deepEqual(removed, ['expanded']);
-  assert.equal(fixture.manager._locationSearch.value, '');
-  assert.equal(blurred, true);
+  assert.equal(input.classList.contains('expanded'), false);
+  assert.equal(input.value, '');
+  assert.equal(location.field.getState().query, '');
+  assert.notEqual(document.activeElement, input);
   assert.equal(fixture.focused(), true);
 });
 

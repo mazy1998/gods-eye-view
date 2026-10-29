@@ -2533,7 +2533,6 @@
   "Keep location tray open": "保持位置托盤展開",
   "Search any location": "搜索任意位置",
   "Search location by name or coordinates": "按名稱或座標搜索位置",
-  "Search any location...": "搜索任意位置…",
   "WEATHER": "天氣",
   "Active weather products": "已啟用的天氣產品",
   "RECENT IMAGERY": "近期影像",
@@ -2866,5 +2865,7 @@
   },
   "S2 Underground publishes these KMZ products to GitHub. New uploads are detected within seconds and replace the previous edition automatically. Click a marker for its report.": "S2 Underground 在 GitHub 發布這些 KMZ 產品。新上傳的內容會在數秒內被檢測到，並自動替換舊版本。點擊標記查看報告。",
   "routing busy — too many routes at once": "路線服務繁忙：同時請求的路線過多",
-  "route proxy error": "路線代理出錯"
+  "route proxy error": "路線代理出錯",
+  "Search places or coordinates": "搜索地點或座標",
+  "Fly to": "飛往"
 }

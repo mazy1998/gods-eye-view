@@ -1,3 +1,4 @@
+import { LocationField } from './locationField.js';
 import { cancelCameraArrival } from '../data/cameraArrival.js';
 import { createStateChannel } from '../app/stateChannel.js';
 import * as Cesium from 'cesium';
@@ -37,6 +38,7 @@ export class NavigationController {
       showToast,
       cancelOrientation,
     });
+    this.locationField = new LocationField(searchInput);
     this._navigationGeneration = 0;
     this._cameraHandoffs = createStateChannel(() => ({
       generation: this._navigationGeneration,
@@ -123,15 +125,13 @@ export class NavigationController {
   _settleLocationSearchUi(generation, { keepQuery = false } = {}) {
     if (this._activeLocationSearchGeneration !== generation) return;
     this._activeLocationSearchGeneration = null;
-    this.searchInput?.classList.remove('searching');
+    this.locationField.set({ busy: false });
     if (keepQuery) {
       this.searchInput?.focus();
       this.searchInput?.select?.();
       return;
     }
-    this.searchInput?.classList.remove('expanded');
-    if (this.searchInput) this.searchInput.value = '';
-    this.searchInput?.blur();
+    this.locationField.close();
   }
 
   _releaseFollowCamera({
@@ -273,6 +273,7 @@ export class NavigationController {
     this._disposed = true;
     this._cameraHandoffs?.publish();
     this._cameraHandoffs?.destroy();
+    this.locationField?.destroy();
   }
   destroy() {
     this.stop();

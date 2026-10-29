@@ -1,0 +1,123 @@
+/* Location adopts colours as one surface, including the existing tray shell. */
+:is(#command-dock, body) #location-bar.gev-surface {
+  color: var(--gev-text);
+  color-scheme: var(--gev-color-scheme);
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(.location-inner, .dock-popover-content) {
+  background: var(--gev-surface-overlay);
+  color: var(--gev-text);
+  border-color: var(--gev-border);
+  box-shadow: var(--gev-elevation-2);
+  backdrop-filter: var(--gev-backdrop-blur);
+}
+:is(#command-dock, body) #location-bar.gev-surface .panel-glow,
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  .dock-popover-content::after {
+  display: none;
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(
+    .location-toolbar-label,
+    .location-mini-city,
+    .location-mini-poi,
+    .poi-pill-key
+  ) {
+  color: var(--gev-text-muted);
+  text-shadow: none;
+}
+:is(#command-dock, body) #location-bar.gev-surface .dock-label-icon {
+  background: var(--gev-text-muted);
+  filter: none;
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(.location-pill, .poi-pill, .search-toggle-btn, .dock-pin-btn),
+.gev-location-search.gev-surface .search-toggle-btn,
+.gev-location-results.gev-surface button {
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  border: 1px solid var(--gev-border);
+  box-shadow: none;
+  text-shadow: none;
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(.location-pill, .poi-pill, .search-toggle-btn, .dock-pin-btn):hover,
+.gev-location-search.gev-surface .search-toggle-btn:hover,
+.gev-location-results.gev-surface button:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(.location-pill, .poi-pill).active,
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  .dock-pin-btn[aria-pressed='true'] {
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent);
+  box-shadow: none;
+}
+.gev-location-search.gev-surface #location-search {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+.gev-location-search.gev-surface #location-search::placeholder {
+  color: var(--gev-text-muted);
+  opacity: 1;
+}
+.gev-location-search.gev-surface #location-search.searching {
+  border-color: var(--gev-accent);
+}
+:is(#command-dock, body) #location-bar.gev-surface .location-bar-divider {
+  background: var(--gev-border-subtle);
+}
+:is(#command-dock, body)
+  #location-bar.gev-surface
+  :is(button, input):focus-visible,
+.gev-location-search.gev-surface :is(button, input):focus-visible,
+.gev-location-results.gev-surface button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -3px;
+}
+.gev-location-results.gev-surface .location-search-error {
+  color: var(--gev-danger-text);
+  background: var(--gev-danger-tint);
+  border-color: var(--gev-danger);
+}
+.gev-location-results.gev-surface .gev-location-result {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-2);
+  margin-top: var(--gev-space-2);
+  padding-top: var(--gev-space-2);
+  border-top: 1px solid var(--gev-border-subtle);
+  color: var(--gev-text);
+  font-size: var(--gev-font-size-sm);
+}
+.gev-location-result-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gev-location-results.gev-surface button {
+  flex: none;
+  padding: var(--gev-space-1) var(--gev-space-2);
+  border-radius: var(--gev-radius-sm);
+  cursor: pointer;
+}
+
+@media (min-width: 761px) {
+  #command-dock #location-bar.gev-surface .location-search-wrap {
+    flex-basis: 15rem;
+  }
+}

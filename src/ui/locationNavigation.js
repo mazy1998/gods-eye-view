@@ -7,6 +7,7 @@ import { LocationControls } from './location.js';
 export class LocationNavigation {
   constructor({
     viewer,
+    views,
     placeSearch,
     services,
     elements,
@@ -16,7 +17,7 @@ export class LocationNavigation {
   }) {
     Object.assign(
       this,
-      { viewer, placeSearch, services, navigation, readCockpit },
+      { viewer, views, placeSearch, services, navigation, readCockpit },
       elements,
       operations,
     );
@@ -80,6 +81,7 @@ export class LocationNavigation {
 
   _handleLocationSearchState(state, change) {
     if (this._disposed || !change) return;
+    this.views?.results.update({ state });
     if (change.type === 'started') {
       this._activeLocationSearchGeneration = change.generation;
       this._setLocationSearchError(null);
@@ -111,17 +113,7 @@ export class LocationNavigation {
 
   /** Show, or with null clear, the announced error under the search field. */
   _setLocationSearchError(message) {
-    const input = this._locationSearch;
-    const error = this._locationSearchError;
-    if (error) error.textContent = message || '';
-    if (!input) return;
-    if (message) {
-      input.setAttribute('aria-invalid', 'true');
-      if (error?.id) input.setAttribute('aria-describedby', error.id);
-    } else {
-      input.removeAttribute('aria-invalid');
-      input.removeAttribute('aria-describedby');
-    }
+    this.navigation.locationField.set({ error: message || '' });
   }
 
   _initLocationBar() {
@@ -131,6 +123,7 @@ export class LocationNavigation {
     this._locationLookup?.destroy();
     this._locationLookup = new LocationSearch({
       input: this._locationSearch,
+      setSearching: (busy) => this.navigation.locationField.set({ busy }),
       begin: () => this._beginDeferredNavigation('location'),
       isCurrent: (generation) =>
         !this._disposed && generation === this._navigationGeneration,
@@ -152,6 +145,9 @@ export class LocationNavigation {
       },
     );
     this._locationControls = new LocationControls({
+      field: this.navigation.locationField,
+      views: this.views,
+      getSearchState: () => this._locationLookup.getState(),
       elements: {
         pills: this._locationPills,
         poiRow: this._poiRow,
@@ -168,6 +164,7 @@ export class LocationNavigation {
       onPoi: (id, index) => this._onPoiClick(id, index),
       onSearch: (query) => this._locationLookup.run(query),
       onSearchEdit: () => this._setLocationSearchError(null),
+      onSearchOpen: () => this._openLocationSearch(),
       onReset: () => this.resetToGlobeView(),
     });
   }

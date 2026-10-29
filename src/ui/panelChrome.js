@@ -108,9 +108,12 @@ export class PanelChrome {
     this._panelDisclosureControls = [];
     const targets = new Map();
     document
-      .querySelectorAll('.panel-collapse-btn[data-collapse-target]')
+      .querySelectorAll(
+        '.panel-collapse-btn[data-collapse-target], #location-bar-toggle',
+      )
       .forEach((button) => {
-        const targetId = button.dataset.collapseTarget;
+        const targetId =
+          button.dataset.collapseTarget || button.dataset.dockToggleTarget;
         if (!targetId) return;
         if (!targets.has(targetId)) targets.set(targetId, []);
         targets.get(targetId).push(button);
@@ -131,8 +134,8 @@ export class PanelChrome {
         allowStored: !this._initialShareState,
       });
     }
-    // The command dock always starts compact; either wing reveals on hover,
-    // focus, or click and collapses again after the interaction moves away.
+    // The command dock starts compact. Location uses click and Escape;
+    // visual presets retain their existing hover disclosure.
     this.setPanelCollapsed('control-panel', true, {
       syncShare: false,
       persist: false,
@@ -142,10 +145,6 @@ export class PanelChrome {
       persist: false,
     });
     this._initAutoHoverPanel('control-panel', {
-      openDelayMs: 140,
-      closeDelayMs: 420,
-    });
-    this._initAutoHoverPanel('location-bar', {
       openDelayMs: 140,
       closeDelayMs: 420,
     });
@@ -164,9 +163,7 @@ export class PanelChrome {
         this.setPanelCollapsed(panelId, collapsed, options),
       beforeCollapse: () => {
         if (panelId !== 'location-bar' || !this._locationSearch) return;
-        this._locationSearch.classList.remove('expanded');
-        this._locationSearch.value = '';
-        this._locationSearch.blur();
+        this.closeLocationSearch();
       },
     });
   }

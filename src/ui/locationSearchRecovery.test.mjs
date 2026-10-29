@@ -1,72 +1,53 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { NavigationController } from './navigationController.js';
-import { LocationNavigation } from './locationNavigation.js';
+import { locationFixture } from '../testSupport/locationFixture.mjs';
+const { LocationNavigation } = await import('./locationNavigation.js');
 
-function input() {
-  const classes = new Set(['expanded', 'searching']);
-  const attributes = new Map();
-  return {
-    id: 'location-search',
-    value: 'Pariss',
-    focused: false,
-    selected: false,
-    classList: {
-      remove: (...names) => names.forEach((name) => classes.delete(name)),
-      contains: (name) => classes.has(name),
-    },
-    focus() {
-      this.focused = true;
-    },
-    blur() {
-      this.focused = false;
-    },
-    select() {
-      this.selected = true;
-    },
-    setAttribute: (name, value) => attributes.set(name, value),
-    removeAttribute: (name) => attributes.delete(name),
-    getAttribute: (name) => attributes.get(name) ?? null,
+function settle(fixture, options) {
+  const owner = {
+    _activeLocationSearchGeneration: 4,
+    searchInput: fixture.elements.search,
+    locationField: fixture.field,
   };
-}
-
-function settle(searchInput, options) {
-  const owner = { _activeLocationSearchGeneration: 4, searchInput };
-  NavigationController.prototype._settleLocationSearchUi.call(
-    owner,
-    4,
-    options,
-  );
+  NavigationController.prototype._settleLocationSearchUi.call(owner, 4, options);
   return owner;
 }
 
 test('a search that found nothing keeps its query, the open field and focus', () => {
-  const field = input();
-  const owner = settle(field, { keepQuery: true });
+  const fixture = locationFixture();
+  fixture.field.set({ query: 'Pariss', expanded: true, busy: true });
+  const field = fixture.elements.search;
+  const owner = settle(fixture, { keepQuery: true });
   assert.equal(owner._activeLocationSearchGeneration, null);
   assert.equal(field.value, 'Pariss');
   assert.equal(field.classList.contains('expanded'), true);
   assert.equal(field.classList.contains('searching'), false);
-  assert.equal(field.focused, true);
-  assert.equal(field.selected, true);
+  assert.equal(document.activeElement, field);
+  assert.equal(field.selectionStart, 0);
+  assert.equal(field.selectionEnd, field.value.length);
 });
 
 test('a search that arrived still clears and closes the field', () => {
-  const field = input();
-  field.focused = true;
-  settle(field);
+  const fixture = locationFixture();
+  fixture.field.set({ query: 'Pariss', expanded: true, busy: true });
+  const field = fixture.elements.search;
+  field.focus();
+  settle(fixture);
   assert.equal(field.value, '');
   assert.equal(field.classList.contains('expanded'), false);
-  assert.equal(field.focused, false);
+  assert.notEqual(document.activeElement, field);
 });
 
 function navigation() {
-  const field = input();
-  const error = { id: 'location-search-error', textContent: '' };
+  const fixture = locationFixture();
+  const field = fixture.elements.search;
+  const error = document.getElementById('location-search-error');
   const settled = [];
   const toasts = [];
   const owner = {
     _disposed: false,
+    navigation: { locationField: fixture.field },
     _locationSearch: field,
     _locationSearchError: error,
     _activeLocationSearchGeneration: null,

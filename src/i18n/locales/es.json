@@ -117,7 +117,6 @@
   "📍 Location: --": "📍 Ubicación: --",
   "Landmark: --": "Punto de interés: --",
   "Search any location": "Buscar un lugar",
-  "Search any location...": "Buscar un lugar…",
   "LEVEL": "NIVEL",
   "Estimated destination direction": "Dirección estimada del destino",
   "DEST ---°": "DEST ---°",
@@ -3004,5 +3003,7 @@
   "Preview is off.": "La vista previa está desactivada.",
   "Automatic stop is unavailable for this voice connection.": "La parada automática no está disponible para esta conexión de voz.",
   "routing busy — too many routes at once": "servicio de rutas ocupado: demasiadas rutas a la vez",
-  "route proxy error": "error del proxy de rutas"
+  "route proxy error": "error del proxy de rutas",
+  "Search places or coordinates": "Buscar lugares o coordenadas",
+  "Fly to": "Volar a"
 }

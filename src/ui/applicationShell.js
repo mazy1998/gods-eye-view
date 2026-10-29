@@ -1,3 +1,4 @@
+import { mountLocationViews } from './locationViews.js';
 import { resolveImageryHost } from '../layers/weather/imageryHost.js';
 import { ShellFacade } from './shellFacade.js';
 import { AircraftDisplay } from './aircraftDisplay.js';
@@ -116,6 +117,9 @@ export class StyleManager extends ShellFacade {
     this._recording = new RecordingControls({
       syncShareState: () => this._syncShareState(),
     });
+    this._locationViews = mountLocationViews((...args) =>
+      this._mountView(...args),
+    );
     Object.assign(this, readShellElements());
     this._panelChrome = new PanelChrome({
       elements: {
@@ -127,6 +131,7 @@ export class StyleManager extends ShellFacade {
         _rightPanelStack: this._rightPanelStack,
       },
       operations: {
+        closeLocationSearch: () => this._navigation.locationField.close(),
         _setRadioDisclosure: (...args) => this._setRadioDisclosure(...args),
         _syncCctvPanelViewport: (...args) =>
           this._syncCctvPanelViewport(...args),
@@ -322,6 +327,7 @@ export class StyleManager extends ShellFacade {
     this._cockpitDisplayModeHandler = null;
 
     this._locationNavigation = new LocationNavigation({
+      views: this._locationViews,
       viewer,
       placeSearch,
       navigation: this._navigation,
@@ -360,6 +366,10 @@ export class StyleManager extends ShellFacade {
         _locationMiniPoi: this._locationMiniPoi,
       },
       operations: {
+        _openLocationSearch: () =>
+          this._panelChrome.setPanelCollapsed('location-bar', false, {
+            explicit: true,
+          }),
         _beginDeferredNavigation: (...args) =>
           this._beginDeferredNavigation(...args),
         _reassertNavigationHandoff: (...args) =>
@@ -559,6 +569,7 @@ export class StyleManager extends ShellFacade {
         _detectionDensityValue: this._detectionDensityValue,
       },
       operations: {
+        closeLocationSearch: () => this._navigation.locationField.close(),
         setStyle: (...args) => this.setStyle(...args),
         _updateHudButtonState: (...args) => this._updateHudButtonState(...args),
         _syncShareState: (...args) => this._syncShareState(...args),

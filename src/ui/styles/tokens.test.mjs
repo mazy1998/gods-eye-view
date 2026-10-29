@@ -35,7 +35,7 @@ test('original resolves the colors it shares with the legacy palette', () => {
 // A surface adopts the tokens for its foreground and background together when
 // it is ported; add its stylesheet here in that step. Only the first-level
 // @imports of style.css are followed; none import further.
-const PORTED = new Set(['tokens', 'primitives'].map((name) => `./src/ui/styles/${name}.css`));
+const PORTED = new Set(['tokens', 'primitives', 'location-views'].map((name) => `./src/ui/styles/${name}.css`));
 const read = (path) => readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8');
 const stylesheets = [...read('style.css').matchAll(/@import '([^']+)'/g)].map((m) => m[1]);
 const withoutComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');

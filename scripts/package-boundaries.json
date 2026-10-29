@@ -535,9 +535,11 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/ui/mountView.js",
+      "src/ui/locationViews/PlacePills.vue"
     ],
-    "external": []
+    "external": ["vue"]
   },
   "radio-controls": {
     "exports": ["./ui/radio"],
@@ -820,7 +822,14 @@
       "src/ui/mountView.js",
       "src/ui/ownerState.js",
       "src/ui/StyleIndicator.vue",
-      "src/scopeMaskPolicy.js"
+      "src/scopeMaskPolicy.js",
+      "src/ui/locationField.js",
+      "src/ui/locationViews/PlacePills.vue",
+      "src/ui/locationViews.js",
+      "src/ui/locationViews/LocationPin.vue",
+      "src/ui/locationViews/SearchField.vue",
+      "src/ui/locationViews/SearchResults.vue",
+      "src/ui/locationViews/MiniStatus.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2639,7 +2648,14 @@
       "src/ui/ownerState.js",
       "src/ui/StyleIndicator.vue",
       "src/sceneCommandRelease.js",
-      "src/scopeMaskPolicy.js"
+      "src/scopeMaskPolicy.js",
+      "src/ui/locationField.js",
+      "src/ui/locationViews/PlacePills.vue",
+      "src/ui/locationViews.js",
+      "src/ui/locationViews/LocationPin.vue",
+      "src/ui/locationViews/SearchField.vue",
+      "src/ui/locationViews/SearchResults.vue",
+      "src/ui/locationViews/MiniStatus.vue"
     ],
     "external": [
       "hls.js",
@@ -3316,7 +3332,8 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/i18n/index.js"
+      "src/i18n/index.js",
+      "src/ui/locationField.js"
     ],
     "external": ["cesium"]
   },
