@@ -10,9 +10,10 @@ import {
   editSceneDetails,
   selectSceneDocument,
 } from '../director/authoring.js';
-import { createSceneDialog, mountSceneSharing } from '../ui/sceneSharing.js';
+import { mountSceneDialog } from '../ui/sceneSharing.js';
 import { PACK_LIMITS } from '../director/packs/manifest.js';
 import { t, tn } from '../i18n/index.js';
+import { displaySceneTitle, displayShotTitle } from './recipes.js';
 
 function download(text, name) {
   const url = URL.createObjectURL(
@@ -62,25 +63,64 @@ const mimeFor = (file) =>
 export function createSceneSharing(director) {
   let dialog,
     controller,
+    presentation,
+    detailsDraft,
+    assetDraft,
     disposed = false,
     staged = null,
     busy = false;
   const alive = (owner) =>
     !disposed && controller === owner && !owner.signal.aborted;
+  const chosen = (files) =>
+    files.length === 1
+      ? files[0].name
+      : files.length
+        ? tn(files.length, '{count} file selected', '{count} files selected')
+        : '';
+  function paint() {
+    if (!dialog || disposed) return;
+    dialog.update({
+      ...presentation,
+      texts: [...presentation.texts],
+      actions: { ...presentation.actions },
+      details: detailsDraft ? { ...detailsDraft } : null,
+      files: chosen(assetDraft?.files || []),
+      folder: chosen(assetDraft?.folder || []),
+    });
+  }
   function close() {
     controller?.abort();
     controller = null;
     dialog?.dispose();
     dialog = null;
+    presentation = null;
+    detailsDraft = null;
+    assetDraft = null;
     staged = null;
     busy = false;
   }
-  function open(title) {
+  function open(title, mode) {
     close();
     if (disposed) return null;
     controller = new AbortController();
-    dialog = createSceneDialog(title, close);
+    presentation = {
+      title,
+      mode,
+      texts: [],
+      status: '',
+      applyDisabled: false,
+      actions: {},
+    };
+    dialog = mountSceneDialog({ ...presentation }, close);
     return controller;
+  }
+  function addText(text) {
+    presentation.texts.push(text);
+    paint();
+  }
+  function setStatus(text) {
+    presentation.status = text;
+    paint();
   }
   async function run(owner, job) {
     if (!alive(owner) || busy) return;
@@ -89,12 +129,13 @@ export function createSceneSharing(director) {
       await job();
     } catch (error) {
       if (alive(owner))
-        dialog.status.textContent =
+        setStatus(
           error?.name === 'SceneDocumentError'
             ? error.message
             : t(
                 'Could not complete this action. Check the file, references and selected assets.',
-              );
+              ),
+        );
     } finally {
       if (alive(owner)) busy = false;
     }
@@ -105,15 +146,15 @@ export function createSceneSharing(director) {
       sourceIds: director._dataPacks.sourceIds(),
       layerIds: director.dataManager.getAll().map((l) => l.id),
     });
-    dialog.text(
+    const texts = [
       [
         tn(report.scenes, '{count} scene', '{count} scenes'),
         tn(report.shots, '{count} shot', '{count} shots'),
         tn(report.packs.length, '{count} data pack', '{count} data packs'),
       ].join(' · '),
-    );
+    ];
     for (const pack of report.packs)
-      dialog.text(
+      texts.push(
         t(
           '{scene} / {pack}: {status}. File: {path}. {attribution} · {license}',
           {
@@ -127,46 +168,50 @@ export function createSceneSharing(director) {
         ),
       );
     if (report.missingLayers.length)
-      dialog.text(
+      texts.push(
         t('Unavailable layers: {layers}', {
           layers: report.missingLayers.join(', '),
         }),
       );
     if (report.externalContent)
-      dialog.text(
+      texts.push(
         t(
           'Uses registered content or linked media. Those external files are not included in a scene bundle. Their original notices still apply.',
         ),
       );
     if (report.bundledBytes)
-      dialog.text(
+      texts.push(
         t(
           '{bytes} bundled bytes verified. Files stay in memory for this session. Reimport the bundle after reloading the app.',
           { bytes: report.bundledBytes },
         ),
       );
+    presentation.texts.push(...texts);
+    paint();
     return report;
   }
+
   async function preview(file) {
-    const owner = open(t('Review scene import'));
+    const owner = open(t('Review scene import'), 'import');
     if (!owner) return;
     const expected = currentProject();
-    dialog.text(t('Nothing is loaded or changed until you apply this file.'));
+    addText(t('Nothing is loaded or changed until you apply this file.'));
     await run(owner, async () => {
       const input = await readSceneShare(file, { signal: owner.signal });
       if (!alive(owner)) return;
       staged = input;
       inventory(input);
-      dialog.status.textContent = t('Ready to import');
-      dialog.text(
+      setStatus(t('Ready to import'));
+      addText(
         t(
           'Apply replaces the current project. Export your current project first if you want to keep both.',
         ),
       );
-      const apply = dialog.button(t('Apply import'), () =>
+      presentation.actions.applyImport = () =>
         run(owner, async () => {
           if (expected !== currentProject()) throw new Error('Project changed');
-          apply.disabled = true;
+          presentation.applyDisabled = true;
+          paint();
           const ok = await director.importProjectFile(file, {
             prepared: input,
             expectedProject: expected,
@@ -175,15 +220,16 @@ export function createSceneSharing(director) {
           if (alive(owner)) {
             if (ok) close();
             else {
-              apply.disabled = false;
-              dialog.status.textContent = t(
-                'Import was not applied. The current project may have changed.',
+              presentation.applyDisabled = false;
+              setStatus(
+                t(
+                  'Import was not applied. The current project may have changed.',
+                ),
               );
             }
           }
-        }),
-      );
-      apply.dataset.directorApplyImport = '';
+        });
+      paint();
     });
   }
   function edit() {
@@ -193,119 +239,118 @@ export function createSceneSharing(director) {
       director._updateStatus(t('Select a scene and shot first'));
       return;
     }
-    const owner = open(t('Edit scene details'));
+    const owner = open(t('Edit scene details'), 'details');
     if (!owner) return;
     const original = structuredClone(director._project),
       expected = currentProject();
-    dialog.text(
+    presentation.context = `${displaySceneTitle(scene)} / ${displayShotTitle(shot.title, shot, scene)}`;
+    addText(
       t(
         'Camera positions use degrees and meters above the ellipsoid. Drafts are validated before they replace your saved scene.',
       ),
     );
-    const sceneText = dialog.input(
-      t('Anchors and data packs'),
-      json(subset(scene, sceneKeys)),
-      { multiline: true },
-    );
-    const shotText = dialog.input(
-      t('Shot camera, timing, packs and actions'),
-      json(subset(shot, shotKeys)),
-      { multiline: true },
-    );
-    const anchorName = dialog.input(t('New anchor ID'), 'anchor-1');
-    dialog.button(
-      t('Capture camera as anchor'),
-      () =>
-        run(owner, async () => {
-          const details = JSON.parse(sceneText.value),
-            camera = director.styleManager.getCameraState();
-          if (!camera) throw new Error('Camera unavailable');
-          const anchors = details.anchors || [];
-          if (anchors.some((a) => a.id === anchorName.value))
-            throw new Error('Duplicate anchor');
-          details.anchors = [
-            ...anchors,
-            {
-              id: anchorName.value,
-              lat: camera.lat,
-              lon: camera.lon,
-              alt: camera.alt,
-              altitudeReference: 'ellipsoid',
-            },
-          ];
-          editSceneDetails(
-            original,
-            scene.id,
-            shot.id,
-            details,
-            JSON.parse(shotText.value),
-          );
-          sceneText.value = json(details);
-          dialog.status.textContent = t('Anchor added to draft');
-        }),
-      dialog.body,
-    );
-    dialog.button(
-      t('Set move start to current camera'),
-      () =>
-        run(owner, async () => {
-          const details = JSON.parse(shotText.value),
-            camera = director.styleManager.getCameraState();
-          if (!camera) throw new Error('Camera unavailable');
-          details.move = {
-            from: {
-              ...subset(camera, [
-                'lat',
-                'lon',
-                'alt',
-                'heading',
-                'pitch',
-                'roll',
-              ]),
-              altitudeReference: 'ellipsoid',
-            },
-            easing: 'cubic-in-out',
-          };
-          if (!details.camera.anchorId)
-            details.camera.altitudeReference = 'ellipsoid';
-          details.durationSec = Math.max(0.2, details.durationSec || 3);
-          editSceneDetails(
-            original,
-            scene.id,
-            shot.id,
-            JSON.parse(sceneText.value),
-            details,
-          );
-          shotText.value = json(details);
-          dialog.status.textContent = t(
-            'Move added to draft; destination remains the shot camera',
-          );
-        }),
-      dialog.body,
-    );
-    dialog.button(
-      t('Use ordinary flight'),
-      () => {
-        if (!alive(owner)) return;
-        try {
-          const details = JSON.parse(shotText.value);
-          delete details.move;
-          shotText.value = json(details);
-        } catch {
-          dialog.status.textContent = t('Invalid shot JSON');
-        }
-      },
-      dialog.body,
-    );
-    const apply = dialog.button(t('Apply details'), () =>
+    const draft = (detailsDraft = {
+      sceneText: json(subset(scene, sceneKeys)),
+      shotText: json(subset(shot, shotKeys)),
+      anchorName: 'anchor-1',
+    });
+    const adopt = () => {
+      if (alive(owner) && detailsDraft === draft)
+        Object.assign(draft, dialog.readDetails());
+    };
+    presentation.actions.inputDetail = (key, value) => {
+      if (!alive(owner) || detailsDraft !== draft || !Object.hasOwn(draft, key))
+        return;
+      adopt();
+      draft[key] = value;
+      paint();
+    };
+    presentation.actions.captureAnchor = () =>
       run(owner, async () => {
+        adopt();
+        const details = JSON.parse(draft.sceneText),
+          camera = director.styleManager.getCameraState();
+        if (!camera) throw new Error('Camera unavailable');
+        const anchors = details.anchors || [];
+        if (anchors.some((a) => a.id === draft.anchorName))
+          throw new Error('Duplicate anchor');
+        details.anchors = [
+          ...anchors,
+          {
+            id: draft.anchorName,
+            lat: camera.lat,
+            lon: camera.lon,
+            alt: camera.alt,
+            altitudeReference: 'ellipsoid',
+          },
+        ];
+        editSceneDetails(
+          original,
+          scene.id,
+          shot.id,
+          details,
+          JSON.parse(draft.shotText),
+        );
+        draft.sceneText = json(details);
+        setStatus(t('Anchor added to draft'));
+      });
+    presentation.actions.moveStart = () =>
+      run(owner, async () => {
+        adopt();
+        const details = JSON.parse(draft.shotText),
+          camera = director.styleManager.getCameraState();
+        if (!camera) throw new Error('Camera unavailable');
+        details.move = {
+          from: {
+            ...subset(camera, [
+              'lat',
+              'lon',
+              'alt',
+              'heading',
+              'pitch',
+              'roll',
+            ]),
+            altitudeReference: 'ellipsoid',
+          },
+          easing: 'cubic-in-out',
+        };
+        if (!details.camera.anchorId)
+          details.camera.altitudeReference = 'ellipsoid';
+        details.durationSec = Math.max(0.2, details.durationSec || 3);
+        editSceneDetails(
+          original,
+          scene.id,
+          shot.id,
+          JSON.parse(draft.sceneText),
+          details,
+        );
+        draft.shotText = json(details);
+        setStatus(
+          t('Move added to draft; destination remains the shot camera'),
+        );
+      });
+    presentation.actions.ordinaryFlight = () => {
+      if (!alive(owner)) return;
+      try {
+        adopt();
+        const details = JSON.parse(draft.shotText);
+        delete details.move;
+        draft.shotText = json(details);
+        paint();
+      } catch {
+        setStatus(t('Invalid shot JSON'));
+      }
+    };
+    presentation.actions.applyDetails = () =>
+      run(owner, async () => {
+        adopt();
         if (expected !== currentProject()) throw new Error('Project changed');
         const project = editSceneDetails(
           original,
           scene.id,
           shot.id,
-          JSON.parse(sceneText.value),
-          JSON.parse(shotText.value),
+          JSON.parse(draft.sceneText),
+          JSON.parse(draft.shotText),
         );
         const ok = await director.importProjectFile(
           {
@@ -320,9 +365,8 @@ export function createSceneSharing(director) {
           },
         );
         if (alive(owner) && ok) close();
-      }),
-    );
-    apply.dataset.directorApplyDetails = '';
+      });
+    paint();
   }
   function share() {
     let project;
@@ -335,7 +379,7 @@ export function createSceneSharing(director) {
       director._updateStatus(t('Select a scene first'));
       return;
     }
-    const owner = open(t('Share selected scene'));
+    const owner = open(t('Share selected scene'), 'share');
     if (!owner) return;
     const paths = new Set(
       project.scenes.flatMap((s) =>
@@ -351,26 +395,27 @@ export function createSceneSharing(director) {
     );
     staged = { project, assets: existing };
     inventory(staged);
-    dialog.text(
+    addText(
       t(
         'Scene JSON preserves authored settings and attribution. It does not include asset files. Bundles include only pack files you choose here or previously imported bundle files.',
       ),
     );
-    dialog.button(t('Download scene JSON'), () => {
+    presentation.actions.shareJson = () => {
       if (alive(owner)) download(stringifySceneDocument(project), 'scene.json');
-    });
-    const files = dialog.input(t('Choose data-pack files'), '', {
-      type: 'file',
-    });
-    files.multiple = true;
-    const folder = dialog.input(t('Or choose a data-pack folder'), '', {
-      type: 'file',
-    });
-    folder.multiple = true;
-    folder.setAttribute('webkitdirectory', '');
-    dialog.button(t('Download asset bundle'), () =>
+    };
+    const assets = (assetDraft = { files: [], folder: [] });
+    const adoptAssets = () => {
+      if (alive(owner) && assetDraft === assets)
+        Object.assign(assets, dialog.readAssets());
+    };
+    presentation.actions.chooseAssets = () => {
+      adoptAssets();
+      paint();
+    };
+    presentation.actions.shareBundle = () =>
       run(owner, async () => {
-        const selected = [...files.files, ...folder.files];
+        adoptAssets();
+        const selected = [...assets.files, ...assets.folder];
         const packs = project.scenes.flatMap((s) => s.dataPacks || []);
         const text = await createSceneBundle(
           project,
@@ -410,22 +455,17 @@ export function createSceneSharing(director) {
         );
         if (alive(owner)) {
           download(text, 'scene.gevbundle.json');
-          dialog.status.textContent = t('Asset bundle downloaded');
+          setStatus(t('Asset bundle downloaded'));
         }
-      }),
-    );
+      });
+    paint();
   }
-  const unmount = () => {};
-  let removeToolbar = unmount;
+
   return {
     preview,
     edit,
     share,
     close,
-    mount() {
-      removeToolbar();
-      removeToolbar = mountSceneSharing({ edit, share });
-    },
     getState: () => ({
       open: !!dialog,
       busy,
@@ -434,7 +474,6 @@ export function createSceneSharing(director) {
     destroy() {
       disposed = true;
       close();
-      removeToolbar();
     },
   };
 }

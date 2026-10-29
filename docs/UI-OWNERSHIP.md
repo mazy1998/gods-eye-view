@@ -161,3 +161,17 @@ appearance uses `data-gev-credit-surface`, which survives that operation; it
 never observes or rewrites Cesium's class list. The startup cover is already a
 surface and gets no nested card. Fatal startup text uses `--gev-error-text`:
 appearance danger text normally, the unchanged legacy `#ff4444` under Cyber.
+
+## Stories and authoring drafts
+
+SceneControls owns Browse/Create, inline rename drafts and the panel/runtime views.
+Director still owns the project, selection, playback clock and cancellation.
+Progress/status notifications preserve the recipe and shot nodes; a changed shot
+list releases its old row callbacks. The existing runtime overlay keeps Stop
+reachable independently of the panel. Teardown removes both views and Escape.
+
+The sharing owner retains staged imports, details and selected-file drafts.
+Native input events update drafts; every commit also adopts the current native
+values so programmatic edits without input events keep working. Vue paints plain
+text and native file controls. Preview, expected-project validation, explicit
+asset selection, abort signals and session-only bundle bytes stay with sharing.

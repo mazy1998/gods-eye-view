@@ -404,7 +404,9 @@ try {
   const teardown = await page.evaluate(async () => {
     const director = window.__godsEyeView.sceneDirector;
     const controls = director._controls;
-    const previousStatus = document.getElementById('scene-status').textContent;
+    const newButton = document.getElementById('scene-new-btn');
+    const statusNode = document.getElementById('scene-status');
+    const previousStatus = statusNode.textContent;
     const project = director._project;
     let finish;
     const gate = new Promise((resolve) => {
@@ -423,7 +425,7 @@ try {
       controls.destroyed &&
       controls.removers.length === 0 &&
       controls.rowRemovers.length === 0;
-    document.getElementById('scene-new-btn').click();
+    newButton.click();
     controls.run('capture');
     finish();
     await pending;
@@ -433,8 +435,7 @@ try {
       stoppedSynchronously,
       stateStopped: window.__qaSceneState.length === notificationsAtStop,
       sameProject: director._project === project,
-      noLateStatus:
-        document.getElementById('scene-status').textContent === previousStatus,
+      noLateStatus: statusNode.textContent === previousStatus,
       rowsGone: !document.querySelector('.scene-shot-row'),
     };
   });

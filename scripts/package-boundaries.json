@@ -681,9 +681,18 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/ui/mountView.js",
+      "src/ui/StoriesPanelView.vue",
+      "src/ui/SceneLibrary.vue",
+      "src/ui/SceneShotsView.vue",
+      "src/ui/SceneShotRow.vue",
+      "src/ui/ScenePlaybackView.vue",
+      "src/ui/primitives/ActionButton.vue",
+      "src/ui/primitives/TabList.vue",
+      "src/ui/segmentedControl.js"
     ],
-    "external": []
+    "external": ["vue"]
   },
   "ui-shell": {
     "exports": ["./ui/shell"],
@@ -899,7 +908,12 @@
       "src/ui/primitives/DisclosureRow.vue",
       "src/ui/StreetLevelPanelView.vue",
       "src/ui/feedback/FeedbackContent.vue",
-      "src/ui/feedback/LiteralText.vue"
+      "src/ui/feedback/LiteralText.vue",
+      "src/ui/StoriesPanelView.vue",
+      "src/ui/SceneLibrary.vue",
+      "src/ui/SceneShotsView.vue",
+      "src/ui/SceneShotRow.vue",
+      "src/ui/ScenePlaybackView.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -1016,9 +1030,21 @@
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/ui/mountView.js",
+      "src/ui/StoriesPanelView.vue",
+      "src/ui/SceneLibrary.vue",
+      "src/ui/SceneShotsView.vue",
+      "src/ui/SceneShotRow.vue",
+      "src/ui/ScenePlaybackView.vue",
+      "src/ui/primitives/ActionButton.vue",
+      "src/ui/primitives/TabList.vue",
+      "src/ui/segmentedControl.js",
+      "src/ui/SceneDialogView.vue",
+      "src/ui/SceneDetailsView.vue",
+      "src/ui/SceneFileChooser.vue"
     ],
-    "external": ["cesium"]
+    "external": ["cesium", "vue"]
   },
   "live-observations": {
     "exports": ["./sources/live"],
@@ -2788,7 +2814,15 @@
       "src/ui/feedback/LiteralText.vue",
       "src/ui/feedback/FirstRunContent.vue",
       "src/ui/feedback/CreditsHost.vue",
-      "src/ui/creditText.js"
+      "src/ui/creditText.js",
+      "src/ui/StoriesPanelView.vue",
+      "src/ui/SceneLibrary.vue",
+      "src/ui/SceneShotsView.vue",
+      "src/ui/SceneShotRow.vue",
+      "src/ui/ScenePlaybackView.vue",
+      "src/ui/SceneDialogView.vue",
+      "src/ui/SceneDetailsView.vue",
+      "src/ui/SceneFileChooser.vue"
     ],
     "external": [
       "hls.js",

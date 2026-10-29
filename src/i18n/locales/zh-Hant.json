@@ -2007,7 +2007,6 @@
   "Double-click to rename": "雙擊重命名",
   "Shot name": "鏡頭名稱",
   "LOAD": "加載",
-  "DEL": "刪除",
   "{duration}s + {hold}s": "{duration} 秒 + {hold} 秒",
   "Choose files": "選擇文件",
   "{count} files selected": {
@@ -2702,7 +2701,6 @@
   "SINCE": "起始時間",
   "SCENES": "場景",
   "Scene recipe": "場景方案",
-  "NEW": "新建",
   "CAPTURE SHOT": "保存鏡頭",
   "UPDATE SHOT": "更新鏡頭",
   "START": "啟動",
@@ -2897,5 +2895,10 @@
   "Tools": "工具",
   "Import, draw, and plan routes": "匯入、繪製和規劃路線",
   "Configure data providers and preferences.": "設定資料提供者和偏好設定。",
-  "Coverage is estimated from the camera pose.": "覆蓋範圍根據攝影機的位置和朝向估算。"
+  "Coverage is estimated from the camera pose.": "覆蓋範圍根據攝影機的位置和朝向估算。",
+  "Browse": "瀏覽",
+  "Create": "創作",
+  "New scene": "新增場景",
+  "Delete scene": "刪除場景",
+  "Delete shot": "刪除鏡頭"
 }

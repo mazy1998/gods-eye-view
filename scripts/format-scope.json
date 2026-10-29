@@ -1169,5 +1169,8 @@
   "src/voice/VoiceCardHost.vue",
   "src/ui/styles/voice-dock-view.css",
   "scripts/qa-voice-dock-contrast.mjs",
-  "src/voice/dockCompat.js"
+  "src/voice/dockCompat.js",
+  "src/scenes/sharingControls.test.mjs",
+  "src/ui/styles/stories.css",
+  "scripts/qa-scene-dialog-file-drop.mjs"
 ]

@@ -409,7 +409,6 @@ export class SceneDirector {
    * Exits silently if the scene-select element is missing (headless/test mode).
    */
   _initUI() {
-    this._sharing?.mount();
     this._controls = new SceneControls({
       subscribe: (listener) => this.subscribe(listener),
       read: () => ({
@@ -456,6 +455,8 @@ export class SceneDirector {
         import: (file) => this.importProjectFile(file),
         reviewImport: (file) => this._sharing.preview(file),
         download: () => this.downloadLastRunMetadata(),
+        edit: () => this._sharing.edit(),
+        share: () => this._sharing.share(),
         load: (sceneId, shotId) => this.loadShot(sceneId, shotId),
         deleteShot: (sceneId, shotId) => this.deleteShot(sceneId, shotId),
       },

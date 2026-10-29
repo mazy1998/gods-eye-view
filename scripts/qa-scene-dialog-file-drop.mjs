@@ -3,46 +3,37 @@
  * qa-scene-dialog-file-drop — the SHARE SCENE dialog's file control accepts a
  * file dropped from the desktop, proved in a real browser.
  *
- * The dialog draws a translated row over the native file input
- * (src/ui/sceneSharing.js, fileChooser). The input must still cover the row,
- * or drops miss it. Drops a file on the row's centre via CDP and expects
- * `input.files` to hold it.
- *
- * Usage:
- *   node scripts/qa-scene-dialog-file-drop.mjs
+ * The production sharing owner opens its dialog with a native
+ * input. Drop on the row's centre through CDP and assert the selected filename.
+ * Run against a fresh app server with QA_BASE_URL=http://localhost:4183.
+ * The isolated Vite-served fixture loads no map or provider.
  *
  * Needs the repository's puppeteer (devDependencies). Exit status 0 when the
  * drop selects the file, 1 otherwise.
  */
-import http from 'node:http';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const TYPES = {
-  '.js': 'text/javascript',
-  '.mjs': 'text/javascript',
-  '.json': 'application/json',
-  '.html': 'text/html',
-};
-
-const PAGE = `<!doctype html><html lang="en"><body>
+const PAGE = `<!doctype html><html lang="en"><head><link rel="stylesheet" href="/style.css"></head><body>
 <script type="module">
-  import { createSceneDialog } from '/src/ui/sceneSharing.js';
-  window.openDialog = () => {
-    const dialog = createSceneDialog('Share selected scene', () => {});
-    const files = dialog.input('Choose data-pack files', '', { type: 'file' });
-    files.multiple = true;
-    window.filesInput = files;
-    // Centre of the visible row (the wrapper's last child).
-    const row = files.parentElement.lastElementChild;
-    const r = row.getBoundingClientRect();
-    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  import { createSceneSharing } from '/src/scenes/sharing.js';
+  const project={version:6,scenes:[{id:'fixture',title:'File drop fixture',shots:[]}]};
+  const sharing=createSceneSharing({
+    _project:project,_selectedSceneId:'fixture',
+    _bundleAssets:{snapshot:()=>new Map()},
+    _dataPacks:{sourceIds:()=>[]},dataManager:{getAll:()=>[]},
+  });
+  window.openDialog=()=>{
+    sharing.share();
+    const files=document.querySelector('[data-director-dialog] input[type=file]');
+    window.filesInput=files;
+    const row=files.parentElement.lastElementChild;
+    const r=row.getBoundingClientRect();
+    return {x:r.x+r.width/2,y:r.y+r.height/2};
   };
-  window.ready = true;
+  window.ready=true;
 </script></body></html>`;
 
 async function dropOn(client, x, y, file) {
@@ -56,31 +47,21 @@ async function main() {
   const dir = await mkdtemp(path.join(tmpdir(), 'qa-scene-dialog-drop-'));
   const pack = path.join(dir, 'pack.json');
   await writeFile(pack, '{}');
-  const server = http.createServer(async (req, res) => {
-    if (req.url === '/') {
-      res.writeHead(200, { 'content-type': 'text/html' });
-      res.end(PAGE);
-      return;
-    }
-    try {
-      const body = await readFile(path.join(ROOT, req.url));
-      res.writeHead(200, {
-        'content-type': TYPES[path.extname(req.url)] || 'text/plain',
-      });
-      res.end(body);
-    } catch {
-      res.writeHead(404).end();
-    }
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const url = `http://127.0.0.1:${server.address().port}/`;
   const browser = await puppeteer.launch({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1000, height: 800 });
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(url);
+    // Vite serves the production owner/view modules; the isolated document keeps
+    // unrelated app-wide drop handlers out of this native-input geometry check.
+    await page.setRequestInterception(true);
+    page.on('request', (request) =>
+      request.resourceType() === 'document'
+        ? request.respond({ status: 200, contentType: 'text/html', body: PAGE })
+        : request.continue(),
+    );
+    await page.goto(process.env.QA_BASE_URL || 'http://localhost:4173');
     await page.waitForFunction(() => window.ready === true);
     const point = await page.evaluate(() => window.openDialog());
     const client = await page.createCDPSession();
@@ -98,7 +79,6 @@ async function main() {
     console.log('OK: a file dropped on the visible control is selected');
   } finally {
     await browser.close();
-    server.close();
     await rm(dir, { recursive: true, force: true });
   }
 }

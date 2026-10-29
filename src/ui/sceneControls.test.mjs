@@ -1,86 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createStateChannel } from '../app/stateChannel.js';
-import { SceneControls } from './sceneControls.js';
-import { SceneDirector } from '../scenes/director.js';
+import { container } from '../testSupport/componentDom.mjs';
+const { SceneControls } = await import('./sceneControls.js');
+const { SceneDirector } = await import('../scenes/director.js');
+const { sceneElements } = await import('./scenePresentation.js');
 
 function fixture() {
-  class Element extends EventTarget {
-    constructor() {
-      super();
-      this.children = [];
-      this.style = {};
-      this.dataset = {};
-      this.value = '';
-      this._text = '';
-      const classes = new Set();
-      this.classList = {
-        toggle(name, active) {
-          if (active) classes.add(name);
-          else classes.delete(name);
-        },
-        contains: (name) => classes.has(name),
-      };
-    }
-    appendChild(element) {
-      this.children.push(element);
-      element.parentNode = this;
-    }
-    append(...nodes) {
-      for (const node of nodes) this.appendChild(node);
-    }
-    remove() {
-      if (this.parentNode)
-        this.parentNode.children = this.parentNode.children.filter(
-          (node) => node !== this,
-        );
-    }
-    setAttribute(name, value) {
-      this[name] = value;
-    }
-    focus() {}
-    select() {}
-    set textContent(value) {
-      this._text = value;
-      this.children = [];
-    }
-    get textContent() {
-      return (
-        this._text + this.children.map((node) => node.textContent).join('')
-      );
-    }
-    click() {
-      this.dispatchEvent(new Event('click'));
-    }
-  }
-  const saved = { document: globalThis.document, window: globalThis.window };
-  const document = Object.assign(new EventTarget(), {
-    createElement: () => new Element(),
-    body: new Element(),
-  });
-  globalThis.document = document;
-  globalThis.window = { prompt: () => 'Renamed' };
-  const elements = Object.fromEntries(
-    [
-      'panel',
-      'select',
-      'new',
-      'delete',
-      'capture',
-      'update',
-      'shots',
-      'start',
-      'stop',
-      'next',
-      'export',
-      'import',
-      'file',
-      'download',
-      'status',
-      'progress',
-      'runtime',
-    ].map((name) => [name, new Element()]),
-  );
+  const saved = { prompt: window.prompt, confirm: window.confirm };
+  container.innerHTML =
+    '<div id="scene-panel"><div id="scene-controls-body"></div></div><div id="scene-runtime"></div>';
+  window.prompt = () => 'Renamed';
+  window.confirm = () => true;
+  const elements = sceneElements();
   const state = {
     scenes: [
       {
@@ -137,7 +70,7 @@ function fixture() {
     document,
     restore() {
       owner.destroy();
-      Object.assign(globalThis, saved);
+      Object.assign(window, saved);
     },
   };
 }
@@ -152,6 +85,10 @@ test('Scene controls render the supplied selection and running/download states',
       '<Shot A>',
     );
     assert.equal(f.elements.stop.disabled, true);
+    assert.equal(
+      document.getElementById('scene-status').hasAttribute('role'),
+      false,
+    );
     assert.equal(f.elements.download.disabled, true);
     f.state.hasRun = true;
     f.owner.setButtons(true);
@@ -242,8 +179,15 @@ test('a file import finishing after disposal cannot clear the retained file cont
       new Promise((resolve) => {
         finish = resolve;
       });
-    f.elements.file.files = [{ name: 'project.json' }];
-    f.elements.file.value = 'project.json';
+    Object.defineProperty(f.elements.file, 'files', {
+      configurable: true,
+      value: [{ name: 'project.json' }],
+    });
+    Object.defineProperty(f.elements.file, 'value', {
+      configurable: true,
+      writable: true,
+      value: 'project.json',
+    });
     f.elements.file.dispatchEvent(new Event('change'));
     f.owner.destroy();
     finish();
@@ -331,31 +275,12 @@ test('the real director preserves a selected shot label for the following double
   let director;
   try {
     f.owner.destroy();
-    const ids = {
-      'scene-panel': 'panel',
-      'scene-select': 'select',
-      'scene-new-btn': 'new',
-      'scene-delete-btn': 'delete',
-      'scene-capture-btn': 'capture',
-      'scene-update-shot-btn': 'update',
-      'scene-shot-list': 'shots',
-      'scene-start-btn': 'start',
-      'scene-stop-btn': 'stop',
-      'scene-next-btn': 'next',
-      'scene-export-btn': 'export',
-      'scene-import-btn': 'import',
-      'scene-import-file': 'file',
-      'scene-download-btn': 'download',
-      'scene-status': 'status',
-      'scene-progress-fill': 'progress',
-      'scene-runtime': 'runtime',
-    };
-    f.document.getElementById = (id) => f.elements[ids[id]] || null;
     globalThis.localStorage = {
       getItem: () => JSON.stringify({ version: 3, scenes: f.state.scenes }),
       setItem() {},
     };
     director = new SceneDirector({ camera: { cancelFlight() {} } }, {}, {});
+    Object.assign(f.elements, sceneElements());
     const label = f.elements.shots.children[0].children[0].children[0];
     label.click();
     assert.equal(f.elements.shots.children[0].children[0].children[0], label);
@@ -432,6 +357,149 @@ test('Scene controls consume current state, preserve rows on progress, and unsub
     assert.equal(owner.unsubscribe, null);
     channel.destroy();
   } finally {
+    f.restore();
+  }
+});
+
+test('Browse selects a recipe without starting playback and New opens Create', () => {
+  const f = fixture();
+  try {
+    assert.equal(document.getElementById('stories-browse').hidden, false);
+    document.querySelector('[data-scene-recipe-id]').click();
+    assert.deepEqual(f.calls, [['selectScene', 'scene-a']]);
+    f.elements.new.click();
+    assert.equal(document.getElementById('stories-create').hidden, false);
+    assert.equal(
+      f.calls.some(([name]) => name === 'start'),
+      false,
+    );
+  } finally {
+    f.restore();
+  }
+});
+
+test('a detached rename input cannot finish the following draft', () => {
+  const f = fixture(),
+    warnings = [],
+    prior = console.warn;
+  console.warn = (...args) => warnings.push(args);
+  try {
+    const label = f.elements.shots.querySelector('.scene-shot-label');
+    label.dispatchEvent(new Event('dblclick'));
+    const stale = label.querySelector('input');
+    stale.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+    label.dispatchEvent(new Event('dblclick'));
+    const current = label.querySelector('input');
+    current.value = 'Current draft';
+    current.dispatchEvent(new Event('input'));
+    stale.value = 'Obsolete';
+    stale.dispatchEvent(new Event('blur'));
+    assert.equal(label.querySelector('input'), current);
+    assert.equal(f.owner.renameDraft.value, 'Current draft');
+    current.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
+    assert.deepEqual(f.calls, [
+      ['renameShot', 'scene-a', 'shot-a', 'Current draft'],
+    ]);
+    assert.deepEqual(warnings, []);
+  } finally {
+    console.warn = prior;
+    f.restore();
+  }
+});
+
+test('the existing runtime overlay exposes Stop independently of the panel and tears it down', () => {
+  const f = fixture();
+  try {
+    f.state.running = true;
+    f.owner.setButtons(true);
+    f.owner.updateRuntime('Example / Overview');
+    f.elements.panel.hidden = true;
+    document.getElementById('scene-runtime-stop').click();
+    assert.deepEqual(f.calls, [['stop', 'Stopped']]);
+    assert.equal(f.elements.runtime.classList.contains('active'), true);
+    f.owner.destroy();
+    assert.equal(document.getElementById('scene-runtime-stop'), null);
+    assert.equal(f.elements.runtime.classList.contains('active'), false);
+  } finally {
+    f.restore();
+  }
+});
+
+test('recording hides runtime Stop but preserves captions and restores Stop outside recording', () => {
+  const f = fixture();
+  const style = document.createElement('style');
+  style.textContent = ['action-button', 'scenes', 'recording', 'stories']
+    .map((sheet) =>
+      readFileSync(new URL(`./styles/${sheet}.css`, import.meta.url), 'utf8'),
+    )
+    .join('\n');
+  document.head.append(style);
+  try {
+    f.state.running = true;
+    f.owner.setButtons(true);
+    f.owner.updateRuntime('Example / Overview');
+    f.elements.panel.hidden = true;
+    const stop = document.getElementById('scene-runtime-stop');
+    assert.notEqual(getComputedStyle(stop).display, 'none');
+    assert.equal(getComputedStyle(stop).pointerEvents, 'auto');
+    document.body.classList.add('recording-mode');
+    assert.equal(getComputedStyle(stop).display, 'none');
+    assert.equal(getComputedStyle(f.elements.runtime).visibility, 'visible');
+    assert.equal(
+      f.elements.runtime.querySelector('span').textContent,
+      'Example / Overview',
+    );
+    f.owner.updateRuntime('');
+    assert.equal(getComputedStyle(f.elements.runtime).display, 'none');
+    f.owner.updateRuntime('Example / Overview');
+    assert.notEqual(getComputedStyle(f.elements.runtime).display, 'none');
+    document.body.classList.remove('recording-mode');
+    assert.notEqual(getComputedStyle(stop).display, 'none');
+    stop.click();
+    assert.deepEqual(f.calls, [['stop', 'Stopped']]);
+  } finally {
+    document.body.classList.remove('recording-mode');
+    style.remove();
+    f.restore();
+  }
+});
+
+test('collapsed Scenes shows only its header and keeps the independent playback Stop reachable', () => {
+  const f = fixture();
+  const style = document.createElement('style');
+  style.textContent = readFileSync(
+    new URL('./styles/scenes.css', import.meta.url),
+    'utf8',
+  );
+  document.head.append(style);
+  const header = document.createElement('button');
+  header.className = 'panel-header';
+  header.textContent = 'Scenes';
+  f.elements.panel.prepend(header);
+  try {
+    const body = document.getElementById('scene-controls-body');
+    assert.ok(body.querySelector('#stories-browse-tab'));
+    assert.ok(body.querySelector('#stories-browse button'));
+    assert.notEqual(getComputedStyle(body).display, 'none');
+    f.state.running = true;
+    f.owner.setButtons(true);
+    f.owner.updateRuntime('Example / Overview');
+    f.elements.panel.classList.add('collapsed');
+    assert.equal(getComputedStyle(body).display, 'none');
+    assert.notEqual(getComputedStyle(header).display, 'none');
+    const stop = document.getElementById('scene-runtime-stop');
+    assert.equal(f.elements.panel.contains(stop), false);
+    assert.notEqual(getComputedStyle(stop).display, 'none');
+    stop.click();
+    assert.deepEqual(f.calls, [['stop', 'Stopped']]);
+    f.elements.panel.classList.remove('collapsed');
+    assert.notEqual(getComputedStyle(body).display, 'none');
+  } finally {
+    style.remove();
     f.restore();
   }
 });

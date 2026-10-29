@@ -358,6 +358,7 @@ html:not([lang='en']) #scene-panel .scene-controls .scene-btn {
 #cctv-panel.collapsed #cctv-meta,
 #cctv-panel.collapsed .cctv-summary-label,
 #cctv-panel.collapsed #cctv-summary,
+#scene-panel.collapsed #scene-controls-body,
 #scene-panel.collapsed .scene-controls,
 #scene-panel.collapsed .scene-shot-list,
 #scene-panel.collapsed .scene-progress,

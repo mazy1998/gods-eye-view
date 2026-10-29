@@ -1,14 +1,32 @@
-/** Own Scene panel listeners and presentation through project reads and actions. */
+/** Own scene-panel intent and presentation; Director remains the project owner. */
 import { t, msg } from '../i18n/index.js';
-import {
-  sceneElements,
-  renderSceneOptions,
-  renderSceneShots,
-  presentSceneSelection,
-  presentSceneButtons,
-  presentSceneProgress,
-  presentSceneRuntime,
-} from './scenePresentation.js';
+import { mountView } from './mountView.js';
+import StoriesPanelView from './StoriesPanelView.vue';
+import ScenePlaybackView from './ScenePlaybackView.vue';
+import { sceneElements } from './scenePresentation.js';
+
+const LIBRARY_CHANGES = new Set([
+  'scene-options-changed',
+  'scene-created',
+  'scene-deleted',
+  'project-imported',
+  'shots-changed',
+  'shot-captured',
+  'shot-updated',
+  'shot-renamed',
+  'shot-deleted',
+  'selection-changed',
+]);
+const SHOT_CHANGES = new Set([
+  'scene-created',
+  'scene-deleted',
+  'project-imported',
+  'shots-changed',
+  'shot-captured',
+  'shot-updated',
+  'shot-renamed',
+  'shot-deleted',
+]);
 
 export class SceneControls {
   constructor({ read, actions, subscribe, elements = sceneElements() }) {
@@ -17,108 +35,128 @@ export class SceneControls {
     this.elements = elements;
     this.destroyed = false;
     this.actionGeneration = 0;
+    // Retained teardown diagnostics; Vue owns the local element listeners.
     this.removers = [];
     this.rowRemovers = [];
     this.playbackKeyRemover = null;
-    if (!elements.select) return;
+    this.renameDraft = null;
+    this.tab = 'browse';
+    this.listRevision = 0;
+    this.library = read();
+    this.presentation = {
+      running: this.library.running,
+      hasRun: this.library.hasRun,
+      progress: 0,
+      status: t('Ready'),
+      runtime: '',
+    };
+    this.viewActions = {
+      setTab: (tab) => this.setTab(tab),
+      selectScene: (id) => this.run('selectScene', id),
+      selectShot: (id) => this.run('selectShot', id),
+      beginRename: (...args) => this.beginRename(...args),
+      createScene: () => {
+        this.setTab('create');
+        this.createScene();
+      },
+      deleteScene: () => this.deleteSelectedScene(),
+      capture: () => this.run('capture'),
+      update: () => this.run('update'),
+      edit: () => this.run('edit'),
+      share: () => this.run('share'),
+      load: (...args) => this.run('load', ...args),
+      deleteShot: (...args) => this.deleteShot(...args),
+      start: () => this.run('start', this.read().selectedSceneId),
+      stop: () => this.run('stop', msg('Stopped')),
+      next: () => this.run('next'),
+      export: () => this.run('export'),
+      download: () => this.run('download'),
+      import: () => this.elements.file?.click(),
+      importFile: async (node) => {
+        const file = node.files?.[0];
+        if (!file) return;
+        await this.run(
+          this.actions.reviewImport ? 'reviewImport' : 'import',
+          file,
+        );
+        if (!this.destroyed) node.value = '';
+      },
+    };
+    if (!elements.body) return;
+    this.view = mountView(StoriesPanelView, {
+      parent: elements.body,
+      props: this._viewProps(),
+    });
+    Object.assign(elements, sceneElements(elements.body.ownerDocument));
+    elements.runtime?.classList.add('stories-playback');
+    if (elements.runtime)
+      this.runtimeView = mountView(ScenePlaybackView, {
+        parent: elements.runtime,
+        props: {
+          runtime: this.presentation.runtime,
+          running: this.presentation.running,
+          stop: this.viewActions.stop,
+        },
+      });
     if (subscribe)
       this.unsubscribe = subscribe((notification) =>
         this.present(notification),
       );
-    else {
-      this.renderSceneSelect();
-      this.renderShotList();
-    }
-    this.listen(elements.select, 'change', () =>
-      this.run('selectScene', elements.select.value),
-    );
-    for (const [element, action] of Object.entries({
-      capture: 'capture',
-      update: 'update',
-      next: 'next',
-      export: 'export',
-      download: 'download',
-    })) {
-      this.listen(elements[element], 'click', () => this.run(action));
-    }
-    this.listen(elements.new, 'click', () => this.createScene());
-    this.listen(elements.delete, 'click', () => this.deleteSelectedScene());
-    this.listen(elements.start, 'click', () =>
-      this.run('start', this.read().selectedSceneId),
-    );
-    this.listen(elements.stop, 'click', () => this.run('stop', msg('Stopped')));
-    this.listen(elements.import, 'click', () => elements.file?.click());
-    this.listen(elements.file, 'change', async () => {
-      const file = elements.file?.files?.[0];
-      if (!file) return;
-      await this.run(
-        this.actions.reviewImport ? 'reviewImport' : 'import',
-        file,
-      );
-      if (!this.destroyed) elements.file.value = '';
-    });
-    if (!subscribe) {
-      this.updateStatus(t('Ready'));
-      this.setProgress(0);
-      this.setButtons(false);
-    }
+    else this.setButtons(this.presentation.running);
   }
-
-  /** Apply only the presentation affected by an action; selection keeps row identity. */
+  _viewProps() {
+    return {
+      library: this.library,
+      presentation: { ...this.presentation },
+      tab: this.tab,
+      draft: this.renameDraft ? { ...this.renameDraft } : null,
+      actions: this.viewActions,
+      listRevision: this.listRevision,
+    };
+  }
+  _paint() {
+    if (this.destroyed) return;
+    this.view?.update(this._viewProps());
+    this.runtimeView?.update({
+      runtime: this.presentation.runtime,
+      running: this.presentation.running,
+    });
+    this.elements.panel?.classList.toggle('running', this.presentation.running);
+    this.elements.runtime?.classList.toggle(
+      'active',
+      !!this.presentation.runtime || this.presentation.running,
+    );
+  }
   present({ state, change, initial }) {
     if (this.destroyed) return;
     const type = change?.type;
+    if (initial || LIBRARY_CHANGES.has(type)) this.library = this.read();
+    if (initial || SHOT_CHANGES.has(type)) {
+      this.renameDraft = null;
+      this.listRevision++;
+    }
     if (
       initial ||
-      [
-        'scene-options-changed',
-        'scene-created',
-        'scene-deleted',
-        'project-imported',
-      ].includes(type)
-    )
-      this.renderSceneSelect();
-    if (
-      initial ||
-      [
-        'shots-changed',
-        'scene-created',
-        'scene-deleted',
-        'shot-captured',
-        'shot-updated',
-        'shot-renamed',
-        'shot-deleted',
-        'project-imported',
-      ].includes(type)
-    )
-      this.renderShotList();
-    if (type === 'selection-changed')
-      presentSceneSelection(this.elements.shots, state.selectedShotId);
-    if (initial || type === 'buttons-changed') this.setButtons(state.running);
-    if (initial || type === 'progress-changed')
-      this.setProgress(state.progress);
-    if (initial || type === 'status-changed') this.updateStatus(state.status);
-    if (initial || type === 'runtime-changed')
-      this.updateRuntime(state.runtime);
+      type === 'buttons-changed' ||
+      (type === 'run-event' && change.event === 'shot_start')
+    ) {
+      this.presentation.running = state.running;
+      this.presentation.hasRun = state.hasRun;
+    }
+    for (const [typeName, key] of [
+      ['progress-changed', 'progress'],
+      ['status-changed', 'status'],
+      ['runtime-changed', 'runtime'],
+    ])
+      if (initial || type === typeName) this.presentation[key] = state[key];
+    if (type === 'project-exported' || type === 'shot-loaded')
+      this.presentation.status = state.status;
     if (initial || type === 'playback-presentation')
       this.setPlaybackActive(state.playbackActive);
     if (initial || type === 'playback-keyboard')
       this.setPlaybackKeyboardEnabled(state.keyboardEnabled);
-    if (type === 'project-exported') this.updateStatus(state.status);
-    if (type === 'shot-loaded') this.updateStatus(state.status);
-    if (type === 'run-event' && change.event === 'shot_start')
-      this.setButtons(state.running);
+    this._paint();
   }
-
-  listen(target, type, callback, removers = this.removers) {
-    if (!target) return;
-    const listener = (event) => {
-      if (!this.destroyed) return callback(event);
-    };
-    target.addEventListener(type, listener);
-    removers.push(() => target.removeEventListener(type, listener));
-  }
-
   run(action, ...args) {
     if (this.destroyed) return;
     const generation = ++this.actionGeneration;
@@ -133,11 +171,57 @@ export class SceneControls {
       failed();
     }
   }
-
-  renderSceneSelect() {
-    if (!this.destroyed) renderSceneOptions(this.elements.select, this.read());
+  setTab(tab) {
+    if (this.destroyed || !['browse', 'create'].includes(tab)) return;
+    this.tab = tab;
+    this._paint();
   }
-
+  renderSceneSelect() {
+    if (this.destroyed) return;
+    this.library = this.read();
+    this._paint();
+  }
+  renderShotList() {
+    if (this.destroyed) return;
+    this.library = this.read();
+    this.renameDraft = null;
+    this.listRevision++;
+    this._paint();
+  }
+  beginRename(sceneId, shotId, title, label) {
+    if (this.destroyed || this.renameDraft) return;
+    const draft = { sceneId, shotId, title, value: title };
+    draft.input = (value) => {
+      if (this.renameDraft === draft) {
+        draft.value = value;
+        this._paint();
+      }
+    };
+    draft.finish = (save, value) => {
+      if (this.destroyed || this.renameDraft !== draft) return;
+      draft.value = value;
+      this.renameDraft = null;
+      const next = draft.value.trim();
+      if (save && next && next !== title)
+        this.run('renameShot', sceneId, shotId, next);
+      this._paint();
+    };
+    draft.inputEvent = (event) => draft.input(event.target.value);
+    draft.blur = (event) => draft.finish(true, event.target.value);
+    draft.key = (event) => {
+      event.stopPropagation();
+      if (event.key === 'Enter' || event.key === 'Escape') {
+        event.preventDefault();
+        draft.finish(event.key === 'Enter', event.target.value);
+      }
+    };
+    this.renameDraft = draft;
+    this._paint();
+    // The synchronous paint creates the editor before focus/select.
+    const input = label.querySelector('input');
+    input?.focus();
+    input?.select();
+  }
   createScene() {
     if (this.destroyed) return;
     const name = window.prompt(
@@ -146,13 +230,10 @@ export class SceneControls {
     );
     if (name) this.run('create', name);
   }
-
   deleteSelectedScene() {
     if (this.destroyed) return;
-    const state = this.read();
-    const scene = state.scenes.find(
-      (item) => item.id === state.selectedSceneId,
-    );
+    const state = this.read(),
+      scene = state.scenes.find((item) => item.id === state.selectedSceneId);
     if (
       scene &&
       window.confirm(
@@ -161,11 +242,10 @@ export class SceneControls {
     )
       this.run('deleteScene');
   }
-
   deleteShot(sceneId, shotId) {
     if (this.destroyed) return;
-    const scene = this.read().scenes.find((item) => item.id === sceneId);
-    const shot = scene?.shots.find((item) => item.id === shotId);
+    const scene = this.read().scenes.find((item) => item.id === sceneId),
+      shot = scene?.shots.find((item) => item.id === shotId);
     if (
       shot &&
       window.confirm(
@@ -174,51 +254,34 @@ export class SceneControls {
     )
       this.run('deleteShot', sceneId, shotId);
   }
-
-  renderShotList() {
-    if (this.destroyed) return;
-    for (const remove of this.rowRemovers.splice(0)) remove();
-    renderSceneShots(this.elements.shots, this.read(), {
-      listen: (element, type, callback) =>
-        this.listen(element, type, callback, this.rowRemovers),
-      select: (id) => {
-        this.run('selectShot', id);
-        if (!this.destroyed)
-          presentSceneSelection(
-            this.elements.shots,
-            this.read().selectedShotId,
-          );
-      },
-      rename: (sceneId, shotId, title) =>
-        this.run('renameShot', sceneId, shotId, title),
-      load: (sceneId, shotId) => this.run('load', sceneId, shotId),
-      remove: (sceneId, shotId) => this.deleteShot(sceneId, shotId),
-    });
-  }
-
   setButtons(running) {
-    if (!this.destroyed)
-      presentSceneButtons(this.elements, running, this.read().hasRun);
+    if (this.destroyed) return;
+    this.presentation.running = running;
+    this.presentation.hasRun = this.read().hasRun;
+    this._paint();
   }
-
   setProgress(progress) {
-    if (!this.destroyed) presentSceneProgress(this.elements.progress, progress);
+    if (!this.destroyed) {
+      this.presentation.progress = progress;
+      this._paint();
+    }
   }
-
-  updateStatus(text) {
-    if (!this.destroyed && this.elements.status)
-      this.elements.status.textContent = text;
+  updateStatus(status) {
+    if (!this.destroyed) {
+      this.presentation.status = status;
+      this._paint();
+    }
   }
-
-  updateRuntime(text) {
-    if (!this.destroyed) presentSceneRuntime(this.elements.runtime, text);
+  updateRuntime(runtime) {
+    if (!this.destroyed) {
+      this.presentation.runtime = runtime;
+      this._paint();
+    }
   }
-
   setPlaybackActive(active) {
     if (this.destroyed && active) return;
     document.body.classList.toggle('scene-playback-mode', active);
   }
-
   setPlaybackKeyboardEnabled(enabled) {
     if (!enabled) {
       this.playbackKeyRemover?.();
@@ -233,21 +296,17 @@ export class SceneControls {
         document.removeEventListener('keydown', onKeyDown);
     }
   }
-
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.renameDraft = null;
     this.actionGeneration++;
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.setPlaybackKeyboardEnabled(false);
-    for (const remove of [
-      ...this.removers.splice(0),
-      ...this.rowRemovers.splice(0),
-    ])
-      remove();
-    if (this.elements.shots) this.elements.shots.textContent = '';
-    presentSceneRuntime(this.elements.runtime, '');
+    this.view?.dispose();
+    this.runtimeView?.dispose();
+    this.elements.runtime?.classList.remove('active', 'stories-playback');
     this.setPlaybackActive(false);
   }
 }

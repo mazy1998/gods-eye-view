@@ -2019,7 +2019,6 @@
   "Double-click to rename": "双击重命名",
   "Shot name": "镜头名称",
   "LOAD": "加载",
-  "DEL": "删除",
   "{duration}s + {hold}s": "{duration} 秒 + {hold} 秒",
   "Choose files": "选择文件",
   "{count} files selected": {
@@ -2714,7 +2713,6 @@
   "SINCE": "起始时间",
   "SCENES": "场景",
   "Scene recipe": "场景方案",
-  "NEW": "新建",
   "CAPTURE SHOT": "保存镜头",
   "UPDATE SHOT": "更新镜头",
   "START": "启动",
@@ -2897,5 +2895,10 @@
   "Tools": "工具",
   "Import, draw, and plan routes": "导入、绘制和规划路线",
   "Configure data providers and preferences.": "配置数据提供方和偏好设置。",
-  "Coverage is estimated from the camera pose.": "覆盖范围根据摄像头的位置和朝向估算。"
+  "Coverage is estimated from the camera pose.": "覆盖范围根据摄像头的位置和朝向估算。",
+  "Browse": "浏览",
+  "Create": "创作",
+  "New scene": "新建场景",
+  "Delete scene": "删除场景",
+  "Delete shot": "删除镜头"
 }

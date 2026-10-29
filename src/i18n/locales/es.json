@@ -758,8 +758,6 @@
   "The Google Maps key buys the photorealistic planet — everything else stacks on top.": "La clave de Google Maps activa el planeta fotorrealista; todo lo demás se superpone.",
   "SCENES": "ESCENAS",
   "Scene recipe": "Receta de escena",
-  "NEW": "NUEVA",
-  "DEL": "BORRAR",
   "CAPTURE SHOT": "CAPTURAR PLANO",
   "UPDATE SHOT": "ACTUALIZAR PLANO",
   "START": "INICIAR",
@@ -3039,5 +3037,10 @@
   "Tools": "Herramientas",
   "Import, draw, and plan routes": "Importa, dibuja y planifica rutas",
   "Configure data providers and preferences.": "Configura los proveedores de datos y las preferencias.",
-  "Coverage is estimated from the camera pose.": "La cobertura se estima a partir de la posición y orientación de la cámara."
+  "Coverage is estimated from the camera pose.": "La cobertura se estima a partir de la posición y orientación de la cámara.",
+  "Browse": "Explorar",
+  "Create": "Crear",
+  "New scene": "Nueva escena",
+  "Delete scene": "Eliminar escena",
+  "Delete shot": "Eliminar toma"
 }

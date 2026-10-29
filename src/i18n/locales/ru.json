@@ -798,8 +798,6 @@
   "East offset from catalog position (m) — click to type": "Смещение на восток от позиции каталога (м) — нажмите для ввода",
   "SAVE CAL": "СОХРАНИТЬ КАЛИБР.",
   "RESET CAL": "СБРОСИТЬ КАЛИБР.",
-  "NEW": "НОВАЯ",
-  "DEL": "УДАЛ.",
   "CAPTURE SHOT": "СДЕЛАТЬ КАДР",
   "UPDATE SHOT": "ОБНОВИТЬ КАДР",
   "START": "СТАРТ",
@@ -3110,5 +3108,10 @@
   "Tools": "Инструменты",
   "Import, draw, and plan routes": "Импорт, рисование и маршруты",
   "Configure data providers and preferences.": "Настройте источники данных и параметры.",
-  "Coverage is estimated from the camera pose.": "Покрытие оценивается по положению и ориентации камеры."
+  "Coverage is estimated from the camera pose.": "Покрытие оценивается по положению и ориентации камеры.",
+  "Browse": "Обзор",
+  "Create": "Создать",
+  "New scene": "Новая сцена",
+  "Delete scene": "Удалить сцену",
+  "Delete shot": "Удалить кадр"
 }

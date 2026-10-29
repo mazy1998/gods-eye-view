@@ -2880,3 +2880,51 @@
   border-radius: 0;
   clip-path: var(--cyber-panel-frame);
 }
+
+/* Scene dialogs previously supplied this fixed palette inline. */
+:root[data-ui-theme='cyber'] .stories-dialog {
+  background: #08141e;
+  color: #e3faff;
+  border: 1px solid #397080;
+  border-radius: 6px;
+  font: 14px/1.5 sans-serif;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:root[data-ui-theme='cyber']
+  .stories-dialog
+  :is(button, input, textarea, .stories-file-row) {
+  color: #e3faff;
+  background: #10242e;
+  border: 1px solid #397080;
+}
+:root[data-ui-theme='cyber']
+  .stories-dialog
+  :is(button, .stories-file-row > span:first-child) {
+  border-radius: 3px;
+}
+:root[data-ui-theme='cyber']
+  .stories-dialog
+  .stories-file-row
+  > span:first-child {
+  background: #08141e;
+  border: 1px solid #397080;
+}
+:root[data-ui-theme='cyber']
+  .stories-dialog
+  .stories-file-chooser:focus-within
+  .stories-file-row
+  > span:first-child {
+  outline: 2px solid #e3faff;
+}
+/* Recipe cards are new; their Cyber palette follows the existing glass controls. */
+:root[data-ui-theme='cyber'] .stories-recipe {
+  color: var(--text-primary);
+  background: transparent;
+  border-color: var(--glass-border);
+}
+:root[data-ui-theme='cyber']
+  .stories-recipe:is(:hover, :focus-visible, .active) {
+  color: var(--text-primary);
+  border-color: var(--glass-border-hover);
+}

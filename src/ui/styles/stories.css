@@ -1,0 +1,289 @@
+/* The Director and sharing owner retain all project, draft and playback state. */
+.stories-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-2);
+  min-width: 0;
+}
+.stories-controls .scene-controls {
+  margin-bottom: 0;
+}
+.stories-controls [hidden] {
+  display: none !important;
+}
+.stories-controls .scene-btn {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.stories-library {
+  display: grid;
+  gap: var(--gev-space-2);
+  max-height: 260px;
+  overflow: auto;
+}
+.stories-recipe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-1);
+  width: 100%;
+  text-align: left;
+  padding: var(--gev-space-3);
+  border: 1px solid;
+  border-radius: var(--gev-radius-sm);
+  cursor: pointer;
+  font: inherit;
+  overflow-wrap: anywhere;
+}
+.stories-controls .scene-shot-list {
+  max-height: 220px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  font: var(--gev-font-size-sm)/1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-controls .stories-recipe {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .stories-recipe:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .stories-recipe.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  :is(.scene-shot-label, #scene-status) {
+  color: var(--gev-text);
+  text-shadow: none;
+  font: inherit;
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-meta {
+  color: var(--gev-text-muted);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-row {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-row.active {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-empty {
+  color: var(--gev-text-muted);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-progress {
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  #scene-progress-fill {
+  color: var(--gev-on-accent);
+  background: var(--gev-accent);
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .scene-shot-rename {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+.stories-runtime {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-2);
+}
+#scene-runtime.stories-playback {
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+}
+.stories-runtime > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.stories-runtime .stories-runtime-stop {
+  flex: none;
+  pointer-events: auto;
+}
+:where(body.recording-mode) .stories-runtime-stop {
+  display: none;
+}
+:where(body.recording-mode)
+  #scene-runtime.stories-playback:has(.stories-runtime > span:empty) {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #scene-runtime.stories-playback {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border);
+  text-shadow: none;
+}
+.stories-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 20px;
+  overflow: auto;
+  font: 14px/1.5 var(--gev-font-sans);
+}
+.stories-dialog h2 {
+  margin: 0 0 var(--gev-space-3);
+  font-size: var(--gev-font-size-xl);
+}
+.stories-dialog p {
+  margin: var(--gev-space-2) 0;
+  overflow-wrap: anywhere;
+}
+.stories-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gev-space-2);
+  margin-top: var(--gev-space-2);
+}
+.stories-dialog .gev-action-button {
+  font: inherit;
+  letter-spacing: normal;
+  padding: 7px 11px;
+  white-space: normal;
+}
+.stories-details > label {
+  display: block;
+}
+.stories-details :is(input, textarea) {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 6px 0 14px;
+  padding: 7px;
+}
+.stories-details textarea {
+  resize: vertical;
+  font: var(--gev-font-size-sm)/1.5 var(--gev-font-mono);
+}
+.stories-file-chooser {
+  position: relative;
+  display: block;
+  margin-top: var(--gev-space-2);
+}
+.stories-file-chooser > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.stories-file-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 6px 0 14px;
+  padding: 7px;
+  border: 1px solid;
+  overflow-wrap: anywhere;
+}
+.stories-file-row > span:first-child {
+  padding: 3px 9px;
+  border: 1px solid;
+  border-radius: 3px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-dialog {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-dialog .stories-file-row {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-dialog
+  .stories-file-row
+  > span:first-child {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-file-chooser:focus-within
+  .stories-file-row
+  > span:first-child {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .scene-shot-actions
+  .gev-action-button {
+  color: var(--gev-text);
+}
+
+.stories-runtime .stories-runtime-stop {
+  min-width: 64px;
+  min-height: 32px;
+  font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-runtime.stories-playback
+  .stories-runtime-stop {
+  color: var(--gev-danger-text);
+  background: var(--gev-danger-tint);
+  border-color: var(--gev-danger);
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-runtime.stories-playback
+  .stories-runtime-stop:is(:hover, :focus-visible) {
+  color: var(--gev-danger-text);
+  background: var(--gev-danger-tint);
+  border-color: var(--gev-danger);
+}
+@media (max-width: 720px) {
+  .stories-runtime .stories-runtime-stop {
+    min-width: 72px;
+    min-height: 44px;
+  }
+}
