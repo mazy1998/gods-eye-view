@@ -455,3 +455,132 @@ test('an already-current list item scrolls into view on mount and remount', asyn
   await nextTick();
   assert.deepEqual(scrolled, ['step-2', 'step-2']);
 });
+
+test('Directions follows the drawer destination without losing the phone disclosure or mounted controls', (t) => {
+  let active = false;
+  const drawerChannel = createStateChannel(() => ({
+    active,
+    destination: null,
+  }));
+  t.after(() => drawerChannel.destroy());
+  const calls = [];
+  const commands = [];
+  const { panel, layers } = fixture(t, {
+    drawerChannel,
+    getRowControls: () => ({
+      chips: [{ id: 'set-a', label: 'SET A', params: { arm: 'a' } }],
+    }),
+    openDetails: (id) => calls.push(id),
+    setLayerParams: (...args) => commands.push(args),
+  });
+  layers[0].id = 'directions';
+  layers[0].enabled = true;
+  panel._refreshTogglePanel();
+  const root = container.querySelector('#directions-controls-body');
+  const details = container.querySelector('.layer-details');
+  const controls = root.querySelector('.data-toggle-controls');
+  details.click();
+  panel._pushView();
+  assert.equal(controls.hidden, true, 'phone details still collapse');
+  assert.equal(details.getAttribute('aria-expanded'), 'false');
+  assert.deepEqual(calls, []);
+  active = true;
+  drawerChannel.publish({ type: 'active-changed' });
+  assert.equal(container.querySelector('#directions-controls-body'), root);
+  assert.equal(
+    controls.hidden,
+    false,
+    'Tools is independent of phone collapse',
+  );
+  assert.equal(
+    details.getAttribute('aria-controls'),
+    'directions-controls-body',
+  );
+  assert.equal(details.hasAttribute('aria-expanded'), false);
+  details.click();
+  assert.deepEqual(calls, ['directions-controls-body']);
+  const host = document.createElement('div');
+  host.className = 'gev-legacy-host';
+  document.body.append(host);
+  t.after(() => host.remove());
+  const home = document.createComment('directions-home');
+  root.before(home);
+  host.append(root);
+  const chip = root.querySelector('[data-chip-id=set-a]');
+  layers[0].stats = { count: 2 };
+  panel._refreshTogglePanel();
+  assert.equal(root.parentNode, host, 'updates keep the same borrowed root');
+  assert.equal(root.querySelector('[data-chip-id=set-a]'), chip);
+  chip.click();
+  assert.deepEqual(commands, [
+    ['directions', { arm: 'a' }, { origin: 'user' }],
+  ]);
+  home.replaceWith(root);
+  active = false;
+  drawerChannel.publish({ type: 'active-changed' });
+  assert.equal(details.getAttribute('aria-expanded'), 'false');
+  assert.equal(controls.hidden, true, 'the phone disclosure was retained');
+  details.click();
+  panel._pushView();
+  assert.equal(controls.hidden, false);
+  active = true;
+  drawerChannel.publish();
+  host.append(root);
+  panel.destroy();
+  assert.equal(root.parentNode, null, 'Vue removes a borrowed root on dispose');
+  chip.click();
+  assert.equal(commands.length, 1, 'retained borrowed controls are inert');
+  details.click();
+  active = true;
+  drawerChannel.publish();
+  assert.deepEqual(calls, ['directions-controls-body']);
+  assert.equal(document.getElementById('directions-controls-body'), null);
+});
+
+test('the Tools and Layers switches share one Directions transaction', async (t) => {
+  const layer = {
+    id: 'directions',
+    name: 'Directions',
+    enabled: false,
+    showInTogglePanel: true,
+    stats: {},
+  };
+  const drawerChannel = createStateChannel(() => ({
+    active: true,
+    destination: 'tools',
+  }));
+  t.after(() => drawerChannel.destroy());
+  let finish,
+    calls = 0;
+  const { panel } = fixture(t, {
+    drawerChannel,
+    getLayers: () => [layer],
+    isEnabled: () => layer.enabled,
+    setEnabled: (_id, enabled) => {
+      calls++;
+      return new Promise((resolve) => {
+        finish = () => {
+          layer.enabled = enabled;
+          resolve();
+        };
+      });
+    },
+  });
+  const tools = container.querySelector(
+    '#directions-controls-body [role=switch]',
+  );
+  const layers = container.querySelector('.data-toggle-top [role=switch]');
+  tools.click();
+  assert.equal(calls, 1);
+  assert.equal(tools.getAttribute('aria-busy'), 'true');
+  assert.equal(layers.getAttribute('aria-busy'), 'true');
+  layers.click();
+  assert.equal(calls, 1);
+  finish();
+  await Promise.resolve();
+  assert.equal(tools.getAttribute('aria-checked'), 'true');
+  assert.equal(layers.getAttribute('aria-checked'), 'true');
+  panel.destroy();
+  tools.click();
+  assert.equal(calls, 1);
+});

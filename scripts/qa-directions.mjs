@@ -106,9 +106,7 @@ const layerState = () =>
     const gev = window.__godsEyeView;
     const manager = gev.dataManager;
     const module = manager.layers.get('directions').module;
-    const row = document.querySelector(
-      '#data-toggles [data-layer-id="directions"]',
-    );
+    const row = document.getElementById('directions-controls-body');
     const controls = module.getRowControls();
     const viewer = gev.viewer;
     const entities = [...viewer.entities.values];
@@ -151,9 +149,7 @@ const layerState = () =>
 
 const clickChip = async (chipId) => {
   const clicked = await page.evaluate((id) => {
-    const row = document.querySelector(
-      '#data-toggles [data-layer-id="directions"]',
-    );
+    const row = document.getElementById('directions-controls-body');
     const button = row?.querySelector(`button[data-chip-id="${id}"]`);
     if (!button || button.disabled) return false;
     button.click();
@@ -197,12 +193,12 @@ const poseDelta = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 /** Keep the same projected globe target clear of the borrowed panel drawer. */
 async function clickGlobe(at) {
   const open = await page.evaluate(() => {
-    const drawer = document.getElementById('gev-drawer');
-    return Boolean(drawer && !drawer.hidden);
+    return window.__godsEyeView.styleManager._drawer.channel.getSnapshot()
+      .destination;
   });
   if (open) await page.click('#gev-drawer .gev-panel-header-actions button');
   await page.mouse.click(at.x, at.y);
-  if (open) await page.click('.gev-rail-item[data-destination="layers"]');
+  if (open) await page.click(`.gev-rail-item[data-destination="${open}"]`);
 }
 
 /** Place A and B by clicking the globe. Returns whether both landed. */
@@ -273,6 +269,13 @@ try {
     'the Directions row is in the Data Layers panel and toggles on',
     toggled,
   );
+  await page.evaluate(() => {
+    const details = document.querySelector(
+      '#data-toggles [data-layer-id="directions"] .layer-details',
+    );
+    if (details?.getAttribute('aria-controls') === 'directions-controls-body')
+      details.click();
+  });
   let state = await layerState();
   check(
     'the row guides the operator before anything is placed',
@@ -407,9 +410,7 @@ try {
     driveSummary,
   );
   const focused = await page.evaluate(() => {
-    const row = document.querySelector(
-      '#data-toggles [data-layer-id="directions"]',
-    );
+    const row = document.getElementById('directions-controls-body');
     const items = row.querySelectorAll('.data-row-list-item');
     items[2]?.focus();
     const active = document.activeElement === items[2];
@@ -786,9 +787,7 @@ try {
         shownDots = primitive.show ? primitive.length : 0;
       }
     }
-    const row = document.querySelector(
-      '#data-toggles [data-layer-id="directions"]',
-    );
+    const row = document.getElementById('directions-controls-body');
     return {
       entities: left.length,
       shownDots,

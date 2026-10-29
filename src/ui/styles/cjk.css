@@ -32,7 +32,7 @@ html:lang(zh) #cockpit-hud * {
 }
 
 /* Move short travel modes (步行 / 骑行) to the next line as whole words. */
-html:lang(zh) [data-layer-id='directions'] .data-toggle-meta {
+html:lang(zh) .directions-view .data-toggle-meta {
   word-break: keep-all;
   overflow-wrap: break-word;
 }

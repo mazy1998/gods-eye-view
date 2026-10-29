@@ -669,3 +669,36 @@ test('every destination icon is in the icon font subset', () => {
   for (const { id, icon } of DRAWER_DESTINATIONS)
     assert.ok(subset.includes(icon), `${id}: ${icon}`);
 });
+
+test('Tools borrows the one Directions root, updates it in place, returns it on phones and never resurrects a disposed view', (t) => {
+  const { drawer, calls, media } = fixture();
+  t.after(() => drawer.destroy());
+  const home = document.getElementById('data-panel');
+  const directions = document.createElement('section');
+  directions.id = 'directions-controls-body';
+  const input = document.createElement('input');
+  input.value = 'retained route draft';
+  directions.append(input);
+  home.append(directions);
+  drawer.open('tools');
+  assert.deepEqual(hosted(drawer), [
+    'geo-import-group',
+    'draw-group',
+    'directions-controls-body',
+  ]);
+  assert.equal(document.getElementById(directions.id), directions);
+  assert.deepEqual(calls, [], 'moving a section claims no PanelChrome state');
+  media.set(true);
+  assert.equal(directions.parentNode, home);
+  assert.equal(input.value, 'retained route draft');
+  media.set(false);
+  assert.equal(directions.parentNode, drawer.host);
+  drawer.open('layers');
+  assert.equal(directions.parentNode, home);
+  assert.equal(home.parentNode, drawer.host);
+  drawer.open('tools');
+  directions.remove();
+  drawer.close();
+  assert.equal(document.getElementById(directions.id), null);
+  assert.equal(directions.parentNode, null);
+});

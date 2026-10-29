@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue';
 import LayerText from './LayerText.vue';
+import ToggleSwitch from './primitives/ToggleSwitch.vue';
 import { t } from '../i18n/index.js';
 
 const props = defineProps({
@@ -9,17 +10,27 @@ const props = defineProps({
   expanded: { type: Boolean, default: true },
   chip: Function,
   listItem: Function,
+  hosted: Boolean,
+  enabled: Boolean,
+  toggleState: Object,
+  toggle: Function,
 });
 const list = ref(null);
+const root = ref(null);
 let live = true;
 onBeforeUnmount(() => {
   live = false;
+  // The drawer may have borrowed this root outside its Vue parent's DOM.
+  root.value?.remove();
 });
 const chooseChip = (id) => {
   if (live) props.chip?.(id);
 };
 const chooseStep = (id) => {
   if (live) props.listItem?.(id);
+};
+const toggleLayer = () => {
+  if (live && !props.toggleState?.blocked) props.toggle?.();
 };
 watch(
   () => props.controls?.list?.items?.find((item) => item.current)?.id,
@@ -35,10 +46,26 @@ watch(
 </script>
 <template>
   <section
+    ref="root"
     id="directions-controls-body"
     class="directions-view gev-surface"
+    :class="{ 'directions-view--hosted': hosted }"
+    :tabindex="hosted ? -1 : undefined"
     :aria-label="t('Directions')"
   >
+    <header v-if="hosted" class="directions-header">
+      <h3>{{ t('Directions') }}</h3>
+      <ToggleSwitch
+        :model-value="enabled"
+        :label="toggleState?.stateText"
+        :busy="toggleState?.busy"
+        :aria-label="toggleState?.label || t('Directions')"
+        :aria-busy="String(Boolean(toggleState?.busy))"
+        :aria-disabled="String(Boolean(toggleState?.blocked))"
+        :title="toggleState?.title"
+        @update:model-value="toggleLayer()"
+      />
+    </header>
     <LayerText class="data-toggle-meta" :text="summary" :hidden="!expanded" />
     <div
       class="data-toggle-controls"

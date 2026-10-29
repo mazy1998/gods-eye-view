@@ -8,6 +8,26 @@
 .directions-view [hidden] {
   display: none !important;
 }
+.directions-view--hosted {
+  padding: var(--gev-space-3);
+  border-width: 1px;
+  border-style: solid;
+}
+.directions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gev-space-2);
+  margin-bottom: var(--gev-space-2);
+}
+.directions-header h3 {
+  margin: 0;
+  font: 600 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+.directions-view--hosted .data-toggle-meta,
+.directions-view--hosted .data-toggle-controls {
+  padding-left: 0;
+}
 .directions-view .data-toggle-meta {
   display: block;
   overflow-wrap: anywhere;
@@ -52,6 +72,9 @@
 .directions-view .data-row-list-text {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.directions-view--hosted .data-row-list-item.current {
+  border-left-width: 2px;
 }
 .directions-view .data-row-list-lead {
   flex: 0 0 auto;

@@ -56,8 +56,8 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Tools'),
       subtitle: msg('Import, draw, and plan routes'),
       panels: [],
-      // Import and Draw leave the Display panel for here; Map hides them.
-      elements: ['geo-import-group', 'draw-group'],
+      // The existing views move from Display/Layers; their home hides them.
+      elements: ['geo-import-group', 'draw-group', 'directions-controls-body'],
     },
     {
       id: 'settings',
@@ -174,7 +174,11 @@ export function createDrawerNavigation({
     borrowed = null;
     if (!previous) return;
     for (const { node, placeholder } of previous.moved)
-      if (placeholder.parentNode) placeholder.replaceWith(node);
+      if (placeholder.parentNode) {
+        // A mounted view may already have removed its root during teardown.
+        if (node.parentNode) placeholder.replaceWith(node);
+        else placeholder.remove();
+      }
     for (const [id, before] of previous.before)
       if (
         isCollapsed(id) === previous.applied.get(id) &&

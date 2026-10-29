@@ -2935,10 +2935,18 @@
 }
 
 /* Directions adds a portable host; the existing Cyber row keeps its skin. */
-:root[data-ui-theme='cyber'] .directions-view.gev-surface {
+:root[data-ui-theme='cyber']
+  .directions-view.gev-surface:not(.directions-view--hosted) {
   color: inherit;
   border: 0;
   background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:root[data-ui-theme='cyber'] .directions-view--hosted {
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   box-shadow: none;
   backdrop-filter: none;
 }

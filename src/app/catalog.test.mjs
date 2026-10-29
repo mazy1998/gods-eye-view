@@ -153,3 +153,51 @@ test('controls bind catalog instances rather than similarly named defaults', () 
     /Control layer missing/,
   );
 });
+
+test('Directions details opens Tools without claiming the share-panel lane', async (t) => {
+  const previous = globalThis.document;
+  let focused;
+  const section = {
+    focus: (options) => {
+      focused = options;
+    },
+  };
+  globalThis.document = {
+    getElementById: (id) =>
+      id === 'directions-controls-body' ? section : null,
+  };
+  t.after(() => {
+    if (previous === undefined) delete globalThis.document;
+    else globalThis.document = previous;
+  });
+  const calls = [],
+    releases = [];
+  const drawerChannel = { subscribe: () => () => {} };
+  const { presentation } = createApplicationData({
+    scene: { viewer: {} },
+    controls: {
+      styleManager: {
+        _drawer: {
+          channel: drawerChannel,
+          open: (id) => calls.push(['drawer', id]),
+        },
+        attachDataManager() {},
+        setPanelCollapsed: (...args) => calls.push(['panel', ...args]),
+      },
+    },
+    catalog: createLayerCatalog([], []),
+    defer: (release) => releases.push(release),
+  });
+  assert.equal(presentation.panel.drawerChannel, drawerChannel);
+  presentation.panel.openDetails('directions-controls-body');
+  assert.deepEqual(calls, [['drawer', 'tools']]);
+  assert.deepEqual(focused, { preventScroll: true });
+  presentation.panel.openDetails('weather-panel');
+  assert.deepEqual(calls[1], [
+    'panel',
+    'weather-panel',
+    false,
+    { explicit: true },
+  ]);
+  for (const release of releases.reverse()) await release();
+});

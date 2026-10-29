@@ -136,3 +136,45 @@ test('Directions scrolls current steps after paint and cancels pending scroll af
   await nextTick();
   assert.equal(scrolled.length, count);
 });
+
+test('Tools has a named card and a shared, busy-guarded layer switch', () => {
+  let calls = 0;
+  const view = mount(DirectionsView, {
+    props: {
+      hosted: true,
+      enabled: false,
+      summary: 'OSM routing · never',
+      toggleState: {
+        label: 'Directions: OFF',
+        stateText: 'OFF',
+        busy: false,
+        blocked: false,
+      },
+      toggle: () => calls++,
+    },
+  });
+  const root = view.element;
+  assert.equal(root.querySelector('h3').textContent, 'Directions');
+  root.focus();
+  assert.equal(document.activeElement, root);
+  const button = root.querySelector('[role=switch]');
+  button.click();
+  assert.equal(calls, 1);
+  view.update({
+    enabled: true,
+    toggleState: {
+      label: 'Directions: ON',
+      stateText: 'ON',
+      busy: true,
+      blocked: true,
+    },
+  });
+  assert.equal(button.getAttribute('aria-checked'), 'true');
+  assert.equal(button.getAttribute('aria-busy'), 'true');
+  assert.equal(button.disabled, false);
+  button.click();
+  assert.equal(calls, 1);
+  view.dispose();
+  button.click();
+  assert.equal(calls, 1);
+});

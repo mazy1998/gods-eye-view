@@ -80,9 +80,13 @@ watch(
     </div>
     <DirectionsView
       v-if="row.id === 'directions'"
+      :hosted="Boolean(row.detailsPanel)"
+      :enabled="row.enabled"
+      :toggle-state="row.toggle"
+      :toggle="() => toggle(row.id)"
       :controls="row.controls"
       :summary="row.meta"
-      :expanded="expanded"
+      :expanded="row.detailsPanel ? true : expanded"
       :chip="(id) => chip(row.id, id)"
       :list-item="(id) => listItem(row.id, id)"
     />

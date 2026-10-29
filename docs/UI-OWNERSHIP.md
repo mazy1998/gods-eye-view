@@ -200,14 +200,22 @@ that painter. Provider strings remain text and interactive host nodes stay intac
 The Directions layer already owns mode, A/B placement, routing, selected steps
 and cinematic flight. No DOM draft extraction is needed. Its existing descriptor
 and row notification feed the single LayerPanel subscription. `DirectionsView`
-accepts `controls`, `summary`, `expanded`, and chip/list-item ID callbacks; it can
-be mounted independently through `mountView` when Tools hosts it. The Transport
-row currently supplies those props and keeps the shared layer visibility switch.
+accepts `controls`, `summary`, `expanded`, and chip/list-item ID callbacks. The
+Transport row supplies those props and keeps the shared layer visibility switch.
+Tools borrows the same `#directions-controls-body` root through drawer element
+hosting. LayerPanel reads the drawer channel's `active` flag: desktop details
+opens Tools without a PanelChrome/share-panel change, while phones retain the
+row's local disclosure. The hosted Layers panel hides the section at home.
+The Tools card names Directions and projects the same enabled, busy and blocked
+state into a second switch that calls the existing LayerPanel toggle action.
+Opening details focuses the borrowed section after synchronous drawer painting.
 LayerPanel re-reads each current descriptor and dispatches existing owner params
 with user origin. The view adds no request, pointer owner, application state,
 clock or listener to the layer. It scrolls current steps after Vue's paint and
 cancels pending scroll/action callbacks on disposal. Existing chip/list hooks
-and their explicit hidden state remain on the native nodes.
+and their explicit hidden state remain on the native nodes. The view removes its
+borrowed root on unmount; the drawer discards that root's obsolete placeholder
+instead of reconnecting a disposed view.
 
 ## Shell chrome
 

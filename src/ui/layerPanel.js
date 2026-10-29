@@ -154,12 +154,14 @@ export class LayerPanel {
     channel,
     clearChannel,
     clearSelectedLayers = () => {},
+    drawerChannel,
     openDetails = () => {},
   }) {
     this.weatherClock = weatherClock;
     this.channel = channel;
     this.clearChannel = clearChannel;
     this.clearSelectedLayers = clearSelectedLayers;
+    this.drawerChannel = drawerChannel;
     this.openDetails = openDetails;
     this._pending = new Set();
     this._imports = null;
@@ -183,6 +185,15 @@ export class LayerPanel {
     if (this._destroyed) return;
     this._releaseBindings();
     this._toggleContainer = container;
+    this._drawerState = null;
+    if (this.drawerChannel)
+      this._removers.push(
+        this.drawerChannel.subscribe(({ state }) => {
+          const changed = this._drawerState?.active !== state?.active;
+          this._drawerState = state;
+          if (changed) this._pushView();
+        }),
+      );
     this._weatherPanel?.destroy();
     this._weatherPanel = createWeatherPanel({
       clock: this.weatherClock,
@@ -341,7 +352,10 @@ export class LayerPanel {
           meta: this._buildMetaText(layer),
           toggle: this._toggleState(layer),
           readout: Boolean(descriptor?.readout),
-          detailsPanel: DETAIL_PANELS[layer.id],
+          detailsPanel:
+            layer.id === 'directions' && this._drawerState?.active
+              ? 'directions-controls-body'
+              : DETAIL_PANELS[layer.id],
           controls:
             layer.enabled && !descriptor?.readout && descriptor
               ? {

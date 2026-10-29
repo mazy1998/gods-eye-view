@@ -370,6 +370,17 @@ const voiceCardHtml = `<div id="command-dock"><div id="gev-voice-control" class=
 // Mirrors DirectionsView inside its existing Transport row. The new host is
 // transparent under Cyber; all chip/list skins remain legacy-owned.
 const directionsHtml = `<section id="data-panel"><div id="data-toggles" class="layer-browser gev-surface"><div class="data-toggle-row" data-layer-id="directions"><section id="directions-controls-body" class="directions-view gev-surface" data-audit="directions-frame"><div class="data-toggle-meta" data-audit="directions-summary">Drive · 2.1 km · 5 min</div><div class="data-toggle-controls">${['mode-car', 'mode-foot', 'mode-bike', 'set-a', 'set-b', 'swap', 'fly', 'clear'].map((id) => b(`directions-${id}`, 'data-toggle-chip', `data-chip-id="${id}" data-state-active data-state-pressed`, id)).join('')}${b('directions-fly-busy', 'data-toggle-chip chip-loading', 'data-chip-id="fly" aria-busy="true" disabled', 'FLY ···')}</div><ol class="data-row-list"><li>${b('directions-step', 'data-row-list-item', 'data-list-item-id="step-0" data-state-active', '<span class="data-row-list-lead" data-audit="directions-step-lead">1 · 100 m</span><span class="data-row-list-text" data-audit="directions-step-text">Continue straight</span>')}</li><li>${b('directions-current', 'data-row-list-item current', 'data-list-item-id="step-1" aria-current="step" data-state-active', '<span class="data-row-list-lead">200 m</span><span class="data-row-list-text">Turn right</span>')}</li><li>${b('directions-truncated', 'data-row-list-item note', 'data-list-item-id="step-truncated" disabled', '<span class="data-row-list-text">Only the first steps shown</span>')}</li></ol></section></div></div></section>`;
+const toolsDirectionsHtml = `<div class="gev-drawer-body"><div class="gev-legacy-host">${directionsHtml
+  .match(/<section id="directions-controls-body"[\s\S]*?<\/section>/)[0]
+  .replace(
+    'class="directions-view gev-surface"',
+    'class="directions-view directions-view--hosted gev-surface" tabindex="-1"',
+  )
+  .replace(
+    '<div class="data-toggle-meta"',
+    `<header class="directions-header"><h3>Directions</h3>${b('directions-switch', 'gev-toggle', 'role="switch" data-state-checked', '<span class="gev-toggle-track" data-probe="track"><span class="gev-toggle-thumb"></span></span><span class="gev-toggle-label">ON</span>')}</header><div class="data-toggle-meta"`,
+  )
+  .replaceAll('data-audit="', 'data-audit="tools-')}</div></div>`;
 
 export const fixtures = [
   {
@@ -418,7 +429,11 @@ export const fixtures = [
 
   {
     sheet: 'directions',
-    html: directionsHtml,
+    html:
+      directionsHtml.replace(
+        'id="directions-controls-body"',
+        'id="directions-controls-home"',
+      ) + toolsDirectionsHtml,
     outsideClasses: ['gev-surface', 'directions-view'],
   },
 ];

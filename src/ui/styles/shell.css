@@ -309,6 +309,9 @@
 .gev-legacy-host > #pp-toggles :is(#geo-import-group, #draw-group) {
   display: none;
 }
+.gev-legacy-host > #data-panel #directions-controls-body {
+  display: none;
+}
 /* Context's compact Radio controls hang below its header, over the panels
    Inspect hosts after it. */
 .gev-legacy-host > #global-context-panel {

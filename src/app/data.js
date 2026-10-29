@@ -31,8 +31,15 @@ export function createApplicationData({
     channel: styleManager._layerBindings?.channel,
     clearChannel: styleManager._contextControls?.clearChannel,
     clearSelectedLayers: () => styleManager.clearSelectedLayers(),
-    openDetails: (panelId) =>
-      styleManager.setPanelCollapsed(panelId, false, { explicit: true }),
+    drawerChannel: styleManager._drawer?.channel,
+    openDetails: (panelId) => {
+      if (panelId === 'directions-controls-body') {
+        if (!styleManager._drawer?.open('tools')) return false;
+        document.getElementById(panelId)?.focus({ preventScroll: true });
+        return true;
+      }
+      return styleManager.setPanelCollapsed(panelId, false, { explicit: true });
+    },
   });
   defer(() => presentation.destroy());
   onData?.(dataManager);
