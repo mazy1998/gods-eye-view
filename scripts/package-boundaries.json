@@ -866,7 +866,12 @@
       "src/ui/locationViews/LocationPin.vue",
       "src/ui/locationViews/SearchField.vue",
       "src/ui/locationViews/SearchResults.vue",
-      "src/ui/locationViews/MiniStatus.vue"
+      "src/ui/locationViews/MiniStatus.vue",
+      "src/ui/radioView.js",
+      "src/ui/InternetRadioView.vue",
+      "src/ui/radioCardView.js",
+      "src/ui/LocalSdrView.vue",
+      "src/sdr/gain.js"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2713,7 +2718,11 @@
       "src/ui/toolViews/GeoImport.vue",
       "src/ui/RecentImageryView.vue",
       "src/ui/recentImageryPresentation.js",
-      "src/ui/primitives/ActionButton.vue"
+      "src/ui/primitives/ActionButton.vue",
+      "src/ui/radioView.js",
+      "src/ui/InternetRadioView.vue",
+      "src/ui/radioCardView.js",
+      "src/ui/LocalSdrView.vue"
     ],
     "external": [
       "hls.js",

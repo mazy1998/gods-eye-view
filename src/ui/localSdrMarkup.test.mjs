@@ -2,19 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { expandApplicationHtml } from '../../build/application-html.js';
+import { radioDomFixture } from '../testSupport/radioDomFixture.mjs';
 import { createBrowserViteConfig } from '../../build/vite.js';
 import { R820T_GAIN_STEPS_DB } from '../sdr/gain.js';
 
-const html = expandApplicationHtml(
-  readFileSync(new URL('../../index.html', import.meta.url), 'utf8'),
-);
+function renderedHtml() {
+  const fixture = radioDomFixture({ sdr: true });
+  const html = fixture.container.innerHTML;
+  fixture.dispose();
+  return html;
+}
 const css = readFileSync(
   new URL('./styles/radio.css', import.meta.url),
   'utf8',
 );
 
 test('the Local RTL-SDR card lives inside the Radio panel with every control', () => {
+  const html = renderedHtml();
   const radioStart = html.indexOf('id="radio-panel"');
   const cardStart = html.indexOf('id="sdr-radio-card"');
   const radioEnd = html.indexOf('</section>', radioStart);
@@ -47,9 +51,10 @@ test('the Local RTL-SDR card lives inside the Radio panel with every control', (
 });
 
 test('the gain control offers AUTO plus every R820T step', () => {
+  const html = renderedHtml();
   const start = html.indexOf('id="sdr-gain-select"');
   const select = html.slice(start, html.indexOf('</select>', start));
-  const values = [...select.matchAll(/<option value="([^"]+)"/g)].map(
+  const values = [...select.matchAll(/<option[^>]* value="([^"]+)"/g)].map(
     (match) => match[1],
   );
   assert.deepEqual(values, [

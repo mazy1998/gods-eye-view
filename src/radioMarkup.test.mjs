@@ -1,8 +1,8 @@
+import { radioDomFixture } from './testSupport/radioDomFixture.mjs';
 import { readRealtimeSource } from './testSupport/readRealtimeSource.mjs';
 import { GEV_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
 import { realtimeInstructions } from '../server/providers/openai/instructions.js';
 import { readShellSource } from './testSupport/readShellSource.mjs';
-import { expandApplicationHtml } from '../build/application-html.js';
 import { readLayerSource } from './testSupport/readLayerSource.mjs';
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
 import { readFileSync as readRadioSource } from 'node:fs';
@@ -14,7 +14,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const html = expandApplicationHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+const fixture = radioDomFixture({sdr: true});
+const html = fixture.container.innerHTML;
+const initialTickCount = fixture.container.querySelector('.radio-tuner-scale').children.length;
+fixture.dispose();
 const ui = readShellSource();
 const radio = ['playback', 'interaction'].map(name =>
   readFileSync(new URL(`./layers/radio/${name}.js`, import.meta.url), 'utf8')
@@ -290,11 +293,11 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(html, /id="cockpit-radio-(?:prev|play|next)-btn"/);
   assert.match(html, /id="cockpit-radio-volume"/);
   assert.match(html, /id="radio-tuner"[^>]*hidden/);
-  assert.match(html, /id="radio-tuner-band-label">DIRECTORY BAND/);
+  assert.match(html, /id="radio-tuner-band-label"[^>]*>DIRECTORY BAND/);
   assert.match(html, /id="radio-tuner-slider"[^>]*type="range"/);
   assert.match(html, /id="radio-tuner-needle"[^>]*aria-hidden="true"/);
   assert.match(html, /SNAPS TO AVAILABLE STATIONS/);
-  assert.match(html, /class="radio-tuner-scale" aria-hidden="true"><\/div>/);
+  assert.equal(initialTickCount, 0, 'the tuner scale starts without station ticks');
   assert.match(html, /DIRECTORY: RADIO BROWSER/);
   assert.match(html, /Audio connects directly to the broadcaster/);
   assert.doesNotMatch(html, /radio-(?:favicon|visualizer|spectrum)/i);

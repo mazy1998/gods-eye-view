@@ -69,6 +69,12 @@ function fixture() {
     preservePanelStateDuringClear: () => false,
   };
   const controls = new RadioControls({
+    view: {
+      update(props) {
+        enable.setAttribute('aria-busy', String(props.pending));
+        enable.setAttribute('aria-disabled', String(props.pending));
+      },
+    },
     elements: {
       _radioPanel: panel,
       _radioEnableBtn: enable,
@@ -168,6 +174,24 @@ test('destruction releases an active tuner pointer after revoking listeners', ()
     assert.deepEqual(released, [7]);
     assert.equal(f.controls._radioTunerDragging, false);
     assert.equal(f.controls._radioTunerPointerId, null);
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('the tuner interaction owner retains its slot independently of the slider', () => {
+  const f = fixture();
+  try {
+    f.controls._radioTunerSlider = { value: '0' };
+    f.controls._setRadioTunerSlot(4);
+    assert.equal(f.controls._radioTunerSlot, 4);
+    assert.equal(
+      f.controls._radioTunerSlider.value,
+      '0',
+      'the owner no longer paints the native field',
+    );
+    f.controls._radioTunerSlider.value = '9';
+    assert.equal(f.controls._radioTunerSlot, 4);
   } finally {
     f.cleanup();
   }

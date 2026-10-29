@@ -4,8 +4,11 @@ import { renderRadioState } from './radioPresentation.js';
 
 /** Own Radio DOM, tuner interaction and subscription; receive playback and application actions. */
 export class RadioControls {
-  constructor({ elements, radio, actions, canvas }) {
+  constructor({ elements, radio, actions, canvas, view = null }) {
     Object.assign(this, elements);
+    this._view = view;
+    this._radioTunerView = {};
+    this._radioEnablePending = false;
     this.radio = radio;
     this.actions = actions;
     this.canvas = canvas;
@@ -22,6 +25,8 @@ export class RadioControls {
     this._radioTunerLastSlot = 0;
     this._radioTunerDragDirection = 0;
     this._radioTunerCoordinate = 0;
+    this._radioTunerSlot = 0;
+    this._radioVolumeDraft = String(this._radioVolume?.value || 80);
     this._radioTunerPointerId = null;
     this._radioTunerKeyboardKey = null;
     this._radioTunerBandSignature = '';
@@ -29,6 +34,23 @@ export class RadioControls {
     this._radioTunerBandPinnedForNavigation = false;
     this._refreshRadioTunerBand = null;
     bindRadioControls.call(this);
+  }
+
+  /** The in-progress tuner slot belongs to this interaction owner. */
+  _setRadioTunerSlot(value) {
+    this._radioTunerSlot = Number(value) || 0;
+    this._paintRadioView();
+  }
+
+  _paintRadioView() {
+    if (this.destroyed) return;
+    this._view?.update({
+      state: this._radioState || {},
+      tuner: { ...this._radioTunerView },
+      slot: this._radioTunerSlot,
+      volume: this._radioVolumeDraft,
+      pending: this._radioEnablePending,
+    });
   }
 
   listen(target, type, handler, options = {}) {
@@ -230,7 +252,9 @@ export class RadioControls {
     } catch {
       /* capture already released */
     }
-    this._radioTuner?.classList.remove('is-dragging', 'is-static');
+    this._radioTunerView.dragging = false;
+    this._radioTunerView.static = false;
+    this._view = null;
     document
       .getElementById('title-bar')
       ?.classList.remove('radio-broadcasting');

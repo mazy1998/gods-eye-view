@@ -105,21 +105,8 @@ export function bindRadioControls() {
       this._radioTunerStations.length,
       dial.getBoundingClientRect().width,
     );
-    while (scale.children.length < model.ticks.length) {
-      const tick = document.createElement('span');
-      tick.className = 'radio-tuner-tick';
-      scale.append(tick);
-    }
-    while (scale.children.length > model.ticks.length)
-      scale.lastElementChild?.remove();
-    model.ticks.forEach((entry, index) => {
-      const tick = scale.children[index];
-      tick.style.left = `${entry.xPx}px`;
-      tick.textContent = entry.label;
-      tick.dataset.stationIndex = String(entry.stationIndex);
-      tick.classList.toggle('is-current', entry.current);
-    });
-    scale.style.setProperty('--radio-tuner-tick-pitch', `${model.pitchPx}px`);
+    this._radioTunerView.ticks = model.ticks;
+    this._radioTunerView.pitchPx = model.pitchPx;
     return model;
   };
   const tunerPreview = ({
@@ -128,7 +115,7 @@ export function bindRadioControls() {
     rotate = true,
   } = {}) => {
     const slot = radioTunerSlot(
-      this._radioTunerSlider?.value,
+      this._radioTunerSlot,
       this._radioTunerStations.length,
     );
     const station = slot.locked
@@ -146,35 +133,26 @@ export function bindRadioControls() {
         ? 0.5
         : resolvedCoordinate / Math.max(1, this._radioTunerStations.length - 1);
     this._radioTunerCoordinate = resolvedCoordinate;
-    this._radioTuner?.style.setProperty('--radio-tuner-ratio', String(ratio));
-    this._radioTuner?.classList.toggle(
-      'is-static',
-      syncStatic ? false : Boolean(this._radioState?.tuningStatic),
-    );
+    this._radioTunerView.ratio = String(ratio);
+    this._radioTunerView.static = syncStatic
+      ? false
+      : Boolean(this._radioState?.tuningStatic);
     syncTunerTape(resolvedCoordinate);
-    if (this._radioTunerValue) {
-      this._radioTunerValue.textContent = station
-        ? t('CH {index} / {total}', {
-            index: String(slot.stationIndex + 1).padStart(2, '0'),
-            total: String(this._radioTunerStations.length).padStart(2, '0'),
-          })
-        : t('NO STATIONS');
-    }
-    if (this._radioTunerStation)
-      this._radioTunerStation.textContent =
-        station?.name || t('NO STATION AVAILABLE');
-    if (this._radioTunerSlider) {
-      this._radioTunerSlider.setAttribute(
-        'aria-valuetext',
-        station
-          ? t('{name}, station {index} of {total}', {
-              name: station.name,
-              index: slot.stationIndex + 1,
-              total: this._radioTunerStations.length,
-            })
-          : t('No station available'),
-      );
-    }
+    this._radioTunerView.value = station
+      ? t('CH {index} / {total}', {
+          index: String(slot.stationIndex + 1).padStart(2, '0'),
+          total: String(this._radioTunerStations.length).padStart(2, '0'),
+        })
+      : t('NO STATIONS');
+    this._radioTunerView.station = station?.name || t('NO STATION AVAILABLE');
+    this._radioTunerView.aria = station
+      ? t('{name}, station {index} of {total}', {
+          name: station.name,
+          index: slot.stationIndex + 1,
+          total: this._radioTunerStations.length,
+        })
+      : t('No station available');
+    this._paintRadioView();
     if (syncStatic)
       this.radio.previewTuningStation(station?.id || null, { rotate });
     return station;
@@ -185,13 +163,8 @@ export function bindRadioControls() {
     this._radioTunerBandSignature = this._radioTunerStations
       .map((station) => station.id)
       .join('|');
-    if (this._radioTunerSlider) {
-      this._radioTunerSlider.min = '0';
-      this._radioTunerSlider.max = String(
-        Math.max(0, this._radioTunerStations.length - 1),
-      );
-      this._radioTunerSlider.step = '1';
-    }
+    this._radioTunerView.max = Math.max(0, this._radioTunerStations.length - 1);
+    this._paintRadioView();
   };
   const refreshTunerBand = ({ force = false } = {}) => {
     if (
@@ -221,7 +194,7 @@ export function bindRadioControls() {
       selectedPoolIndex >= 0 ? selectedPoolIndex : 0,
       this._radioTunerStations.length,
     );
-    this._radioTunerSlider.value = String(slot.slot);
+    this._setRadioTunerSlot(slot.slot);
     this._radioTunerCoordinate = slot.stationIndex >= 0 ? slot.stationIndex : 0;
     tunerPreview({ coordinate: this._radioTunerCoordinate, syncStatic: false });
     return true;
@@ -237,7 +210,7 @@ export function bindRadioControls() {
     // Only an explicit globe pointer/wheel gesture releases camera pinning.
     this._radioTunerBandPinnedForNavigation = true;
     this._radioTunerDragging = true;
-    this._radioTuner?.classList.add('is-dragging');
+    this._radioTunerView.dragging = true;
     const selectedIndex = this._radioTunerStations.findIndex(
       (station) => station.id === this._radioState?.selected?.id,
     );
@@ -245,7 +218,7 @@ export function bindRadioControls() {
       selectedIndex >= 0 ? selectedIndex : 0,
       this._radioTunerStations.length,
     );
-    this._radioTunerSlider.value = String(slot.slot);
+    this._setRadioTunerSlot(slot.slot);
     this._radioTunerCoordinate = slot.stationIndex >= 0 ? slot.stationIndex : 0;
     this._radioTunerDragStartSlot = slot.slot;
     this._radioTunerDragSnapshot = {
@@ -273,14 +246,14 @@ export function bindRadioControls() {
           dragSnapshot.slot,
           this._radioTunerStations.length,
         );
-        this._radioTunerSlider.max = String(startSlot.max);
-        this._radioTunerSlider.value = String(startSlot.slot);
+        this._radioTunerView.max = startSlot.max;
+        this._setRadioTunerSlot(startSlot.slot);
       }
       this._radioTunerCoordinate = Number.isFinite(dragSnapshot.coordinate)
         ? dragSnapshot.coordinate
         : dragSnapshot.slot;
     } else if (!commit && this._radioTunerSlider) {
-      this._radioTunerSlider.value = String(this._radioTunerDragStartSlot);
+      this._setRadioTunerSlot(this._radioTunerDragStartSlot);
       this._radioTunerCoordinate = this._radioTunerDragStartSlot;
     }
     let station = tunerPreview({
@@ -289,10 +262,10 @@ export function bindRadioControls() {
     });
     if (commit && !station && this._radioTunerSlider) {
       const snapped = radioTunerCommitSlot(
-        this._radioTunerSlider.value,
+        this._radioTunerSlot,
         this._radioTunerStations.length,
       );
-      this._radioTunerSlider.value = String(snapped.slot);
+      this._setRadioTunerSlot(snapped.slot);
       this._radioTunerCoordinate = snapped.stationIndex;
       station = tunerPreview({ coordinate: this._radioTunerCoordinate });
     }
@@ -318,18 +291,17 @@ export function bindRadioControls() {
     // Flush the snapped position while transitions are still disabled so
     // removing the drag class cannot interpolate from the released gap.
     void this._radioTunerNeedle?.offsetLeft;
-    this._radioTuner?.classList.remove('is-dragging');
+    this._radioTunerView.dragging = false;
+    this._paintRadioView();
     if (result && !result.ok) {
       this._radioTunerBandPinnedForNavigation = false;
       if (result.reason === 'station-unavailable') {
-        if (this._radioTunerValue)
-          this._radioTunerValue.textContent = t('OFF AIR');
-        if (this._radioTunerStation)
-          this._radioTunerStation.textContent = t('STATION UNAVAILABLE');
-        this._radioTunerSlider?.setAttribute(
-          'aria-valuetext',
-          t('Station unavailable after directory refresh'),
+        this._radioTunerView.value = t('OFF AIR');
+        this._radioTunerView.station = t('STATION UNAVAILABLE');
+        this._radioTunerView.aria = t(
+          'Station unavailable after directory refresh',
         );
+        this._paintRadioView();
       }
     }
   };
@@ -353,8 +325,13 @@ export function bindRadioControls() {
     if (trigger.getAttribute('aria-busy') === 'true') return;
     const enabling = !this.actions.isEnabled();
     const revealAfterEnable = enabling && trigger === this._radioEnableBtn;
-    trigger.setAttribute('aria-disabled', 'true');
-    trigger.setAttribute('aria-busy', 'true');
+    if (trigger === this._radioEnableBtn) {
+      this._radioEnablePending = true;
+      this._paintRadioView();
+    } else {
+      trigger.setAttribute('aria-disabled', 'true');
+      trigger.setAttribute('aria-busy', 'true');
+    }
     try {
       const toggled = await this.actions.runUserAction(
         (notificationToken) =>
@@ -387,8 +364,13 @@ export function bindRadioControls() {
         await this._revealRadioControlsAfterExplicitEnable(trigger);
     } finally {
       if (!this.destroyed) {
-        trigger.setAttribute('aria-disabled', 'false');
-        trigger.setAttribute('aria-busy', 'false');
+        if (trigger === this._radioEnableBtn) {
+          this._radioEnablePending = false;
+          this._paintRadioView();
+        } else {
+          trigger.setAttribute('aria-disabled', 'false');
+          trigger.setAttribute('aria-busy', 'false');
+        }
         if (revealAfterEnable && trigger.isConnected)
           trigger.focus({ preventScroll: true });
       }
@@ -551,7 +533,7 @@ export function bindRadioControls() {
   this.listen(this._radioFilter, 'change', () => {
     const presentation = this.radio.getUIState();
     if (!presentation.presentationActive) {
-      this._radioFilter.value = presentation.filter;
+      this._paintRadioView();
       return;
     }
     if (this._radioTunerDragging) finishTuner(false);
@@ -563,7 +545,7 @@ export function bindRadioControls() {
         { origin: 'user' },
       )
     ) {
-      this._radioFilter.value = this.radio.getUIState().filter;
+      this._paintRadioView();
       return;
     }
     this._radioTunerBandPinnedForNavigation = false;
@@ -581,9 +563,9 @@ export function bindRadioControls() {
     this.radio.stopPlayback({ origin: 'user' }),
   );
   this.listen(this._radioVolume, 'input', () => {
-    const value = Number(this._radioVolume.value);
-    if (this._radioVolumeValue)
-      this._radioVolumeValue.textContent = `${value}%`;
+    this._radioVolumeDraft = this._radioVolume.value;
+    const value = Number(this._radioVolumeDraft);
+    this._paintRadioView();
     this.actions.setParams({ volume: value / 100 }, { origin: 'user' });
   });
   this.listen(this._contextRadioMiniPrevBtn, 'click', () => cycleRadio(-1));
@@ -634,7 +616,7 @@ export function bindRadioControls() {
       this._radioTunerDragDirection = -1;
     this._radioTunerLastSlot = position.stationIndex;
     this._radioTunerCoordinate = position.coordinate;
-    this._radioTunerSlider.value = String(position.stationIndex);
+    this._setRadioTunerSlot(position.stationIndex);
     tunerPreview({ coordinate: position.coordinate });
     return true;
   };
@@ -684,6 +666,7 @@ export function bindRadioControls() {
         this._radioTunerDragDirection = 1;
       else if (inputSlot.slot < this._radioTunerLastSlot)
         this._radioTunerDragDirection = -1;
+      this._setRadioTunerSlot(inputSlot.slot);
       this._radioTunerLastSlot = inputSlot.slot;
       this._radioTunerCoordinate = inputSlot.stationIndex;
       tunerPreview({ coordinate: this._radioTunerCoordinate });
@@ -770,7 +753,7 @@ export function bindRadioControls() {
       this._radioTunerKeyboardKey = event.key;
       const max = Math.max(0, this._radioTunerStations.length - 1);
       const current = radioTunerSlot(
-        this._radioTunerSlider.value,
+        this._radioTunerSlot,
         this._radioTunerStations.length,
       ).slot;
       const page = Math.max(1, Math.round(max / 10));
@@ -791,7 +774,7 @@ export function bindRadioControls() {
         this._radioTunerDragDirection = -1;
       this._radioTunerLastSlot = slot.slot;
       this._radioTunerCoordinate = slot.stationIndex;
-      this._radioTunerSlider.value = String(slot.slot);
+      this._setRadioTunerSlot(slot.slot);
       tunerPreview({ coordinate: this._radioTunerCoordinate });
     },
     tunerListenerOptions,

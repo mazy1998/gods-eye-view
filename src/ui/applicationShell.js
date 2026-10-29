@@ -22,6 +22,7 @@ import { createMapStackChannel } from './mapStackChannel.js';
 import StatusBadge from './primitives/StatusBadge.vue';
 import StyleIndicator from './StyleIndicator.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
+import { mountRadioView } from './radioView.js';
 import { RadioControls } from './radio.js';
 import { LocalSdrControls } from './localSdrControls.js';
 import { LocationNavigation } from './locationNavigation.js';
@@ -120,6 +121,9 @@ export class StyleManager extends ShellFacade {
     });
     this._locationViews = mountLocationViews((...args) =>
       this._mountView(...args),
+    );
+    this._radioView = mountRadioView(document, (component, options) =>
+      this._mountView(component, options),
     );
     Object.assign(this, readShellElements());
     this._panelChrome = new PanelChrome({
@@ -1072,6 +1076,7 @@ export class StyleManager extends ShellFacade {
     const { radioLayer } = this.services;
     this._radioControls?.destroy();
     this._radioControls = new RadioControls({
+      view: this._radioView,
       elements: {
         _cockpitDisplayPanel: this._cockpitDisplayPanel,
         _cockpitDisplayToggleBtn: this._cockpitDisplayToggleBtn,

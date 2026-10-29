@@ -1148,5 +1148,12 @@
   "src/ui/recentImagery.js",
   "src/ui/recentImageryPresentation.js",
   "src/ui/RecentImageryView.vue",
-  "src/ui/styles/recent-imagery-view.css"
+  "src/ui/styles/recent-imagery-view.css",
+  "src/ui/InternetRadioView.vue",
+  "src/ui/LocalSdrView.vue",
+  "src/ui/radioView.js",
+  "src/ui/radioCardView.js",
+  "src/ui/styles/radio-views.css",
+  "src/testSupport/radioDomFixture.mjs",
+  "src/ui/radioViews.dom.test.mjs"
 ]

@@ -7,7 +7,7 @@ import { cctvSourceStatusLabel } from '../ui/cctvFrames.js';
 import { READOUT_WORDS } from '../layers/recentImagery/display.js';
 import { createModel } from '../layers/firms/model.js';
 import { createQueries } from '../layers/firms/queries.js';
-import { renderRadioState } from '../ui/radioPresentation.js';
+import { radioDomFixture } from '../testSupport/radioDomFixture.mjs';
 
 test('Chinese HUD and cockpit units keep their case without spacing coordinates', () => {
   try {
@@ -75,32 +75,14 @@ test('CCTV translates the healthy status and preserves unknown provider codes', 
 });
 
 test('radio option text and accessible name use the same localized parentheses', () => {
-  const originalDocument = globalThis.document;
-  const element = () => ({
-    style: {}, dataset: {}, attributes: {},
-    classList: { contains: () => true, toggle() {} },
-    setAttribute(name, value) { this.attributes[name] = value; },
-    replaceChildren(...children) { this.children = children; },
-  });
-  globalThis.document = { createElement: element, getElementById: () => null };
+  const fixture = radioDomFixture();
   try {
     for (const [locale, label, expected] of [['zh-CN', '全部', '全部（750）'], ['en', 'All', 'All (750)']]) {
       setLocale(locale);
-      const host = {
-        _radioPanel: element(), _radioFilter: element(),
-        _syncContextRadioLauncherState() {},
-        actions: { getLifecycle: () => null, scheduleLayout() {} },
-      };
-      renderRadioState.call(host, {
-        enabled: true, categories: [{ id: 'all', label, count: 750, color: '' }],
-        filter: 'all', filteredCount: 750, stationCount: 750, volume: 1,
-      });
-      const option = host._radioFilter.children[0];
+      fixture.view.update({state: { enabled: true, categories: [{ id: 'all', label, count: 750, color: '' }], filter: 'all', filteredCount: 750, stationCount: 750, volume: 1 }});
+      const option = fixture.elements._radioFilter.options[0];
       assert.equal(option.textContent, `● ${expected}`);
-      assert.equal(option.attributes['aria-label'], expected);
+      assert.equal(option.getAttribute('aria-label'), expected);
     }
-  } finally {
-    globalThis.document = originalDocument;
-    setLocale('en');
-  }
+  } finally { fixture.dispose(); setLocale('en'); }
 });

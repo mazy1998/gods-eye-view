@@ -1,3 +1,4 @@
+import { container } from '../testSupport/componentDom.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -7,31 +8,8 @@ import { LocalSdrControls } from './localSdrControls.js';
 import { localSdrCardView } from './localSdrPresentation.js';
 
 function stubDocument() {
-  const elements = new Map();
-  const doc = {
-    activeElement: null,
-    getElementById(id) {
-      if (!elements.has(id)) {
-        const listeners = new Map();
-        elements.set(id, {
-          id,
-          value: '',
-          hidden: false,
-          disabled: false,
-          textContent: '',
-          ownerDocument: doc,
-          classList: { toggle() {} },
-          setAttribute() {},
-          closest: () => null,
-          addEventListener(type, handler) {
-            listeners.set(type, handler);
-          },
-        });
-      }
-      return elements.get(id);
-    },
-  };
-  return doc;
+  container.innerHTML = '<section id="radio-panel"><div id="sdr-radio-card"></div></section>';
+  return document;
 }
 
 function stubRadio() {

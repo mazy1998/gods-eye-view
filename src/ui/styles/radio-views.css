@@ -1,0 +1,152 @@
+/* The detailed view keeps Radio's compact geometry and native field padding.
+   Cyber retains its existing Radio palette and control precedence. */
+:root:not([data-ui-theme='cyber']) #radio-panel .radio-panel-inner.gev-surface {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-color: var(--gev-border-subtle);
+  box-shadow: none;
+  scrollbar-color: var(--gev-border) var(--gev-control-bg);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-station-card, .radio-tuner, .sdr-radio-card) {
+  color: var(--gev-text);
+  border-color: var(--gev-border-subtle);
+  background: var(--gev-surface-raised);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-station-card strong,
+    .sdr-radio-heading strong,
+    .sdr-adsb-stats output
+  ) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-filter-label,
+    .radio-station-card span,
+    .radio-tuner-header,
+    .radio-tuner-readout,
+    .radio-tuner-readout span,
+    .radio-volume-row,
+    .radio-playback-state,
+    .radio-privacy,
+    .sdr-radio-card > p,
+    .sdr-gain-row label,
+    .sdr-frequency-row label,
+    .sdr-adsb-stats,
+    .sdr-feed-status,
+    #sdr-connection-state,
+    .radio-layer-state
+  ) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    #radio-station-tags,
+    #radio-tuner-value,
+    .radio-layer-state.active,
+    #sdr-connection-state.active,
+    .radio-links a
+  ) {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(#radio-filter, #sdr-gain-select, #sdr-frequency-input) {
+  --gev-field-background: var(--gev-control-bg);
+  --gev-field-color: var(--gev-text);
+  --gev-field-border-color: var(--gev-border);
+  --gev-field-disabled-opacity: var(--gev-disabled-opacity);
+  color: var(--gev-text);
+  background-color: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-transport button, .sdr-radio-card button, #radio-enable-btn) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-transport button, .sdr-radio-card button, #radio-enable-btn):is(
+    :hover,
+    :focus-visible
+  ):not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-transport button,
+    .sdr-radio-card button,
+    #radio-enable-btn
+  ).active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(button, input, select, a):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-playback-state.error,
+    .radio-tuner.is-static #radio-tuner-station
+  ) {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber']) #radio-panel .gev-surface .radio-tuner-dial {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-tuner-scale, .radio-tuner-tick) {
+  color: var(--gev-text-muted);
+  border-color: var(--gev-border);
+  text-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-tuner-tick.is-current {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-tuner-needle {
+  background: var(--gev-danger);
+  box-shadow: none;
+}
+
+:root:not([data-ui-theme='cyber']) #radio-panel .gev-surface #radio-filter {
+  --radio-tag-color-weight: 25%;
+}

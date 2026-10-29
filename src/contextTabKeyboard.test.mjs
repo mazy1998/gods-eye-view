@@ -130,14 +130,15 @@ test('Context tabs draw a visible keyboard-focus outline including active tabs',
 test('Context async action buttons remain focused while busy', () => {
   const init = _initGlobalContextPanel.toString();
   const radio = radioBindings.slice(radioBindings.indexOf('const toggleRadio = async (trigger) => {'), radioBindings.indexOf('this.listen(this._contextRadioToggleBtn,'));
-  const radioSync = radioPresentation.slice(0, radioPresentation.indexOf('if (this._radioFilter)'));
+  const radioSync = radioPresentation;
   const clear = clearSelectedLayers.toString();
 
   assert.match(init, /button\.getAttribute\('aria-busy'\) === 'true'/);
   assert.doesNotMatch(init, /button\.disabled\s*=\s*true/);
   assert.match(radio, /trigger\.getAttribute\('aria-busy'\) === 'true'/);
   assert.doesNotMatch(radio, /trigger\.disabled\s*=\s*true/);
-  for (const name of ['_radioEnableBtn', '_contextRadioMiniEnableBtn', '_cockpitRadioEnableBtn']) {
+  // Detailed Vue button coverage lives in radioPresentationTransition.test.mjs.
+  for (const name of ['_contextRadioMiniEnableBtn', '_cockpitRadioEnableBtn']) {
     assert.match(radioSync, new RegExp(`${name}\\.disabled = false`));
   }
   assert.doesNotMatch(clear, /_clearSelectedLayersBtn\.disabled\s*=\s*true/);

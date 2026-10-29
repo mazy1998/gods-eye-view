@@ -1,35 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { LocalSdrControls } from './localSdrControls.js';
+import { container } from '../testSupport/componentDom.mjs';
+const { LocalSdrControls } = await import('./localSdrControls.js');
 
 function stubDocument() {
-  const elements = new Map();
-  const doc = {
-    activeElement: null,
-    getElementById(id) {
-      if (!elements.has(id)) {
-        const listeners = new Map();
-        elements.set(id, {
-          id,
-          value: '',
-          hidden: false,
-          disabled: false,
-          textContent: '',
-          ownerDocument: doc,
-          classList: { toggle() {} },
-          setAttribute() {},
-          closest: () => null,
-          addEventListener(type, handler) {
-            listeners.set(type, handler);
-          },
-          fire: (type, event = {}) => listeners.get(type)?.(event),
-        });
-      }
-      return elements.get(id);
-    },
-  };
-  return doc;
+  container.innerHTML =
+    '<section id="radio-panel"><div id="sdr-radio-card"></div></section>';
+  return document;
+}
+async function fire(element, type) {
+  element.dispatchEvent(new Event(type, { bubbles: true }));
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function stubReceiver() {
@@ -152,15 +135,15 @@ test('card controls drive gain, FM mode and the Local ADS-B layer', async (t) =>
   t.after(() => controls.destroy());
   const gain = doc.getElementById('sdr-gain-select');
   gain.value = '20.7';
-  gain.fire('change');
+  await fire(gain, 'change');
   assert.deepEqual(receiver.calls.at(-1), ['setGain', '20.7']);
 
   receiver.emit({ connected: true, status: 'streaming', mode: 'adsb' });
-  await doc.getElementById('sdr-mode-fm-btn').fire('click');
+  await fire(doc.getElementById('sdr-mode-fm-btn'), 'click');
   assert.deepEqual(layerCalls, [false]);
   assert.deepEqual(receiver.calls.at(-1), ['setMode', 'fm']);
 
-  await doc.getElementById('sdr-mode-adsb-btn').fire('click');
+  await fire(doc.getElementById('sdr-mode-adsb-btn'), 'click');
   assert.deepEqual(layerCalls, [false, true]);
   assert.equal(controls.isActive(), true);
 });
@@ -204,4 +187,23 @@ test('the card shows one read-only decoder-feed line after a single probe', asyn
   await new Promise((resolve) => setTimeout(resolve, 30));
   assert.equal(line.hidden, false);
   assert.equal(line.textContent, 'Decoder feeds: 1090 live · 978 live');
+});
+
+test('the receiver control owner retains the tuning draft while its input is focused', (t) => {
+  const doc = stubDocument();
+  const receiver = stubReceiver();
+  const controls = new LocalSdrControls({ document: doc, receiver });
+  t.after(() => controls.destroy());
+  const frequency = doc.getElementById('sdr-frequency-input');
+  frequency.focus();
+  frequency.value = '101.7';
+  frequency.dispatchEvent(new Event('input', { bubbles: true }));
+  receiver.emit({ frequencyHz: 99_500_000 });
+  controls._render();
+  assert.equal(controls.drafts.frequency, '101.7');
+  assert.equal(frequency.value, '101.7');
+  frequency.blur();
+  controls._render();
+  assert.equal(controls.drafts.frequency, '99.5');
+  assert.equal(frequency.value, '99.5');
 });

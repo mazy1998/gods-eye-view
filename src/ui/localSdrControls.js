@@ -1,10 +1,11 @@
+import LocalSdrView from './LocalSdrView.vue';
+import { mountView } from './mountView.js';
 import { t } from '../i18n/index.js';
 import {
   internetRadioAudioActive,
   localSdrCardView,
   localSdrFeedLine,
   localSdrFmAudioActive,
-  localSdrGainOptionLabel,
 } from './localSdrPresentation.js';
 
 const ELEMENT_IDS = Object.freeze({
@@ -30,10 +31,6 @@ const ELEMENT_IDS = Object.freeze({
   status: 'sdr-status',
   feedStatus: 'sdr-feed-status',
 });
-
-function setText(element, text) {
-  if (element && element.textContent !== text) element.textContent = text;
-}
 
 /**
  * Local RTL-SDR card in the Radio panel.
@@ -65,6 +62,17 @@ export class LocalSdrControls {
     this.feeds = feeds;
     this.radio = radio;
     this.actions = actions;
+    const card = doc?.getElementById?.('sdr-radio-card');
+    this.drafts = { frequency: '98.5', gain: 'auto', volume: '80' };
+    this._view = card
+      ? mountView(LocalSdrView, {
+          parent: card,
+          props: {
+            view: localSdrCardView(receiver.getState()),
+            drafts: { ...this.drafts },
+          },
+        })
+      : null;
     this.elements = Object.fromEntries(
       Object.entries(ELEMENT_IDS).map(([key, id]) => [
         key,
@@ -79,7 +87,6 @@ export class LocalSdrControls {
     this._renderFrame = null;
     this._destroyed = false;
     if (!this.elements.card) return;
-    this._labelGainOptions();
     this._bind();
     this._receiverUnsubscribe = receiver.subscribe((state) =>
       this._onReceiverState(state),
@@ -96,14 +103,6 @@ export class LocalSdrControls {
   /** Whether the receiver session is open (keeps the Radio panel expanded). */
   isActive() {
     return Boolean(this._state?.connected);
-  }
-
-  /** Numeric gain options read in the page language; values stay numeric. */
-  _labelGainOptions() {
-    for (const option of this.elements.gain?.options || []) {
-      if (option.value !== 'auto')
-        option.textContent = localSdrGainOptionLabel(option.value);
-    }
   }
 
   _listen(element, type, handler) {
@@ -153,11 +152,20 @@ export class LocalSdrControls {
       if (await this.receiver.setMode('adsb'))
         await this._enableLayerWhenReceiving();
     });
+    this._listen(el.gain, 'input', () => {
+      this.drafts.gain = el.gain.value;
+    });
     this._listen(el.gain, 'change', () => {
-      void this.receiver.setGain(el.gain.value);
+      this.drafts.gain = el.gain.value;
+      void this.receiver.setGain(this.drafts.gain);
+    });
+    this._listen(el.frequency, 'input', () => {
+      this.drafts.frequency = el.frequency.value;
     });
     const tune = () => {
-      const mhz = Number(el.frequency?.value);
+      // Explicit submission also captures autofill/programmatic native input.
+      this.drafts.frequency = el.frequency?.value ?? this.drafts.frequency;
+      const mhz = Number(this.drafts.frequency);
       if (!Number.isFinite(mhz)) return;
       this._stopInternetRadio();
       void this.receiver.tuneFm(mhz * 1_000_000);
@@ -178,9 +186,10 @@ export class LocalSdrControls {
       });
     }
     this._listen(el.volume, 'input', () => {
-      const value = Number(el.volume.value);
+      this.drafts.volume = el.volume.value;
+      const value = Number(this.drafts.volume);
       this.receiver.setVolume(value / 100);
-      setText(el.volumeValue, `${value}%`);
+      this._render();
     });
   }
 
@@ -221,62 +230,13 @@ export class LocalSdrControls {
     const el = this.elements;
     const view = localSdrCardView(this._state);
     const doc = el.card?.ownerDocument;
-    setText(el.connectionState, view.connectionLabel);
-    el.connectionState?.classList.toggle('active', view.connectionActive);
-    if (el.connect) {
-      setText(el.connect, view.connectLabel);
-      el.connect.disabled = view.connectDisabled;
-      el.connect.classList.toggle('active', view.connectPressed);
-      el.connect.setAttribute('aria-pressed', String(view.connectPressed));
-    }
-    for (const [button, active] of [
-      [el.modeFm, view.fmActive],
-      [el.modeAdsb, view.adsbActive],
-    ]) {
-      if (!button) continue;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', String(active));
-      button.disabled = view.modeDisabled;
-    }
-    if (el.locate) {
-      setText(el.locate, view.locateLabel);
-      el.locate.disabled = view.locateDisabled;
-      el.locate.classList.toggle('active', view.locateActive);
-    }
-    if (el.changeDevice) el.changeDevice.disabled = view.changeDeviceDisabled;
-    if (el.gain) {
-      if (doc?.activeElement !== el.gain && el.gain.value !== view.gainValue)
-        el.gain.value = view.gainValue;
-      el.gain.disabled = view.gainDisabled;
-    }
-    if (el.stats) el.stats.hidden = view.statsHidden;
-    setText(el.statRate, view.stats.rate);
-    setText(el.statHeard, view.stats.heard);
-    setText(el.statPositioned, view.stats.positioned);
-    setText(el.statIq, view.stats.iq);
-    if (el.frequency) {
-      el.frequency.disabled = view.frequencyDisabled;
-      if (doc?.activeElement !== el.frequency && view.frequencyValue !== null)
-        el.frequency.value = view.frequencyValue;
-    }
-    if (el.tune) el.tune.disabled = view.tuneDisabled;
-    if (el.seekBack) el.seekBack.disabled = view.seekDisabled;
-    if (el.seekForward) el.seekForward.disabled = view.seekDisabled;
-    if (el.volume) {
-      if (doc?.activeElement !== el.volume)
-        el.volume.value = String(view.volumePercent);
-      el.volume.disabled = view.volumeDisabled;
-    }
-    setText(el.volumeValue, `${view.volumePercent}%`);
-    if (el.status) {
-      setText(el.status, view.statusText);
-      el.status.classList.toggle('error', view.statusError);
-    }
+    if (doc?.activeElement !== el.gain) this.drafts.gain = view.gainValue;
+    if (doc?.activeElement !== el.frequency && view.frequencyValue !== null)
+      this.drafts.frequency = view.frequencyValue;
+    if (doc?.activeElement !== el.volume)
+      this.drafts.volume = String(view.volumePercent);
     const feedLine = localSdrFeedLine(this.feeds?.getState?.() || null);
-    if (el.feedStatus) {
-      el.feedStatus.hidden = feedLine === null;
-      setText(el.feedStatus, feedLine || '');
-    }
+    this._view?.update({ view, drafts: { ...this.drafts }, feedLine });
     el.card
       ?.closest?.('#radio-panel')
       ?.classList.toggle('sdr-connected', view.connectionActive);
@@ -292,6 +252,8 @@ export class LocalSdrControls {
   destroy() {
     this._destroyed = true;
     this._listeners.abort();
+    this._view?.dispose();
+    this._view = null;
     this._receiverUnsubscribe?.();
     this._radioUnsubscribe?.();
     this._feedsUnsubscribe?.();
