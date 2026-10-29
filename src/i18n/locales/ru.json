@@ -3058,6 +3058,12 @@
   "Voice inactivity timeout": "Тайм-аут бездействия голоса",
   "Custom": "Другое",
   "Minutes": "Минуты",
+  "{count} minutes": {
+    "one": "{count} минута",
+    "few": "{count} минуты",
+    "many": "{count} минут",
+    "other": "{count} минуты"
+  },
   "These preferences stay in this browser.": "Эти настройки сохраняются в этом браузере.",
   "Your choice applies now, but could not be saved.": "Ваш выбор применён, но сохранить его не удалось.",
   "Voice replies appear here.": "Здесь появляются голосовые ответы.",

@@ -4,10 +4,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setLocale, t } from '../i18n/index.js';
 import { RealtimeCost } from './realtimeCost.js';
+import { createVoiceDockState } from './dockState.js';
 
 function harness() {
   const button = { textContent: '', title: '', setAttribute() {} };
-  const ui = { tierButton: button, detail: {} };
+  const ui = { tierButton: button, detail: {}, dock: createVoiceDockState() };
   const statusCalls = [];
   const cost = new RealtimeCost({
     readUi: () => ui,
@@ -18,7 +19,7 @@ function harness() {
       setStatus: (status, detail) => statusCalls.push(detail),
     },
   });
-  return { cost, button, statusCalls };
+  return { cost, ui, statusCalls };
 }
 
 const EXPECTED = {
@@ -41,10 +42,13 @@ for (const locale of Object.keys(EXPECTED)) {
     setLocale(locale);
     ctx.after(() => setLocale('en'));
     for (const tier of ['mini', 'standard']) {
-      const { cost, button, statusCalls } = harness();
+      const { cost, ui, statusCalls } = harness();
       assert.equal(cost.setVoiceTier(tier), tier, 'stored tier stays English');
       assert.equal(statusCalls.at(-1), EXPECTED[locale][tier]);
-      assert.equal(button.textContent, tier === 'mini' ? t('MINI') : t('STD'));
+      assert.equal(
+        ui.dock.state.tierLabel,
+        tier === 'mini' ? t('MINI') : t('STD'),
+      );
     }
   });
 }

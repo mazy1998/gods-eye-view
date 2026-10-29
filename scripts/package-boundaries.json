@@ -1756,6 +1756,12 @@
       "src/voice/realtimeBackend.js",
       "src/voice/cloudVoiceAuth.js",
       "src/voice/control.js",
+      "src/voice/dockState.js",
+      "src/voice/dockCompat.js",
+      "src/ui/mountView.js",
+      "src/voice/VoiceDockView.vue",
+      "src/voice/VoiceCardHost.vue",
+      "src/voice/VoiceSettingsView.vue",
       "src/voice/layerSummary.js",
       "src/voice/voiceCost.js",
       "src/voice/commands.js",
@@ -1813,7 +1819,7 @@
       "src/sources/requestDeadline.js",
       "src/i18n/marker.js"
     ],
-    "external": []
+    "external": ["vue"]
   },
   "application-components": {
     "exports": [
@@ -2436,6 +2442,11 @@
       "src/voice/panel/nativeActivity.js",
       "src/voice/panel/preferences.js",
       "src/voice/control.js",
+      "src/voice/dockState.js",
+      "src/voice/dockCompat.js",
+      "src/voice/VoiceDockView.vue",
+      "src/voice/VoiceSettingsView.vue",
+      "src/voice/VoiceCardHost.vue",
       "src/voice/gevActions.js",
       "src/agent/worldPacket.js",
       "src/voice/speech.js",
@@ -3661,6 +3672,13 @@
       "src/voice/sessionCommands.js",
       "src/voice/session.js",
       "src/voice/control.js",
+      "src/voice/dockState.js",
+      "src/voice/dockCompat.js",
+      "src/ui/mountView.js",
+      "src/voice/VoiceDockView.vue",
+      "src/voice/VoiceSettingsView.vue",
+      "src/voice/VoiceCardHost.vue",
+      "src/app/stateChannel.js",
       "src/voice/voiceCard.js",
       "src/voice/voiceCardPresentation.js",
       "src/voice/resultDisplay.js",
@@ -3680,7 +3698,7 @@
       "src/ui/statusText.js",
       "src/voice/providerCapabilities.js"
     ],
-    "external": []
+    "external": ["vue"]
   },
   "alpr-source": {
     "exports": ["./layers/alpr/source"],

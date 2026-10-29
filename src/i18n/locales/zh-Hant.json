@@ -2827,6 +2827,9 @@
   "Voice inactivity timeout": "語音空閒超時",
   "Custom": "自定義",
   "Minutes": "分鐘",
+  "{count} minutes": {
+    "other": "{count} 分鐘"
+  },
   "These preferences stay in this browser.": "這些偏好設置僅保存在此瀏覽器中。",
   "Your choice applies now, but could not be saved.": "選擇已生效，但無法保存。",
   "Voice replies appear here.": "語音回覆顯示在此處。",

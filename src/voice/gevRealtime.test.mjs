@@ -34,6 +34,7 @@ import {
   withToolCatalog,
 } from './gevRealtime.js';
 import { createVoiceCostTracker } from './voiceCost.js';
+import { createVoiceDockState } from './dockState.js';
 
 test('push-to-talk recognizes Space by code or key', () => {
   assert.equal(PUSH_TO_TALK_HOLD_DELAY_MS, 500);
@@ -117,6 +118,7 @@ function createPushToTalkFixture(t) {
       ui: {
         root: { dataset: {}, querySelectorAll: () => [], remove() {} },
         status: {}, detail: {},
+        dock: createVoiceDockState(),
       },
       runner: async () => ({}),
       radioLayer: {
@@ -310,6 +312,7 @@ test('push-to-talk starts once at 500ms and repeat does not reset the threshold'
   f.advance(PUSH_TO_TALK_HOLD_DELAY_MS * 2);
   assert.deepEqual(f.radio, radioAfterStart);
   assert.equal(f.starts.length, 1);
+  assert.equal(f.controller.ui.dock.state.pushToTalk, 'held');
   assert.equal(
     f.key('keyup', pushToTalkTarget({ tagName: 'BUTTON' })).defaultPrevented,
     true,
@@ -318,8 +321,8 @@ test('push-to-talk starts once at 500ms and repeat does not reset the threshold'
   assert.equal(f.controller.spaceKeyHeld, false);
   assert.equal(f.controller.pushToTalkKeyHeld, false);
   assert.equal(f.microphone.enabled, false);
-  assert.equal(f.controller.ui.root.dataset.pushToTalk, undefined);
-  assert.equal(f.controller.ui.detail.textContent, 'Hold Space to talk');
+  assert.equal(f.controller.ui.dock.state.pushToTalk, null);
+  assert.equal(f.controller.ui.dock.state.detail, 'Hold Space to talk');
 });
 
 test('push-to-talk treats a Space release before 500ms as a background tap', (t) => {
@@ -384,6 +387,7 @@ test('push-to-talk cancels pending and active holds on blur or hidden document',
     f.key('keydown', background);
     f.advance(PUSH_TO_TALK_HOLD_DELAY_MS);
     assert.equal(f.microphone.enabled, true);
+    assert.equal(f.controller.ui.dock.state.pushToTalk, 'held');
     if (exit === 'blur') f.window.dispatch('blur');
     else {
       f.document.visibilityState = 'hidden';
@@ -392,7 +396,7 @@ test('push-to-talk cancels pending and active holds on blur or hidden document',
     assert.equal(f.controller.spaceKeyHeld, false);
     assert.equal(f.controller.pushToTalkKeyHeld, false);
     assert.equal(f.microphone.enabled, false);
-    assert.equal(f.controller.ui.root.dataset.pushToTalk, undefined);
+    assert.equal(f.controller.ui.dock.state.pushToTalk, null);
     assert.equal(f.key('keyup', background).defaultPrevented, false);
     f.document.visibilityState = 'visible';
   }
@@ -3122,6 +3126,7 @@ function costControllerHarness({ runner } = {}) {
       getAttribute(key) { return this.attrs[key] ?? null; },
     },
     costValue: { textContent: '', title: '', dataset: {} },
+    dock: createVoiceDockState(),
   };
   const controller = new GevRealtimeController({
     ui,
@@ -3190,9 +3195,9 @@ test('F1: the toggle still records the next-session preference while live', () =
   controller.status = 'listening';
   controller.setVoiceTier('mini');
   assert.equal(controller.voiceTier, 'mini');
-  assert.equal(ui.tierButton.textContent, 'MINI');
+  assert.equal(ui.dock.state.tierLabel, 'MINI');
   // ...and says so, rather than implying the live session switched.
-  assert.match(ui.tierButton.title, /this session stays on/i);
+  assert.match(ui.dock.state.tierTitle, /this session stays on/i);
 });
 
 test('OAuth cloud sessions report unknown cost and usage without tripping the API spend guard', () => {
@@ -3202,8 +3207,8 @@ test('OAuth cloud sessions report unknown cost and usage without tripping the AP
   controller._cost.sessionCloudVoiceAuth = 'oauth';
   controller.syncCostUi();
   const before = controller.costTracker.state();
-  assert.equal(ui.costValue.hidden, false);
-  assert.equal(ui.costValue.textContent, 'COST UNKNOWN');
+  assert.equal(ui.dock.state.costHidden, false);
+  assert.equal(ui.dock.state.costText, 'COST UNKNOWN');
   assert.deepEqual(controller.recordUsage(usdUsage(100)), {
     responses: 1,
     input: 0,
@@ -3214,11 +3219,11 @@ test('OAuth cloud sessions report unknown cost and usage without tripping the AP
   const after = controller.costTracker.state();
   assert.equal(after.totalUsd, before.totalUsd);
   assert.equal(controller.costCapStopped, false);
-  assert.match(ui.costValue.title, /1 response\(s\).*1562500 output tokens/);
+  assert.match(ui.dock.state.costTitle, /1 response\(s\).*1562500 output tokens/);
   controller.dc = {};
   controller.responseActive = true;
   controller.stop();
-  assert.match(ui.costValue.title, /Usage is incomplete/);
+  assert.match(ui.dock.state.costTitle, /Usage is incomplete/);
 });
 
 test('OAuth cloud sessions count caption transcriptions without pricing them into the API cap', () => {
@@ -3239,8 +3244,8 @@ test('OAuth cloud sessions count caption transcriptions without pricing them int
   assert.equal(after.totalUsd, before.totalUsd);
   assert.equal(after.capReached, false);
   assert.equal(controller.costCapStopped, false);
-  assert.equal(ui.costValue.textContent, 'COST UNKNOWN');
-  assert.match(ui.costValue.title, /1 caption transcription\(s\)/);
+  assert.equal(ui.dock.state.costText, 'COST UNKNOWN');
+  assert.match(ui.dock.state.costTitle, /1 caption transcription\(s\)/);
 });
 
 test('F1: when idle, toggling does re-price the preview meter', () => {
@@ -3444,7 +3449,7 @@ test('F4: two clicks during a live session return to the original preference', (
 
   controller.toggleVoiceTier();
   assert.equal(controller.voiceTier, 'standard', 'second click switches back');
-  assert.equal(ui.tierButton.textContent, 'STD');
+  assert.equal(ui.dock.state.tierLabel, 'STD');
 });
 
 test('F4: the toggle alternates across many clicks mid-session', () => {

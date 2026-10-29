@@ -49,6 +49,7 @@ const shellHtml = `<nav class="gev-rail gev-surface" aria-label="Destinations"><
 // Exact new-control exceptions: removing primitives.css removes these controls'
 // own definitions and exposes browser defaults. None exempts a button's hover
 // or pressed/selected palette, or any inside/outside surface difference.
+const voiceHtml = `<div id="command-dock"><div id="gev-voice-control" class="gev-surface" data-audit="voice-frame" data-status="listening" data-speaker="user" data-provider-choice="true"><label class="gev-voice-provider-field" data-audit="provider-field">${select('voice-provider', '', 'id="gev-voice-provider"')}</label>${b('voice-settings', 'gev-voice-settings-button', 'aria-expanded="false"')}<div class="gev-voice-heading"><div id="gev-voice-status" data-audit="voice-status">LISTENING</div><span class="gev-voice-cost-value gev-voice-cost-warning" data-level="warn" data-audit="cost-warning">~$2.10</span></div>${b('voice-mic', '', 'id="gev-voice-button"', '<span class="gev-mic-orbit" data-audit="mic-orbit"></span><span class="gev-mic-label">MIC</span>')}<div class="gev-voice-visualizer"><span data-audit="voice-bar"></span></div><div id="gev-voice-help" class="gev-voice-help-tray" data-audit="help-tray"><span class="gev-voice-help-kicker">VOICE CONTROL</span></div><section class="gev-voice-panel" data-audit="voice-panel"><div class="gev-voice-panel-header">${b('preview-tab', 'gev-voice-panel-tab', 'role="tab" data-state-selected')}${b('settings-tab', 'gev-voice-panel-tab', 'role="tab" data-state-selected')}${b('voice-close', '', 'id="gev-voice-settings-close"')}</div><label class="gev-voice-preference" data-audit="voice-preference"><input type="checkbox"> Show Voice Preview</label>${select('voice-timeout', '', 'id="gev-voice-timeout-select"')}${input('voice-minutes', '', 'number', 'id="gev-voice-timeout-input"')}<div class="gev-voice-cost-settings">${b('voice-tier', 'gev-voice-tier-btn', 'data-state-pressed')}<span class="gev-voice-cost-value" data-level="ok" data-audit="cost-value">~$0.40</span></div></section><div class="gev-voice-error-tray" data-audit="error-tray"><div class="gev-voice-error-header">VOICE SYSTEM ERROR</div>${b('voice-error-dismiss', 'gev-voice-error-dismiss')}</div></div></div>`;
 const baseProperties = [
   'color',
   'backgroundColor',
@@ -323,4 +324,5 @@ export const fixtures = [
   { sheet: 'radio-views', html: radioHtml },
   { sheet: 'shell', html: shellHtml, exceptions: railEdges },
   cameraFixture,
+  { sheet: 'voice-dock-view', html: voiceHtml },
 ];

@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { setLocale } from '../i18n/index.js';
 import { RealtimeCost } from './realtimeCost.js';
 import { createVoiceCostTracker } from './voiceCost.js';
+import { createVoiceDockState } from './dockState.js';
 
 for (const locale of ['es', 'ru']) {
   test(`API-key cost tooltip for an incomplete session has no English (${locale})`, () => {
@@ -20,10 +21,11 @@ for (const locale of ['es', 'ru']) {
         isActive: () => false,
         ui: {
           costValue: { hidden: true, dataset: {}, title: '', textContent: '' },
+          dock: createVoiceDockState(),
         },
       };
       RealtimeCost.prototype.syncCostUi.call(host);
-      const title = host.ui.costValue.title;
+      const title = host.ui.dock.state.costTitle;
       assert.ok(title.length > 0);
       assert.doesNotMatch(
         title,
@@ -47,8 +49,11 @@ test('API-key cost tooltip in English still ends with the tracker note', () => {
     isActive: () => false,
     ui: {
       costValue: { hidden: true, dataset: {}, title: '', textContent: '' },
+      dock: createVoiceDockState(),
     },
   };
   RealtimeCost.prototype.syncCostUi.call(host);
-  assert.ok(host.ui.costValue.title.endsWith(` ${costTracker.state().note}`));
+  assert.ok(
+    host.ui.dock.state.costTitle.endsWith(` ${costTracker.state().note}`),
+  );
 });

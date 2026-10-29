@@ -110,10 +110,8 @@ export function createVoicePreferences({ storage } = {}) {
 export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
   const {
     voicePreviewInput: preview,
-    voicePreviewNote: previewNote,
     voiceTimeoutSelect: select,
     voiceTimeoutInput: input,
-    voiceTimeoutNote: timeoutNote,
   } = ui;
   let disposed = false;
   const initial = preferences.snapshot();
@@ -124,46 +122,52 @@ export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
       : displayed > 0
         ? displayed
         : 5;
+  const dock = ui.dock;
   function render(state) {
     if (disposed) return;
-    if (preview) preview.checked = state.previewEnabled;
-    if (previewNote)
-      previewNote.textContent = `${copy.previewNote}${state.previewPersisted === false ? ` ${copy.notSaved}` : ''}`;
-    if (timeoutNote)
-      timeoutNote.textContent = `${copy.timeoutNote}${state.timeoutPersisted === false ? ` ${copy.notSaved}` : ''}`;
     const value = String(state.minutes);
     const customSelected = state.minutes > 0 && !PRESETS.includes(value);
     if (customSelected) custom = state.minutes;
-    if (select)
-      select.value =
-        state.minutes === 0 ? '0' : customSelected ? 'custom' : value;
-    if (input) {
-      input.value = String(custom);
-      input.hidden = !customSelected;
-    }
+    dock?.set({
+      previewChecked: state.previewEnabled,
+      previewNote: `${copy.previewNote}${state.previewPersisted === false ? ` ${copy.notSaved}` : ''}`,
+      timeoutNote: `${copy.timeoutNote}${state.timeoutPersisted === false ? ` ${copy.notSaved}` : ''}`,
+      timeoutValue:
+        state.minutes === 0 ? '0' : customSelected ? 'custom' : value,
+      customText: String(custom),
+      customHidden: !customSelected,
+    });
   }
   const unsubscribe = preferences.subscribe((state) => {
     render(state);
     onChange?.(state);
   });
+  // Each native choice is recorded as shown before the model decides, as the
+  // controls held it before; a refusal renders the model's state back.
   const previewChange = () => {
-    if (!disposed && !preferences.setPreviewEnabled(preview.checked).ok)
+    if (disposed) return;
+    dock?.set({ previewChecked: preview.checked });
+    if (!preferences.setPreviewEnabled(preview.checked).ok)
       render(preferences.snapshot());
   };
   const selectChange = () => {
     if (disposed) return;
     const value = select.value;
+    // Read the minutes field before recording the choice repaints it.
+    const typed = input?.value;
+    dock?.set({ timeoutValue: value });
     if (value === 'custom') {
-      const parsed = parseMinutes(input?.value);
+      const parsed = parseMinutes(typed);
       if (parsed === undefined || parsed === 0) {
         render(preferences.snapshot());
         return;
       }
       custom = parsed;
       preferences.setMinutes(parsed);
-      // A custom value may equal a preset: retain the user's explicit editor choice.
-      select.value = 'custom';
-      if (input) input.hidden = false;
+      // A custom value may equal a preset: retain the user's explicit editor
+      // choice. It is mount-local, so it lives here and in the dock, not in
+      // the stored preference.
+      dock?.set({ timeoutValue: 'custom', customHidden: false });
     } else if (value === '0' || PRESETS.includes(value))
       preferences.setMinutes(value);
     else render(preferences.snapshot());
@@ -177,24 +181,29 @@ export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
     }
     custom = parsed;
     preferences.setMinutes(parsed);
-    if (select) select.value = 'custom';
-    input.hidden = false;
+    dock?.set({ timeoutValue: 'custom', customHidden: false });
+  };
+  // The minutes field's typed draft is owner state, so a repaint of the dock
+  // (cost, status) never overwrites what is being typed.
+  const inputDraft = () => {
+    if (!disposed) dock?.set({ customText: input.value });
   };
   const bindings = [
-    [preview, previewChange],
-    [select, selectChange],
-    [input, inputChange],
+    [preview, 'change', previewChange],
+    [select, 'change', selectChange],
+    [input, 'change', inputChange],
+    [input, 'input', inputDraft],
   ];
-  for (const [element, listener] of bindings)
-    element?.addEventListener('change', listener);
+  for (const [element, type, listener] of bindings)
+    element?.addEventListener(type, listener);
   render(initial);
   return {
     dispose() {
       if (disposed) return;
       disposed = true;
       unsubscribe();
-      for (const [element, listener] of bindings)
-        element?.removeEventListener('change', listener);
+      for (const [element, type, listener] of bindings)
+        element?.removeEventListener(type, listener);
     },
   };
 }

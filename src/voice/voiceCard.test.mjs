@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { readStylesheet } from '../testSupport/readStylesheet.mjs';
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
 import { VoiceCardControls } from './voiceCard.js';
+import VoiceDockView from './VoiceDockView.vue';
+import { initialVoiceDockState } from './dockState.js';
 import { getLocale, setLocale } from '../i18n/index.js';
 import {
   initialVoiceCardState,
@@ -10,9 +13,16 @@ import {
   voiceCardView,
 } from './voiceCardPresentation.js';
 
-const controlSource = readFileSync(
-  new URL('./control.js', import.meta.url),
-  'utf8',
+// The control's rendered markup (the dock view, with its hosted card).
+const controlSource = await renderToString(
+  createSSRApp({
+    render: () =>
+      h(VoiceDockView, {
+        state: initialVoiceDockState(),
+        panel: false,
+        dismissError() {},
+      }),
+  }),
 );
 const css = readStylesheet(new URL('../../style.css', import.meta.url));
 
@@ -158,7 +168,7 @@ test('presentation: silent lookups, dismissal and session end', () => {
 });
 
 test('markup: the card nests inside the voice control with every element and a polite live region', () => {
-  const root = controlSource.indexOf("root.id = 'gev-voice-control'");
+  const root = controlSource.indexOf('id="gev-voice-control"');
   const card = controlSource.indexOf('id="gev-voice-card"');
   assert.ok(
     root >= 0 && card > root,
@@ -183,7 +193,7 @@ test('markup: the card nests inside the voice control with every element and a p
     controlSource,
     /id="gev-voice-card-live"[^>]*aria-live="polite"/,
   );
-  assert.match(controlSource, /aria-label="\$\{t\('Dismiss voice card'\)\}"/);
+  assert.match(controlSource, /aria-label="Dismiss voice card"/);
   assert.match(css, /#gev-voice-control \.gev-voice-card \{/);
   assert.match(
     css,
@@ -555,7 +565,12 @@ test('additive presentation gates retain the current localized reducer labels', 
     const steps = card.state.steps;
     const result = card.state.result;
     const who = root.querySelector('#gev-voice-card-user-who');
-    card.handle({ type: 'transcript', role: 'user', text: 'Same words', attribution: 'unverified' });
+    card.handle({
+      type: 'transcript',
+      role: 'user',
+      text: 'Same words',
+      attribution: 'unverified',
+    });
     assert.equal(card.state.userAttribution, 'unverified');
     assert.equal(card.snapshot().user.label, 'Habla reciente');
     assert.equal(who.textContent, 'Habla reciente');
@@ -582,6 +597,7 @@ test('manual panel and preference compose with the actual card without changing 
   const { createManualVoicePanel } = await import('./panel/manualPanel.js');
   const { createVoicePreferences, bindPreferenceControls } =
     await import('./panel/preferences.js');
+  const { createVoiceDockState } = await import('./dockState.js');
   const { root } = fakeRoot();
   let panel;
   const card = new VoiceCardControls({
@@ -599,6 +615,7 @@ test('manual panel and preference compose with the actual card without changing 
     previewEmpty: root.querySelector('#empty'),
     voicePreviewInput: root.querySelector('#preview-input'),
     voicePreviewNote: root.querySelector('#preview-note'),
+    dock: createVoiceDockState(),
   };
   const preference = createVoicePreferences({ storage: null });
   const fields = bindPreferenceControls({
@@ -639,7 +656,7 @@ test('manual panel and preference compose with the actual card without changing 
   assert.equal(card.snapshot().visible, true);
   preference.setPreviewEnabled(false);
   assert.equal(card.snapshot().visible, false);
-  assert.equal(ui.previewEmpty.textContent, 'Desactivada.');
+  assert.equal(ui.dock.state.previewEmptyText, 'Desactivada.');
   panel.select('settings');
   panel.select('preview');
   assert.equal(preference.snapshot().previewEnabled, false);

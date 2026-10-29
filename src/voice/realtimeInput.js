@@ -116,7 +116,7 @@ export class RealtimeInput {
           // off if it is talking. Short taps never reach this point.
           if (mayInterrupt) this.bargeIn?.();
           this.beginPointerTurn?.('keydown');
-          this.ui.root.dataset.pushToTalk = 'held';
+          this.ui.dock?.set({ pushToTalk: 'held' });
           this.setMicrophoneEnabled(true);
           if (this.status === 'listening')
             this.setStatus('listening', t('Release Space to send'));
@@ -124,7 +124,7 @@ export class RealtimeInput {
           this.start({ pushToTalk: true });
           // start() performs a controlled stop() before connecting. Restore the
           // marker it clears so the UI reflects this still-held gesture.
-          if (this.pushToTalkKeyHeld) this.ui.root.dataset.pushToTalk = 'held';
+          if (this.pushToTalkKeyHeld) this.ui.dock?.set({ pushToTalk: 'held' });
         }
       }, PUSH_TO_TALK_HOLD_DELAY_MS);
     };
@@ -191,7 +191,7 @@ export class RealtimeInput {
     this.releasePointerHold?.();
     if (!this.pushToTalkKeyHeld) return;
     this.pushToTalkKeyHeld = false;
-    delete this.ui.root.dataset.pushToTalk;
+    this.ui.dock?.set({ pushToTalk: null });
     if (!this.pushToTalkMode) return;
     this.setMicrophoneEnabled(false);
     if (this.status === 'listening')
@@ -205,8 +205,7 @@ export class RealtimeInput {
    * @returns {void}
    */
   setMicrophoneEnabled(enabled) {
-    if (this.ui?.root)
-      this.ui.root.dataset.microphone = enabled ? 'active' : 'muted';
+    this.ui?.dock?.set({ microphone: enabled ? 'active' : 'muted' });
     this.stream?.getAudioTracks?.().forEach((track) => {
       track.enabled = Boolean(enabled);
     });
@@ -363,15 +362,14 @@ export class RealtimeInput {
    * @returns {void}
    */
   updateVoiceButtonLabel() {
-    if (!this.ui.buttonLabel) return;
     // The mic button's caption; the first-run tip names it the same way.
-    this.ui.buttonLabel.textContent = t('MIC');
-    if (this.ui.helpDetail) {
-      this.ui.helpDetail.textContent = resolveVoiceControlHint(
+    this.ui.dock?.set({
+      micLabel: t('MIC'),
+      hint: resolveVoiceControlHint(
         this.pushToTalkMode,
         this.pushToTalkKeyHeld,
-      );
-    }
+      ),
+    });
   }
 
   setVoiceSpeaker(speaker, { keepVisualizerSpeaker = false } = {}) {
@@ -382,7 +380,7 @@ export class RealtimeInput {
       nextSpeaker,
       keepVisualizerSpeaker,
     );
-    this.ui.root.dataset.speaker = nextSpeaker;
+    this.ui.dock?.set({ speaker: nextSpeaker });
     if (shouldPauseRadioForVoice({ speaker: nextSpeaker }))
       this.pauseRadioForVoice();
   }
@@ -392,10 +390,7 @@ export class RealtimeInput {
     this.pushToTalkKeyHeld = false;
     this.spaceKeyHeld = false;
     this.resetPushToTalkGesture();
-    if (this.ui?.root) {
-      delete this.ui.root.dataset.pushToTalk;
-      delete this.ui.root.dataset.microphone;
-    }
+    this.ui?.dock?.set({ pushToTalk: null, microphone: null });
   }
 
   detachBindings() {

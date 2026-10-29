@@ -54,31 +54,28 @@ export function createManualVoicePanel({
     if (disposed) return;
     const hidePanel = !open || suppressed();
     const restoreFocus = hidePanel && panel.contains?.(doc?.activeElement);
-    panel.hidden = hidePanel;
-    panel.dataset.view = view;
-    if (ui.previewPanel)
-      ui.previewPanel.hidden = !open || view !== 'preview' || suppressed();
-    if (ui.voiceSettingsPanel)
-      ui.voiceSettingsPanel.hidden = !open || view !== 'settings';
-    ui.voiceSettingsButton?.setAttribute(
-      'aria-expanded',
-      String(open && view === 'settings'),
-    );
-    tabs.forEach((tab, index) => {
-      if (!tab) return;
-      const selected = view === (index === 0 ? 'preview' : 'settings');
-      tab.setAttribute('aria-selected', String(selected));
-      tab.tabIndex = selected ? 0 : -1;
+    // The owner paints synchronously, so focus below sees the new state.
+    ui.dock?.set({
+      panelHidden: hidePanel,
+      panelView: view,
+      view,
+      open,
+      previewHidden: !open || view !== 'preview' || suppressed(),
+      settingsHidden: !open || view !== 'settings',
     });
     card?.setPresented?.(open && view === 'preview' && !suppressed());
-    if (ui.previewEmpty) {
-      ui.previewEmpty.hidden = Boolean(ui.card && !ui.card.hidden);
-      ui.previewEmpty.textContent = enabled()
-        ? copy.previewEmpty
-        : copy.previewDisabled;
-    }
-    if (restoreFocus)
+    // After presenting: the empty note follows whether the card is shown.
+    ui.dock?.set({
+      previewEmptyHidden: Boolean(ui.card && !ui.card.hidden),
+      previewEmptyText: enabled() ? copy.previewEmpty : copy.previewDisabled,
+    });
+    if (restoreFocus) {
+      // The hidden control gives up focus first, as the browser did when the
+      // template re-set its tabindex: the gear is a target only when it stays
+      // visible without that focus inside the row (hover or pointer grace).
+      doc?.activeElement?.blur?.();
       [ui.voiceSettingsButton, ui.button].find(visible)?.focus?.();
+    }
   };
   const refuse = (reason) => ({
     ok: false,
@@ -151,12 +148,12 @@ export function createManualVoicePanel({
     let graceTimer;
     const endGrace = () => {
       clearTimeout(graceTimer);
-      if (ui.root) delete ui.root.dataset.rowGrace;
+      ui.dock?.set({ rowGrace: false });
     };
     listen(ui.root, 'pointerleave', (event) => {
       if (event.pointerType === 'touch') return;
       endGrace();
-      ui.root.dataset.rowGrace = 'true';
+      ui.dock?.set({ rowGrace: true });
       graceTimer = setTimeout(endGrace, ROW_GRACE_MS);
     });
     listen(ui.root, 'pointerenter', endGrace);

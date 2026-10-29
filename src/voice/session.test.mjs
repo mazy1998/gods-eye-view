@@ -242,8 +242,13 @@ test('common button and annotation bindings work with an alternate adapter and c
   const previous = globalThis.window;
   globalThis.window = {};
   try {
+    // A host's own control: plain handles, no dock (the compatibility painter).
     const button = new EventTarget();
-    button.setAttribute = () => {};
+    const attributes = {};
+    button.setAttribute = (name, value) => {
+      attributes[name] = value;
+    };
+    button.getAttribute = (name) => attributes[name] ?? null;
     let removed = 0;
     let subscribed = null;
     let calls = 0;
@@ -302,6 +307,7 @@ test('common button and annotation bindings work with an alternate adapter and c
     assert.equal(ui.helpDetail.textContent, 'Activate to toggle voice');
     assert.equal(ui.status.textContent, 'LISTENING');
     assert.equal(ui.detail.textContent, 'Ready');
+    assert.equal(attributes['aria-pressed'], 'true');
     // Switching language (a reload) asks first during a session.
     assert.deepEqual(describeUnsavedWork(), ['the active voice session']);
     subscribed({ status: 'resolved' });
@@ -627,4 +633,54 @@ test('actual default OpenAI adapter stop publishes one common idle', (t) => {
   );
   assert.equal(session.state, 'idle');
   assert.equal(session.adapter.controller.status, 'idle');
+});
+
+test('a supplied control without a dock gets every field painted, defaults included', async () => {
+  const previous = globalThis.window;
+  globalThis.window = {};
+  try {
+    const button = new EventTarget();
+    button.setAttribute = () => {};
+    const providerSelect = new EventTarget();
+    providerSelect.title = '';
+    // Host markup starting the other way round from what the binder decides.
+    const ui = {
+      button,
+      root: { dataset: {}, remove() {} },
+      status: {},
+      detail: {},
+      providerField: { hidden: false },
+      providerSelect,
+      tierButton: { hidden: true },
+      costValue: { hidden: true },
+      helpDetail: {},
+    };
+    const controls = createVoiceCommands({
+      runner: async () => ({ ok: true }),
+      createControl: () => ui,
+      provider: 'openai',
+      supportedProviders: ['openai'],
+      onProviderChange() {},
+      createSession() {
+        return {
+          capabilities: { pushToTalk: true, costControls: true },
+          async start() {},
+          stop() {},
+          sendText() {},
+          sendMapEvent() {},
+        };
+      },
+    });
+    assert.equal(
+      ui.providerField.hidden,
+      true,
+      'one provider: no choice shown',
+    );
+    assert.match(ui.providerSelect.title, /reconnects voice/);
+    assert.equal(ui.tierButton.hidden, false, 'cost controls shown');
+    assert.equal(ui.costValue.hidden, false);
+    controls.session.destroy();
+  } finally {
+    globalThis.window = previous;
+  }
 });

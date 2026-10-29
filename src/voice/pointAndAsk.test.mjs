@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import VoiceDockView from './VoiceDockView.vue';
+import { initialVoiceDockState } from './dockState.js';
 import { GevRealtimeController } from './realtimeController.js';
 import {
   POINTER_OPEN_MIC_RECENT_MS,
@@ -299,10 +302,17 @@ test('card: the chip says what "this" or "here" resolved to and resets per turn'
   assert.equal(unchanged, state, 'a stale pointer on an empty chip is a no-op');
 });
 
-test('markup: the chip sits under the user caption with a screen-reader separator', () => {
-  const control = readFileSync(
-    new URL('./control.js', import.meta.url),
-    'utf8',
+test('markup: the chip sits under the user caption with a screen-reader separator', async () => {
+  // The control's rendered markup (the dock view, with its hosted card).
+  const control = await renderToString(
+    createSSRApp({
+      render: () =>
+        h(VoiceDockView, {
+          state: initialVoiceDockState(),
+          panel: false,
+          dismissError() {},
+        }),
+    }),
   );
   const user = control.indexOf('id="gev-voice-card-user"');
   const chip = control.indexOf('id="gev-voice-card-pointer"');
@@ -351,9 +361,10 @@ test('deixis prompt lint: one short rule, and every sentinel it names exists in 
   assert.ok(size <= 52000, `prompt size ${size}`);
 });
 
-
 test('after-tool speech allows returned items to answer requested lists and rankings', () => {
-  const rule = realtimeInstructions().split('\n').find(line => line.startsWith('AFTER TOOLS:'));
+  const rule = realtimeInstructions()
+    .split('\n')
+    .find((line) => line.startsWith('AFTER TOOLS:'));
   assert.match(rule, /requested analyst list or ranking/);
   assert.match(rule, /returned items.*returned values/);
   assert.match(rule, /keep their order/);

@@ -67,11 +67,12 @@ export function createVoicePanelHost({
       }
     };
     const renderActivity = () => {
-      if (ui.voiceTimeoutStatus)
-        ui.voiceTimeoutStatus.textContent =
+      ui.dock?.set({
+        timeoutStatus:
           nativeProvider === 'openai' || nativeProvider === 'gemini'
             ? ''
-            : t('Automatic stop is unavailable for this voice connection.');
+            : t('Automatic stop is unavailable for this voice connection.'),
+      });
     };
     const changed = () => {
       if (!owns()) return;

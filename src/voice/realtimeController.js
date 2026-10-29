@@ -396,6 +396,7 @@ export class GevRealtimeController extends RealtimeFacade {
     }
     if (removeUi) this._radio.detachObservers();
     if (removeUi && this.ui?.root) {
+      this.ui.dispose?.();
       this.ui.root.remove();
     }
     if (!preserveStatus && !removeUi) {
@@ -416,11 +417,12 @@ export class GevRealtimeController extends RealtimeFacade {
   setStatus(status, detail) {
     this.status = status;
     this.emitSessionEvent({ type: 'state', state: status, detail });
-    this.ui.root.dataset.status = status;
-    if (status === 'error') this.ui.root.classList.remove('error-dismissed');
+    this.ui.dock?.set({
+      status,
+      ...(status === 'error' ? { errorDismissed: false } : {}),
+    });
     this.updateVoiceButtonLabel();
     const shownStatus = STATUS_STATES.has(status) ? status : 'idle';
-    this.ui.status.textContent = voiceStatusLabel(shownStatus);
     const resolvedDetail =
       status === 'listening' && this.pushToTalkMode
         ? this.pushToTalkKeyHeld
@@ -432,14 +434,15 @@ export class GevRealtimeController extends RealtimeFacade {
         ? t('VOICE UNAVAILABLE')
         : resolvedDetail ||
           (status === 'idle' ? t('VOICE STANDBY') : t('VOICE ACTIVE'));
-    this.ui.detail.textContent = primaryDetail;
-    this.ui.detail.title = primaryDetail;
-    if (this.ui.errorDetail) {
-      this.ui.errorDetail.textContent =
+    this.ui.dock?.set({
+      statusLabel: voiceStatusLabel(shownStatus),
+      detail: primaryDetail,
+      detailTitle: primaryDetail,
+      errorDetail:
         status === 'error'
           ? resolvedDetail || t('Voice session could not be started.')
-          : '';
-    }
+          : '',
+    });
     if (status === 'idle' || status === 'connecting' || status === 'error') {
       this.setVoiceSpeaker('idle');
     }

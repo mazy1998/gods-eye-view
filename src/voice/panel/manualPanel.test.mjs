@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createManualVoicePanel } from './manualPanel.js';
+import { createVoiceDockState } from '../dockState.js';
 
 function fixture(t) {
   const doc = { activeElement: null };
@@ -42,6 +43,30 @@ function fixture(t) {
   ui.voicePanel.contains = (element) =>
     Object.values(ui).includes(element) &&
     ![ui.root, ui.voiceSettingsButton, ui.button].includes(element);
+  // The panel sets the dock owner. These nodes stand in for the dock view
+  // (covered with the real view in host.test.mjs) and show the panel fields.
+  ui.dock = createVoiceDockState();
+  const unsubscribe = ui.dock.channel.subscribe(({ state, initial }) => {
+    if (initial) return;
+    ui.voicePanel.hidden = state.panelHidden;
+    ui.voicePanel.dataset.view = state.panelView;
+    ui.previewPanel.hidden = state.previewHidden;
+    ui.voiceSettingsPanel.hidden = state.settingsHidden;
+    ui.voiceSettingsButton.setAttribute(
+      'aria-expanded',
+      String(state.open && state.view === 'settings'),
+    );
+    [ui.previewTab, ui.settingsTab].forEach((tab, index) => {
+      const selected = state.view === (index === 0 ? 'preview' : 'settings');
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    });
+    ui.previewEmpty.hidden = state.previewEmptyHidden;
+    ui.previewEmpty.textContent = state.previewEmptyText;
+    if (state.rowGrace) ui.root.dataset.rowGrace = 'true';
+    else delete ui.root.dataset.rowGrace;
+  });
+  t.after(unsubscribe);
   let enabled = true,
     content = false,
     intents = 0;

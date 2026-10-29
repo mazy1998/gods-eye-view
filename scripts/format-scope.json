@@ -1162,5 +1162,12 @@
   "docs/CYBER-PRECEDENCE.md",
   "src/ui/styles/camera-views.css",
   "src/ui/styles/feedback-views.css",
-  "src/ui/feedback/feedbackViews.test.mjs"
+  "src/ui/feedback/feedbackViews.test.mjs",
+  "src/voice/dockState.js",
+  "src/voice/VoiceDockView.vue",
+  "src/voice/VoiceSettingsView.vue",
+  "src/voice/VoiceCardHost.vue",
+  "src/ui/styles/voice-dock-view.css",
+  "scripts/qa-voice-dock-contrast.mjs",
+  "src/voice/dockCompat.js"
 ]

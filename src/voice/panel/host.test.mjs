@@ -1,12 +1,57 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createVoiceControl } from '../control.js';
-import { createGevActionRunner } from '../gevActions.js';
-import { createVoiceCommands as bind } from '../sessionCommands.js';
-import { createVoiceCommands as compose } from '../commands.js';
-import { createProviderCommands } from '../providerCommands.js';
-import { createVoicePanelHost } from './host.js';
-import { installPanelDom, controlledClock } from './testDom.mjs';
+// The real dock view in a real DOM: import the jsdom helper before Vue.
+import { container } from '../../testSupport/componentDom.mjs';
+import { controlledClock, installAncestorVisibility } from './testDom.mjs';
+
+installAncestorVisibility(window);
+
+const { createVoiceControl } = await import('../control.js');
+const { createGevActionRunner } = await import('../gevActions.js');
+const { createVoiceCommands: bind } = await import('../sessionCommands.js');
+const { createVoiceCommands: compose } = await import('../commands.js');
+const { createProviderCommands } = await import('../providerCommands.js');
+const { createVoicePanelHost } = await import('./host.js');
+
+/** A clean body for each scenario; the shared fixture container stays. */
+function installPanelDom(t) {
+  t.after(() => {
+    document.body.className = '';
+    for (const node of [...document.body.children])
+      if (node !== container) node.remove();
+    document.activeElement?.blur?.();
+  });
+  return document;
+}
+
+/**
+ * Dispatch a real event; `target` names a descendant it starts from. A
+ * listener's exception reaches the caller, as a direct handler call would.
+ */
+function fire(element, type, { target, ...init } = {}) {
+  const node =
+    target && target !== element && element.contains(target) ? target : element;
+  const Event_ =
+    type === 'click'
+      ? MouseEvent
+      : type.startsWith('key')
+        ? KeyboardEvent
+        : Event;
+  let thrown = null;
+  const onError = (event) => {
+    thrown ??= { error: event.error };
+    event.preventDefault();
+  };
+  window.addEventListener('error', onError);
+  try {
+    node.dispatchEvent(
+      new Event_(type, { bubbles: true, cancelable: true, ...init }),
+    );
+  } finally {
+    window.removeEventListener('error', onError);
+  }
+  if (thrown) throw thrown.error;
+}
 
 function factory(instances, { stopError = null, native = false } = {}) {
   return (hooks) => {
@@ -130,14 +175,14 @@ test('actual control default remains opt-out; panel markup has unique controlled
 
 test('actual binder/card has launcher toggle, idempotent tabs, focus and disabled Preview', (t) => {
   const { ui, commands, doc } = mounted(t);
-  ui.voiceSettingsButton.fire('click');
+  fire(ui.voiceSettingsButton, 'click');
   assert.equal(commands.voicePanel.snapshot().settingsOpen, true);
-  ui.voiceSettingsButton.fire('click');
+  fire(ui.voiceSettingsButton, 'click');
   assert.equal(commands.voicePanel.snapshot().panelOpen, false);
-  ui.settingsTab.fire('click');
-  ui.settingsTab.fire('keydown', { key: 'End' });
+  fire(ui.settingsTab, 'click');
+  fire(ui.settingsTab, 'keydown', { key: 'End' });
   assert.equal(commands.voicePanel.snapshot().settingsOpen, true);
-  ui.settingsTab.fire('click');
+  fire(ui.settingsTab, 'click');
   assert.equal(commands.voicePanel.snapshot().settingsOpen, true);
   commands.voicePanel.select('preview');
   commands.voiceCard.handle({
@@ -148,15 +193,15 @@ test('actual binder/card has launcher toggle, idempotent tabs, focus and disable
   });
   const dismiss = ui.root.querySelector('#gev-voice-card-dismiss');
   dismiss.focus();
-  dismiss.fire('click');
+  fire(dismiss, 'click');
   assert.equal(ui.card.hidden, true);
   assert.equal(commands.voicePanel.snapshot().panelOpen, true);
   assert.equal(doc.activeElement?.id, ui.previewTab.id);
-  ui.voicePanel.fire('keydown', { key: 'Escape', target: doc.activeElement });
+  fire(ui.voicePanel, 'keydown', { key: 'Escape', target: doc.activeElement });
   assert.equal(commands.voicePanel.snapshot().panelOpen, false);
   commands.voicePanel.select('settings');
   ui.voicePreviewInput.checked = false;
-  ui.voicePreviewInput.fire('change');
+  fire(ui.voicePreviewInput, 'change');
   commands.voicePanel.select('preview');
   commands.voiceCard.handle({
     type: 'transcript',
@@ -167,7 +212,7 @@ test('actual binder/card has launcher toggle, idempotent tabs, focus and disable
   assert.equal(ui.card.hidden, true);
   assert.equal(ui.previewEmpty.textContent, 'Preview is off.');
   ui.previewTab.focus();
-  ui.voicePanel.fire('keydown', { key: 'Escape' });
+  fire(ui.voicePanel, 'keydown', { key: 'Escape' });
   assert.equal(doc.activeElement, ui.voiceSettingsButton);
   commands.voiceCard.handle({
     type: 'transcript',
@@ -209,15 +254,15 @@ test('actual facade remount keeps failed-save live preferences/view and manual c
   const old = commands.ui;
   commands.voicePanel.select('settings');
   old.voicePreviewInput.checked = false;
-  old.voicePreviewInput.fire('change');
+  fire(old.voicePreviewInput, 'change');
   old.voiceTimeoutInput.value = '7';
   old.voiceTimeoutSelect.value = 'custom';
-  old.voiceTimeoutSelect.fire('change');
+  fire(old.voiceTimeoutSelect, 'change');
   const preferenceWrites = () =>
     writes.filter(([key]) => key.startsWith('godsEyeView.voice.')).length;
   assert.equal(preferenceWrites(), 2);
   old.providerSelect.value = 'gemini';
-  old.providerSelect.fire('change');
+  fire(old.providerSelect, 'change');
   assert.notEqual(commands.ui, old);
   assert.equal(old.root.isConnected, false);
   assert.equal(commands.voicePanel.snapshot().settingsOpen, true);
@@ -232,12 +277,12 @@ test('actual facade remount keeps failed-save live preferences/view and manual c
   assert.equal(preferenceWrites(), 2);
   assert.equal(doc.activeElement, commands.ui.providerSelect);
   commands.ui.voicePreviewInput.checked = true;
-  commands.ui.voicePreviewInput.fire('change');
+  fire(commands.ui.voicePreviewInput, 'change');
   commands.voicePanel.close();
   await commands.start();
   const retired = instances[1];
   commands.ui.providerSelect.value = 'openai';
-  commands.ui.providerSelect.fire('change');
+  fire(commands.ui.providerSelect, 'change');
   await commands.start();
   assert.equal(commands.session.isActive(), true);
   retired.hooks.emit({
@@ -268,14 +313,14 @@ test('explicit successful mic Stop closes; failed Stop idle and startup error do
   const good = mounted(t);
   await good.commands.session.start();
   good.commands.voicePanel.select('settings');
-  good.ui.button.fire('click');
+  fire(good.ui.button, 'click');
   assert.equal(good.commands.voicePanel.snapshot().panelOpen, false);
   const error = Error('stop failed');
   const bad = mounted(t, { stopError: error });
   await bad.commands.session.start();
   bad.commands.voicePanel.select('settings');
   assert.throws(
-    () => bad.ui.button.fire('click'),
+    () => fire(bad.ui.button, 'click'),
     (value) => value === error,
   );
   assert.equal(bad.commands.session.state, 'idle');
@@ -296,7 +341,7 @@ test('reentrant manual choice/new start during Stop cannot close the successor c
     if (event.type === 'state' && event.state === 'idle')
       f.commands.voicePanel.select('preview');
   });
-  f.ui.button.fire('click');
+  fire(f.ui.button, 'click');
   assert.equal(f.commands.voicePanel.snapshot().panelOpen, true);
   assert.equal(f.commands.voicePanel.snapshot().view, 'preview');
   unsubscribe();
@@ -308,7 +353,7 @@ test('integrated inactivity rechecks held PTT at expiry, then normal stop closes
   f.commands.voicePanel.select('settings');
   f.ui.voiceTimeoutInput.value = '1';
   f.ui.voiceTimeoutSelect.value = 'custom';
-  f.ui.voiceTimeoutSelect.fire('change');
+  fire(f.ui.voiceTimeoutSelect, 'change');
   f.instances[0].input.pushToTalkKeyHeld = true;
   f.clock.advance(60000);
   assert.equal(f.instances[0].stops, 0);
@@ -322,7 +367,7 @@ test('None cancels integrated app timer and unknown custom hosts never guess exp
   const native = mounted(t, { native: true });
   await native.commands.session.start();
   native.ui.voiceTimeoutSelect.value = '0';
-  native.ui.voiceTimeoutSelect.fire('change');
+  fire(native.ui.voiceTimeoutSelect, 'change');
   native.clock.advance(600000);
   assert.equal(native.instances[0].stops, 0);
   assert.equal(native.commands.getVoicePreferences().minutes, 0);
@@ -338,7 +383,7 @@ test('transient native OpenAI response activity does not announce connection una
   await f.commands.session.start();
   f.ui.voiceTimeoutInput.value = '1';
   f.ui.voiceTimeoutSelect.value = 'custom';
-  f.ui.voiceTimeoutSelect.fire('change');
+  fire(f.ui.voiceTimeoutSelect, 'change');
   f.instances[0].controller._turns.observeSpeech({ type: 'response.created' });
   assert.equal(f.ui.voiceTimeoutStatus.textContent, '');
   f.clock.advance(60000);
@@ -480,7 +525,7 @@ test('named voice settings exits Cockpit directly; Preview stays disabled and vi
   assert.equal(f.state.exits, 1);
   assert.equal(result.settingsOpen, true);
   f.ui.voicePreviewInput.checked = false;
-  f.ui.voicePreviewInput.fire('change');
+  fire(f.ui.voicePreviewInput, 'change');
   const preview = await f.run('set_panel_open', {
     panelId: 'voice control',
     open: true,
@@ -667,7 +712,7 @@ test('Preview off and actual Cockpit state suppress automatic presentation witho
   window.dispatchEvent(new Event('gev:cockpit-mode-changed'));
   assert.equal(f.ui.voicePanel.hidden, true);
   f.ui.voicePreviewInput.checked = false;
-  f.ui.voicePreviewInput.fire('change');
+  fire(f.ui.voicePreviewInput, 'change');
   emit({ type: 'interruption', reason: 'user-speech' });
   reply('Preference stays off');
   assert.equal(f.ui.voicePanel.hidden, true);
@@ -692,8 +737,8 @@ test('Provider Settings uses its ready dialog handlers and refuses unavailable o
   const query = panel.querySelector.bind(panel);
   panel.querySelector = (selector) =>
     selector === '[data-key-setup-close]' ? close : query(selector);
-  chip.click = () => chip.fire('click');
-  close.click = () => close.fire('click');
+  chip.click = () => fire(chip, 'click');
+  close.click = () => fire(close, 'click');
   let frames = 0;
   const previousFrame = globalThis.requestAnimationFrame;
   globalThis.requestAnimationFrame = (callback) => {
@@ -753,4 +798,20 @@ test('Provider Settings uses its ready dialog handlers and refuses unavailable o
     0,
     'provider setup never opens a visual or scene panel',
   );
+});
+
+test('a minutes value the field holds survives dock repaints until its change commits', (t) => {
+  const { ui, commands } = mounted(t);
+  commands.voicePanel.select('settings');
+  ui.voiceTimeoutSelect.value = 'custom';
+  fire(ui.voiceTimeoutSelect, 'change');
+  // Set without an input event (autofill, a script), then a cost tick and a
+  // status repaint arrive before the field's change commits.
+  ui.voiceTimeoutInput.value = '9';
+  ui.dock.set({ costText: '~$0.10', costLevel: 'ok' });
+  ui.dock.set({ detail: 'Listening' });
+  assert.equal(ui.voiceTimeoutInput.value, '9');
+  fire(ui.voiceTimeoutInput, 'change');
+  assert.equal(commands.getVoicePreferences().minutes, 9);
+  assert.equal(ui.voiceTimeoutInput.value, '9');
 });

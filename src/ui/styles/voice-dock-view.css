@@ -1,0 +1,365 @@
+/* The voice dock and its settings popover on the semantic tokens. Colour
+   only: the dock keeps its geometry, sliding row and tray layout. Every rule
+   starts from the dock root so it outranks the legacy dock rules, including
+   their #command-dock forms; Cyber keeps its own dock palette. The reply card
+   inside the popover is S20b's. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-color: var(--gev-border-subtle);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  :is(.gev-voice-kicker, .gev-mic-label, #gev-voice-detail) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  #gev-voice-status {
+  color: var(--gev-accent-text);
+}
+
+/* Session state: listening and speaking read as the accent, the user's turn
+   and model work as warning, failure as danger. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface:is(
+    [data-status='listening'],
+    [data-status='connecting']
+  ) {
+  border-color: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-status='executing'] {
+  border-color: var(--gev-warning);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-status='executing']
+  #gev-voice-status {
+  color: var(--gev-warning-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-status='error'] {
+  border-color: var(--gev-danger);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-status='error']
+  :is(#gev-voice-status, #gev-voice-detail) {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-speaker='ai']
+  :is(#gev-voice-status, #gev-voice-detail) {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-speaker='user']
+  :is(#gev-voice-status, #gev-voice-detail) {
+  color: var(--gev-warning-text);
+}
+
+/* The microphone glyph is an external image with a fixed stroke and filter,
+   which no token reaches. Outside Cyber the same SVG masks the image box and
+   the box is painted in the semantic foreground (the accent while voice is
+   active or the button is pointed at); the image's own pixels are moved out
+   of its box. Cyber keeps its glyph treatment. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-mic-orbit
+  img {
+  filter: none;
+  opacity: 1;
+  object-position: -9999px 0;
+  background-color: var(--gev-text-muted);
+  -webkit-mask: url('/mic.svg') center / contain no-repeat;
+  mask: url('/mic.svg') center / contain no-repeat;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  #gev-voice-button:is(:hover, :focus-visible)
+  .gev-mic-orbit
+  img,
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface:is(
+    [data-status='connecting'],
+    [data-status='listening']:not([data-microphone='muted']),
+    [data-status='executing']
+  )
+  .gev-mic-orbit
+  img {
+  background-color: var(--gev-accent-text);
+}
+
+/* The mic button and its orbit; the visualizer bars keep their geometry and
+   take the accent, or warning while the user speaks. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  #gev-voice-button {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-mic-orbit {
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  #gev-voice-button:is(:hover, :focus-visible)
+  .gev-mic-orbit,
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface:is(
+    [data-status='connecting'],
+    [data-status='listening'],
+    [data-status='executing']
+  )
+  .gev-mic-orbit {
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-visualizer
+  span {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface[data-speaker='user']
+  .gev-voice-visualizer
+  span {
+  background: var(--gev-warning);
+}
+
+/* Trays: help and error. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-help-tray {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-help-kicker {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-error-tray {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-danger);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-error-header {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  #gev-voice-error-detail {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-error-hint {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-error-dismiss {
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-error-dismiss:hover {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+}
+
+/* Provider row and settings gear. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-provider-field {
+  color: var(--gev-text-muted);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+  box-shadow: var(--gev-elevation-1);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  :is(
+    .gev-voice-provider-field select,
+    .gev-voice-panel select,
+    .gev-voice-panel input[type='number']
+  ) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-settings-button {
+  color: var(--gev-text-muted);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-settings-button:is(:hover, [aria-expanded='true']) {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  :is(
+    .gev-voice-settings-button,
+    .gev-voice-panel :is(button, select, input)
+  ):focus-visible {
+  outline-color: var(--gev-focus-ring);
+}
+
+/* The popover: frame, header, tabs and settings. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-title {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  button {
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  button:hover {
+  color: var(--gev-text);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  [role='tab'][aria-selected='true'] {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent);
+  box-shadow: 0 -2px 0 var(--gev-accent) inset;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  :is(.gev-voice-preference, .gev-voice-cost-setting-row) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  :is(.gev-voice-timeout-unit, .gev-voice-settings-note) {
+  color: var(--gev-text-muted);
+}
+
+/* Model tier and session cost. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-tier-btn {
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-tier-btn:hover {
+  color: var(--gev-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-tier-btn[aria-pressed='true'] {
+  color: var(--gev-warning-text);
+  border-color: var(--gev-warning);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-value {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-settings
+  .gev-voice-cost-value[data-level='ok'] {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-value:is([data-level='warn'], [data-level='unknown']) {
+  color: var(--gev-warning-text);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-value[data-level='cap'] {
+  color: var(--gev-danger-text);
+}

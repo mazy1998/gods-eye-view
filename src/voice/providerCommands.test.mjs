@@ -12,6 +12,8 @@ import { createPointerTracker } from './pointerContext.js';
 import { createReferentRegistry } from './referents.js';
 import { describeUnsavedWork, t as translate } from '../i18n/index.js';
 
+import { createVoiceDockState } from './dockState.js';
+
 const PROVIDER_KEY = 'gev.voice.provider';
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -64,6 +66,7 @@ for (const custom of [false, true]) {
       status: {},
       detail: {},
       providerField: {},
+      dock: createVoiceDockState(),
     };
     let defaultCreated = 0;
     let customCreated = 0;
@@ -108,8 +111,8 @@ for (const custom of [false, true]) {
       controls.session.sendText('test'),
       `${custom ? 'custom' : 'default'}:test`,
     );
-    assert.equal(ui.providerField.hidden, true);
-    assert.equal(ui.root.dataset.providerChoice, 'false');
+    assert.equal(ui.dock.state.providerVisible, false);
+    assert.equal(ui.dock.state.providerChoice, 'false');
     if (!custom)
       assert.deepEqual(controls.session.adapter.getStartOptions(), {
         pushToTalk: true,
@@ -341,6 +344,8 @@ function compositionFixture(
       costValue: {},
       helpDetail: {},
       card: {},
+      // What the control shows is its dock owner's state.
+      dock: createVoiceDockState(),
     };
     views.push(view);
     return view;
@@ -518,15 +523,15 @@ for (const scenario of [
     assert.equal(Object.isFrozen(f.facade.supportedProviders), true);
     assert.equal(f.facade.provider, scenario.provider);
     assert.deepEqual(
-      f.views[0].providerSelect.options.map((option) => option.value),
+      f.views[0].dock.state.providers.map((option) => option.value),
       scenario.expected,
     );
     assert.equal(
-      f.views[0].providerField.hidden,
-      scenario.expected.length === 1,
+      f.views[0].dock.state.providerVisible,
+      scenario.expected.length !== 1,
     );
     assert.equal(
-      f.views[0].root.dataset.providerChoice,
+      f.views[0].dock.state.providerChoice,
       String(scenario.expected.length > 1),
     );
     assert.equal(f.instances.length, 1);
@@ -603,8 +608,8 @@ test('active switch keeps PTT mode, retires the held key, and disposes before mo
   assert.equal(f.views[0].providerSelect.listenerCount('change'), 0);
   assert.equal(f.views[1].providerSelect.listenerCount('change'), 1);
   assert.equal(f.views[1].providerSelect.focusCount, 1);
-  assert.equal(f.views[1].tierButton.hidden, true);
-  assert.equal(f.views[1].costValue.hidden, true);
+  assert.equal(f.views[1].dock.state.tierHidden, true);
+  assert.equal(f.views[1].dock.state.costHidden, true);
   assert.equal(f.facade.providerDiagnostic(), 'gemini:1');
   assert.equal(f.pointer.activeSnapshot(), null);
   assert.deepEqual(f.referents.list(), []);

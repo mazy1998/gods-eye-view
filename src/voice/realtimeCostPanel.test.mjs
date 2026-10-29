@@ -1,13 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createVoiceControl } from './control.js';
-import { RealtimeCost } from './realtimeCost.js';
-import { createVoiceCostTracker, resolveVoiceModel } from './voiceCost.js';
-import { installPanelDom } from './panel/testDom.mjs';
+// The real dock view in a real DOM: import the jsdom helper before Vue.
+import { container } from '../testSupport/componentDom.mjs';
+import { installAncestorVisibility } from './panel/testDom.mjs';
+
+installAncestorVisibility(window);
+
+const { createVoiceControl } = await import('./control.js');
+const { RealtimeCost } = await import('./realtimeCost.js');
+const { createVoiceCostTracker, resolveVoiceModel } =
+  await import('./voiceCost.js');
 
 function harness(t) {
-  installPanelDom(t);
-  const ui = createVoiceControl({ panel: true });
+  const ui = createVoiceControl({ reset: true, panel: true });
+  t.after(() => {
+    ui.dispose();
+    for (const node of [...document.body.children])
+      if (node !== container) node.remove();
+  });
   const stops = [];
   const statuses = [];
   const cost = new RealtimeCost({

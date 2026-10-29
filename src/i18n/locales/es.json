@@ -2989,6 +2989,11 @@
   "Voice inactivity timeout": "Tiempo de inactividad de voz",
   "Custom": "Personalizado",
   "Minutes": "Minutos",
+  "{count} minutes": {
+    "one": "{count} minuto",
+    "many": "{count} minutos",
+    "other": "{count} minutos"
+  },
   "These preferences stay in this browser.": "Estas preferencias se guardan en este navegador.",
   "Your choice applies now, but could not be saved.": "Tu elección se aplica ahora, pero no se pudo guardar.",
   "Voice replies appear here.": "Las respuestas de voz aparecen aquí.",
