@@ -14,6 +14,7 @@ import {
   translateKnown,
 } from '../i18n/index.js';
 import { flyToDataSource } from './flyToDataSource.js';
+import { createStateChannel } from '../app/stateChannel.js';
 
 // One color per file, in import order, from the whiteboard palette.
 const COLORS = ['#39d0ff', '#ffb547', '#5dff9f', '#ff6b6b', '#8be9ff'];
@@ -24,7 +25,8 @@ const COLORS = ['#39d0ff', '#ffb547', '#5dff9f', '#ff6b6b', '#8be9ff'];
  *   `load(file, {viewer, color})` defaults to `loadGeoFile`; tests pass a double.
  * @returns {{destroy: Function, importFiles: Function, list: Function,
  *   setVisible: Function, flyTo: Function, remove: Function,
- *   diagnostics: Function}|null}
+ *   diagnostics: Function, channel: object}|null}
+ *   `channel` publishes `{files: list()}` whenever the list changes.
  */
 export function initGeoFileImport({
   viewer,
@@ -42,6 +44,17 @@ export function initGeoFileImport({
   if (!viewer || !button || !input || !listEl) return null;
 
   const imports = [];
+  const list = () =>
+    imports.map(({ id, name, format, entityCount, removed, visible }) => ({
+      id,
+      name,
+      format,
+      entityCount,
+      removed,
+      visible,
+    }));
+  // Views read the session's files here; every change re-renders the list.
+  const channel = createStateChannel(() => ({ files: list() }));
   const listeners = [];
   let queue = Promise.resolve();
   let seq = 0;
@@ -192,6 +205,7 @@ export function initGeoFileImport({
     );
     listEl.classList.toggle('visible', imports.length > 0);
     restoreFocus(keep);
+    channel.publish({ type: 'files-changed' });
   }
 
   const find = (id) => imports.find((item) => item.id === id) || null;
@@ -419,15 +433,8 @@ export function initGeoFileImport({
 
   const handle = {
     importFiles,
-    list: () =>
-      imports.map(({ id, name, format, entityCount, removed, visible }) => ({
-        id,
-        name,
-        format,
-        entityCount,
-        removed,
-        visible,
-      })),
+    list,
+    channel,
     setVisible,
     flyTo,
     remove,
@@ -455,6 +462,7 @@ export function initGeoFileImport({
       listEl.replaceChildren();
       listEl.classList.remove('visible');
       setHint('');
+      channel.destroy();
       if (globalThis.window?.__gevGeoImport === handle)
         delete globalThis.window.__gevGeoImport;
     },

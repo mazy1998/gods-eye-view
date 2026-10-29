@@ -72,6 +72,9 @@ export function createStateChannel(readSnapshot) {
     },
     publish(change = null) {
       if (destroyed) return false;
+      // With nobody listening there is no copy to make: a later subscriber
+      // starts from the state as it is then.
+      if (!listeners.size) return true;
       pending.push(
         Object.freeze({
           state: getSnapshot(),

@@ -818,6 +818,8 @@
       "src/ui/statusBadge.js",
       "src/ui/StatusBadge.vue",
       "src/ui/mountView.js",
+      "src/ui/ownerState.js",
+      "src/ui/StyleIndicator.vue",
       "src/scopeMaskPolicy.js"
     ],
     "external": ["cesium", "vue"]
@@ -2634,6 +2636,8 @@
       "src/ui/statusBadge.js",
       "src/ui/StatusBadge.vue",
       "src/ui/mountView.js",
+      "src/ui/ownerState.js",
+      "src/ui/StyleIndicator.vue",
       "src/sceneCommandRelease.js",
       "src/scopeMaskPolicy.js"
     ],
@@ -3374,7 +3378,8 @@
       "src/i18n/locales/zh-CN.json",
       "src/i18n/locales/zh-Hant.json",
       "src/scopeMaskPolicy.js",
-      "src/ui/displayControls.js"
+      "src/ui/displayControls.js",
+      "src/app/stateChannel.js"
     ],
     "external": ["cesium"]
   },
@@ -3399,7 +3404,8 @@
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
       "src/i18n/locales/zh-CN.json",
-      "src/i18n/locales/zh-Hant.json"
+      "src/i18n/locales/zh-Hant.json",
+      "src/app/stateChannel.js"
     ],
     "external": []
   },

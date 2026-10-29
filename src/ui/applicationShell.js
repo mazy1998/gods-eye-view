@@ -18,6 +18,7 @@ import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { mountView } from './mountView.js';
 import StatusBadge from './StatusBadge.vue';
+import StyleIndicator from './StyleIndicator.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { RadioControls } from './radio.js';
 import { LocalSdrControls } from './localSdrControls.js';
@@ -110,6 +111,8 @@ export class StyleManager extends ShellFacade {
     } = services;
     this.services = services;
     this._lifetime = new UiLifetime();
+    // Vue views the shell mounted; dispose() releases them first.
+    this._views = new Set();
     this._recording = new RecordingControls({
       syncShareState: () => this._syncShareState(),
     });
@@ -247,7 +250,6 @@ export class StyleManager extends ShellFacade {
         _sharpenSliderValue: this._sharpenSliderValue,
         _sliderContainer: this._sliderContainer,
         _sliderPanel: this._sliderPanel,
-        _styleIndicator: this._styleIndicator,
         _styleMiniValue: this._styleMiniValue,
       },
       operations: {
@@ -619,6 +621,7 @@ export class StyleManager extends ShellFacade {
     this._initHUDToggle();
     this._initModels3dToggle();
     this._applyGlobalPostDefaults();
+    this._initStyleIndicator();
     this._initOrbit();
     this._initRecordingOverlay();
     this._startAnimationLoop();
@@ -970,12 +973,14 @@ export class StyleManager extends ShellFacade {
 
   /**
    * Pushes the current visual state (bloom, sharpen, HUD, detection) to
-   * the ShareLinkManager so the URL hash stays in sync.
+   * the ShareLinkManager so the URL hash stays in sync, and to views of the
+   * visual-settings channel. Every visual change ends here, whichever owner
+   * or control made it.
    * @returns {void}
    */
-
   _syncShareState() {
     if (this._disposed) return;
+    this._visualSettings.publishState();
     this._shareState.publish({ type: 'settings-changed' });
   }
 
@@ -1187,6 +1192,38 @@ export class StyleManager extends ShellFacade {
     this._streetLevelControls.connect();
   }
 
+  /**
+   * Mount a Vue view (see mountView.js) that the shell releases at the start
+   * of dispose(), before any owner it reads is stopped or destroyed.
+   */
+  _mountView(component, options) {
+    const view = mountView(component, options);
+    this._views.add(view);
+    return {
+      get element() {
+        return view.element;
+      },
+      update: view.update,
+      dispose: () => {
+        this._views.delete(view);
+        view.dispose();
+      },
+    };
+  }
+
+  /** The ACTIVE STYLE value follows the visual-settings channel. */
+  _initStyleIndicator() {
+    const host = document.getElementById('style-indicator');
+    if (!host) return;
+    this._mountView(StyleIndicator, {
+      parent: host,
+      props: {
+        id: 'active-style-name',
+        channel: this._visualSettings.channel,
+      },
+    });
+  }
+
   /** Compose camera panel controls from the existing camera port and application actions. */
   _initCctvPanel() {
     const { cctvLayer } = this.services;
@@ -1194,7 +1231,7 @@ export class StyleManager extends ShellFacade {
     // The calibration chip closes the projection row; CctvControls paints it.
     const projectionRow = this._cctvProjectionBtn?.parentElement;
     this._cctvQualityBadge ??= projectionRow
-      ? mountView(StatusBadge, {
+      ? this._mountView(StatusBadge, {
           parent: projectionRow,
           props: {
             id: 'cctv-quality-chip',
@@ -1799,6 +1836,9 @@ export class StyleManager extends ShellFacade {
     this._feedback._globalStatusNotice = null;
     if (this._globalLoadingStatus) this._globalLoadingStatus.hidden = true;
     this._disposed = true;
+    // Phase 1 starts with the views, so no owner publication reaches them.
+    for (const view of this._views) view.dispose();
+    this._views.clear();
     this._navigation.stop();
     this._shareState.destroy();
     this._locationNavigation.destroy();
@@ -1817,7 +1857,6 @@ export class StyleManager extends ShellFacade {
     this._cameraOrientationControls?.destroy();
     this._clearLayersControl?.destroy();
     this._cctvControls?.destroy();
-    this._cctvQualityBadge?.dispose();
     this.services?.streetLevelLayer?.attachNavigation?.(null);
     this._streetLevelControls?.destroy();
     this._radioControls?.destroy();

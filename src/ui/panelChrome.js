@@ -1,4 +1,5 @@
 import { UiLifetime } from './uiLifetime.js';
+import { createStateChannel } from '../app/stateChannel.js';
 import { t, msg } from '../i18n/index.js';
 import { displayPanelScroller } from './displayPanelScroll.js';
 import { PanelPositionControls } from './panelPositionControls.js';
@@ -59,6 +60,9 @@ export class PanelChrome {
     });
     this._disposed = false;
     this._lifetime = new UiLifetime();
+    // Views read panel state through this channel. Every collapse, layout
+    // and position change ends by syncing the panel's collapse button.
+    this.channel = createStateChannel(() => this._readPanelState());
     this._cockpitPanelRestore = null;
     this._cockpitContextCollapsedForDataPanel = false;
     this._panelPosition = new PanelPositionControls({
@@ -222,6 +226,7 @@ export class PanelChrome {
       }
     }
     this._updateCommandDockTrayStack();
+    this.channel.publish({ type: 'panel-changed', panelId });
     if (syncShare) {
       if (!restore) this.shareLinkManager?.claimRestoreLane?.('panel', panelId);
       this.shareLinkManager?.onPanelStateChange?.();
@@ -374,6 +379,22 @@ export class PanelChrome {
     if (panelEl.id === 'radio-panel' || panelEl.id === 'global-context-panel') {
       this._syncContextRadioLauncherState();
     }
+    this.channel.publish({ type: 'panel-changed', panelId: panelEl.id });
+  }
+
+  /** Collapse, presentation-only auto-collapse and dock pin of each panel. */
+  _readPanelState() {
+    const panels = {};
+    for (const panel of document.querySelectorAll('[data-panel-id]')) {
+      panels[panel.id] = {
+        collapsed: panel.classList.contains('collapsed'),
+        autoCollapsed:
+          panel.classList.contains('layout-auto-collapsed') ||
+          panel.classList.contains('cyber-accordion-collapsed'),
+        pinned: panel.classList.contains('dock-pinned'),
+      };
+    }
+    return { panels };
   }
 
   _buildSharePanelState() {
@@ -671,5 +692,6 @@ export class PanelChrome {
     this._hoverPanelControls?.forEach((control) => control.destroy());
     this._hoverPanelControls?.clear();
     this._cancelMapSourceFocus?.();
+    this.channel.destroy();
   }
 }

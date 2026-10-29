@@ -781,3 +781,29 @@ Components (`.vue`) are renderers with inline JavaScript and HTML blocks. Their
 CSS lives in `src/ui/styles`, so `<style>` blocks are refused. `build/vue.js`
 holds this policy and the compiler options for the browser build, the boundary
 gate and the `node:test` hooks.
+
+### Owner-to-view bridge
+
+An owner that views read exposes one `channel` from `createStateChannel`. It
+publishes from the owner's existing mutation paths, and its snapshot is plain
+data that the channel copies and freezes. Visual settings publish from the
+shell's share sync, which every visual change ends in, and only when the state
+differs from the last publication. A publication with no subscriber reads
+nothing. The layer channel turns module stats into plain data (an `Error`
+becomes its message), so one failing layer cannot stall the others. `useOwnerState(channel)` in
+`src/ui/ownerState.js` gives a view a read-only ref that changes synchronously
+with each publication and unsubscribes when the view's scope ends; writing the
+ref throws. Operations stay the owner's own methods, called with the origin
+they already require (for example `setEnabled(id, value, { origin: 'user' })`).
+There is no store and no registry: whoever mounts a view passes it the channel
+as a prop, or a destination's root component provides it to its children.
+
+Vue patches the DOM a microtask after a publication. Code that reads painted
+DOM right after an owner operation (focus, measurement, roving `tabindex`)
+awaits `flushViews()` from the same module, or keeps a synchronous paint
+through `mountView`'s `update()`.
+
+The layer channel carries what `getAll()` reports; row controls keep their
+single `setRowControlsListener` consumer, which the channel never installs.
+`StyleIndicator.vue` is the first view built this way: the ACTIVE STYLE value
+reads `VisualSettings.channel`.

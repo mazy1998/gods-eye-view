@@ -4,6 +4,7 @@ import { STYLE_STATUS_LABELS } from './visualPresets.js';
 import { syncSegmentedControl } from './segmentedControl.js';
 import { t } from '../i18n/index.js';
 import { UiLifetime } from './uiLifetime.js';
+import { createStateChannel } from '../app/stateChannel.js';
 import {
   VisualEffects,
   STYLES,
@@ -202,6 +203,11 @@ export class VisualSettings {
       readDisplayPortalActive,
     });
     this._lifetime = new UiLifetime();
+    // Views read getVisualState() through this channel. Every visual change
+    // ends in the shell's share sync (a restore syncs once, at its end),
+    // which calls publishState().
+    this.channel = createStateChannel(() => this.getVisualState());
+    this._publishedState = null;
     this._visualEffects = new VisualEffects({
       viewer,
       requestRender: services.governorRequestRender,
@@ -866,6 +872,16 @@ export class VisualSettings {
         focus: false,
       });
     }
+    // Start-up defaults skip the share sync, so they publish here.
+    this.publishState();
+  }
+
+  /** Tell views about the visual state, once per change: syncs often repeat. */
+  publishState() {
+    const state = JSON.stringify(this.getVisualState());
+    if (state === this._publishedState) return;
+    this._publishedState = state;
+    this.channel.publish({ type: 'visual-changed' });
   }
 
   _shareableDetectionState() {
@@ -1612,10 +1628,7 @@ export class VisualSettings {
       btn.classList.toggle('active', btn.dataset.style === styleName);
     });
 
-    // Update style indicator
-    this._styleIndicator.textContent = STYLE_STATUS_LABELS[styleName]
-      ? t(STYLE_STATUS_LABELS[styleName])
-      : styleName.toUpperCase();
+    // The ACTIVE STYLE indicator is a view of this.channel (StyleIndicator.vue).
     this._updateStyleMiniStatus(styleName);
 
     // Update parameter sliders
@@ -1724,5 +1737,6 @@ export class VisualSettings {
     this.stop();
     this.releaseIrBoost();
     this._visualEffects.destroy();
+    this.channel.destroy();
   }
 }

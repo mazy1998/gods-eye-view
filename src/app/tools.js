@@ -209,5 +209,6 @@ export function createApplicationTools({
       signal,
     }),
   );
-  return { sceneDirector, annotations, voiceCommands };
+  // The session import handle: views follow its files through `channel`.
+  return { sceneDirector, annotations, voiceCommands, geoFileImport };
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { LocationNavigation } from './locationNavigation.js';
 import { LayerBindings } from './layerBindings.js';
+import { LayerLifecycle } from '../data/lifecycle.js';
 
 function replaceWindow(t, value) {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
@@ -115,6 +116,89 @@ test('manager replacement releases Directions even when the new manager has no r
   owner.attachDataManager(manager('late'));
   owner.stop(); owner.disconnect();
   assert.equal(events.length, count);
+});
+
+function layerManager(id, count) {
+  const streams = { changes: new Set(), activity: new Set() };
+  const rowListeners = [];
+  const layer = { id, enabled: false, stats: { count } };
+  return {
+    layer, streams, rowListeners,
+    layers: new Map([[id, { module: {
+      setRowControlsListener(listener) { rowListeners.push(listener); },
+    } }]]),
+    getAll: () => [{ ...layer, stats: { ...layer.stats } }],
+    subscribe(listener) {
+      streams.changes.add(listener);
+      return () => streams.changes.delete(listener);
+    },
+    subscribeActivity(listener) {
+      streams.activity.add(listener);
+      return () => streams.activity.delete(listener);
+    },
+    emit(stream, change) { for (const listener of streams[stream]) listener(change); },
+  };
+}
+
+test('the layer channel follows both manager streams and the replacement manager', (t) => {
+  const { owner } = bindings(t);
+  const seen = [];
+  owner.channel.subscribe(({ state, change }) => seen.push({ state, change }));
+  assert.deepEqual(seen.at(-1).state.layers, []);
+  const first = layerManager('quakes', 3);
+  owner.attachDataManager(first);
+  assert.equal(seen.at(-1).state.layers[0].stats.count, 3);
+  first.layer.enabled = true;
+  first.emit('changes', { type: 'visibility', layerId: 'quakes', error: new Error('kept out') });
+  assert.equal(seen.at(-1).state.layers[0].enabled, true);
+  assert.deepEqual(seen.at(-1).change, { type: 'visibility', layerId: 'quakes' });
+  first.layer.stats.count = 7;
+  first.emit('activity', { type: 'status' });
+  assert.equal(seen.at(-1).state.layers[0].stats.count, 7);
+  assert.equal(Object.isFrozen(seen.at(-1).state.layers[0].stats), true);
+
+  const second = layerManager('vessels', 1);
+  owner.attachDataManager(second);
+  assert.equal(first.streams.changes.size + first.streams.activity.size, 0);
+  assert.deepEqual(seen.at(-1).state.layers.map((layer) => layer.id), ['vessels']);
+  const count = seen.length;
+  first.emit('activity', { type: 'status' });
+  assert.equal(seen.length, count, 'the replaced manager no longer publishes');
+  second.emit('activity', { type: 'status' });
+  assert.equal(seen.length, count + 1);
+  assert.deepEqual([...first.rowListeners, ...second.rowListeners], []);
+
+  // One layer's failure in its stats must not stall every layer's view.
+  second.layer.stats = { count: 2, error: new Error('feed down'), lastUpdate: new Date(5) };
+  second.emit('activity', { type: 'status' });
+  assert.deepEqual(seen.at(-1).state.layers[0].stats, { count: 2, error: 'feed down', lastUpdate: 5 });
+  owner.stop(); owner.disconnect();
+  assert.equal(second.streams.changes.size + second.streams.activity.size, 0);
+  assert.equal(owner.channel.publish(), false, 'the channel ends with the bindings');
+});
+
+test('a real manager with one failing layer keeps every layer on the channel', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  const { owner } = bindings(t);
+  const manager = new LayerLifecycle({ scene: { requestRender() {} } });
+  let healthyCount = 4;
+  const layer = (id, getStats) => ({
+    id, name: id, init() {}, enable() {}, disable() {}, update() {}, destroy() {}, getStats,
+  });
+  manager.register(layer('healthy', () => ({ count: healthyCount, lastUpdate: 10 })));
+  manager.register(layer('broken', () => { throw new Error('feed down'); }));
+  for (const id of ['healthy', 'broken'])
+    await manager.setEnabled(id, true, { origin: 'user' });
+  const seen = [];
+  owner.channel.subscribe(({ state }) => seen.push(state.layers));
+  owner.attachDataManager(manager);
+  const byId = () => Object.fromEntries(seen.at(-1).map((item) => [item.id, item.stats]));
+  assert.equal(byId().broken.error, 'feed down');
+  assert.equal(byId().healthy.count, 4);
+  healthyCount = 9;
+  manager.refreshLayerStats();
+  assert.equal(byId().healthy.count, 9, 'the healthy layer keeps publishing');
+  owner.stop(); owner.disconnect();
 });
 
 test('attaching the manager reconnects Street Level, so its switch-on requests reach the panel', (t) => {

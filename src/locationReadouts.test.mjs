@@ -21,15 +21,24 @@ function locationSearchHandler() {
 test('the ACTIVE STYLE indicator is written from the style name and nothing else', () => {
   // A free-text location search used to write the searched CITY into the
   // top-right style slot, so the corner read "ACTIVE STYLE / TOKYO".
-  const writes = [...ui.matchAll(/this\._styleIndicator\.textContent\s*=/g)];
-  assert.equal(writes.length, 1, 'the style indicator must have exactly one writer');
+  // The one writer is StyleIndicator.vue, a view of the visual-settings
+  // channel; the shell only mounts it.
+  const view = fs.readFileSync(path.join(ROOT, 'src', 'ui', 'StyleIndicator.vue'), 'utf8');
   assert.match(
-    ui.slice(writes[0].index, writes[0].index + 160),
-    /this\._styleIndicator\.textContent = STYLE_STATUS_LABELS\[styleName\]\s*\?\s*t\(STYLE_STATUS_LABELS\[styleName\]\)\s*:\s*styleName\.toUpperCase\(\);/,
+    view,
+    /const style = visual\.value\?\.style \?\? 'normal';\s*return STYLE_STATUS_LABELS\[style\]\s*\?\s*t\(STYLE_STATUS_LABELS\[style\]\)\s*:\s*style\.toUpperCase\(\);/,
+  );
+  assert.match(view, /<span class="indicator-value scene-text-holdout">\{\{ label \}\}<\/span>/);
+  assert.doesNotMatch(ui, /_styleIndicator|active-style-name'\)/, 'no owner writes the indicator directly');
+  const mounts = [...ui.matchAll(/this\._mountView\(StyleIndicator,/g)];
+  assert.equal(mounts.length, 1, 'the style indicator must have exactly one writer');
+  assert.match(
+    ui.slice(mounts[0].index, mounts[0].index + 200),
+    /channel: this\._visualSettings\.channel/,
   );
 
   const handler = locationSearchHandler();
-  assert.doesNotMatch(handler, /_styleIndicator/, 'location search must not touch the style indicator');
+  assert.doesNotMatch(handler, /_styleIndicator|StyleIndicator/, 'location search must not touch the style indicator');
   assert.doesNotMatch(handler, /active-style-name/, 'location search must not touch the style indicator');
 });
 

@@ -97,3 +97,21 @@ test('an invalid initial snapshot cannot retain a subscriber without a cleanup h
   channel.publish();
   assert.equal(calls, 0);
 });
+
+test('a publication with nobody listening reads nothing; a later subscriber starts current', () => {
+  let reads = 0;
+  const state = { value: 1 };
+  const channel = createStateChannel(() => (reads++, { ...state }));
+  state.value = 2;
+  assert.equal(channel.publish({ type: 'unheard' }), true);
+  assert.equal(reads, 0);
+  const seen = [];
+  const remove = channel.subscribe(({ state: next }) => seen.push(next.value));
+  assert.deepEqual(seen, [2]);
+  state.value = 3;
+  channel.publish();
+  remove();
+  channel.publish();
+  assert.deepEqual(seen, [2, 3]);
+  assert.equal(reads, 2);
+});

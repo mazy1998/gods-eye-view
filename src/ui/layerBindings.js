@@ -9,6 +9,25 @@ import {
   routeWorldFocusRequest,
 } from '../worldFocus.js';
 import { registerNavigationAuthorityListener } from '../navigationPolicy.js';
+import { createStateChannel } from '../app/stateChannel.js';
+
+/**
+ * Layer stats come from each module; keep what a view can show as plain data.
+ * An Error becomes its message, a Date its time, and functions or other
+ * instances are left out, so one layer cannot stall every layer's channel.
+ */
+function plainData(value) {
+  if (value === null || typeof value !== 'object')
+    return typeof value === 'function' ? undefined : value;
+  if (value instanceof Error) return value.message;
+  if (value instanceof Date) return value.getTime();
+  if (Array.isArray(value)) return value.map(plainData);
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return undefined;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, plainData(item)]),
+  );
+}
 /** Own manager subscriptions and the camera-entry events that outlive controls. */
 export class LayerBindings {
   constructor({
@@ -32,6 +51,14 @@ export class LayerBindings {
     );
     this._disposed = false;
     this._dataManager = null;
+    // Views read the attached manager's layers here. Both manager streams
+    // publish: subscribe() for visibility, params and refresh events, and
+    // subscribeActivity() for status, freshness and counts. Row controls
+    // keep their single listener; this channel never installs one.
+    this.channel = createStateChannel(() => ({
+      layers: (this._dataManager?.getAll?.() ?? []).map(plainData),
+    }));
+    this._activityUnsubscribe = null;
     this._directionsShellModule = null;
     this._weatherShellModules = [];
     this._cctvRequestFocusHandler = null;
@@ -227,13 +254,21 @@ export class LayerBindings {
       this._dataManagerUnsubscribe();
       this._dataManagerUnsubscribe = null;
     }
+    this._activityUnsubscribe?.();
+    this._activityUnsubscribe = null;
     this._contextControls.connect(this._dataManager);
     if (typeof this._dataManager?.subscribe === 'function') {
       this._dataManagerUnsubscribe = this._dataManager.subscribe((change) => {
         this._feedback._loadingFeedbackEvent = change;
         this._updateGlobalLoadingFeedback(performance.now());
+        this._publishLayers(change);
       });
     }
+    if (typeof this._dataManager?.subscribeActivity === 'function')
+      this._activityUnsubscribe = this._dataManager.subscribeActivity(
+        (change) => this._publishLayers(change),
+      );
+    this._publishLayers({ type: 'manager-attached' });
     this._updateGlobalLoadingFeedback(performance.now());
     this._syncContextModeButtons();
     this._cctvControls.connect();
@@ -287,9 +322,20 @@ export class LayerBindings {
     this._removeNavigationAuthorityListener?.();
     this._removeNavigationAuthorityListener = null;
   }
+  /** Publish the layers with the manager event's plain identity. */
+  _publishLayers(change) {
+    const text = (value) => (typeof value === 'string' ? value : null);
+    this.channel.publish({
+      type: text(change?.type),
+      layerId: text(change?.layerId),
+    });
+  }
   disconnect() {
     this._dataManagerUnsubscribe?.();
     this._dataManagerUnsubscribe = null;
+    this._activityUnsubscribe?.();
+    this._activityUnsubscribe = null;
+    this.channel.destroy();
     this._directionsShellModule?.attachShellServices?.(null);
     this._directionsShellModule = null;
     this._dataManager = null;

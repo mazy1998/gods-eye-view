@@ -119,6 +119,7 @@ function harness({ hidden = false, selected = true, noChips = false } = {}) {
     ...methods,
     _savePanelCollapsedState(...args) { saves.push(args); },
     _scheduleLeftPanelLayout() {}, _scheduleRightPanelLayout() {},
+    channel: { publish() {} },
     shareLinkManager: {
       claimRestoreLane(...args) { claims.push(args); },
       onPanelStateChange() { shareSyncs += 1; },

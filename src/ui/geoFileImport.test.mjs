@@ -305,6 +305,25 @@ test('row buttons hide, show, fly to and remove a file', async () => {
   assert.equal(t.tool.remove(id), false);
 });
 
+test('views follow the session files through the channel, which stops at destroy', async () => {
+  const t = setup();
+  const seen = [];
+  t.tool.channel.subscribe(({ state }) => seen.push(state.files));
+  assert.deepEqual(seen, [[]]);
+  await t.tool.importFiles([file('a.gpx')]);
+  const [{ id }] = t.tool.list();
+  assert.deepEqual(seen.at(-1), t.tool.list());
+  assert.ok(Object.isFrozen(seen.at(-1)[0]));
+  t.tool.setVisible(id, false);
+  assert.equal(seen.at(-1)[0].visible, false);
+  t.tool.remove(id);
+  assert.deepEqual(seen.at(-1), []);
+  const count = seen.length;
+  t.tool.destroy();
+  t.tool.setVisible(id, true);
+  assert.equal(seen.length, count);
+});
+
 test('a refused file says why and does not stop the rest of the batch', async () => {
   const t = setup();
   const out = await t.tool.importFiles([
