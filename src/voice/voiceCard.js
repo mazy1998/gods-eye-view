@@ -1,3 +1,4 @@
+import { createStateChannel } from '../app/stateChannel.js';
 import {
   initialVoiceCardState,
   reduceVoiceCard,
@@ -9,59 +10,23 @@ const VOICE_CARD_IDLE_MS = 14000;
 
 const ELEMENT_IDS = Object.freeze({
   card: 'gev-voice-card',
-  phase: 'gev-voice-card-phase',
   dismiss: 'gev-voice-card-dismiss',
-  user: 'gev-voice-card-user',
-  userText: 'gev-voice-card-user-text',
-  userWho: 'gev-voice-card-user-who',
-  pointer: 'gev-voice-card-pointer',
-  pointerKind: 'gev-voice-card-pointer-kind',
-  pointerText: 'gev-voice-card-pointer-text',
-  assistant: 'gev-voice-card-assistant',
-  assistantText: 'gev-voice-card-assistant-text',
-  plan: 'gev-voice-card-plan',
-  result: 'gev-voice-card-result',
-  resultTitle: 'gev-voice-card-result-title',
-  chips: 'gev-voice-card-chips',
-  lines: 'gev-voice-card-lines',
-  referents: 'gev-voice-card-referents',
   notes: 'gev-voice-card-notes',
-  noteList: 'gev-voice-card-note-list',
-  live: 'gev-voice-card-live',
 });
-
-function setText(element, text) {
-  if (element && element.textContent !== text) element.textContent = text;
-}
-
-function setHidden(element, hidden) {
-  if (element && element.hidden !== hidden) element.hidden = hidden;
-}
-
-function fillList(list, items, render) {
-  if (!list) return;
-  const doc = list.ownerDocument;
-  list.replaceChildren(
-    ...items.map((item) => {
-      const node = doc.createElement('li');
-      render(node, item, doc);
-      return node;
-    }),
-  );
-}
 
 /**
  * Voice card controls, nested in the voice control's markup (`control.js`)
  * beside its help and error trays, so Clean-UI and recording mode hide it with
  * the control. Receives provider-neutral session events through `handle` and
- * annotation outline outcomes through `outline`; owns only its listeners and
- * idle timer. All text is set through textContent. Captions update silently;
+ * annotation outline outcomes through `outline`; owns its folded state,
+ * disclosure, listeners and idle timer. The Vue view renders literal text. Captions update silently;
  * the polite live region carries final replies and result titles only.
  */
 export class VoiceCardControls {
   /**
    * @param {object} options
    * @param {HTMLElement} options.root Voice control root containing the card.
+   * @param {(channel: object) => Function} [options.connectView] Synchronous view connection supplied by createVoiceControl.
    * @param {number} [options.idleMs]
    * @param {Function} [options.setTimer]
    * @param {Function} [options.clearTimer]
@@ -72,6 +37,7 @@ export class VoiceCardControls {
     setTimer = (fn, ms) => setTimeout(fn, ms),
     clearTimer = (id) => clearTimeout(id),
     onRender,
+    connectView,
   }) {
     Object.assign(this, { idleMs, setTimer, clearTimer, onRender });
     this.elements = Object.fromEntries(
@@ -81,6 +47,11 @@ export class VoiceCardControls {
       ]),
     );
     this.state = initialVoiceCardState();
+    this.notesOpen = Boolean(this.elements.notes?.open);
+    this.channel = createStateChannel(() => ({
+      ...this.snapshot(),
+      notesOpen: this.notesOpen,
+    }));
     this.enabled = true;
     this.presented = true;
     this.announcementRevision = 0;
@@ -89,11 +60,34 @@ export class VoiceCardControls {
     this.destroyed = false;
     this.listeners = new AbortController();
     if (!this.elements.card) return;
+    this.disconnectView = connectView?.(this.channel);
     this.elements.dismiss?.addEventListener(
       'click',
       () => this.handle({ type: 'dismiss' }),
       { signal: this.listeners.signal },
     );
+    this.elements.notes?.querySelector?.('summary')?.addEventListener(
+      'click',
+      (event) => {
+        event.preventDefault();
+        this.setNotesOpen(!this.notesOpen);
+      },
+      { signal: this.listeners.signal },
+    );
+    this.elements.notes?.addEventListener(
+      'toggle',
+      () => {
+        this.setNotesOpen(this.elements.notes.open);
+      },
+      { signal: this.listeners.signal },
+    );
+    this.render();
+  }
+
+  /** The disclosure choice persists across replies and presentation changes. */
+  setNotesOpen(open) {
+    if (this.destroyed || this.notesOpen === Boolean(open)) return;
+    this.notesOpen = Boolean(open);
     this.render();
   }
 
@@ -170,65 +164,7 @@ export class VoiceCardControls {
   }
 
   render() {
-    const el = this.elements;
-    const view = this.snapshot();
-    setHidden(el.card, !view.visible);
-    el.card.dataset.busy = String(view.busy);
-    setText(el.phase, view.phase);
-    setHidden(el.user, !view.user.visible);
-    setText(el.userText, view.user.text);
-    setText(el.userWho, view.user.label);
-    setHidden(el.pointer, !view.pointer.visible);
-    setText(el.pointerKind, view.pointer.kind);
-    setText(el.pointerText, view.pointer.text);
-    setHidden(el.assistant, !view.assistant.visible);
-    setText(el.assistantText, view.assistant.text);
-    setHidden(el.plan, view.steps.length === 0);
-    fillList(el.plan, view.steps, (node, step, doc) => {
-      node.className = 'gev-voice-card-step';
-      node.dataset.status = step.status;
-      const label = doc.createElement('span');
-      label.className = 'gev-voice-card-step-label';
-      label.textContent = step.label;
-      const status = doc.createElement('span');
-      status.className = 'gev-voice-card-sr';
-      status.textContent = step.statusText ? `, ${step.statusText}` : '';
-      node.append(label, status);
-      if (step.detail) {
-        const detail = doc.createElement('span');
-        detail.className = 'gev-voice-card-step-detail';
-        detail.textContent = step.detail;
-        node.append(detail);
-      }
-    });
-    setHidden(el.result, !view.result.visible);
-    setText(el.resultTitle, view.result.title);
-    setHidden(el.chips, view.result.chips.length === 0);
-    if (el.chips) {
-      const doc = el.chips.ownerDocument;
-      el.chips.replaceChildren(
-        ...view.result.chips.map((text) => {
-          const chip = doc.createElement('span');
-          chip.className = 'gev-voice-card-chip';
-          chip.dataset.tone = text;
-          chip.textContent = text;
-          return chip;
-        }),
-      );
-    }
-    fillList(el.lines, view.result.lines, (node, line) => {
-      node.textContent = line;
-    });
-    setHidden(el.referents, view.result.referents.length === 0);
-    fillList(el.referents, view.result.referents, (node, ref) => {
-      node.value = ref.n;
-      node.textContent = ref.label;
-    });
-    setHidden(el.notes, view.result.notes.length === 0);
-    fillList(el.noteList, view.result.notes, (node, note) => {
-      node.textContent = note;
-    });
-    setText(el.live, view.announce);
+    this.channel.publish({ type: 'card-changed' });
     this.onRender?.();
   }
 
@@ -252,5 +188,7 @@ export class VoiceCardControls {
     this.destroyed = true;
     this.cancelIdle();
     this.listeners.abort();
+    this.disconnectView?.();
+    this.channel.destroy();
   }
 }

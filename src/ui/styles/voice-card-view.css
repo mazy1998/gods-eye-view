@@ -1,0 +1,107 @@
+/* Reply preview only. Preserve the dock/card geometry and Cyber's palette. */
+:root:not([data-ui-theme='cyber']) #gev-voice-control #gev-voice-card {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border-subtle);
+  box-shadow: var(--gev-elevation-2);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  :is(
+    .gev-voice-card-kicker,
+    .gev-voice-card-caption[data-role='assistant'] .gev-voice-card-who,
+    .gev-voice-card-pointer .gev-voice-card-who
+  ) {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  :is(
+    .gev-voice-card-phase,
+    .gev-voice-card-who,
+    .gev-voice-card-step-detail,
+    .gev-voice-card-notes summary
+  ) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  :is(
+    .gev-voice-card-result-title,
+    .gev-voice-card-pointer-label,
+    .gev-voice-card-caption[data-role='user'] .gev-voice-card-text,
+    .gev-voice-card-lines li,
+    .gev-voice-card-referents li
+  ) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  :is(
+    .gev-voice-card-plan,
+    .gev-voice-card-result,
+    .gev-voice-card-pointer-label,
+    .gev-voice-card-chip
+  ) {
+  border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber']) #gev-voice-card .gev-voice-card-chip {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber']) #gev-voice-card .gev-voice-card-dismiss {
+  color: var(--gev-text-muted);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-dismiss:is(:hover, :focus-visible) {
+  color: var(--gev-text);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-step::before {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  :is(
+    .gev-voice-card-step[data-status='done'],
+    .gev-voice-card-referents li
+  )::before {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card[data-busy='true']
+  .gev-voice-card-phase,
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-step[data-status='running']::before {
+  color: var(--gev-warning-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-step:is(
+    [data-status='failed'],
+    [data-status='cancelled']
+  )::before {
+  color: var(--gev-danger-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-chip:is(
+    [data-tone='stale'],
+    [data-tone='degraded'],
+    [data-tone='fallback'],
+    [data-tone='partial']
+  ) {
+  color: var(--gev-warning-text);
+  border-color: var(--gev-warning);
+}
+:root:not([data-ui-theme='cyber'])
+  #gev-voice-card
+  .gev-voice-card-chip[data-tone='unavailable'] {
+  color: var(--gev-danger-text);
+  border-color: var(--gev-danger);
+}

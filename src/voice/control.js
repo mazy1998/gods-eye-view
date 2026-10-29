@@ -61,9 +61,22 @@ export function createVoiceControl({ reset = false, panel = false } = {}) {
     if (locationBar) commandDock.insertBefore(locationBar, root);
     if (controlPanel) commandDock.appendChild(controlPanel);
   }
+  const cardConnections = new Set();
   const controls = {
     root,
     dock,
+    // The card has its own owner/channel; dock publications never copy its state.
+    connectCard(channel) {
+      const unsubscribeCard = channel.subscribe(({ state }) =>
+        view.update({ cardState: state }),
+      );
+      const disconnect = () => {
+        unsubscribeCard();
+        cardConnections.delete(disconnect);
+      };
+      cardConnections.add(disconnect);
+      return disconnect;
+    },
     voicePanel: root.querySelector('#gev-voice-panel'),
     previewPanel: root.querySelector('#gev-voice-preview-panel'),
     voiceSettingsPanel: root.querySelector('#gev-voice-settings-panel'),
@@ -92,6 +105,7 @@ export function createVoiceControl({ reset = false, panel = false } = {}) {
     card: root.querySelector('#gev-voice-card'),
   };
   controls.dispose = () => {
+    for (const disconnect of cardConnections) disconnect();
     unsubscribe();
     dock.channel.destroy();
     view.dispose();

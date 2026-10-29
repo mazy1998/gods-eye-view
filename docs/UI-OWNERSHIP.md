@@ -175,3 +175,20 @@ Native input events update drafts; every commit also adopts the current native
 values so programmatic edits without input events keep working. Vue paints plain
 text and native file controls. Preview, expected-project validation, explicit
 asset selection, abort signals and session-only bundle bytes stay with sharing.
+
+## Voice reply card
+
+`VoiceCardControls` owns the provider-neutral reducer, presentation gates,
+announcement consumption, Notes & Sources disclosure and idle timer. Its own
+state channel publishes immutable presentation snapshots. `createVoiceControl`
+connects that channel to `VoiceCardView` through synchronous `mountView.update`;
+the dock channel never copies transcript or result state. The card section,
+dismiss control, live region and details node retain identity across updates.
+The owner keeps native dismiss/disclosure listeners and the idle interaction
+check; Vue alone paints the card. Session cleanup disconnects the card channel
+before the parent dock is disposed. No provider text becomes HTML or links.
+
+Injected voice controls without `connectCard` use the isolated native
+`cardCompat` subscriber over their existing markup. The same card owner supplies
+its snapshot and disposes the subscription; the default Vue control never uses
+that painter. Provider strings remain text and interactive host nodes stay intact.

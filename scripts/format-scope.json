@@ -1166,11 +1166,15 @@
   "src/voice/dockState.js",
   "src/voice/VoiceDockView.vue",
   "src/voice/VoiceSettingsView.vue",
-  "src/voice/VoiceCardHost.vue",
+  "src/voice/VoiceCardView.vue",
   "src/ui/styles/voice-dock-view.css",
   "scripts/qa-voice-dock-contrast.mjs",
   "src/voice/dockCompat.js",
   "src/scenes/sharingControls.test.mjs",
   "src/ui/styles/stories.css",
-  "scripts/qa-scene-dialog-file-drop.mjs"
+  "scripts/qa-scene-dialog-file-drop.mjs",
+  "src/voice/voiceCardState.test.mjs",
+  "src/voice/cardCompat.js",
+  "src/voice/voiceCardCompat.test.mjs",
+  "src/ui/styles/voice-card-view.css"
 ]

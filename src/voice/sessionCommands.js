@@ -2,6 +2,7 @@ import { createVoiceControl, voiceStatusLabel } from './control.js';
 import { attachCompatibleDock } from './dockCompat.js';
 import { createVoiceSession } from './session.js';
 import { VoiceCardControls } from './voiceCard.js';
+import { connectCompatibleCard } from './cardCompat.js';
 import { PointerReticle } from './pointerReticle.js';
 import { VOICE_PROVIDERS } from './providerCapabilities.js';
 import { msg, registerUnsavedWork, t } from '../i18n/index.js';
@@ -140,6 +141,9 @@ export function createVoiceCommands({
   const card = ui.card
     ? createCard({
         root: ui.root,
+        connectView:
+          ui.connectCard ??
+          ((channel) => connectCompatibleCard(ui.root, channel)),
         ...(panelHost ? { onRender: () => panelMount?.panel.sync() } : {}),
       })
     : null;

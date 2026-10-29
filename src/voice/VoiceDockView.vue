@@ -3,13 +3,12 @@
  * The voice dock: status heading, mic button, visualizer, readout, help and
  * error trays, and (with a panel) the Preview / Settings popover. Pure
  * presentation of the voice dock owner; session, cost, provider, panel and
- * preference code own every value, listener and focus move. Two hosted
- * parts are deliberately static: the visualizer bars, which realtimeInput
- * drives every frame, and the reply card, which voiceCard.js owns.
+ * preference code own every value, listener and focus move. The visualizer bars stay static for realtimeInput; the card receives its
+ * own owner snapshot independently of the dock state.
  */
 import { onMounted, ref } from 'vue';
 import { t } from '../i18n/index.js';
-import VoiceCardHost from './VoiceCardHost.vue';
+import VoiceCardView from './VoiceCardView.vue';
 import VoiceSettingsView from './VoiceSettingsView.vue';
 
 defineProps({
@@ -17,6 +16,7 @@ defineProps({
   state: { type: Object, required: true },
   /** Whether the dock has its Preview / Settings popover. */
   panel: { type: Boolean, default: false },
+  cardState: { type: Object, default: null },
   dismissError: { type: Function, required: true },
 });
 const visualizer = ref(null);
@@ -216,7 +216,7 @@ const tabIndex = (state, view) =>
           <p id="gev-voice-preview-empty" :hidden="state.previewEmptyHidden">
             {{ state.previewEmptyText }}
           </p>
-          <VoiceCardHost />
+          <VoiceCardView :state="cardState" />
         </section>
         <section
           id="gev-voice-settings-panel"
@@ -228,7 +228,7 @@ const tabIndex = (state, view) =>
         </section>
       </div>
     </section>
-    <VoiceCardHost v-else />
+    <VoiceCardView v-else :state="cardState" />
     <div class="gev-voice-error-tray" role="alert" aria-live="assertive">
       <div class="gev-voice-error-header">
         <span>{{ t('VOICE SYSTEM ERROR') }}</span>

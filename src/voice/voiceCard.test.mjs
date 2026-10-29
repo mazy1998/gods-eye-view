@@ -1,5 +1,7 @@
+import '../testSupport/componentDom.mjs';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import test, { afterEach } from 'node:test';
+import { createVoiceControl } from './control.js';
 import { readStylesheet } from '../testSupport/readStylesheet.mjs';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
@@ -207,60 +209,37 @@ test('markup: the card nests inside the voice control with every element and a p
   );
 });
 
-function fakeRoot() {
-  const make = (id) => {
-    const listeners = new Map();
-    const node = {
-      id,
-      hidden: false,
-      textContent: '',
-      dataset: {},
-      children: [],
-      ownerDocument: null,
-      addEventListener(type, handler, options) {
-        listeners.set(type, handler);
-        options?.signal?.addEventListener('abort', () =>
-          listeners.delete(type),
-        );
-      },
-      removeEventListener(type, handler) {
-        if (listeners.get(type) === handler) listeners.delete(type);
-      },
-      fire: (type) => listeners.get(type)?.({}),
-      listenerCount: () => listeners.size,
-      replaceChildren(...nodes) {
-        this.children = nodes;
-      },
-      append(...nodes) {
-        this.children.push(...nodes);
-      },
-      matches: () => false,
-    };
-    return node;
+const mountedControls = new Set();
+afterEach(() => {
+  for (const ui of mountedControls) ui.dispose();
+  mountedControls.clear();
+});
+
+function realRoot() {
+  const ui = createVoiceControl({ panel: true });
+  mountedControls.add(ui);
+  const { root, connectCard: connectView } = ui;
+  const nodes = new Map([...root.querySelectorAll('[id]')].map(node => [node.id, node]));
+  const dismiss = nodes.get('gev-voice-card-dismiss');
+  const add = dismiss.addEventListener.bind(dismiss);
+  const registered = new Set();
+  dismiss.addEventListener = (type, listener, options) => {
+    registered.add(listener);
+    options?.signal?.addEventListener('abort', () => registered.delete(listener));
+    add(type, listener, options);
   };
-  const nodes = new Map();
-  const doc = { createElement: (tag) => ({ ...make(tag), tag }) };
-  const root = {
-    ...make('gev-voice-control'),
-    querySelector(selector) {
-      const id = selector.slice(1);
-      if (!nodes.has(id)) {
-        const node = make(id);
-        node.ownerDocument = doc;
-        nodes.set(id, node);
-      }
-      return nodes.get(id);
-    },
-  };
-  return { root, nodes };
+  dismiss.listenerCount = () => registered.size;
+  dismiss.fire = type => dismiss.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+  return { root, nodes, connectView, ui };
 }
 
 test('controls: render, idle hide, dismiss and idempotent teardown', () => {
-  const { root, nodes } = fakeRoot();
+  const { root, nodes, connectView } = realRoot();
   const timers = new Map();
   let nextId = 1;
   const card = new VoiceCardControls({
     root,
+    connectView,
     idleMs: 1000,
     setTimer: (fn) => {
       const id = nextId++;
@@ -443,12 +422,13 @@ test('presentation: stale and unmatched events never reopen the card', () => {
 });
 
 test('presentation controls preserve real reducer content and the existing 14-second idle deadline', () => {
-  const { root, nodes } = fakeRoot();
+  const { root, nodes, connectView } = realRoot();
   const timers = new Map();
   let next = 0,
     renders = 0;
   const card = new VoiceCardControls({
     root,
+    connectView,
     setTimer(fn, ms) {
       const id = ++next;
       timers.set(id, { fn, ms });
@@ -517,9 +497,10 @@ test('presentation controls preserve real reducer content and the existing 14-se
 });
 
 test('a new hidden reply with identical words is still a fresh announcement', () => {
-  const { root } = fakeRoot();
+  const { root, connectView, ui } = realRoot();
   const card = new VoiceCardControls({
     root,
+    connectView,
     setTimer: () => 1,
     clearTimer() {},
   });
@@ -548,9 +529,10 @@ test('additive presentation gates retain the current localized reducer labels', 
   const previous = getLocale();
   try {
     setLocale('es');
-    const { root } = fakeRoot();
+    const { root, connectView, ui } = realRoot();
     const card = new VoiceCardControls({
       root,
+      connectView,
       setTimer: () => 1,
       clearTimer() {},
     });
@@ -597,26 +579,15 @@ test('manual panel and preference compose with the actual card without changing 
   const { createManualVoicePanel } = await import('./panel/manualPanel.js');
   const { createVoicePreferences, bindPreferenceControls } =
     await import('./panel/preferences.js');
-  const { createVoiceDockState } = await import('./dockState.js');
-  const { root } = fakeRoot();
+  const { root, connectView, ui } = realRoot();
   let panel;
   const card = new VoiceCardControls({
     root,
+    connectView,
     setTimer: () => 1,
     clearTimer() {},
     onRender: () => panel?.sync(),
   });
-  const ui = {
-    root,
-    card: root.querySelector('#gev-voice-card'),
-    voicePanel: root.querySelector('#panel'),
-    previewPanel: root.querySelector('#preview-panel'),
-    voiceSettingsPanel: root.querySelector('#settings-panel'),
-    previewEmpty: root.querySelector('#empty'),
-    voicePreviewInput: root.querySelector('#preview-input'),
-    voicePreviewNote: root.querySelector('#preview-note'),
-    dock: createVoiceDockState(),
-  };
   const preference = createVoicePreferences({ storage: null });
   const fields = bindPreferenceControls({
     ui,

@@ -362,6 +362,8 @@ const storiesFixture = {
     },
   ],
 };
+const voiceCardHtml = `<div id="command-dock"><div id="gev-voice-control" class="gev-surface"><section id="gev-voice-card" class="gev-voice-card" data-busy="true" data-audit="card"><div class="gev-voice-card-header"><span class="gev-voice-card-kicker" data-audit="card-kicker">VOICE</span><span class="gev-voice-card-phase" data-audit="card-phase">RUNNING</span><button class="gev-voice-card-dismiss" data-audit="card-dismiss">×</button></div><p class="gev-voice-card-caption" data-role="assistant"><span class="gev-voice-card-who" data-audit="card-who">GEV</span>Reply</p><p class="gev-voice-card-pointer"><span class="gev-voice-card-pointer-label" data-audit="card-pointer">Here</span></p><ol class="gev-voice-card-plan" data-audit="card-plan">${['pending', 'running', 'done', 'failed', 'cancelled'].map((status) => `<li class="gev-voice-card-step" data-status="${status}" data-audit="card-step-${status}">Step</li>`).join('')}</ol><div class="gev-voice-card-result" data-audit="card-result"><div class="gev-voice-card-result-title" data-audit="card-title">Result</div>${['live', 'stale', 'degraded', 'fallback', 'partial', 'unavailable'].map((tone) => `<span class="gev-voice-card-chip" data-tone="${tone}" data-audit="card-chip-${tone}">${tone}</span>`).join('')}<ul class="gev-voice-card-lines"><li data-audit="card-line">Literal result</li></ul><ol class="gev-voice-card-referents"><li data-audit="card-referent">Reference</li></ol><details class="gev-voice-card-notes" open><summary data-audit="card-notes-open">NOTES &amp; SOURCES</summary></details><details class="gev-voice-card-notes"><summary data-audit="card-notes-closed">NOTES &amp; SOURCES</summary></details></div></section></div></div>`;
+
 export const fixtures = [
   {
     sheet: 'feedback-views',
@@ -405,4 +407,5 @@ export const fixtures = [
   cameraFixture,
   { sheet: 'voice-dock-view', html: voiceHtml },
   storiesFixture,
+  { sheet: 'voice-card-view', html: voiceCardHtml },
 ];
