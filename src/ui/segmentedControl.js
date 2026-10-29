@@ -10,6 +10,18 @@ export function nextSegmentValue(values, value, key, { homeEnd = true } = {}) {
   return values[(values.indexOf(value) + step + values.length) % values.length];
 }
 
+/**
+ * The one roving tab stop among `{value, disabled}` items: the selected item
+ * when it is enabled, otherwise the first enabled item, so a disabled
+ * selection never makes the group unreachable by keyboard.
+ */
+export function rovingStop(items, value) {
+  return (
+    items.find((item) => !item.disabled && item.value === value) ??
+    items.find((item) => !item.disabled)
+  );
+}
+
 /** Paint controlled selection without emitting changes or moving focus. */
 export function syncSegmentedControl(
   buttons,

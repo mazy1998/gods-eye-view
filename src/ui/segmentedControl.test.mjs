@@ -4,6 +4,7 @@ import { railFixture } from './railTestFixture.mjs';
 import {
   createSegmentedControl,
   nextSegmentValue,
+  rovingStop,
 } from './segmentedControl.js';
 
 function fixture(options = {}) {
@@ -171,4 +172,16 @@ test('pure value navigation can be reused without a DOM', () => {
   );
   assert.equal(nextSegmentValue([], 'fit', 'ArrowRight'), undefined);
   assert.equal(nextSegmentValue(['fit'], 'fit', 'Escape'), undefined);
+});
+
+test('the roving stop skips a disabled selection and falls back to the first enabled item', () => {
+  const items = [
+    { value: 'a' },
+    { value: 'b', disabled: true },
+    { value: 'c' },
+  ];
+  assert.equal(rovingStop(items, 'c'), items[2]);
+  assert.equal(rovingStop(items, 'b'), items[0]);
+  assert.equal(rovingStop(items, 'missing'), items[0]);
+  assert.equal(rovingStop([{ value: 'a', disabled: true }], 'a'), undefined);
 });

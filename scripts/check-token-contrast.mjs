@@ -27,6 +27,8 @@ const NON_TEXT = ['--gev-border', '--gev-focus-ring', '--gev-accent', '--gev-war
 const LAYERED = [
   ['--gev-text', '--gev-control-bg'],
   ['--gev-text-muted', '--gev-control-bg'],
+  ['--gev-text', '--gev-control-bg-hover'],
+  ['--gev-text-muted', '--gev-control-bg-hover'],
   ['--gev-text', '--gev-accent-tint'],
   ['--gev-accent-text', '--gev-accent-tint'],
   ['--gev-danger-text', '--gev-danger-tint'],

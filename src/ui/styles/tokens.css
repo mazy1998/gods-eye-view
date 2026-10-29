@@ -36,6 +36,7 @@
   --gev-focus-ring: var(--text-primary);
   --gev-focus-ring-inner: #061014;
   --gev-control-bg: rgba(255, 255, 255, 0.06);
+  --gev-control-bg-hover: rgba(255, 255, 255, 0.09);
   --gev-disabled-opacity: 0.45;
   --gev-backdrop-blur: none;
   --gev-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -72,7 +73,7 @@
   --gev-border: #8a989e;
   --gev-border-subtle: rgba(220, 232, 236, 0.14);
   --gev-text: #eef1f2;
-  --gev-text-muted: #c2cbd0;
+  --gev-text-muted: #ccd4d8;
   --gev-accent: #2fd9ec;
   --gev-accent-text: #7ae8f5;
   --gev-accent-tint: rgba(47, 217, 236, 0.12);
@@ -86,6 +87,7 @@
   --gev-focus-ring: #f2f5f6;
   --gev-focus-ring-inner: #061014;
   --gev-control-bg: rgba(255, 255, 255, 0.08);
+  --gev-control-bg-hover: rgba(255, 255, 255, 0.1);
   --gev-backdrop-blur: blur(18px) saturate(1.2);
   --gev-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35);
   --gev-elevation-2: 0 12px 32px rgba(0, 0, 0, 0.4);
@@ -99,7 +101,7 @@
   --gev-border: #687780;
   --gev-border-subtle: rgba(16, 40, 52, 0.12);
   --gev-text: #13212a;
-  --gev-text-muted: #4f5d66;
+  --gev-text-muted: #4a5861;
   --gev-accent: #007c8f;
   --gev-accent-text: #00626f;
   --gev-accent-tint: rgba(0, 124, 143, 0.1);
@@ -113,6 +115,7 @@
   --gev-focus-ring: #005f6e;
   --gev-focus-ring-inner: #fff;
   --gev-control-bg: rgba(16, 40, 52, 0.05);
+  --gev-control-bg-hover: rgba(16, 40, 52, 0.08);
   --gev-backdrop-blur: blur(18px) saturate(1.4);
   --gev-elevation-1: 0 1px 2px rgba(16, 32, 40, 0.12);
   --gev-elevation-2: 0 12px 32px rgba(16, 32, 40, 0.18);

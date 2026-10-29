@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createStatusBadge, updateStatusBadge } from './statusBadge.js';
-import StatusBadge from './StatusBadge.vue';
+import StatusBadge from './primitives/StatusBadge.vue';
 import { createRailCards } from './railCards.js';
 import { railFixture } from './railTestFixture.mjs';
 

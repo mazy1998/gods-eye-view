@@ -17,7 +17,7 @@ import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { mountView } from './mountView.js';
-import StatusBadge from './StatusBadge.vue';
+import StatusBadge from './primitives/StatusBadge.vue';
 import StyleIndicator from './StyleIndicator.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { RadioControls } from './radio.js';
