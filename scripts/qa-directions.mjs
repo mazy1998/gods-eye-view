@@ -194,17 +194,28 @@ const cameraPose = () =>
   });
 const poseDelta = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
+/** Keep the same projected globe target clear of the borrowed panel drawer. */
+async function clickGlobe(at) {
+  const open = await page.evaluate(() => {
+    const drawer = document.getElementById('gev-drawer');
+    return Boolean(drawer && !drawer.hidden);
+  });
+  if (open) await page.click('#gev-drawer .gev-panel-header-actions button');
+  await page.mouse.click(at.x, at.y);
+  if (open) await page.click('.gev-rail-item[data-destination="layers"]');
+}
+
 /** Place A and B by clicking the globe. Returns whether both landed. */
 async function placeEndpoints(a, b) {
   await clickChip('set-a');
   const atA = await screenAt(a.lat, a.lon);
   if (!atA) return false;
-  await page.mouse.click(atA.x, atA.y);
+  await clickGlobe(atA);
   await sleep(700);
   await clickChip('set-b');
   const atB = await screenAt(b.lat, b.lon);
   if (!atB) return false;
-  await page.mouse.click(atB.x, atB.y);
+  await clickGlobe(atB);
   return true;
 }
 
@@ -327,7 +338,7 @@ try {
 
   let at = await screenAt(FERRY.lat, FERRY.lon);
   check('the Ferry Building is on screen', !!at, JSON.stringify(at));
-  await page.mouse.click(at.x, at.y);
+  await clickGlobe(at);
   await sleep(800);
   state = await layerState();
   check(
@@ -351,7 +362,7 @@ try {
   await clickChip('set-b');
   at = await screenAt(GGPARK.lat, GGPARK.lon);
   check('Golden Gate Park is on screen', !!at, JSON.stringify(at));
-  await page.mouse.click(at.x, at.y);
+  await clickGlobe(at);
   const lateOwners = await page.evaluate(() => window.__gevQaLateHandler);
   check(
     'a handler later in the same click still sees the pointer as taken',

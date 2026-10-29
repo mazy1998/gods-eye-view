@@ -364,6 +364,10 @@ const storiesFixture = {
 };
 const voiceCardHtml = `<div id="command-dock"><div id="gev-voice-control" class="gev-surface"><section id="gev-voice-card" class="gev-voice-card" data-busy="true" data-audit="card"><div class="gev-voice-card-header"><span class="gev-voice-card-kicker" data-audit="card-kicker">VOICE</span><span class="gev-voice-card-phase" data-audit="card-phase">RUNNING</span><button class="gev-voice-card-dismiss" data-audit="card-dismiss">×</button></div><p class="gev-voice-card-caption" data-role="assistant"><span class="gev-voice-card-who" data-audit="card-who">GEV</span>Reply</p><p class="gev-voice-card-pointer"><span class="gev-voice-card-pointer-label" data-audit="card-pointer">Here</span></p><ol class="gev-voice-card-plan" data-audit="card-plan">${['pending', 'running', 'done', 'failed', 'cancelled'].map((status) => `<li class="gev-voice-card-step" data-status="${status}" data-audit="card-step-${status}">Step</li>`).join('')}</ol><div class="gev-voice-card-result" data-audit="card-result"><div class="gev-voice-card-result-title" data-audit="card-title">Result</div>${['live', 'stale', 'degraded', 'fallback', 'partial', 'unavailable'].map((tone) => `<span class="gev-voice-card-chip" data-tone="${tone}" data-audit="card-chip-${tone}">${tone}</span>`).join('')}<ul class="gev-voice-card-lines"><li data-audit="card-line">Literal result</li></ul><ol class="gev-voice-card-referents"><li data-audit="card-referent">Reference</li></ol><details class="gev-voice-card-notes" open><summary data-audit="card-notes-open">NOTES &amp; SOURCES</summary></details><details class="gev-voice-card-notes"><summary data-audit="card-notes-closed">NOTES &amp; SOURCES</summary></details></div></section></div></div>`;
 
+// Mirrors DirectionsView inside its existing Transport row. The new host is
+// transparent under Cyber; all chip/list skins remain legacy-owned.
+const directionsHtml = `<section id="data-panel"><div id="data-toggles" class="layer-browser gev-surface"><div class="data-toggle-row" data-layer-id="directions"><section id="directions-controls-body" class="directions-view gev-surface" data-audit="directions-frame"><div class="data-toggle-meta" data-audit="directions-summary">Drive · 2.1 km · 5 min</div><div class="data-toggle-controls">${['mode-car', 'mode-foot', 'mode-bike', 'set-a', 'set-b', 'swap', 'fly', 'clear'].map((id) => b(`directions-${id}`, 'data-toggle-chip', `data-chip-id="${id}" data-state-active data-state-pressed`, id)).join('')}${b('directions-fly-busy', 'data-toggle-chip chip-loading', 'data-chip-id="fly" aria-busy="true" disabled', 'FLY ···')}</div><ol class="data-row-list"><li>${b('directions-step', 'data-row-list-item', 'data-list-item-id="step-0" data-state-active', '<span class="data-row-list-lead" data-audit="directions-step-lead">1 · 100 m</span><span class="data-row-list-text" data-audit="directions-step-text">Continue straight</span>')}</li><li>${b('directions-current', 'data-row-list-item current', 'data-list-item-id="step-1" aria-current="step" data-state-active', '<span class="data-row-list-lead">200 m</span><span class="data-row-list-text">Turn right</span>')}</li><li>${b('directions-truncated', 'data-row-list-item note', 'data-list-item-id="step-truncated" disabled', '<span class="data-row-list-text">Only the first steps shown</span>')}</li></ol></section></div></div></section>`;
+
 export const fixtures = [
   {
     sheet: 'feedback-views',
@@ -408,4 +412,10 @@ export const fixtures = [
   { sheet: 'voice-dock-view', html: voiceHtml },
   storiesFixture,
   { sheet: 'voice-card-view', html: voiceCardHtml },
+
+  {
+    sheet: 'directions',
+    html: directionsHtml,
+    outsideClasses: ['gev-surface', 'directions-view'],
+  },
 ];

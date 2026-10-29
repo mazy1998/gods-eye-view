@@ -1,0 +1,134 @@
+/* One content view can move from its Transport row to a Tools host. */
+.directions-view {
+  min-width: 0;
+  border: 0;
+  border-radius: var(--gev-radius-sm);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+.directions-view [hidden] {
+  display: none !important;
+}
+.directions-view .data-toggle-meta {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: var(--gev-font-size-xs);
+}
+.directions-view .data-toggle-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gev-space-1);
+  margin-top: var(--gev-space-2);
+}
+.directions-view .data-toggle-chip {
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--gev-space-1) var(--gev-space-2);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: var(--gev-radius-sm);
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  white-space: normal;
+  overflow-wrap: normal;
+  cursor: pointer;
+}
+.directions-view .data-row-list {
+  margin: var(--gev-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 150px;
+  overflow: auto;
+}
+.directions-view .data-row-list-item {
+  display: flex;
+  width: 100%;
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-2);
+  border-width: 1px;
+  border-style: solid;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+.directions-view .data-row-list-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.directions-view .data-row-list-lead {
+  flex: 0 0 auto;
+}
+.directions-view :disabled {
+  cursor: default;
+}
+:where(:root:not([data-ui-theme='cyber'])) .directions-view :disabled {
+  opacity: var(--gev-disabled-opacity);
+}
+:where(:root:not([data-ui-theme='cyber'])) .directions-view {
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border-color: var(--gev-border-subtle);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) .directions-view .data-toggle-meta,
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-lead {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .directions-view .data-row-list-lead,
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-item::before {
+  opacity: 1;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-item::before {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .directions-view .data-toggle-chip {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-toggle-chip:hover:not(:disabled) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-toggle-chip.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-item {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-item:is(.active, .current) {
+  color: var(--gev-accent-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .directions-view
+  .data-row-list-text {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}

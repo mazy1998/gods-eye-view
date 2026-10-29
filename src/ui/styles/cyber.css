@@ -2928,3 +2928,12 @@
   color: var(--text-primary);
   border-color: var(--glass-border-hover);
 }
+
+/* Directions adds a portable host; the existing Cyber row keeps its skin. */
+:root[data-ui-theme='cyber'] .directions-view.gev-surface {
+  color: inherit;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}

@@ -192,3 +192,17 @@ Injected voice controls without `connectCard` use the isolated native
 `cardCompat` subscriber over their existing markup. The same card owner supplies
 its snapshot and disposes the subscription; the default Vue control never uses
 that painter. Provider strings remain text and interactive host nodes stay intact.
+
+## Directions content
+
+The Directions layer already owns mode, A/B placement, routing, selected steps
+and cinematic flight. No DOM draft extraction is needed. Its existing descriptor
+and row notification feed the single LayerPanel subscription. `DirectionsView`
+accepts `controls`, `summary`, `expanded`, and chip/list-item ID callbacks; it can
+be mounted independently through `mountView` when Tools hosts it. The Transport
+row currently supplies those props and keeps the shared layer visibility switch.
+LayerPanel re-reads each current descriptor and dispatches existing owner params
+with user origin. The view adds no request, pointer owner, application state,
+clock or listener to the layer. It scrolls current steps after Vue's paint and
+cancels pending scroll/action callbacks on disposal. Existing chip/list hooks
+and their explicit hidden state remain on the native nodes.

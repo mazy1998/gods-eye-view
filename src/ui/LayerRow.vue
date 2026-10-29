@@ -2,6 +2,7 @@
 import { ref, watch, nextTick } from 'vue';
 import ToggleSwitch from './primitives/ToggleSwitch.vue';
 import LayerText from './LayerText.vue';
+import DirectionsView from './DirectionsView.vue';
 import { t } from '../i18n/index.js';
 const props = defineProps({
   row: { type: Object, required: true },
@@ -13,7 +14,10 @@ const props = defineProps({
 const expanded = ref(true);
 const list = ref(null);
 watch(
-  () => props.row.controls?.list?.items?.find((item) => item.current)?.id,
+  () =>
+    props.row.id === 'directions'
+      ? null
+      : props.row.controls?.list?.items?.find((item) => item.current)?.id,
   async () => {
     await nextTick();
     list.value
@@ -74,9 +78,22 @@ watch(
         </button>
       </div>
     </div>
-    <LayerText class="data-toggle-meta" :text="row.meta" :hidden="!expanded" />
+    <DirectionsView
+      v-if="row.id === 'directions'"
+      :controls="row.controls"
+      :summary="row.meta"
+      :expanded="expanded"
+      :chip="(id) => chip(row.id, id)"
+      :list-item="(id) => listItem(row.id, id)"
+    />
+    <LayerText
+      v-else
+      class="data-toggle-meta"
+      :text="row.meta"
+      :hidden="!expanded"
+    />
     <div
-      v-if="!row.readout"
+      v-if="row.id !== 'directions' && !row.readout"
       class="data-toggle-controls"
       :hidden="
         !expanded ||
@@ -139,7 +156,7 @@ watch(
       </div>
     </div>
     <ol
-      v-if="!row.readout"
+      v-if="row.id !== 'directions' && !row.readout"
       ref="list"
       class="data-row-list"
       :hidden="!expanded || !row.controls?.list?.items?.length"

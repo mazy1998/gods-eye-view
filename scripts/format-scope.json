@@ -1176,5 +1176,7 @@
   "src/voice/voiceCardState.test.mjs",
   "src/voice/cardCompat.js",
   "src/voice/voiceCardCompat.test.mjs",
-  "src/ui/styles/voice-card-view.css"
+  "src/ui/styles/voice-card-view.css",
+  "src/ui/styles/directions.css",
+  "src/ui/directionsView.test.mjs"
 ]
