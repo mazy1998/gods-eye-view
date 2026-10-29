@@ -296,3 +296,17 @@ test('a share link that carries detection OFF still restores OFF', () => {
   assert.equal(dense.detectionMode, 'DENSE');
   assert.equal(dense.detectionDensity, 75);
 });
+
+test('first run opens with the HUD off, and old share links keep their HUD meaning', async () => {
+  // K12 (user decision 2026-10-29): the first view is clean. Tactical stays
+  // the layout the HUD shows once turned on.
+  const { GLOBAL_POST_DEFAULTS } = await import('./ui/visualPresets.js');
+  assert.equal(GLOBAL_POST_DEFAULTS.hudVisible, false);
+  assert.equal(GLOBAL_POST_DEFAULTS.hudVariant, 'tactical');
+  const ui = readShellSource();
+  assert.match(ui, /_initHUDToggle\(\) \{\s*this\._setHudVariant\('tactical'\);[\s\S]*?this\.hud\.setMode\('off'\);/);
+  // Format v1 links were made with the HUD on by default: a link that omits
+  // the HUD still means on, so no existing link changes meaning.
+  const { SHARE_VIEW_STYLE_DEFAULTS } = await import('./share/viewCodec.js');
+  assert.equal(SHARE_VIEW_STYLE_DEFAULTS.normal.hudVisible, true);
+});

@@ -540,7 +540,9 @@ export const SHARE_VIEW_STYLE_DEFAULTS = Object.freeze(
           sharpen: preset.sharpen?.enabled ?? g.sharpen.enabled,
           sharpenIntensity: preset.sharpen?.intensity ?? g.sharpen.intensity,
           hudVariant: preset.hudVariant ?? g.hudVariant,
-          hudVisible: preset.hudVisible ?? g.hudVisible,
+          // Frozen: v1 links were made when the first view showed the HUD.
+          // The app now starts with it off (K12); old links keep meaning on.
+          hudVisible: preset.hudVisible ?? true,
           detectionMode: detection.enabled ? detection.profile : 'OFF',
           detectionDensity: detection.densityPct,
           detectionAllocation: normalizeAllocationStrategy(
