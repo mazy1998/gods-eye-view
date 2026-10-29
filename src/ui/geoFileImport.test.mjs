@@ -6,158 +6,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { initGeoFileImport, summarize } from './geoFileImport.js';
+import { toolDocument, instrument } from '../testSupport/toolDomFixture.mjs';
+const { initGeoFileImport, summarize } = await import('./geoFileImport.js');
 import { GeoImportError, MAX_IMPORTED_FILES } from '../data/geoFileImport.js';
 import { describeUnsavedWork } from '../i18n/index.js';
 
-class FakeClassList {
-  constructor() {
-    this.names = new Set();
-  }
-  add(...n) {
-    n.forEach((x) => this.names.add(x));
-  }
-  remove(...n) {
-    n.forEach((x) => this.names.delete(x));
-  }
-  contains(n) {
-    return this.names.has(n);
-  }
-  toggle(n, force) {
-    const on = force === undefined ? !this.names.has(n) : Boolean(force);
-    if (on) this.names.add(n);
-    else this.names.delete(n);
-    return on;
-  }
-}
-
-// The one focused element across every fake document (tests run one at a time).
-const focus = { active: null };
-
-class FakeElement {
-  constructor(tagName = 'div', id = '') {
-    this.tagName = tagName.toUpperCase();
-    this.id = id;
-    this.classList = new FakeClassList();
-    this.dataset = {};
-    this.style = {};
-    this.attributes = new Map();
-    this.children = [];
-    this.parent = null;
-    this.listeners = [];
-    this.textContent = '';
-    this.value = '';
-    this.clicks = 0;
-  }
-  set className(v) {
-    this.classList = new FakeClassList();
-    String(v)
-      .split(/\s+/)
-      .filter(Boolean)
-      .forEach((n) => this.classList.add(n));
-  }
-  setAttribute(n, v) {
-    this.attributes.set(n, String(v));
-  }
-  getAttribute(n) {
-    return this.attributes.get(n) ?? null;
-  }
-  append(...kids) {
-    for (const k of kids) {
-      k.parent = this;
-      this.children.push(k);
-    }
-  }
-  replaceChildren(...kids) {
-    this.children = [];
-    this.append(...kids);
-  }
-  addEventListener(type, listener, options) {
-    this.listeners.push({ type, listener, options });
-  }
-  removeEventListener(type, listener) {
-    const at = this.listeners.findIndex(
-      (l) => l.type === type && l.listener === listener,
-    );
-    if (at >= 0) this.listeners.splice(at, 1);
-  }
-  emit(type, event = {}) {
-    for (const { listener } of this.listeners.filter((l) => l.type === type))
-      listener({
-        target: this,
-        preventDefault() {
-          this.prevented = true;
-        },
-        ...event,
-      });
-  }
-  click() {
-    this.clicks += 1;
-    this.emit('click');
-  }
-  focus() {
-    focus.active = this;
-  }
-  contains(el) {
-    for (let at = el; at; at = at.parent) if (at === this) return true;
-    return false;
-  }
-  *walk() {
-    for (const kid of this.children) {
-      yield kid;
-      yield* kid.walk();
-    }
-  }
-  querySelectorAll(selector) {
-    if (selector !== '[data-import-id]') throw new Error(`fake: ${selector}`);
-    return [...this.walk()].filter((el) => el.dataset.importId);
-  }
-  querySelector(selector) {
-    const exact = /^button\[data-action="([a-z]+)"\]$/.exec(selector);
-    for (const el of this.walk()) {
-      if (el.tagName !== 'BUTTON') continue;
-      if (selector === 'button' || (exact && el.dataset.action === exact[1]))
-        return el;
-    }
-    return null;
-  }
-  closest(selector) {
-    for (let el = this; el; el = el.parent) {
-      if (
-        selector === 'button[data-action]' &&
-        el.tagName === 'BUTTON' &&
-        el.dataset.action
-      )
-        return el;
-      if (selector === '[data-import-id]' && el.dataset.importId) return el;
-    }
-    return null;
-  }
-}
-
 function setup({ load, navigation, flyToSource, subscribeMapSource } = {}) {
-  focus.active = null;
-  const els = {
-    'geo-import-button': new FakeElement('button', 'geo-import-button'),
-    'geo-import-input': new FakeElement('input', 'geo-import-input'),
-    'geo-import-list': new FakeElement('ul', 'geo-import-list'),
-    'geo-import-hint': new FakeElement('span', 'geo-import-hint'),
-  };
-  const document = {
-    body: new FakeElement('body'),
-    getElementById: (id) => els[id] ?? null,
-    createElement: (tag) => new FakeElement(tag),
-    get activeElement() {
-      return focus.active;
-    },
-  };
-  Object.setPrototypeOf(document, new FakeElement('document'));
+  const { document } = toolDocument('geo-import-group');
+  const els = {};
   const added = [];
   const removed = [];
   const flights = [];
   let renders = 0;
   const viewer = {
-    container: new FakeElement('div', 'cesiumContainer'),
+    container: instrument(globalThis.document.createElement('div')),
     scene: { requestRender: () => (renders += 1) },
     dataSources: {
       add: async (ds) => {
@@ -194,6 +56,13 @@ function setup({ load, navigation, flyToSource, subscribeMapSource } = {}) {
     ...(subscribeMapSource ? { subscribeMapSource } : {}),
     flyToSource: flyToSource || ((_viewer, ds) => flights.push(ds)),
   });
+  for (const id of [
+    'geo-import-button',
+    'geo-import-input',
+    'geo-import-list',
+    'geo-import-hint',
+  ])
+    els[id] = document.getElementById(id);
   return {
     tool,
     els,
@@ -210,7 +79,7 @@ function setup({ load, navigation, flyToSource, subscribeMapSource } = {}) {
 const file = (name, extra = {}) => ({ name, size: 10, ...extra });
 const rows = (els) => els['geo-import-list'].children;
 const action = (row, name) =>
-  row.children.find((c) => c.dataset.action === name);
+  [...row.children].find((c) => c.dataset.action === name);
 
 // Runs first: tools left by later tests would answer the same registry.
 test('imported files make the language switch ask first', async () => {
@@ -231,7 +100,9 @@ test('returns null without its markup or viewer', () => {
   assert.equal(
     initGeoFileImport({
       viewer: null,
-      document: { getElementById: () => new FakeElement() },
+      document: {
+        getElementById: () => globalThis.document.createElement('div'),
+      },
     }),
     null,
   );
@@ -269,11 +140,12 @@ test('the Import button opens the picker and a pick imports each file', async ()
 test('file names are text, never markup', async () => {
   const t = setup();
   await t.tool.importFiles([file('<img src=x onerror=alert(1)>.kml')]);
-  const name = rows(t.els)[0].children.find((c) =>
+  const name = [...rows(t.els)[0].children].find((c) =>
     c.classList.contains('geo-import-name'),
   );
   assert.equal(name.textContent, '<img src=x onerror=alert(1)>.kml');
-  assert.equal(name.innerHTML, undefined);
+  assert.equal(name.querySelector('img'), null);
+  assert.match(name.innerHTML, /^&lt;img/);
 });
 
 test('row buttons hide, show, fly to and remove a file', async () => {
@@ -406,7 +278,7 @@ test('destroy removes every file and listener and the window handle', async () =
       t.els['geo-import-list'],
     ])
       assert.equal(el.listeners.length, 0);
-    assert.equal(rows(t.els).length, 0);
+    assert.equal(t.els['geo-import-list'].isConnected, false);
     assert.equal(globalThis.window.__gevGeoImport, undefined);
     assert.equal(t.tool.diagnostics().destroyed, true);
   } finally {
@@ -458,7 +330,7 @@ test('the application composition wires the import and owns its teardown', () =>
   );
   assert.ok(tools.indexOf('defer(() => geoFileImport?.destroy());') > importAt);
   const markup = fs.readFileSync(
-    new URL('./templates/display-controls.html', import.meta.url),
+    new URL('./toolViews/GeoImport.vue', import.meta.url),
     'utf8',
   );
   for (const id of [
@@ -695,9 +567,9 @@ test('keyboard focus stays on the control after hide, show and remove', async ()
   const [first] = rows(t.els);
   action(first, 'toggle').focus();
   press(action(first, 'toggle'));
-  // The list was rebuilt; focus is on the NEW toggle of the same row.
+  // Keyed rows keep their node and the same focused control.
   const again = rows(t.els)[0];
-  assert.notEqual(again, first);
+  assert.equal(again, first);
   assert.equal(t.document.activeElement, action(again, 'toggle'));
   assert.equal(action(again, 'toggle').getAttribute('aria-pressed'), 'false');
   press(action(again, 'toggle'));
@@ -726,7 +598,7 @@ test('KML and KMZ rows say they keep their own styles instead of showing a color
   await t.tool.importFiles([file('a.kml'), file('b.gpx')]);
   const [kml, gpx] = rows(t.els);
   assert.ok(kml.children[0].classList.contains('own-styles'));
-  assert.equal(kml.children[0].style.background, undefined);
+  assert.equal(kml.children[0].style.background, '');
   assert.match(kml.children[1].title, /drawn with its own styles/);
   assert.ok(!gpx.children[0].classList.contains('own-styles'));
   assert.ok(gpx.children[0].style.background);

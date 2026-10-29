@@ -1130,5 +1130,6 @@
   "src/testSupport/componentDom.mjs",
   "src/ui/mountView.test.mjs",
   "docs/COMPONENT-TESTS.md",
-  "src/ui/styles/location-views.css"
+  "src/ui/styles/location-views.css",
+  "src/ui/styles/tool-views.css"
 ]

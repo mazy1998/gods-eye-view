@@ -913,7 +913,6 @@
   "Cyan": "Cian",
   "Green": "Verde",
   "Red": "Rojo",
-  "Clear": "Borrar",
   "Remove every mark from the board": "Quitar todas las marcas del tablero",
   "No street-level imagery providers configured": "No hay proveedores de imágenes a pie de calle configurados",
   "Live Vessels": "Buques en vivo",
@@ -3005,5 +3004,9 @@
   "routing busy — too many routes at once": "servicio de rutas ocupado: demasiadas rutas a la vez",
   "route proxy error": "error del proxy de rutas",
   "Search places or coordinates": "Buscar lugares o coordenadas",
-  "Fly to": "Volar a"
+  "Fly to": "Volar a",
+  "Clear board": "Borrar pizarra",
+  "Drop map files onto the globe": "Suelta archivos de mapas sobre el globo",
+  "Session only — files clear when you reload": "Solo durante la sesión: los archivos se borran al recargar",
+  "Import scene": "Importar escena"
 }

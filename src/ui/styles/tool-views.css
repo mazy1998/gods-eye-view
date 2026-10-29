@@ -1,0 +1,157 @@
+/* These two existing blocks travel intact when the Tools drawer hosts them. */
+.gev-tools.gev-surface {
+  box-sizing: border-box;
+  padding: var(--gev-space-3);
+  color: var(--gev-text);
+  background: var(--gev-surface-base);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-md);
+  color-scheme: var(--gev-color-scheme);
+}
+.gev-tools .gev-tools-title {
+  margin: 0 0 var(--gev-space-2);
+  font-size: var(--gev-font-size-md);
+  color: var(--gev-text);
+}
+.gev-tools .gev-tools-drop-guide {
+  padding: var(--gev-space-3);
+  text-align: center;
+  border: 1px dashed var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+}
+.gev-tools p {
+  margin: var(--gev-space-2) 0;
+  font-size: var(--gev-font-size-sm);
+}
+.gev-tools .gev-tools-meta,
+.gev-tools .draw-hint {
+  color: var(--gev-text-muted);
+  font-size: var(--gev-font-size-xs);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-toggle-btn {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-toggle-btn:hover {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-toggle-btn.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-slider-mini-label,
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface) .pp-icon {
+  color: inherit;
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  :is(.pp-text-input, .pp-select) {
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-text-input::placeholder {
+  color: var(--gev-text-muted);
+  opacity: 1;
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  #draw-label-row {
+  flex-wrap: wrap;
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .pp-slider-row {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segmented,
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segment
+  + .gev-segment {
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segment {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segment:hover {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segment[aria-checked='true'] {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber']) #draw-group.gev-surface)
+  .gev-segment:focus-visible {
+  outline-color: var(--gev-focus-ring);
+  box-shadow: none;
+}
+.gev-tools .geo-import-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) repeat(3, 26px);
+  gap: var(--gev-space-1);
+  padding: var(--gev-space-2) 0;
+  border-top: 1px solid var(--gev-border-subtle);
+}
+.gev-tools .geo-import-name {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--gev-text);
+  font-size: var(--gev-font-size-sm);
+  letter-spacing: normal;
+}
+.gev-tools .geo-import-row > .gev-tools-meta {
+  grid-column: 2;
+  grid-row: 2;
+}
+.gev-tools .geo-import-swatch {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.gev-tools .geo-import-swatch.own-styles {
+  background: transparent;
+  border: 1px dashed var(--gev-text-muted);
+  box-shadow: none;
+}
+.gev-tools .geo-import-action {
+  grid-row: 1 / span 2;
+  width: 26px;
+  height: 28px;
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-tools .geo-import-action:hover {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+}
+.gev-tools :is(button, input, select):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -3px;
+}
+.gev-tools #geo-import-scene {
+  margin-top: var(--gev-space-3);
+}
+body.gev-geo-import-drag #cesiumContainer {
+  outline-color: var(--gev-accent);
+}
+
+/* Undo the old Clear button's zero vertical padding inside this surface. */
+.gev-tools .gev-action-button {
+  min-height: 28px;
+  padding: var(--gev-space-1) var(--gev-space-2);
+  font-size: var(--gev-font-size-xs);
+}

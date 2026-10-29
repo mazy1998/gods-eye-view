@@ -2657,7 +2657,10 @@
       "src/ui/locationViews/LocationPin.vue",
       "src/ui/locationViews/SearchField.vue",
       "src/ui/locationViews/SearchResults.vue",
-      "src/ui/locationViews/MiniStatus.vue"
+      "src/ui/locationViews/MiniStatus.vue",
+      "src/ui/toolViews/DrawControls.vue",
+      "src/ui/toolViews/GeoImport.vue",
+      "src/ui/primitives/ActionButton.vue"
     ],
     "external": [
       "hls.js",

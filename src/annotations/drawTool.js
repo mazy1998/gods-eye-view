@@ -30,6 +30,9 @@
  * at finish, deliberately and in one place — see `finishSpec` in drawMode.js.
  */
 import * as Cesium from 'cesium';
+import { mountView } from '../ui/mountView.js';
+import DrawControls from '../ui/toolViews/DrawControls.vue';
+import { createStateChannel } from '../app/stateChannel.js';
 import { createSegmentedControl } from '../ui/segmentedControl.js';
 import { pickWorldFromScreen } from './annotationResolver.js';
 import {
@@ -71,13 +74,25 @@ const PREVIEW = {
  * @returns {{destroy: Function}|null}
  */
 export function initDrawTool({ viewer, annotations }) {
+  const container = document.getElementById('draw-group');
+  if (!viewer || !annotations || !container) return null;
+  const view = mountView(DrawControls, {
+    parent: container,
+    props: {
+      state: {
+        active: false,
+        shape: 'area',
+        label: '',
+        color: 'primary',
+        hint: '',
+      },
+    },
+  });
   const toggle = document.getElementById('draw-toggle');
   const modeRow = document.getElementById('draw-mode-row');
-  const labelRow = document.getElementById('draw-label-row');
   const labelInput = document.getElementById('draw-label-input');
   const colorSelect = document.getElementById('draw-color-select');
   const clearButton = document.getElementById('draw-clear');
-  const hint = document.getElementById('draw-hint');
   if (!viewer || !annotations || !toggle) return null;
 
   let active = false;
@@ -85,6 +100,20 @@ export function initDrawTool({ viewer, annotations }) {
   let session = null;
   let shape = 'area';
   let color = 'primary';
+  let label = '';
+  let hintText = '';
+  const channel = createStateChannel(() => ({
+    active,
+    shape,
+    color,
+    label,
+    hint: hintText,
+  }));
+  const setLabel = (value) => {
+    if (destroyed) return;
+    label = String(value || '');
+    channel.publish();
+  };
   let handler = null;
   let lease = null;
   let savedDoubleClick = null;
@@ -125,7 +154,8 @@ export function initDrawTool({ viewer, annotations }) {
   );
 
   const setHint = (text) => {
-    if (hint) hint.textContent = text;
+    hintText = text;
+    channel.publish();
   };
 
   // ---- preview ---------------------------------------------------------
@@ -238,14 +268,14 @@ export function initDrawTool({ viewer, annotations }) {
       if (reason !== 'too-few') setHint(drawHint(session));
       return null;
     }
-    const spec = finishSpec(session, { label: labelInput?.value || '', color });
+    const spec = finishSpec(session, { label, color });
     if (!spec) return null;
     // Start a fresh session BEFORE awaiting, so a second Enter or the second
     // half of a double-click cannot submit the same shape twice.
     session = createDrawSession(shape);
     cursor = null;
     syncPreview();
-    if (labelInput) labelInput.value = '';
+    setLabel('');
     const attempt = generation;
     try {
       const result = await annotations.annotate([spec], {
@@ -315,6 +345,7 @@ export function initDrawTool({ viewer, annotations }) {
     // shape left the person pressing Enter at a silent panel. A focused button
     // keeps its own Enter — see enterBelongsToDrawing.
     if (event.key === 'Enter') {
+      if (event.target === labelInput) setLabel(labelInput.value);
       if (session?.vertices?.length && enterBelongsToDrawing(event)) {
         event.preventDefault();
         void finish();
@@ -354,10 +385,6 @@ export function initDrawTool({ viewer, annotations }) {
       }
     }
     active = next;
-    toggle.classList.toggle('active', active);
-    toggle.setAttribute('aria-pressed', String(active));
-    modeRow?.classList.toggle('visible', active);
-    labelRow?.classList.toggle('visible', active);
     document.body.classList.toggle('gev-drawing', active);
     if (active) {
       session = createDrawSession(shape);
@@ -437,28 +464,37 @@ export function initDrawTool({ viewer, annotations }) {
     buttons: shapeButtons,
     valueOf: (button) => button.dataset.shape,
     listen,
-    onChange: (value) => {
-      shape = normalizeShape(value);
-      shapeControl.update(shape);
-      if (active) {
-        generation += 1;
-        session = createDrawSession(shape);
-        cursor = null;
-        syncPreview();
-      }
-    },
+    onChange: setShape,
   });
-  listen(colorSelect, 'change', () => {
-    color = COLORS.includes(colorSelect.value) ? colorSelect.value : 'primary';
+  function setShape(value) {
+    if (destroyed) return;
+    shape = normalizeShape(value);
+    shapeControl.update(shape);
+    if (active) {
+      generation += 1;
+      session = createDrawSession(shape);
+      cursor = null;
+      syncPreview();
+    } else channel.publish();
+  }
+  function setColor(value) {
+    if (destroyed) return;
+    color = COLORS.includes(value) ? value : 'primary';
     syncPreview();
-  });
+  }
+  listen(colorSelect, 'change', () => setColor(colorSelect.value));
   listen(clearButton, 'click', clearAll);
+  listen(labelInput, 'input', () => setLabel(labelInput.value));
+  listen(labelInput, 'change', () => setLabel(labelInput.value));
   listen(labelInput, 'keydown', (event) => {
     if (event.key === 'Enter' && session?.vertices?.length) {
       event.preventDefault();
       void finish();
     }
   });
+  const unsubscribeView = channel.subscribe(({ state }) =>
+    view.update({ state }),
+  );
   setHint(drawHint(null));
 
   const api = {
@@ -471,13 +507,11 @@ export function initDrawTool({ viewer, annotations }) {
     get session() {
       return session;
     },
+    channel,
+    setLabel,
     setActive,
-    setShape(next) {
-      const btn = modeRow?.querySelector(
-        `.pp-mode-btn[data-shape="${normalizeShape(next)}"]`,
-      );
-      btn?.click();
-    },
+    setShape,
+    setColor,
     /** Test seam: add a vertex from lon/lat as if it had been clicked. */
     addVertex(lon, lat, height = 0) {
       if (!session) return false;
@@ -526,6 +560,8 @@ export function initDrawTool({ viewer, annotations }) {
       generation += 1;
       if (active) setActive(false);
       destroyed = true;
+      unsubscribeView();
+      view.dispose();
       unregisterUnsavedWork();
       releaseSceneHandler();
       releasePointer(lease);
@@ -546,11 +582,9 @@ export function initDrawTool({ viewer, annotations }) {
         }
       });
       document.body.classList.remove('gev-drawing');
-      toggle.classList.remove('active');
-      toggle.setAttribute('aria-pressed', 'false');
-      modeRow?.classList.remove('visible');
-      labelRow?.classList.remove('visible');
-      if (hint) hint.textContent = '';
+      hintText = '';
+      channel.getSnapshot();
+      channel.destroy();
       if (window.__gevDrawTool === api) delete window.__gevDrawTool;
       return attaching;
     },

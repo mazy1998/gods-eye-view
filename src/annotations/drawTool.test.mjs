@@ -64,7 +64,7 @@ test('the engine resolves manual geometry before any name resolution', () => {
 test('the Draw control markup carries the ids the tool binds to', () => {
   // The DISPLAY rail is a component template now, assembled into index.html at
   // build time — the markup is not in index.html any more.
-  const html = read('src/ui/templates/display-controls.html');
+  const html = read('src/ui/toolViews/DrawControls.vue');
   const ids = [
     'draw-toggle',
     'draw-mode-row',
@@ -84,11 +84,13 @@ test('the Draw control markup carries the ids the tool binds to', () => {
   for (const shape of ['area', 'line', 'pin']) {
     assert.match(
       html,
-      new RegExp(`data-shape="${shape}"`),
+      new RegExp(`value: '${shape}'`),
       `shape button ${shape} missing`,
     );
   }
-  for (const id of ids) {
+  for (const id of ids.filter(
+    (id) => !['draw-label-row', 'draw-hint'].includes(id),
+  )) {
     assert.match(
       tool(),
       new RegExp(`getElementById\\('${id}'\\)`),
@@ -102,9 +104,10 @@ test('the DISPLAY rail styles live in their current owner, not the shim', () => 
   // these rules lived in the root style.css. That file is an import shim now,
   // and putting rules back into it would silently undo the split.
   const shim = read('style.css');
-  assert.ok(
-    shim.split('\n').length < 40,
-    'style.css is an import shim, not a stylesheet',
+  assert.match(
+    shim.trim(),
+    /^(?:@import '[^'\n]+';\s*)+$/,
+    'style.css contains only imports, regardless of the number of ported views',
   );
   assert.doesNotMatch(
     shim,

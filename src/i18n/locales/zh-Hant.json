@@ -2656,7 +2656,6 @@
   "Cyan": "青色",
   "Green": "綠色",
   "Red": "紅色",
-  "Clear": "清除",
   "Remove every mark from the board": "清除畫板上的所有標註",
   "Show your own GeoJSON, KML, KMZ or GPX files on the globe (or drop them onto it). File bytes stay on this device; overlays can appear in map screenshots shared with voice.": "在地球上顯示自己的 GeoJSON、KML、KMZ 或 GPX 文件（也可直接拖放到地球上）。文件內容僅保留在本設備上；疊加層可能出現在隨語音分享的地圖截圖中。",
   "Import": "導入",
@@ -2867,5 +2866,9 @@
   "routing busy — too many routes at once": "路線服務繁忙：同時請求的路線過多",
   "route proxy error": "路線代理出錯",
   "Search places or coordinates": "搜索地點或座標",
-  "Fly to": "飛往"
+  "Fly to": "飛往",
+  "Clear board": "清空畫板",
+  "Drop map files onto the globe": "將地圖檔案拖放到地球上",
+  "Session only — files clear when you reload": "僅限本次工作階段 — 重新載入後檔案將清除",
+  "Import scene": "匯入場景"
 }

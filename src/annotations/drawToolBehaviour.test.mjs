@@ -5,7 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { initDrawTool } from './drawTool.js';
+import { toolDocument, instrument } from '../testSupport/toolDomFixture.mjs';
+const { initDrawTool } = await import('./drawTool.js');
 import { describeUnsavedWork } from '../i18n/index.js';
 import {
   isPointerFree,
@@ -102,56 +103,9 @@ class FakeElement {
 }
 
 function fakeDom() {
-  const byId = new Map();
-  const make = (id, tagName = 'DIV') => {
-    const element = new FakeElement(tagName, id);
-    byId.set(id, element);
-    return element;
-  };
-  make('draw-toggle', 'BUTTON');
-  const modeRow = make('draw-mode-row');
-  for (const shape of ['area', 'line', 'pin']) {
-    const button = new FakeElement('BUTTON');
-    button.dataset.shape = shape;
-    modeRow.children.push(button);
-  }
-  make('draw-label-row');
-  make('draw-label-input', 'INPUT');
-  make('draw-color-select', 'SELECT');
-  make('draw-clear', 'BUTTON');
-  make('draw-hint', 'SPAN');
-
-  const body = new FakeElement('BODY');
-  const documentDouble = {
-    body,
-    getElementById: (id) => byId.get(id) ?? null,
-    listeners: [],
-    addEventListener(type, listener, options) {
-      this.listeners.push({ type, listener, options });
-    },
-    removeEventListener(type, listener) {
-      const at = this.listeners.findIndex(
-        (entry) => entry.type === type && entry.listener === listener,
-      );
-      if (at >= 0) this.listeners.splice(at, 1);
-    },
-    emit(type, event = {}) {
-      const payload = {
-        type,
-        target: body,
-        preventDefault() {},
-        stopImmediatePropagation() {},
-        ...event,
-      };
-      for (const entry of [...this.listeners])
-        if (entry.type === type) entry.listener(payload);
-      return payload;
-    },
-  };
-  return { byId, documentDouble };
+  const fixture = toolDocument('draw-group');
+  return { byId: fixture.nodes, documentDouble: fixture.document };
 }
-
-/* ── viewer double ─────────────────────────────────────────────────────── */
 
 function fakeViewer() {
   const canvas = new FakeElement('CANVAS');
@@ -225,7 +179,7 @@ function harness() {
     annotations,
     byId,
     documentDouble,
-    element: (id) => byId.get(id),
+    element: (id) => documentDouble.getElementById(id),
     restore() {
       resetPointerOwnership();
       if (previousDocument === undefined) delete globalThis.document;
@@ -464,6 +418,7 @@ test('destroy releases the pointer, the handler, the listeners and the stock act
     assert.equal(after.domListeners, 0, 'every DOM listener came off');
     assert.equal(h.documentDouble.listeners.length, 0, 'including the keydown');
     assert.equal(h.element('draw-toggle').listeners.length, 0);
+    assert.equal(h.element('draw-toggle').isConnected, false);
     assert.equal(
       h.viewer.screenSpaceEventHandler.getInputAction(LEFT_CLICK),
       stockClick,
@@ -492,4 +447,20 @@ test('Clear wipes the board and the shape in progress', async () => {
   } finally {
     h.restore();
   }
+});
+
+
+test('the draw owner retains its label independently of the input and clears it on finish', async () => {
+  const h = harness();
+  try {
+    h.tool.setActive(true);
+    h.tool.setShape('pin');
+    h.tool.setLabel('Owned label');
+    h.element('draw-label-input').value = 'stale DOM';
+    h.tool.addVertex(-97.75, 30.26);
+    await h.tool.finish();
+    assert.equal(h.annotations.calls.annotate[0].specs[0].label, 'Owned label');
+    assert.equal(h.tool.channel.getSnapshot().label, '');
+    assert.equal(h.element('draw-label-input').value, '');
+  } finally { h.restore(); }
 });

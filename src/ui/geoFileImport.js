@@ -1,3 +1,5 @@
+import { mountView } from './mountView.js';
+import GeoImport from './toolViews/GeoImport.vue';
 /** Session-local file controls, serial loading and application-owned navigation. */
 import {
   GEO_FILE_ACCEPT,
@@ -26,7 +28,7 @@ const COLORS = ['#39d0ff', '#ffb547', '#5dff9f', '#ff6b6b', '#8be9ff'];
  * @returns {{destroy: Function, importFiles: Function, list: Function,
  *   setVisible: Function, flyTo: Function, remove: Function,
  *   diagnostics: Function, channel: object}|null}
- *   `channel` publishes `{files: list()}` whenever the list changes.
+ *   `channel` publishes `{files: list(), hint}` when files or status change.
  */
 export function initGeoFileImport({
   viewer,
@@ -37,24 +39,46 @@ export function initGeoFileImport({
   ground = null,
   subscribeMapSource = null,
 }) {
-  const button = doc?.getElementById('geo-import-button');
+  const host = doc?.getElementById('geo-import-group');
+  if (!viewer || !host) return null;
+  const view = mountView(GeoImport, {
+    parent: host,
+    props: { state: { files: [], hint: '' } },
+  });
+  const button = doc.getElementById('geo-import-button');
   const input = doc?.getElementById('geo-import-input');
   const listEl = doc?.getElementById('geo-import-list');
-  const hint = doc?.getElementById('geo-import-hint');
   if (!viewer || !button || !input || !listEl) return null;
 
   const imports = [];
   const list = () =>
-    imports.map(({ id, name, format, entityCount, removed, visible }) => ({
-      id,
-      name,
-      format,
-      entityCount,
-      removed,
-      visible,
-    }));
+    imports.map(
+      ({
+        id,
+        name,
+        format,
+        entityCount,
+        removed,
+        visible,
+        color,
+        ownStyles,
+      }) => ({
+        id,
+        name,
+        format,
+        entityCount,
+        removed,
+        visible,
+        color,
+        ownStyles,
+      }),
+    );
   // Views read the session's files here; every change re-renders the list.
-  const channel = createStateChannel(() => ({ files: list() }));
+  let hintText = '';
+  const channel = createStateChannel(() => ({ files: list(), hint: hintText }));
+  const unsubscribeView = channel.subscribe(({ state }) =>
+    view.update({ state }),
+  );
   const listeners = [];
   let queue = Promise.resolve();
   let seq = 0;
@@ -76,7 +100,8 @@ export function initGeoFileImport({
     listeners.push([target, type, listener, options]);
   };
   const setHint = (text) => {
-    if (hint) hint.textContent = text || '';
+    hintText = text || '';
+    channel.publish({ type: 'hint-changed' });
   };
   const render = () => viewer.scene?.requestRender?.();
   let groundTimer,
@@ -153,59 +178,8 @@ export function initGeoFileImport({
   }
 
   function renderList(keep = focusedAction()) {
-    listEl.replaceChildren(
-      ...imports.map((item) => {
-        const row = doc.createElement('li');
-        row.className = 'geo-import-row';
-        row.dataset.importId = item.id;
-        const swatch = doc.createElement('span');
-        // KML and KMZ draw with their own styles; their swatch says so
-        // instead of claiming a color the globe does not show.
-        swatch.className = `geo-import-swatch${item.ownStyles ? ' own-styles' : ''}`;
-        if (!item.ownStyles) swatch.style.background = item.color;
-        const name = doc.createElement('span');
-        name.className = 'geo-import-name';
-        // textContent, never markup: the name comes from the file system.
-        name.textContent = item.name;
-        name.title = `${item.name} — ${item.format.toUpperCase()}, ${tn(
-          item.entityCount,
-          '{count} map object',
-          '{count} map objects',
-          { count: formatNumber(item.entityCount) },
-        )}${item.ownStyles ? t(', drawn with its own styles') : ''}`;
-        const actions = [
-          [
-            item.visible ? 'visibility' : 'visibility_off',
-            item.visible
-              ? t('Hide {name}', { name: item.name })
-              : t('Show {name}', { name: item.name }),
-            'toggle',
-          ],
-          ['my_location', t('Fly to {name}', { name: item.name }), 'fly'],
-          ['close', t('Remove {name}', { name: item.name }), 'remove'],
-        ].map(([icon, label, action]) => {
-          const btn = doc.createElement('button');
-          btn.type = 'button';
-          btn.className = 'geo-import-action';
-          btn.dataset.action = action;
-          btn.title = label;
-          btn.setAttribute('aria-label', label);
-          if (action === 'toggle')
-            btn.setAttribute('aria-pressed', String(item.visible));
-          const glyph = doc.createElement('span');
-          glyph.className = 'material-symbols-outlined';
-          glyph.setAttribute('aria-hidden', 'true');
-          glyph.textContent = icon;
-          btn.append(glyph);
-          return btn;
-        });
-        row.append(swatch, name, ...actions);
-        return row;
-      }),
-    );
-    listEl.classList.toggle('visible', imports.length > 0);
-    restoreFocus(keep);
     channel.publish({ type: 'files-changed' });
+    restoreFocus(keep);
   }
 
   const find = (id) => imports.find((item) => item.id === id) || null;
@@ -373,6 +347,9 @@ export function initGeoFileImport({
   // ---- controls ----------------------------------------------------------
   input.accept = GEO_FILE_ACCEPT;
   listen(button, 'click', () => input.click());
+  listen(doc.getElementById('geo-import-scene'), 'click', () =>
+    doc.getElementById('scene-import-btn')?.click(),
+  );
   listen(input, 'change', () => {
     const files = [...(input.files || [])];
     // Clear the selection so choosing the same file again fires `change`.
@@ -447,6 +424,8 @@ export function initGeoFileImport({
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      unsubscribeView();
+      view.dispose();
       unregisterUnsavedWork();
       lifetime.abort();
       removeMapSource?.();
@@ -459,9 +438,8 @@ export function initGeoFileImport({
       for (const [target, type, listener, options] of listeners.splice(0))
         target.removeEventListener(type, listener, options);
       setDragging(false);
-      listEl.replaceChildren();
-      listEl.classList.remove('visible');
-      setHint('');
+      hintText = '';
+      channel.getSnapshot();
       channel.destroy();
       if (globalThis.window?.__gevGeoImport === handle)
         delete globalThis.window.__gevGeoImport;

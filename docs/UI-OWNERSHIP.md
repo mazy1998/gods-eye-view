@@ -73,3 +73,23 @@ revokes callbacks and removes those mounts. The shell owns and disposes the
 search, results, mini-status and pin mounts before destroying the owners.
 The result's Fly to action reruns the existing lookup with its retained query;
 it does not bypass authority checks or navigate to raw provider data.
+
+## Import and Draw views
+
+The existing `#geo-import-group` and `#draw-group` containers can move intact
+into Tools. Their owners mount and dispose the views, so moving a container
+does not recreate a file list, annotation engine, pointer lease or drop listener.
+
+The session import channel now publishes `{files, hint}`. Each file includes
+its existing identity/count/visibility fields plus the owner's fixed `color`
+and `ownStyles` flag. The rows render that snapshot; show/hide, fly-to and remove
+still call the import handle's operations. Format names are standard identifiers.
+The scene shortcut activates the existing scene-import control and its file flow.
+File bytes remain in the existing session-only loader; there is no new upload.
+
+Draw owns label, colour, shape, activity and hint in its `channel`. `setLabel`,
+`setColor` and `setShape` change that state. Map clicks, Enter/double-click,
+Backspace undo, Escape and Clear board still use the same drawing session,
+pointer claim and annotation engine. A view never constructs map geometry.
+Both views paint channel updates synchronously through `mountView.update()`,
+so import focus restoration and drawing-control reads need no deferred DOM wait.

@@ -921,7 +921,6 @@
   "Cyan": "Голубой",
   "Green": "Зелёный",
   "Red": "Красный",
-  "Clear": "Очистить",
   "Remove every mark from the board": "Убрать все пометки с доски",
   "No street-level imagery providers configured": "Источники уличных снимков не настроены",
   "Live Vessels": "Суда онлайн",
@@ -3074,5 +3073,9 @@
   "routing busy — too many routes at once": "сервис маршрутов занят: слишком много маршрутов одновременно",
   "route proxy error": "ошибка прокси маршрутов",
   "Search places or coordinates": "Поиск мест или координат",
-  "Fly to": "Перелёт"
+  "Fly to": "Перелёт",
+  "Clear board": "Очистить доску",
+  "Drop map files onto the globe": "Перетащите файлы карт на глобус",
+  "Session only — files clear when you reload": "Только в этом сеансе — файлы удаляются при перезагрузке",
+  "Import scene": "Импортировать сцену"
 }
