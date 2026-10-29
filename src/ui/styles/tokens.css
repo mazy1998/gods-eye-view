@@ -1,0 +1,120 @@
+/* Semantic design tokens. Components read these; an appearance changes only
+   their values, so no component carries per-appearance rules.
+   `data-gev-appearance` on the root selects `original` (the default, also used
+   for absent or unknown values), `transparent-dark` or `light`. The Cyber HUD
+   style (`data-ui-theme='cyber'`) suppresses the alternate appearances; its own
+   token values arrive with the first ported surface that renders under Cyber.
+   Legacy stylesheets do not read these tokens: a surface adopts them for its
+   foreground and background together when it is ported, so an alternate
+   appearance never puts themed text on an unported dark surface.
+   scripts/check-token-contrast.mjs proves the text, border and focus tokens
+   meet WCAG AA against every surface, including text on control and tint
+   layers, in all three appearances. */
+
+/* Original: opaque dark. Values that already exist resolve through the legacy
+   palette, so today's surfaces and Cyber's overrides of it stay unchanged. */
+:root {
+  --gev-surface-base: #0f171c;
+  --gev-surface-raised: #151f25;
+  --gev-surface-overlay: #1b262d;
+  /* Control boundaries meet 3:1; subtle borders are decorative dividers. */
+  --gev-border: #66757d;
+  --gev-border-subtle: var(--glass-border);
+  --gev-text: var(--text-primary);
+  --gev-text-muted: #9aa4ab;
+  /* Accent is checked at 3:1 for indicators and fills; text uses accent-text. */
+  --gev-accent: var(--accent);
+  --gev-accent-text: #9defff;
+  --gev-accent-tint: rgba(0, 212, 255, 0.09);
+  --gev-accent-tint-border: rgba(0, 212, 255, 0.32);
+  --gev-on-accent: #000;
+  --gev-warning: #ffb347;
+  --gev-warning-text: #ffc777;
+  --gev-danger: #ff7272;
+  --gev-danger-text: #ff7272;
+  --gev-danger-tint: rgba(255, 88, 88, 0.15);
+  --gev-focus-ring: var(--text-primary);
+  --gev-focus-ring-inner: #061014;
+  --gev-control-bg: rgba(255, 255, 255, 0.06);
+  --gev-disabled-opacity: 0.45;
+  --gev-backdrop-blur: none;
+  --gev-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --gev-elevation-2: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --gev-color-scheme: dark;
+
+  --gev-radius-sm: 6px;
+  --gev-radius-md: var(--btn-radius);
+  --gev-radius-lg: var(--panel-radius);
+  --gev-radius-pill: 999px;
+  --gev-space-1: 4px;
+  --gev-space-2: 8px;
+  --gev-space-3: 12px;
+  --gev-space-4: 16px;
+  --gev-space-5: 24px;
+  --gev-space-6: 32px;
+  --gev-font-sans: var(--font-sans);
+  --gev-font-mono: var(--font-mono);
+  /* 3xs/2xs carry today's compact 8–9px chrome. */
+  --gev-font-size-3xs: 8px;
+  --gev-font-size-2xs: 9px;
+  --gev-font-size-xs: 10px;
+  --gev-font-size-sm: 12px;
+  --gev-font-size-md: 13px;
+  --gev-font-size-lg: 15px;
+  --gev-font-size-xl: 18px;
+}
+
+/* Charcoal glass: the globe shows through blurred panels. */
+:root[data-gev-appearance='transparent-dark']:not([data-ui-theme='cyber']) {
+  --gev-surface-base: rgba(16, 24, 28, 0.8);
+  --gev-surface-raised: rgba(30, 40, 45, 0.86);
+  --gev-surface-overlay: rgba(18, 27, 31, 0.92);
+  --gev-border: #8a989e;
+  --gev-border-subtle: rgba(220, 232, 236, 0.14);
+  --gev-text: #eef1f2;
+  --gev-text-muted: #c2cbd0;
+  --gev-accent: #2fd9ec;
+  --gev-accent-text: #7ae8f5;
+  --gev-accent-tint: rgba(47, 217, 236, 0.12);
+  --gev-accent-tint-border: rgba(47, 217, 236, 0.36);
+  --gev-on-accent: #031317;
+  --gev-warning: #ffb347;
+  --gev-warning-text: #ffc777;
+  --gev-danger: #ff7272;
+  --gev-danger-text: #ffadad;
+  --gev-danger-tint: rgba(255, 88, 88, 0.16);
+  --gev-focus-ring: #f2f5f6;
+  --gev-focus-ring-inner: #061014;
+  --gev-control-bg: rgba(255, 255, 255, 0.08);
+  --gev-backdrop-blur: blur(18px) saturate(1.2);
+  --gev-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --gev-elevation-2: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Frosted white panels, dark labels and teal controls. */
+:root[data-gev-appearance='light']:not([data-ui-theme='cyber']) {
+  --gev-surface-base: rgba(242, 246, 246, 0.92);
+  --gev-surface-raised: rgba(255, 255, 255, 0.94);
+  --gev-surface-overlay: #fff;
+  --gev-border: #687780;
+  --gev-border-subtle: rgba(16, 40, 52, 0.12);
+  --gev-text: #13212a;
+  --gev-text-muted: #4f5d66;
+  --gev-accent: #007c8f;
+  --gev-accent-text: #00626f;
+  --gev-accent-tint: rgba(0, 124, 143, 0.1);
+  --gev-accent-tint-border: rgba(0, 124, 143, 0.35);
+  --gev-on-accent: #fff;
+  --gev-warning: #b86e00;
+  --gev-warning-text: #8a5200;
+  --gev-danger: #c62828;
+  --gev-danger-text: #a8231c;
+  --gev-danger-tint: rgba(198, 40, 40, 0.1);
+  --gev-focus-ring: #005f6e;
+  --gev-focus-ring-inner: #fff;
+  --gev-control-bg: rgba(16, 40, 52, 0.05);
+  --gev-backdrop-blur: blur(18px) saturate(1.4);
+  --gev-elevation-1: 0 1px 2px rgba(16, 32, 40, 0.12);
+  --gev-elevation-2: 0 12px 32px rgba(16, 32, 40, 0.18);
+  --gev-color-scheme: light;
+}
