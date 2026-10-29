@@ -1,3 +1,4 @@
+import { withDisplayViews } from './testSupport/displayMarkup.mjs';
 import { readShellSource } from './testSupport/readShellSource.mjs';
 import { expandApplicationHtml } from '../build/application-html.js';
 // src/reasonableDefaults.test.mjs
@@ -46,7 +47,7 @@ import { ShareLinkManager } from './sharelink.js';
 // Follow the UI wiring and its extracted preset definitions.
 const uiSource = readShellSource()
   + '\n' + fs.readFileSync(new URL('./ui/visualPresets.js', import.meta.url), 'utf8');
-const indexHtml = expandApplicationHtml(fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+const indexHtml = await withDisplayViews(expandApplicationHtml(fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8')));
 const shareSource = fs.readFileSync(new URL('./sharelink.js', import.meta.url), 'utf8');
 
 /** Slice ui.js between two literal anchors, so a pin reads one method, not the file. */
@@ -92,7 +93,7 @@ test('first run opens with Scope ON and 100% feather at every default surface', 
   assert.match(indexHtml, /id="scope-feather-value"[^>]*>100%</,
     'index.html: and its readout agrees with the handle');
 
-  assert.match(indexHtml, /<input type="checkbox" id="scope-toggle"[^>]*\schecked\s*\/>/,
+  assert.match(indexHtml, /<input type="checkbox" id="scope-toggle"[^>]*\schecked\s*\/?>/,
     'the native Scope checkbox starts checked');
 
   // The link this session generates must describe the mask this session draws,

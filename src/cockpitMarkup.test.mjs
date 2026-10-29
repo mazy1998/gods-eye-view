@@ -1,3 +1,4 @@
+import { withDisplayViews } from './testSupport/displayMarkup.mjs';
 import {
   readShellSource,
   shellMethod,
@@ -46,8 +47,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const html = expandApplicationHtml(
-  fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'),
+const html = await withDisplayViews(
+  expandApplicationHtml(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')),
 );
 const ui = readShellSource();
 const css = readStylesheet(path.join(ROOT, 'style.css'));

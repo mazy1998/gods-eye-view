@@ -1,3 +1,4 @@
+import { withDisplayViews } from '../testSupport/displayMarkup.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -81,8 +82,8 @@ test('real runner and facade use visual settings, preserve visibility and return
   }
 });
 
-test('native sonar sliders represent every accepted integer without browser snapping', () => {
-  const html = readFileSync(new URL('./templates/display-controls.html', import.meta.url), 'utf8');
+test('native sonar sliders represent every accepted integer without browser snapping', async () => {
+  const html = await withDisplayViews(readFileSync(new URL('./templates/display-controls.html', import.meta.url), 'utf8'));
   for (const name of ['rings', 'range', 'intensity', 'opacity', 'sector']) {
     assert.match(html, new RegExp(`id="cyber-sonar-${name}"[^>]*step="1"`));
   }

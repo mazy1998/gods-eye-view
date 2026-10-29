@@ -1,4 +1,8 @@
-/** Own recording chrome, safe frames and the pre-recording HUD snapshot. */
+/**
+ * Own recording chrome, safe frames and the pre-recording HUD snapshot. The
+ * HUD controls are the Display view's: syncShareState publishes the HUD state
+ * it paints (S11b-1), so this owner holds no HUD nodes.
+ */
 export class RecordingControls {
   constructor({ syncShareState }) {
     this._syncShareState = syncShareState;
@@ -12,8 +16,6 @@ export class RecordingControls {
     this._preRecordingHudState = null;
     this._safeFrameOverlay = document.getElementById('safe-frame-overlay');
     this._safeFrameBox = document.getElementById('safe-frame-box');
-    this._hudLayoutSelect = document.getElementById('hud-layout-select');
-    this._hudBtn = document.getElementById('hud-toggle');
     this.hud = null;
   }
   _initRecordingOverlay() {
@@ -63,8 +65,6 @@ export class RecordingControls {
       } else if (hudMode === 'full' || hudMode === 'minimal') {
         this.hud.setMode('on');
         this.hud.setVariant(hudMode === 'minimal' ? 'minimal' : 'tactical');
-        if (this._hudLayoutSelect)
-          this._hudLayoutSelect.value = this.hud.getVariant();
       } else {
         this.hud.setMode('auto');
       }
@@ -73,8 +73,6 @@ export class RecordingControls {
       this._preRecordingHudState = null;
       if (saved) {
         this.hud.setVariant(saved.variant);
-        if (this._hudLayoutSelect)
-          this._hudLayoutSelect.value = this.hud.getVariant();
       }
       this.hud.setMode(saved ? saved.mode : 'auto');
       if (this._safeFrameOverlay) {
@@ -85,7 +83,6 @@ export class RecordingControls {
         );
       }
     }
-    this._hudBtn.classList.toggle('active', this.hud.visible);
     this._syncShareState();
   }
   destroy() {

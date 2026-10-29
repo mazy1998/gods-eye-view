@@ -1,4 +1,5 @@
 import { mountLocationViews } from './locationViews.js';
+import { connectDisplayViews, mountDisplayViews } from './displayViews.js';
 import { resolveImageryHost } from '../layers/weather/imageryHost.js';
 import { ShellFacade } from './shellFacade.js';
 import { AircraftDisplay } from './aircraftDisplay.js';
@@ -127,6 +128,9 @@ export class StyleManager extends ShellFacade {
     this._radioView = mountRadioView(document, (component, options) =>
       this._mountView(component, options),
     );
+    this._displayViews = mountDisplayViews((component, options) =>
+      this._mountView(component, options),
+    );
     Object.assign(this, readShellElements());
     this._panelChrome = new PanelChrome({
       elements: {
@@ -222,43 +226,17 @@ export class StyleManager extends ShellFacade {
         setScopeMaskFeather: services.setScopeMaskFeather,
       },
       elements: {
-        _bloomBtn: this._bloomBtn,
+        // Read through DISPLAY_CONTROLS (this[spec.slider]); native until the
+        // Look tab ports bloom and sharpen.
         _bloomSlider: this._bloomSlider,
+        _sharpenSlider: this._sharpenSlider,
+        _bloomBtn: this._bloomBtn,
         _bloomSliderRow: this._bloomSliderRow,
         _bloomSliderValue: this._bloomSliderValue,
-        _celestialBtn: this._celestialBtn,
         _cockpitDisplayToggleBtn: this._cockpitDisplayToggleBtn,
-        _detectionAllocationRow: this._detectionAllocationRow,
-        _detectionBtn: this._detectionBtn,
-        _detectionDensitySlider: this._detectionDensitySlider,
         _detectionDensityValue: this._detectionDensityValue,
-        _detectionFadeRow: this._detectionFadeRow,
-        _detectionFadeSlider: this._detectionFadeSlider,
-        _detectionFadeValue: this._detectionFadeValue,
-        _detectionOpacityRow: this._detectionOpacityRow,
-        _detectionOpacitySlider: this._detectionOpacitySlider,
-        _detectionOpacityValue: this._detectionOpacityValue,
-        _detectionSliderRow: this._detectionSliderRow,
-        _hudBtn: this._hudBtn,
-        _cyberSonarBtn: this._cyberSonarBtn,
-        _cyberSonarRings: this._cyberSonarRings,
-        _cyberSonarRingsValue: this._cyberSonarRingsValue,
-        _cyberSonarRange: this._cyberSonarRange,
-        _cyberSonarRangeValue: this._cyberSonarRangeValue,
-        _cyberSonarIntensity: this._cyberSonarIntensity,
-        _cyberSonarIntensityValue: this._cyberSonarIntensityValue,
-        _cyberSonarOpacity: this._cyberSonarOpacity,
-        _cyberSonarOpacityValue: this._cyberSonarOpacityValue,
-        _cyberSonarSector: this._cyberSonarSector,
-        _cyberSonarSectorValue: this._cyberSonarSectorValue,
-        _hudLayoutRow: this._hudLayoutRow,
-        _hudLayoutSelect: this._hudLayoutSelect,
         _ppToggles: this._ppToggles,
-        _scopeBtn: this._scopeBtn,
-        _scopeFeatherSlider: this._scopeFeatherSlider,
-        _scopeFeatherValue: this._scopeFeatherValue,
         _sharpenBtn: this._sharpenBtn,
-        _sharpenSlider: this._sharpenSlider,
         _sharpenSliderRow: this._sharpenSliderRow,
         _sharpenSliderValue: this._sharpenSliderValue,
         _sliderContainer: this._sliderContainer,
@@ -515,10 +493,7 @@ export class StyleManager extends ShellFacade {
     this._shareRestoration.attachLinks(this.shareLinkManager);
 
     this._aircraftDisplay = new AircraftDisplay({
-      elements: {
-        _models3dBtn: this._models3dBtn,
-        _models3dModeRow: this._models3dModeRow,
-      },
+      elements: {},
       readDataManager: () => this._dataManager,
       layout: () => this._layoutRightPanels(),
       // Aircraft models are not in share links; views hear of them directly.
@@ -569,27 +544,8 @@ export class StyleManager extends ShellFacade {
         _bloomSlider: this._bloomSlider,
         _sharpenBtn: this._sharpenBtn,
         _sharpenSlider: this._sharpenSlider,
-        _scopeBtn: this._scopeBtn,
-        _scopeFeatherSlider: this._scopeFeatherSlider,
-        _hudLayoutSelect: this._hudLayoutSelect,
-        _hudBtn: this._hudBtn,
-        _cyberSonarBtn: this._cyberSonarBtn,
-        _cyberSonarRings: this._cyberSonarRings,
-        _cyberSonarRange: this._cyberSonarRange,
-        _cyberSonarIntensity: this._cyberSonarIntensity,
-        _cyberSonarOpacity: this._cyberSonarOpacity,
-        _cyberSonarSector: this._cyberSonarSector,
-        _cleanViewBtn: this._cleanViewBtn,
         _cleanViewExitBtn: this._cleanViewExitBtn,
-        _detectionDensitySlider: this._detectionDensitySlider,
-        _detectionBtn: this._detectionBtn,
-        _detectionFadeSlider: this._detectionFadeSlider,
-        _detectionOpacitySlider: this._detectionOpacitySlider,
-        _celestialBtn: this._celestialBtn,
-        _models3dBtn: this._models3dBtn,
-        _scopeFeatherValue: this._scopeFeatherValue,
         _sharpenSliderValue: this._sharpenSliderValue,
-        _detectionDensityValue: this._detectionDensityValue,
       },
       operations: {
         closeLocationSearch: () => this._navigation.locationField.close(),
@@ -630,14 +586,16 @@ export class StyleManager extends ShellFacade {
         celestialRing: this.celestialRing,
         celestialRingEnabled: this.celestialRingEnabled,
         _models3dEnabled: this._models3dEnabled,
-        _models3dModeBtns: this._models3dModeBtns,
-        _detectionAllocationBtns: this._detectionAllocationBtns,
       }),
       claimDetection: () => {
         this._visualSettings._detectionUserOverridden = true;
       },
     });
     this._initUI();
+    this._unsubscribeDisplayViews = connectDisplayViews(this._displayViews, {
+      channel: this._visualSettings.channel,
+      actions: this._displayBindings.displayActions,
+    });
     this._initMapStackControl();
     // Headers first: panel chrome builds its toggle labels from them.
     this._applyRuntimeStaticHeaderText();
@@ -1393,9 +1351,6 @@ export class StyleManager extends ShellFacade {
         ? forceEnabled
         : !document.body.classList.contains('ui-clean-view');
     document.body.classList.toggle('ui-clean-view', shouldEnable);
-    if (this._cleanViewBtn) {
-      this._cleanViewBtn.classList.toggle('active', shouldEnable);
-    }
     this._scheduleLeftPanelLayout();
     this._visualSettings?.publishState();
   }
@@ -1809,9 +1764,6 @@ export class StyleManager extends ShellFacade {
    */
 
   _initHUDToggle() {
-    if (this._hudLayoutSelect) {
-      this._hudLayoutSelect.value = 'tactical';
-    }
     this._setHudVariant('tactical');
     this.hud.setMode('on');
     this._updateHudButtonState();
@@ -1874,6 +1826,7 @@ export class StyleManager extends ShellFacade {
     if (this._globalLoadingStatus) this._globalLoadingStatus.hidden = true;
     this._disposed = true;
     // Phase 1 starts with the views, so no owner publication reaches them.
+    this._unsubscribeDisplayViews?.();
     for (const view of this._views) view.dispose();
     this._views.clear();
     this._navigation.stop();

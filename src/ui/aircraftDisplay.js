@@ -1,6 +1,7 @@
-import { syncSegmentedControl } from './segmentedControl.js';
-
-/** Own the shared aircraft display preference and its controls. */
+/**
+ * Own the shared aircraft display preference. The Display view (ModelsGroup)
+ * shows it from the visual state; onChange publishes that state.
+ */
 export class AircraftDisplay {
   constructor({ elements, readDataManager, layout, onChange = () => {} }) {
     Object.assign(this, elements, {
@@ -11,10 +12,6 @@ export class AircraftDisplay {
     // Both aircraft layers default to models enabled in proximity mode.
     this._models3dEnabled = true;
     this._models3dMode = 'proximity';
-    this._models3dModeBtns = [
-      document.getElementById('models3d-mode-proximity'),
-      document.getElementById('models3d-mode-all'),
-    ];
   }
   get _dataManager() {
     return this.readDataManager();
@@ -29,31 +26,23 @@ export class AircraftDisplay {
     if (!options) return;
     this._models3dEnabled = options.models3d === true;
     this._models3dMode = options.models3dMode === 'all' ? 'all' : 'proximity';
-    this._syncModels3dButtonState();
-    this._models3dModeRow?.classList.toggle('visible', this._models3dEnabled);
-    syncSegmentedControl(this._models3dModeBtns, this._models3dMode, {
-      valueOf: (button) => button.dataset.mode,
-    });
-    this._layoutRightPanels();
+    // Paint first, so the right panels lay out around the view's new rows.
     this._onChange();
+    this._layoutRightPanels();
   }
 
   _syncModels3dModeRow() {
-    if (this._models3dModeRow)
-      this._models3dModeRow.classList.toggle('visible', this._models3dEnabled);
     this._layoutRightPanels();
   }
 
   _initModels3dToggle() {
-    if (!this._models3dBtn) return;
-    this._syncModels3dButtonState();
+    this._onChange();
     this._syncModels3dModeRow();
   }
 
   _setModels3dEnabled(enabled) {
     this._models3dEnabled = !!enabled;
     this._setModels3dParams({ models3d: this._models3dEnabled });
-    this._syncModels3dButtonState();
     this._onChange();
   }
 
@@ -61,22 +50,14 @@ export class AircraftDisplay {
     const normalized = mode === 'all' ? 'all' : 'proximity';
     this._models3dMode = normalized;
     this._setModels3dParams({ models3dMode: normalized });
-    syncSegmentedControl(this._models3dModeBtns, normalized, {
-      valueOf: (button) => button.dataset.mode,
-    });
-    this._syncModels3dButtonState();
     this._onChange();
   }
 
+  /**
+   * The 3D button's pressed state is part of the published state; kept as the
+   * name callers already use.
+   */
   _syncModels3dButtonState() {
-    this._models3dBtn?.classList.toggle('active', this._models3dEnabled);
-    // The lit/dark state is a colour to a sighted operator and nothing at all to
-    // a screen reader without this. It matters more now that the button ships
-    // ACTIVE from markup (default-on, 2026-08-22): the very first thing assistive
-    // tech reported was an unpressed-looking control over an armed layer.
-    this._models3dBtn?.setAttribute(
-      'aria-pressed',
-      String(this._models3dEnabled),
-    );
+    this._onChange();
   }
 }

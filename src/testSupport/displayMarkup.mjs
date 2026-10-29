@@ -1,0 +1,39 @@
+// The application markup as it stands once the Display views are mounted
+// (S11b-1): the group wrappers and the Clean UI seat in the template are
+// filled with each view's server-rendered markup at its first-paint defaults.
+// Markup guards that used to read those controls from the template read them
+// here, unchanged.
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import HudGroup from '../ui/displayViews/HudGroup.vue';
+import DetectionGroup from '../ui/displayViews/DetectionGroup.vue';
+import ModelsGroup from '../ui/displayViews/ModelsGroup.vue';
+import ScopeGroup from '../ui/displayViews/ScopeGroup.vue';
+import CelestialGroup from '../ui/displayViews/CelestialGroup.vue';
+import CleanViewToggle from '../ui/displayViews/CleanViewToggle.vue';
+
+const render = (component) =>
+  renderToString(createSSRApp({ render: () => h(component) }));
+
+const GROUPS = {
+  hud: HudGroup,
+  detection: DetectionGroup,
+  models3d: ModelsGroup,
+  scope: ScopeGroup,
+  celestial: CelestialGroup,
+};
+
+/** @param {string} html markup containing the Display template */
+export async function withDisplayViews(html) {
+  let out = html;
+  for (const [name, component] of Object.entries(GROUPS)) {
+    out = out.replace(
+      `<div class="pp-toggle-group" data-display-group="${name}"></div>`,
+      `<div class="pp-toggle-group">${await render(component)}</div>`,
+    );
+  }
+  return out.replace(
+    '<span data-display-view="clean-view" hidden></span>',
+    await render(CleanViewToggle),
+  );
+}

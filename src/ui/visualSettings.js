@@ -1,7 +1,5 @@
 import { clampScopeFeatherPct } from '../scopeMaskPolicy.js';
-import { syncScopeControls } from './displayControls.js';
 import { STYLE_STATUS_LABELS } from './visualPresets.js';
-import { syncSegmentedControl } from './segmentedControl.js';
 import { t } from '../i18n/index.js';
 import { UiLifetime } from './uiLifetime.js';
 import { createStateChannel } from '../app/stateChannel.js';
@@ -62,21 +60,21 @@ export const DISPLAY_CONTROLS = Object.freeze({
   },
   bloomPct: { slider: '_bloomSlider', min: 0, max: 200, step: 1, value: 0 },
   densityPct: {
-    slider: '_detectionDensitySlider',
+    slider: null,
     min: 0,
     max: 100,
     step: 25,
     value: 50,
   },
   fadePct: {
-    slider: '_detectionFadeSlider',
+    slider: null,
     min: 0,
     max: 40,
     step: 1,
     value: 7,
   },
   outsideOpacityPct: {
-    slider: '_detectionOpacitySlider',
+    slider: null,
     min: 0,
     max: 100,
     step: 1,
@@ -199,13 +197,9 @@ export class VisualSettings {
     }
     if (typeof scopeEnabled === 'boolean') {
       setScopeMaskEnabled(scopeEnabled);
-      syncScopeControls(this._scopeBtn, this._scopeFeatherSlider, scopeEnabled);
     }
-    if (typeof scopeFeatherPct === 'number' && this._scopeFeatherSlider) {
+    if (typeof scopeFeatherPct === 'number') {
       const pct = clampScopeFeatherPct(scopeFeatherPct);
-      this._scopeFeatherSlider.value = String(pct);
-      if (this._scopeFeatherValue)
-        this._scopeFeatherValue.textContent = `${pct}%`;
       setScopeMaskFeather(pct / 100);
     }
     // null restores the altitude-adaptive ramp; a number pins the terminus
@@ -275,10 +269,6 @@ export class VisualSettings {
     this._cockpitVisionMode = 'optical';
     this._cockpitVisionRestore = null;
     this._contactsDetectionRestore = null;
-    this._detectionAllocationBtns = [
-      document.getElementById('detection-allocation-elastic'),
-      document.getElementById('detection-allocation-weighted'),
-    ].filter(Boolean);
     let storedDetectionAllocation = 'ELASTIC';
     try {
       storedDetectionAllocation =
@@ -607,8 +597,6 @@ export class VisualSettings {
     const { getDetectionMode, setDetectionTuning } = this.services;
     const pct = canonicalizeDensity(this._controlValue('densityPct'));
     this._setControlValue('densityPct', pct);
-    if (this._detectionDensityValue)
-      this._detectionDensityValue.textContent = `${pct}%`;
     setDetectionTuning({ densityPct: pct });
     this._updateDetectionButton(getDetectionMode());
   }
@@ -630,11 +618,7 @@ export class VisualSettings {
       ),
     );
     this._setControlValue('fadePct', fadePct);
-    if (this._detectionFadeValue)
-      this._detectionFadeValue.textContent = `${fadePct}%`;
     this._setControlValue('outsideOpacityPct', outsideOpacityPct);
-    if (this._detectionOpacityValue)
-      this._detectionOpacityValue.textContent = `${outsideOpacityPct}%`;
     setKeyholeFadeTuning({
       fadeRatio: fadePct / 100,
       outsideOpacity: outsideOpacityPct / 100,
@@ -651,9 +635,6 @@ export class VisualSettings {
     const normalized = normalizeAllocationStrategy(raw);
     this._detectionAllocationPreference = normalized;
     setDetectionTuning({ allocationStrategy: normalized });
-    syncSegmentedControl(this._detectionAllocationBtns, normalized, {
-      valueOf: (button) => button.dataset.allocation,
-    });
     if (persist) {
       try {
         localStorage.setItem(DETECTION_ALLOCATION_STORAGE_KEY, normalized);
@@ -670,8 +651,6 @@ export class VisualSettings {
       this.services;
     const tuning = getDetectionTuning();
     this._setControlValue('densityPct', tuning.densityPct);
-    if (this._detectionDensityValue)
-      this._detectionDensityValue.textContent = `${tuning.densityPct}%`;
     this._setDetectionAllocation(tuning.allocationStrategy, {
       syncShare: false,
       persist: false,
@@ -710,9 +689,6 @@ export class VisualSettings {
     } else if (enteredCyber) {
       this._preCyberStyle = this.activeStyle;
       this._cyberStyleUserSelected = false;
-    }
-    if (this._hudLayoutSelect && this._hudLayoutSelect.value !== nextVariant) {
-      this._hudLayoutSelect.value = nextVariant;
     }
     const visualDefaults = cyberVisualDefaultsForHudTransition(
       previousVariant,
@@ -753,38 +729,10 @@ export class VisualSettings {
     this.services.governorRequestRender('cyber-visual-defaults');
   }
 
+  /** Apply the stored sonar settings; the HUD view shows them (S11b). */
   _syncCyberSonarControl() {
-    if (!this._cyberSonarBtn) return;
-    const enabled = isCyberSonarEnabled();
-    const settings = applyCyberSonarSettings(readCyberSonarSettings());
-    this._cyberSonarBtn.classList.toggle('active', enabled);
-    this._cyberSonarBtn.setAttribute('aria-pressed', String(enabled));
-    this._cyberSonarBtn.textContent = enabled ? t('ON') : t('OFF');
-    for (const [input, output, value, suffix] of [
-      [this._cyberSonarRings, this._cyberSonarRingsValue, settings.rings, ''],
-      [this._cyberSonarRange, this._cyberSonarRangeValue, settings.range, '%'],
-      [
-        this._cyberSonarIntensity,
-        this._cyberSonarIntensityValue,
-        settings.intensity,
-        '%',
-      ],
-      [
-        this._cyberSonarOpacity,
-        this._cyberSonarOpacityValue,
-        settings.opacity,
-        '%',
-      ],
-      [
-        this._cyberSonarSector,
-        this._cyberSonarSectorValue,
-        settings.sector,
-        '°',
-      ],
-    ]) {
-      if (input) input.value = String(value);
-      if (output) output.textContent = `${value}${suffix}`;
-    }
+    applyCyberSonarSettings(readCyberSonarSettings());
+    this.publishState();
   }
 
   _setCyberSonarEnabled(enabled = !isCyberSonarEnabled()) {
@@ -1271,15 +1219,6 @@ export class VisualSettings {
     if (syncShare) this.shareLinkManager?.claimRestoreLane?.('visual');
     const nextEnabled = styleSupported && enabled;
     this.celestialRing?.setEnabled(nextEnabled);
-    this._celestialBtn?.classList.toggle('active', nextEnabled);
-    this._celestialBtn?.setAttribute('aria-pressed', String(nextEnabled));
-    if (this._celestialBtn) {
-      this._celestialBtn.disabled = !styleSupported;
-      this._celestialBtn.setAttribute('aria-disabled', String(!styleSupported));
-      this._celestialBtn.title = styleSupported
-        ? t('Celestial ring — reveal the full globe')
-        : t('Celestial ring — available in Normal style');
-    }
     let cameraFocused = false;
     if (nextEnabled && focus) {
       cameraFocused = !!this.celestialRing?.focusFullGlobe();
@@ -1408,17 +1347,9 @@ export class VisualSettings {
     const scopeState = state.scope || {};
     if (typeof scopeState.enabled === 'boolean') {
       setScopeMaskEnabled(scopeState.enabled);
-      syncScopeControls(
-        this._scopeBtn,
-        this._scopeFeatherSlider,
-        scopeState.enabled,
-      );
     }
-    if (typeof scopeState.featherPct === 'number' && this._scopeFeatherSlider) {
+    if (typeof scopeState.featherPct === 'number') {
       const pct = clampScopeFeatherPct(scopeState.featherPct);
-      this._scopeFeatherSlider.value = String(pct);
-      if (this._scopeFeatherValue)
-        this._scopeFeatherValue.textContent = `${pct}%`;
       setScopeMaskFeather(pct / 100);
     }
 
@@ -1734,58 +1665,18 @@ export class VisualSettings {
       : String(styleName || 'normal').toUpperCase();
   }
 
+  /** The HUD view shows visibility and layout; layout follows the change. */
   _updateHudButtonState() {
-    this._hudBtn.classList.toggle('active', this.hud.visible);
-    if (this._hudLayoutRow) {
-      this._hudLayoutRow.classList.toggle('visible', this.hud.visible);
-    }
+    this.publishState();
     this._scheduleAdaptivePanelLayout({ settle: true });
   }
 
-  _updateDetectionButton(modeLabel) {
-    const btn = this._detectionBtn;
-    const enabled = modeLabel !== 'OFF';
-    btn.setAttribute('aria-pressed', String(enabled));
-    btn.setAttribute(
-      'aria-label',
-      enabled
-        ? t('Detection overlay: {mode}', {
-            mode: String(modeLabel).toLowerCase(),
-          })
-        : t('Detection overlay: off'),
-    );
-    btn.classList.remove('active', 'god', 'panoptic');
-    if (modeLabel === 'SPARSE') {
-      btn.querySelector('.pp-label').textContent = t('SPARSE');
-      btn.classList.add('active');
-    } else if (modeLabel === 'BALANCED') {
-      btn.querySelector('.pp-label').textContent = t('BALANCED');
-      btn.classList.add('active');
-    } else if (modeLabel === 'DENSE') {
-      btn.querySelector('.pp-label').textContent = t('DENSE');
-      btn.classList.add('active', 'panoptic');
-    } else {
-      btn.querySelector('.pp-label').textContent = t('DETECT');
-    }
-
-    if (this._detectionSliderRow) {
-      this._detectionSliderRow.classList.toggle('visible', modeLabel !== 'OFF');
-    }
-    if (this._detectionAllocationRow) {
-      this._detectionAllocationRow.classList.toggle(
-        'visible',
-        modeLabel !== 'OFF',
-      );
-    }
-    if (this._detectionFadeRow) {
-      this._detectionFadeRow.classList.toggle('visible', modeLabel !== 'OFF');
-    }
-    if (this._detectionOpacityRow) {
-      this._detectionOpacityRow.classList.toggle(
-        'visible',
-        modeLabel !== 'OFF',
-      );
-    }
+  /**
+   * A detection mode change (button, D or the engine): the Detection view
+   * shows it, then the right panels lay out around its rows.
+   */
+  _updateDetectionButton() {
+    this.publishState();
     this._layoutRightPanels();
   }
   stop() {

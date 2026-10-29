@@ -1,3 +1,4 @@
+import { withDisplayViews } from '../testSupport/displayMarkup.mjs';
 import { encodeParams, decodeParams } from '../layers/streetLevel/params.js';
 import { readShellSource } from '../testSupport/readShellSource.mjs';
 import { expandApplicationHtml } from '../../build/application-html.js';
@@ -734,8 +735,10 @@ test('a fresh boot starts 3D aircraft ON in proximity — codec, both layers, an
     /this\.(?:flightState\.)?_models3dMode = 'proximity';/,
     'ui.js: and believes the mode is proximity',
   );
-  const html = expandApplicationHtml(
-    await readFile(new URL('../../index.html', import.meta.url), 'utf8'),
+  const html = await withDisplayViews(
+    expandApplicationHtml(
+      await readFile(new URL('../../index.html', import.meta.url), 'utf8'),
+    ),
   );
   assert.match(
     html,
@@ -743,9 +746,12 @@ test('a fresh boot starts 3D aircraft ON in proximity — codec, both layers, an
     'index.html: the 3D button paints lit on first paint, before ui.js runs — and says so',
   );
   assert.match(
-    ui,
-    /this\._models3dBtn\?\.setAttribute\(\s*'aria-pressed',\s*String\(this\.(?:flightState\.)?_models3dEnabled\),?\s*\)/,
-    'ui.js: and keeps aria-pressed synchronized, so the lit state is not colour-only',
+    await readFile(
+      new URL('../ui/displayViews/ModelsGroup.vue', import.meta.url),
+      'utf8',
+    ),
+    /:aria-pressed="String\(models\.enabled\)"/,
+    'the 3D view keeps aria-pressed synchronized, so the lit state is not colour-only',
   );
   assert.match(
     html,

@@ -9,14 +9,6 @@ export class ShellFacade {
     return this._navigation.subscribeCameraHandoff(listener);
   }
 
-  get _models3dModeBtns() {
-    return this._aircraftDisplay._models3dModeBtns;
-  }
-
-  set _models3dModeBtns(value) {
-    this._aircraftDisplay._models3dModeBtns = value;
-  }
-
   get _models3dEnabled() {
     return this._aircraftDisplay._models3dEnabled;
   }
@@ -427,14 +419,6 @@ export class ShellFacade {
 
   set _contactsDetectionRestore(value) {
     this._visualSettings._contactsDetectionRestore = value;
-  }
-
-  get _detectionAllocationBtns() {
-    return this._visualSettings._detectionAllocationBtns;
-  }
-
-  set _detectionAllocationBtns(value) {
-    this._visualSettings._detectionAllocationBtns = value;
   }
 
   get _detectionAllocationPreference() {

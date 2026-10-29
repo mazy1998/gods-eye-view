@@ -513,7 +513,11 @@ test('newer visual, map, and individual panel actions suppress only their owned 
 });
 
 test('every explicit visual UI gesture claims restore authority before it mutates state', () => {
-  const initUi = sourceBlock('  _initUI() {', '  _initMapStackControl() {');
+  // The Display operations are one shared object (displayActions), which
+  // _initUI hands to the control binder.
+  const initUi =
+    sourceBlock('  _initUI() {', '  _initMapStackControl() {') +
+    Object.getOwnPropertyDescriptor(DisplayBindings.prototype, 'displayActions').get.toString();
   const gestureRoutes = [
     ['toggleHud: () => {', 'toggleOrbit: () =>', 'this.hud.toggle()', 'HUD hotkey'],
     ['cycleDetection: () => {', 'toggleCctv: () =>', 'cycleDetectionMode()', 'detection hotkey'],
@@ -535,7 +539,7 @@ test('every explicit visual UI gesture claims restore authority before it mutate
     assertClaimsBefore(initUi.slice(startIndex, endIndex), mutation, label);
   }
 
-  const displayActions = initUi.slice(initUi.indexOf('this._displayControls ='));
+  const displayActions = initUi.slice(initUi.indexOf('this._displayActions ??='));
   assertClaimsBefore(displayActions.slice(displayActions.indexOf('toggleHud:'), displayActions.indexOf('cycleDetection:')), 'this.hud.toggle()', 'HUD button');
   assertClaimsBefore(displayActions.slice(displayActions.indexOf('cycleDetection:'), displayActions.indexOf('toggleModels:')), 'cycleDetectionMode()', 'detection button');
 

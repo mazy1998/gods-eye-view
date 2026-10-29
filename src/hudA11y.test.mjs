@@ -1,12 +1,13 @@
 import { h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import FirstRunContent from './ui/feedback/FirstRunContent.vue';
+import { withDisplayViews } from './testSupport/displayMarkup.mjs';
 import { expandApplicationHtml } from '../build/application-html.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const html = expandApplicationHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+const html = await withDisplayViews(expandApplicationHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8')));
 const parameters = readFileSync(new URL('./ui/styleParameters.js', import.meta.url), 'utf8');
 
 // Focused markup guards; actual computed names are checked in Chromium.

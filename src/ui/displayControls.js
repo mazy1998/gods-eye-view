@@ -65,7 +65,17 @@ export function bindDisplayControls({ elements, actions }) {
     });
     removers.push(() => control.destroy());
   }
-  for (const el of elements.fadeSliders || []) listen(el, 'input', 'setFade');
+  // Both detection fade sliders commit together, each with its own value.
+  const [fadeSlider, outsideSlider] = elements.fadeSliders || [];
+  const fade = () =>
+    actions.setFade(
+      fadeSlider ? integer(fadeSlider) : undefined,
+      outsideSlider ? integer(outsideSlider) : undefined,
+    );
+  for (const el of [fadeSlider, outsideSlider].filter(Boolean)) {
+    el.addEventListener('input', fade);
+    removers.push(() => el.removeEventListener('input', fade));
+  }
   return {
     destroy() {
       for (const remove of removers.splice(0)) remove();

@@ -1,3 +1,4 @@
+import { withDisplayViews } from '../testSupport/displayMarkup.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -207,9 +208,11 @@ test('DETECT uses the real OFF/restore button and density input to reach DENSE',
   });
   assert.equal(await detectOn(page, pause), 'DENSE');
   assert.deepEqual(modes, ['BALANCED', 'OFF', 'DENSE']);
-  const template = readFileSync(
-    new URL('../ui/templates/display-controls.html', import.meta.url),
-    'utf8',
+  const template = await withDisplayViews(
+    readFileSync(
+      new URL('../ui/templates/display-controls.html', import.meta.url),
+      'utf8',
+    ),
   );
   assert.match(template, /id="detection-density-slider"/);
   assert.match(template, /id="detection-toggle"/);
