@@ -460,7 +460,7 @@ export function initDrawTool({ viewer, annotations }) {
   const shapeButtons = [
     ...(modeRow?.querySelectorAll('.pp-mode-btn[data-shape]') || []),
   ];
-  const shapeControl = createSegmentedControl({
+  createSegmentedControl({
     buttons: shapeButtons,
     valueOf: (button) => button.dataset.shape,
     listen,
@@ -469,7 +469,6 @@ export function initDrawTool({ viewer, annotations }) {
   function setShape(value) {
     if (destroyed) return;
     shape = normalizeShape(value);
-    shapeControl.update(shape);
     if (active) {
       generation += 1;
       session = createDrawSession(shape);
