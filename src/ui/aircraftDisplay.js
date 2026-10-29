@@ -2,10 +2,11 @@ import { syncSegmentedControl } from './segmentedControl.js';
 
 /** Own the shared aircraft display preference and its controls. */
 export class AircraftDisplay {
-  constructor({ elements, readDataManager, layout }) {
+  constructor({ elements, readDataManager, layout, onChange = () => {} }) {
     Object.assign(this, elements, {
       readDataManager,
       _layoutRightPanels: layout,
+      _onChange: onChange,
     });
     // Both aircraft layers default to models enabled in proximity mode.
     this._models3dEnabled = true;
@@ -34,6 +35,7 @@ export class AircraftDisplay {
       valueOf: (button) => button.dataset.mode,
     });
     this._layoutRightPanels();
+    this._onChange();
   }
 
   _syncModels3dModeRow() {
@@ -52,6 +54,7 @@ export class AircraftDisplay {
     this._models3dEnabled = !!enabled;
     this._setModels3dParams({ models3d: this._models3dEnabled });
     this._syncModels3dButtonState();
+    this._onChange();
   }
 
   _setModels3dMode(mode) {
@@ -62,6 +65,7 @@ export class AircraftDisplay {
       valueOf: (button) => button.dataset.mode,
     });
     this._syncModels3dButtonState();
+    this._onChange();
   }
 
   _syncModels3dButtonState() {

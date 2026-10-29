@@ -706,6 +706,19 @@ export class ShellFacade {
     return this._visualSettings._applySharpenIntensity(...arguments);
   }
 
+  /** A Display value VisualSettings owns (see DISPLAY_CONTROLS). */
+  _controlValue(name) {
+    return this._visualSettings._controlValue(...arguments);
+  }
+
+  _setControlValue(name, value) {
+    return this._visualSettings._setControlValue(...arguments);
+  }
+
+  _readControlInputs(...names) {
+    return this._visualSettings._readControlInputs(...arguments);
+  }
+
   /**
    * Toggles sharpening on/off, syncs button state, and reveals/hides the intensity slider row.
    * @param {boolean} enabled - Whether sharpening should be active.

@@ -45,6 +45,56 @@ import {
 import { cyberVisualDefaultsForHudTransition } from '../hudLayouts.js';
 const DETECTION_ALLOCATION_STORAGE_KEY = 'gev:detection-allocation:v1';
 
+/**
+ * Display values VisualSettings owns. They used to live in the Display
+ * panel's range inputs; each keeps its input's range and starts at the value
+ * the markup shipped, and a write is sanitized the way a range input
+ * sanitizes it (clamped, then snapped to its step), so readers see exactly
+ * what the slider held.
+ */
+export const DISPLAY_CONTROLS = Object.freeze({
+  sharpenPct: {
+    slider: '_sharpenSlider',
+    min: 0,
+    max: 100,
+    step: 1,
+    value: 49,
+  },
+  bloomPct: { slider: '_bloomSlider', min: 0, max: 200, step: 1, value: 0 },
+  densityPct: {
+    slider: '_detectionDensitySlider',
+    min: 0,
+    max: 100,
+    step: 25,
+    value: 50,
+  },
+  fadePct: {
+    slider: '_detectionFadeSlider',
+    min: 0,
+    max: 40,
+    step: 1,
+    value: 7,
+  },
+  outsideOpacityPct: {
+    slider: '_detectionOpacitySlider',
+    min: 0,
+    max: 100,
+    step: 1,
+    value: 1,
+  },
+});
+
+/** The value a range input with this spec holds after `value` is written. */
+export function sanitizeRangeValue(value, { min, max, step }) {
+  let number = Number(value);
+  // An unparsable value falls back to the range's midpoint, as the input does.
+  if (!Number.isFinite(number))
+    number = max < min ? min : min + (max - min) / 2;
+  number = Math.min(max, Math.max(min, number));
+  const snapped = min + Math.round((number - min) / step) * step;
+  return snapped > max ? snapped - step : snapped;
+}
+
 /** Own visual preferences, detection overrides and display-control state. */
 export class VisualSettings {
   async restoreShareState(state) {
@@ -102,14 +152,15 @@ export class VisualSettings {
       }
       this._updateSliderPanel(style, { reveal: false });
     }
-    if (typeof bloomIntensity === 'number' && this._bloomSlider) {
+    if (typeof bloomIntensity === 'number') {
       const intensity = decodeBloomIntensity(bloomIntensity, bloomVersion);
       this._setBloomIntensity(intensity, { syncShare: false });
     }
-    if (typeof sharpenIntensity === 'number' && this._sharpenSlider) {
+    if (typeof sharpenIntensity === 'number') {
       const pct = Math.max(0, Math.min(100, Math.round(sharpenIntensity)));
-      this._sharpenSlider.value = String(pct);
-      this._sharpenSliderValue.textContent = `${pct}%`;
+      this._setControlValue('sharpenPct', pct);
+      if (this._sharpenSliderValue)
+        this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
     }
     if (typeof bloom === 'boolean') this._setBloomEnabled(bloom);
@@ -119,10 +170,11 @@ export class VisualSettings {
       this.hud.setMode(hudVisible ? 'on' : 'off');
       this._updateHudButtonState();
     }
-    if (typeof detectionDensity === 'number' && this._detectionDensitySlider) {
+    if (typeof detectionDensity === 'number') {
       const pct = canonicalizeDensity(detectionDensity);
-      this._detectionDensitySlider.value = String(pct);
-      this._detectionDensityValue.textContent = `${pct}%`;
+      this._setControlValue('densityPct', pct);
+      if (this._detectionDensityValue)
+        this._detectionDensityValue.textContent = `${pct}%`;
       this._applyDetectionDensityFromUi();
     }
     if (detectionAllocation) {
@@ -131,14 +183,11 @@ export class VisualSettings {
         persist: false,
       });
     }
-    if (typeof detectionFadePct === 'number' && this._detectionFadeSlider) {
-      this._detectionFadeSlider.value = String(detectionFadePct);
+    if (typeof detectionFadePct === 'number') {
+      this._setControlValue('fadePct', detectionFadePct);
     }
-    if (
-      typeof detectionOutsideOpacityPct === 'number' &&
-      this._detectionOpacitySlider
-    ) {
-      this._detectionOpacitySlider.value = String(detectionOutsideOpacityPct);
+    if (typeof detectionOutsideOpacityPct === 'number') {
+      this._setControlValue('outsideOpacityPct', detectionOutsideOpacityPct);
     }
     this._applyDetectionFadeFromUi();
     if (detectionMode) this._setDetectionMode(detectionMode);
@@ -182,6 +231,8 @@ export class VisualSettings {
     mapStackController,
     readHud,
     readCockpit,
+    readModels3d,
+    readCleanView,
     readDataManager,
     readShareLinks,
     readCelestialRing,
@@ -195,6 +246,8 @@ export class VisualSettings {
       mapStackController,
       readHud,
       readCockpit,
+      readModels3d,
+      readCleanView,
       readDataManager,
       readShareLinks,
       readCelestialRing,
@@ -206,7 +259,7 @@ export class VisualSettings {
     // Views read getVisualState() through this channel. Every visual change
     // ends in the shell's share sync (a restore syncs once, at its end),
     // which calls publishState().
-    this.channel = createStateChannel(() => this.getVisualState());
+    this.channel = createStateChannel(() => this.getViewState());
     this._publishedState = null;
     this._visualEffects = new VisualEffects({
       viewer,
@@ -460,10 +513,38 @@ export class VisualSettings {
     );
   }
 
-  _initBloomSharpen() {
-    this._visualEffects.initPostProcess(
-      this._sharpenSlider ? parseInt(this._sharpenSlider.value, 10) / 100 : 0.6,
+  /** A Display value this owner keeps (see DISPLAY_CONTROLS). */
+  _controlValue(name) {
+    return this._controlStore()[name];
+  }
+
+  /** The kept values, starting from what the markup shipped. */
+  _controlStore() {
+    this._controls ??= Object.fromEntries(
+      Object.entries(DISPLAY_CONTROLS).map(([key, { value }]) => [key, value]),
     );
+    return this._controls;
+  }
+
+  /** Store a Display value as its slider would hold it, and paint the slider. */
+  _setControlValue(name, value) {
+    const spec = DISPLAY_CONTROLS[name];
+    const next = sanitizeRangeValue(value, spec);
+    this._controlStore()[name] = next;
+    if (this[spec.slider]) this[spec.slider].value = String(next);
+    return next;
+  }
+
+  /** Adopt what the user set in these sliders (their input events). */
+  _readControlInputs(...names) {
+    for (const name of names) {
+      const slider = this[DISPLAY_CONTROLS[name].slider];
+      if (slider) this._setControlValue(name, slider.value);
+    }
+  }
+
+  _initBloomSharpen() {
+    this._visualEffects.initPostProcess(this._controlValue('sharpenPct') / 100);
   }
 
   _getBloomIntensity() {
@@ -478,7 +559,7 @@ export class VisualSettings {
     const { governorRequestRender } = this.services;
     governorRequestRender('bloom');
     const clamped = clampBloomIntensity(intensity);
-    if (this._bloomSlider) this._bloomSlider.value = String(clamped);
+    this._setControlValue('bloomPct', clamped);
     if (this._bloomSliderValue)
       this._bloomSliderValue.textContent = `${clamped}%`;
     this._applyBloomIntensity(clamped);
@@ -515,10 +596,8 @@ export class VisualSettings {
     if (this._sharpenSliderRow) {
       this._sharpenSliderRow.classList.toggle('visible', this.sharpenEnabled);
     }
-    if (this.sharpenEnabled && this._sharpenSlider) {
-      this._applySharpenIntensity(
-        parseInt(this._sharpenSlider.value, 10) / 100,
-      );
+    if (this.sharpenEnabled) {
+      this._applySharpenIntensity(this._controlValue('sharpenPct') / 100);
     }
     this._syncShareState();
     this._layoutRightPanels();
@@ -526,9 +605,8 @@ export class VisualSettings {
 
   _applyDetectionDensityFromUi() {
     const { getDetectionMode, setDetectionTuning } = this.services;
-    if (!this._detectionDensitySlider) return;
-    const pct = canonicalizeDensity(this._detectionDensitySlider.value);
-    this._detectionDensitySlider.value = String(pct);
+    const pct = canonicalizeDensity(this._controlValue('densityPct'));
+    this._setControlValue('densityPct', pct);
     if (this._detectionDensityValue)
       this._detectionDensityValue.textContent = `${pct}%`;
     setDetectionTuning({ densityPct: pct });
@@ -539,9 +617,9 @@ export class VisualSettings {
     const { setKeyholeFadeTuning } = this.services;
     const fadePct = Math.max(
       0,
-      Math.min(40, Math.round(Number(this._detectionFadeSlider?.value) || 0)),
+      Math.min(40, Math.round(this._controlValue('fadePct') || 0)),
     );
-    const outsideOpacityValue = this._detectionOpacitySlider?.value;
+    const outsideOpacityValue = this._controlValue('outsideOpacityPct');
     const outsideOpacityPct = Math.max(
       0,
       Math.min(
@@ -551,12 +629,10 @@ export class VisualSettings {
         ),
       ),
     );
-    if (this._detectionFadeSlider)
-      this._detectionFadeSlider.value = String(fadePct);
+    this._setControlValue('fadePct', fadePct);
     if (this._detectionFadeValue)
       this._detectionFadeValue.textContent = `${fadePct}%`;
-    if (this._detectionOpacitySlider)
-      this._detectionOpacitySlider.value = String(outsideOpacityPct);
+    this._setControlValue('outsideOpacityPct', outsideOpacityPct);
     if (this._detectionOpacityValue)
       this._detectionOpacityValue.textContent = `${outsideOpacityPct}%`;
     setKeyholeFadeTuning({
@@ -593,8 +669,7 @@ export class VisualSettings {
     const { getKeyholeFadeTuning, getDetectionTuning, getDetectionMode } =
       this.services;
     const tuning = getDetectionTuning();
-    if (this._detectionDensitySlider)
-      this._detectionDensitySlider.value = String(tuning.densityPct);
+    this._setControlValue('densityPct', tuning.densityPct);
     if (this._detectionDensityValue)
       this._detectionDensityValue.textContent = `${tuning.densityPct}%`;
     this._setDetectionAllocation(tuning.allocationStrategy, {
@@ -602,15 +677,11 @@ export class VisualSettings {
       persist: false,
     });
     const fadeTuning = getKeyholeFadeTuning();
-    if (this._detectionFadeSlider)
-      this._detectionFadeSlider.value = String(
-        Math.round(fadeTuning.fadeRatio * 100),
-      );
-    if (this._detectionOpacitySlider) {
-      this._detectionOpacitySlider.value = String(
-        Math.round(fadeTuning.outsideOpacity * 100),
-      );
-    }
+    this._setControlValue('fadePct', Math.round(fadeTuning.fadeRatio * 100));
+    this._setControlValue(
+      'outsideOpacityPct',
+      Math.round(fadeTuning.outsideOpacity * 100),
+    );
     this._applyDetectionFadeFromUi();
     this._updateDetectionButton(getDetectionMode());
   }
@@ -720,6 +791,8 @@ export class VisualSettings {
     const next = setCyberSonarEnabled(!!enabled);
     this._syncCyberSonarControl();
     this.services.governorRequestRender('cyber-sonar-toggle');
+    // Sonar is not in share links, so views hear of it without a share sync.
+    this.publishState();
     return next;
   }
 
@@ -729,6 +802,7 @@ export class VisualSettings {
     const next = applyCyberSonarSettings({ ...settings, [name]: value });
     this._syncCyberSonarControl();
     this.services.governorRequestRender(`cyber-sonar-${name}`);
+    this.publishState();
     return next;
   }
 
@@ -750,7 +824,7 @@ export class VisualSettings {
     }
 
     const bloomInput = preset.bloom || {};
-    if (typeof bloomInput.intensity === 'number' && this._bloomSlider) {
+    if (typeof bloomInput.intensity === 'number') {
       this._setBloomIntensity(clampBloomIntensity(bloomInput.intensity), {
         syncShare: false,
       });
@@ -760,13 +834,14 @@ export class VisualSettings {
     }
 
     const sharpenInput = preset.sharpen || {};
-    if (typeof sharpenInput.intensity === 'number' && this._sharpenSlider) {
+    if (typeof sharpenInput.intensity === 'number') {
       const sharpenPct = Math.max(
         0,
         Math.min(100, Math.round(sharpenInput.intensity)),
       );
-      this._sharpenSlider.value = String(sharpenPct);
-      this._sharpenSliderValue.textContent = `${sharpenPct}%`;
+      this._setControlValue('sharpenPct', sharpenPct);
+      if (this._sharpenSliderValue)
+        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof sharpenInput.enabled === 'boolean') {
@@ -794,9 +869,9 @@ export class VisualSettings {
 
   _applyDetectionPreset(det) {
     if (!det) return;
-    if (typeof det.densityPct === 'number' && this._detectionDensitySlider) {
+    if (typeof det.densityPct === 'number') {
       const pct = canonicalizeDensity(det.densityPct);
-      this._detectionDensitySlider.value = String(pct);
+      this._setControlValue('densityPct', pct);
       if (this._detectionDensityValue)
         this._detectionDensityValue.textContent = `${pct}%`;
       this._applyDetectionDensityFromUi();
@@ -806,7 +881,7 @@ export class VisualSettings {
 
   _applyGlobalPostDefaults() {
     const defaults = GLOBAL_POST_DEFAULTS;
-    if (typeof defaults.bloom?.intensity === 'number' && this._bloomSlider) {
+    if (typeof defaults.bloom?.intensity === 'number') {
       this._setBloomIntensity(clampBloomIntensity(defaults.bloom.intensity), {
         syncShare: false,
       });
@@ -815,16 +890,14 @@ export class VisualSettings {
       this._setBloomEnabled(defaults.bloom.enabled);
     }
 
-    if (
-      typeof defaults.sharpen?.intensity === 'number' &&
-      this._sharpenSlider
-    ) {
+    if (typeof defaults.sharpen?.intensity === 'number') {
       const sharpenPct = Math.max(
         0,
         Math.min(100, Math.round(defaults.sharpen.intensity)),
       );
-      this._sharpenSlider.value = String(sharpenPct);
-      this._sharpenSliderValue.textContent = `${sharpenPct}%`;
+      this._setControlValue('sharpenPct', sharpenPct);
+      if (this._sharpenSliderValue)
+        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof defaults.sharpen?.enabled === 'boolean') {
@@ -842,13 +915,11 @@ export class VisualSettings {
     if (defaults.detectionMode) {
       this._setDetectionMode(defaults.detectionMode);
     }
-    if (
-      typeof defaults.detectionDensity === 'number' &&
-      this._detectionDensitySlider
-    ) {
+    if (typeof defaults.detectionDensity === 'number') {
       const density = canonicalizeDensity(defaults.detectionDensity);
-      this._detectionDensitySlider.value = String(density);
-      this._detectionDensityValue.textContent = `${density}%`;
+      this._setControlValue('densityPct', density);
+      if (this._detectionDensityValue)
+        this._detectionDensityValue.textContent = `${density}%`;
       this._applyDetectionDensityFromUi();
     }
     this._setDetectionAllocation(
@@ -857,14 +928,11 @@ export class VisualSettings {
         'ELASTIC',
       { syncShare: false, persist: false },
     );
-    if (this._detectionFadeSlider) {
-      this._detectionFadeSlider.value = String(defaults.detectionFadePct ?? 7);
-    }
-    if (this._detectionOpacitySlider) {
-      this._detectionOpacitySlider.value = String(
-        defaults.detectionOutsideOpacityPct ?? 1,
-      );
-    }
+    this._setControlValue('fadePct', defaults.detectionFadePct ?? 7);
+    this._setControlValue(
+      'outsideOpacityPct',
+      defaults.detectionOutsideOpacityPct ?? 1,
+    );
     this._applyDetectionFadeFromUi();
     if (typeof defaults.celestialRing === 'boolean') {
       this.setCelestialRingEnabled(defaults.celestialRing, {
@@ -878,7 +946,9 @@ export class VisualSettings {
 
   /** Tell views about the visual state, once per change: syncs often repeat. */
   publishState() {
-    const state = JSON.stringify(this.getVisualState());
+    // An owner that was never constructed has no channel and no views.
+    if (!this.channel) return;
+    const state = JSON.stringify(this.getViewState());
     if (state === this._publishedState) return;
     this._publishedState = state;
     this.channel.publish({ type: 'visual-changed' });
@@ -889,7 +959,7 @@ export class VisualSettings {
     return shareableDetectionState({
       owned: this._contactsDetectionRestore,
       liveMode: getDetectionMode(),
-      liveDensityPct: parseInt(this._detectionDensitySlider?.value || '50', 10),
+      liveDensityPct: this._controlValue('densityPct'),
     });
   }
 
@@ -907,17 +977,14 @@ export class VisualSettings {
       options: {
         bloomIntensity: this._getBloomIntensity(),
         bloomVersion: BLOOM_SCALE_VERSION,
-        sharpenIntensity: parseInt(this._sharpenSlider?.value || '49', 10),
+        sharpenIntensity: this._controlValue('sharpenPct'),
         hudVariant: this.hud.getVariant(),
         hudVisible: this.hud.visible,
         detectionMode: detection.mode,
         detectionDensity: detection.densityPct,
         detectionAllocation: getDetectionTuning().allocationStrategy,
-        detectionFadePct: parseInt(this._detectionFadeSlider?.value || '7', 10),
-        detectionOutsideOpacityPct: parseInt(
-          this._detectionOpacitySlider?.value || '1',
-          10,
-        ),
+        detectionFadePct: this._controlValue('fadePct'),
+        detectionOutsideOpacityPct: this._controlValue('outsideOpacityPct'),
         celestialRingEnabled: this.celestialRingEnabled,
         scopeEnabled: isScopeMaskEnabled(),
         scopeFeatherPct: Math.round(getScopeMaskFeather() * 100),
@@ -933,18 +1000,13 @@ export class VisualSettings {
 
   getDetectionState() {
     const { getDetectionTuning, getDetectionMode } = this.services;
-    const pct = this._detectionDensitySlider
-      ? parseInt(this._detectionDensitySlider.value, 10)
-      : null;
+    const pct = this._controlValue('densityPct');
     return {
       detectionMode: getDetectionMode(),
       densityPct: pct,
       allocationStrategy: getDetectionTuning().allocationStrategy,
-      fadePct: parseInt(this._detectionFadeSlider?.value || '7', 10),
-      outsideOpacityPct: parseInt(
-        this._detectionOpacitySlider?.value || '0',
-        10,
-      ),
+      fadePct: this._controlValue('fadePct'),
+      outsideOpacityPct: this._controlValue('outsideOpacityPct'),
     };
   }
 
@@ -1049,13 +1111,15 @@ export class VisualSettings {
     if (requestedAllocation) {
       this._setDetectionAllocation(requestedAllocation, { syncShare: false });
     }
-    if (fadePct != null && this._detectionFadeSlider) {
-      this._detectionFadeSlider.value = String(
+    if (fadePct != null) {
+      this._setControlValue(
+        'fadePct',
         Math.max(0, Math.min(40, Math.round(Number(fadePct)))),
       );
     }
-    if (outsideOpacityPct != null && this._detectionOpacitySlider) {
-      this._detectionOpacitySlider.value = String(
+    if (outsideOpacityPct != null) {
+      this._setControlValue(
+        'outsideOpacityPct',
         Math.max(0, Math.min(100, Math.round(Number(outsideOpacityPct)))),
       );
     }
@@ -1069,8 +1133,8 @@ export class VisualSettings {
     ) {
       requestedDensity = defaultDensityForProfile(requestedProfile);
     }
-    if (requestedDensity != null && this._detectionDensitySlider) {
-      this._detectionDensitySlider.value = String(requestedDensity);
+    if (requestedDensity != null) {
+      this._setControlValue('densityPct', requestedDensity);
       this._applyDetectionDensityFromUi();
     }
 
@@ -1081,7 +1145,7 @@ export class VisualSettings {
     } else if (enabled === true && getDetectionMode() === 'OFF') {
       setDetectionModeByLabel(
         profileForDensity(
-          requestedDensity ?? this._detectionDensitySlider?.value ?? 50,
+          requestedDensity ?? this._controlValue('densityPct') ?? 50,
         ),
       );
     }
@@ -1093,9 +1157,7 @@ export class VisualSettings {
   setBloom({ enabled, intensityPct } = {}) {
     const current = () => ({
       enabled: !!this.bloomEnabled,
-      intensityPct: this._bloomSlider
-        ? parseInt(this._bloomSlider.value, 10)
-        : null,
+      intensityPct: this._controlValue('bloomPct'),
     });
     if (enabled !== undefined && typeof enabled !== 'boolean') {
       return {
@@ -1133,9 +1195,7 @@ export class VisualSettings {
   setSharpen({ enabled, intensityPct } = {}) {
     const current = () => ({
       enabled: !!this.sharpenEnabled,
-      intensityPct: this._sharpenSlider
-        ? parseInt(this._sharpenSlider.value, 10)
-        : null,
+      intensityPct: this._controlValue('sharpenPct'),
     });
     if (enabled !== undefined && typeof enabled !== 'boolean') {
       return {
@@ -1160,7 +1220,7 @@ export class VisualSettings {
       this.shareLinkManager?.claimRestoreLane?.('visual');
     if (intensityPct !== undefined) {
       const pct = Math.round(Math.max(0, Math.min(100, intensityPct)));
-      if (this._sharpenSlider) this._sharpenSlider.value = String(pct);
+      this._setControlValue('sharpenPct', pct);
       if (this._sharpenSliderValue)
         this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
@@ -1232,6 +1292,26 @@ export class VisualSettings {
     };
   }
 
+  /**
+   * What views read through `channel`: getVisualState(), which share restore
+   * and story shots also store and so stays as it is, plus display settings
+   * that share links and stories do not carry. The celestial ring's
+   * `visible` is left out: it follows the camera without a publication.
+   */
+  getViewState() {
+    const { isCelestialRingStyleSupported } = this.services;
+    return {
+      ...this.getVisualState(),
+      celestial: {
+        enabled: !!this.readCelestialRing?.()?.enabled,
+        eligible: !!isCelestialRingStyleSupported?.(this.activeStyle),
+      },
+      sonar: { enabled: isCyberSonarEnabled(), ...readCyberSonarSettings() },
+      models3d: this.readModels3d?.() ?? null,
+      cleanView: !!this.readCleanView?.(),
+    };
+  }
+
   getVisualState() {
     const {
       getDetectionTuning,
@@ -1258,7 +1338,7 @@ export class VisualSettings {
       },
       sharpen: {
         enabled: this.sharpenEnabled,
-        intensity: parseInt(this._sharpenSlider?.value || '49', 10),
+        intensity: this._controlValue('sharpenPct'),
       },
       hud: {
         visible: this.hud.visible,
@@ -1266,13 +1346,10 @@ export class VisualSettings {
       },
       detection: {
         mode: getDetectionMode(),
-        density: parseInt(this._detectionDensitySlider?.value || '50', 10),
+        density: this._controlValue('densityPct'),
         allocation: getDetectionTuning().allocationStrategy,
-        fadePct: parseInt(this._detectionFadeSlider?.value || '7', 10),
-        outsideOpacityPct: parseInt(
-          this._detectionOpacitySlider?.value || '0',
-          10,
-        ),
+        fadePct: this._controlValue('fadePct'),
+        outsideOpacityPct: this._controlValue('outsideOpacityPct'),
       },
       scope: {
         enabled: isScopeMaskEnabled(),
@@ -1293,7 +1370,7 @@ export class VisualSettings {
     }
 
     const bloomState = state.bloom || {};
-    if (typeof bloomState.intensity === 'number' && this._bloomSlider) {
+    if (typeof bloomState.intensity === 'number') {
       const intensity = decodeBloomIntensity(
         bloomState.intensity,
         bloomState.version ?? state.bloomVersion ?? BLOOM_SCALE_VERSION,
@@ -1305,13 +1382,14 @@ export class VisualSettings {
     }
 
     const sharpenState = state.sharpen || {};
-    if (typeof sharpenState.intensity === 'number' && this._sharpenSlider) {
+    if (typeof sharpenState.intensity === 'number') {
       const pct = Math.max(
         0,
         Math.min(100, Math.round(sharpenState.intensity)),
       );
-      this._sharpenSlider.value = String(pct);
-      this._sharpenSliderValue.textContent = `${pct}%`;
+      this._setControlValue('sharpenPct', pct);
+      if (this._sharpenSliderValue)
+        this._sharpenSliderValue.textContent = `${pct}%`;
       this._applySharpenIntensity(pct / 100);
     }
     if (typeof sharpenState.enabled === 'boolean') {
@@ -1345,12 +1423,9 @@ export class VisualSettings {
     }
 
     const detectionState = state.detection || {};
-    if (
-      typeof detectionState.density === 'number' &&
-      this._detectionDensitySlider
-    ) {
+    if (typeof detectionState.density === 'number') {
       const pct = canonicalizeDensity(detectionState.density);
-      this._detectionDensitySlider.value = String(pct);
+      this._setControlValue('densityPct', pct);
       if (this._detectionDensityValue)
         this._detectionDensityValue.textContent = `${pct}%`;
       this._applyDetectionDensityFromUi();
@@ -1360,17 +1435,12 @@ export class VisualSettings {
         syncShare: false,
       });
     }
-    if (
-      typeof detectionState.fadePct === 'number' &&
-      this._detectionFadeSlider
-    ) {
-      this._detectionFadeSlider.value = String(detectionState.fadePct);
+    if (typeof detectionState.fadePct === 'number') {
+      this._setControlValue('fadePct', detectionState.fadePct);
     }
-    if (
-      typeof detectionState.outsideOpacityPct === 'number' &&
-      this._detectionOpacitySlider
-    ) {
-      this._detectionOpacitySlider.value = String(
+    if (typeof detectionState.outsideOpacityPct === 'number') {
+      this._setControlValue(
+        'outsideOpacityPct',
         detectionState.outsideOpacityPct,
       );
     }
@@ -1454,13 +1524,14 @@ export class VisualSettings {
       typeof preset.sharpen === 'object'
         ? preset.sharpen
         : { enabled: preset.sharpen };
-    if (typeof sharpenInput.intensity === 'number' && this._sharpenSlider) {
+    if (typeof sharpenInput.intensity === 'number') {
       const sharpenPct = Math.max(
         0,
         Math.min(100, Math.round(sharpenInput.intensity)),
       );
-      this._sharpenSlider.value = String(sharpenPct);
-      this._sharpenSliderValue.textContent = `${sharpenPct}%`;
+      this._setControlValue('sharpenPct', sharpenPct);
+      if (this._sharpenSliderValue)
+        this._sharpenSliderValue.textContent = `${sharpenPct}%`;
       this._applySharpenIntensity(sharpenPct / 100);
     }
     if (typeof sharpenInput.enabled === 'boolean') {
@@ -1476,13 +1547,11 @@ export class VisualSettings {
     if (preset.detectionMode) {
       this._setDetectionMode(preset.detectionMode);
     }
-    if (
-      typeof preset.detectionDensity === 'number' &&
-      this._detectionDensitySlider
-    ) {
+    if (typeof preset.detectionDensity === 'number') {
       const density = canonicalizeDensity(preset.detectionDensity);
-      this._detectionDensitySlider.value = String(density);
-      this._detectionDensityValue.textContent = `${density}%`;
+      this._setControlValue('densityPct', density);
+      if (this._detectionDensityValue)
+        this._detectionDensityValue.textContent = `${density}%`;
       this._applyDetectionDensityFromUi();
     }
     if (preset.detectionAllocation) {

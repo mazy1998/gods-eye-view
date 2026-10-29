@@ -67,6 +67,9 @@ function styleOwner(t, initialVariant = 'cyber') {
     readHud: () => hud,
     readShareLinks: () => ({ onStyleChange() {} }),
     _visualEffects: {
+      // Presets carry bloom and sharpen intensity; the owner applies them.
+      applyBloomIntensity() {},
+      applySharpenIntensity() {},
       stages: Object.fromEntries(
         Object.entries(STYLES).map(([name, config]) => [
           name,

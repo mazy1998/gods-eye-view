@@ -55,11 +55,13 @@ try {
         name,
         count: published.length,
         value: published.length ? read(published.at(-1)) : null,
-        current: read(owner.getVisualState()),
+        // The channel carries the view state: getVisualState() plus display
+        // settings that share links and stories do not carry.
+        current: read(owner.getViewState()),
         matches:
           published.length > 0 &&
           JSON.stringify(published.at(-1)) ===
-            JSON.stringify(owner.getVisualState()),
+            JSON.stringify(owner.getViewState()),
       };
     };
     for (const id of ['pp-toggles']) {
@@ -108,6 +110,56 @@ try {
         (s) => s.bloom.enabled,
       ),
     );
+    // Display settings outside share links publish directly (S11a).
+    out.push(
+      await run(
+        'celestial ring',
+        () => document.getElementById('celestial-toggle').click(),
+        (s) => s.celestial.enabled,
+      ),
+    );
+    out.push(
+      await run(
+        'Cyber sonar toggle',
+        () => document.getElementById('cyber-sonar-toggle').click(),
+        (s) => s.sonar.enabled,
+      ),
+    );
+    out.push(
+      await run(
+        'Cyber sonar rings',
+        () => input('cyber-sonar-rings', 5),
+        (s) => s.sonar.rings,
+      ),
+    );
+    out.push(
+      await run(
+        '3D models toggle',
+        () => document.getElementById('models3d-toggle').click(),
+        (s) => s.models3d.enabled,
+      ),
+    );
+    out.push(
+      await run(
+        '3D models mode (All)',
+        () => document.getElementById('models3d-mode-all').click(),
+        (s) => s.models3d.mode,
+      ),
+    );
+    out.push(
+      await run(
+        'clean view',
+        () => document.getElementById('clean-view-toggle').click(),
+        (s) => s.cleanView,
+      ),
+    );
+    out.push(
+      await run(
+        'clean view exit',
+        () => document.getElementById('clean-view-exit').click(),
+        (s) => s.cleanView,
+      ),
+    );
     out.push(
       await run(
         'style button (Noir)',
@@ -144,6 +196,13 @@ try {
     'Display scope feather': 37,
     'sharpen slider': 73,
     'bloom toggle': undefined,
+    'celestial ring': undefined,
+    'Cyber sonar toggle': undefined,
+    'Cyber sonar rings': 5,
+    '3D models toggle': undefined,
+    '3D models mode (All)': 'all',
+    'clean view': true,
+    'clean view exit': false,
     'style button (Noir)': 'noir',
     'map-source chip (OSM)': 'osm',
   };

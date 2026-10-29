@@ -18,6 +18,7 @@ import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { mountView } from './mountView.js';
+import { createMapStackChannel } from './mapStackChannel.js';
 import StatusBadge from './primitives/StatusBadge.vue';
 import StyleIndicator from './StyleIndicator.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
@@ -273,6 +274,11 @@ export class StyleManager extends ShellFacade {
       },
       readHud: () => this.hud,
       readCockpit: () => this.cockpitView,
+      readModels3d: () => ({
+        enabled: !!this._models3dEnabled,
+        mode: this._models3dMode,
+      }),
+      readCleanView: () => document.body.classList.contains('ui-clean-view'),
       readDataManager: () => this._dataManager,
       readShareLinks: () => this.shareLinkManager,
       readCelestialRing: () => this.celestialRing,
@@ -500,6 +506,8 @@ export class StyleManager extends ShellFacade {
       },
       readDataManager: () => this._dataManager,
       layout: () => this._layoutRightPanels(),
+      // Aircraft models are not in share links; views hear of them directly.
+      onChange: () => this._visualSettings?.publishState(),
     });
 
     // The shared world-overlay host must own its one postRender lane before
@@ -590,6 +598,8 @@ export class StyleManager extends ShellFacade {
           this._setDetectionAllocation(...args),
         _applyDetectionFadeFromUi: (...args) =>
           this._applyDetectionFadeFromUi(...args),
+        _setControlValue: (...args) => this._setControlValue(...args),
+        _readControlInputs: (...args) => this._readControlInputs(...args),
         setCelestialRingEnabled: (...args) =>
           this.setCelestialRingEnabled(...args),
         _setModels3dEnabled: (...args) => this._setModels3dEnabled(...args),
@@ -939,6 +949,11 @@ export class StyleManager extends ShellFacade {
   _initMapStackControl() {
     if (!this.mapStackController) return;
 
+    // Views read the active stack and availability here (K11).
+    this._mapStack?.destroy();
+    this._mapStack = createMapStackChannel({
+      controller: this.mapStackController,
+    });
     this._mapSourceControls?.destroy();
     this._mapSourceControls = createMapSourceControls({
       container: this._mapStackChips,
@@ -1368,6 +1383,7 @@ export class StyleManager extends ShellFacade {
       this._cleanViewBtn.classList.toggle('active', shouldEnable);
     }
     this._scheduleLeftPanelLayout();
+    this._visualSettings?.publishState();
   }
 
   // ── Public control facade ──────────────────────────────────────────────
@@ -1546,15 +1562,11 @@ export class StyleManager extends ShellFacade {
       detection: this.getDetectionState(),
       bloom: {
         enabled: !!this.bloomEnabled,
-        intensityPct: this._bloomSlider
-          ? parseInt(this._bloomSlider.value, 10)
-          : null,
+        intensityPct: this._controlValue('bloomPct'),
       },
       sharpen: {
         enabled: !!this.sharpenEnabled,
-        intensityPct: this._sharpenSlider
-          ? parseInt(this._sharpenSlider.value, 10)
-          : null,
+        intensityPct: this._controlValue('sharpenPct'),
       },
       celestialRing: {
         enabled: this.celestialRingEnabled,
@@ -1865,6 +1877,7 @@ export class StyleManager extends ShellFacade {
 
     this._displayBindings.destroy();
     this._mapSourceControls?.destroy();
+    this._mapStack?.destroy();
     this._cameraOrientationControls?.destroy();
     this._clearLayersControl?.destroy();
     this._cctvControls?.destroy();

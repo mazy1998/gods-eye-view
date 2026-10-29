@@ -150,6 +150,7 @@ export class DisplayBindings {
         },
         setSharpenIntensity: (pct) => {
           this.shareLinkManager?.claimRestoreLane?.('visual');
+          this._setControlValue('sharpenPct', pct);
           if (this._sharpenSliderValue)
             this._sharpenSliderValue.textContent = `${pct}%`;
           this._applySharpenIntensity(pct / 100);
@@ -165,7 +166,7 @@ export class DisplayBindings {
           this.shareLinkManager?.claimRestoreLane?.('visual');
           this.claimDetection();
           const pct = canonicalizeDensity(value);
-          this._detectionDensitySlider.value = String(pct);
+          this._setControlValue('densityPct', pct);
           if (this._detectionDensityValue)
             this._detectionDensityValue.textContent = `${pct}%`;
           this._applyDetectionDensityFromUi();
@@ -178,6 +179,7 @@ export class DisplayBindings {
         },
         setFade: () => {
           this.shareLinkManager?.claimRestoreLane?.('visual');
+          this._readControlInputs('fadePct', 'outsideOpacityPct');
           this._applyDetectionFadeFromUi();
           this._syncShareState();
         },
