@@ -116,7 +116,14 @@ try {
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60000 },
   );
-  await page.click('[data-collapse-target="scene-panel"]');
+  // Open Stories and select Create for this authoring scenario.
+  await page.evaluate(() => {
+    const stories = document.querySelector(
+      '.gev-rail-item[data-destination="stories"]',
+    );
+    if (stories.getAttribute('aria-current') !== 'true') stories.click();
+  });
+  await page.click('#stories-create-tab');
   const before = await page.evaluate(() =>
     JSON.stringify(window.__godsEyeView.sceneDirector._project),
   );
