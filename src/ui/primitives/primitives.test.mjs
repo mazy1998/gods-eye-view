@@ -1,14 +1,10 @@
 // Markup contracts of the primitive components, rendered without a DOM.
-// Behaviour (clicks, keys, focus) is covered in a real browser by
-// scripts/qa-primitives.mjs until the jsdom harness (S5b) lands.
+// Mounted behavior is covered by primitives.dom.test.mjs and browser fixtures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { createActionButton } from '../actionButton.js';
-import { createNumberInput } from '../formField.js';
-import { railFixture } from '../railTestFixture.mjs';
 import ActionButton from './ActionButton.vue';
 import DisclosureRow from './DisclosureRow.vue';
 import FilterChip from './FilterChip.vue';
@@ -40,35 +36,23 @@ function elements(html, tag) {
   );
 }
 
-test('ActionButton renders the actionButton.js button for every variant and size', async () => {
-  const { document } = railFixture();
+test('ActionButton renders native action variants and sizes', async () => {
   for (const variant of ['default', 'danger'])
     for (const size of ['default', 'compact'])
       for (const disabled of [false, true]) {
         const label = '<b>Save</b> · СОХРАНИТЬ';
-        const legacy = createActionButton({ documentRef: document, label, variant, size, disabled });
         const html = await render(ActionButton, { label, variant, size, disabled });
         const [button] = elements(html, 'button');
-        assert.equal(button.type, legacy.type);
-        assert.equal(button.class, legacy.className);
-        assert.equal('disabled' in button, legacy.disabled);
+        assert.equal(button.type, 'button');
+        assert.equal(button.class, ['gev-action-button', variant === 'danger' && 'gev-action-button--danger', size === 'compact' && 'gev-action-button--compact'].filter(Boolean).join(' '));
+        assert.equal('disabled' in button, disabled);
         assert.ok(html.includes('&lt;b&gt;Save&lt;/b&gt; · СОХРАНИТЬ'), 'label stays literal text');
       }
 });
 
-test('NumberField renders the formField.js input, densities included', async () => {
-  const { document } = railFixture();
+test('NumberField renders native numeric bounds, values and densities', async () => {
   for (const density of ['default', 'compact', 'inline']) {
     const className = density === 'default' ? '' : `gev-field--${density}`;
-    const legacy = createNumberInput({
-      documentRef: document,
-      className,
-      min: 0,
-      max: 10,
-      step: 0.5,
-      value: 3,
-      ariaLabel: 'Zoom',
-    });
     const html = await render(NumberField, {
       density,
       min: 0,
@@ -78,10 +62,10 @@ test('NumberField renders the formField.js input, densities included', async () 
       label: 'Zoom',
     });
     const [input] = elements(html, 'input');
-    assert.equal(input.type, legacy.type);
-    assert.equal(input.class, legacy.className);
-    for (const key of ['min', 'max', 'step', 'value']) assert.equal(input[key], String(legacy[key]));
-    assert.equal(input['aria-label'], legacy.getAttribute('aria-label'));
+    assert.equal(input.type, 'number');
+    assert.equal(input.class, `gev-field${className ? ` ${className}` : ''}`);
+    assert.deepEqual([input.min, input.max, input.step, input.value], ['0', '10', '0.5', '3']);
+    assert.equal(input['aria-label'], 'Zoom');
   }
 });
 

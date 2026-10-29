@@ -406,6 +406,8 @@ try {
     const controls = director._controls;
     const newButton = document.getElementById('scene-new-btn');
     const statusNode = document.getElementById('scene-status');
+    const shotRow = document.querySelector('.scene-shot-row');
+    const loadButton = shotRow.querySelector('.scene-shot-actions button');
     const previousStatus = statusNode.textContent;
     const project = director._project;
     let finish;
@@ -423,10 +425,14 @@ try {
     const notificationsAtStop = window.__qaSceneState.length;
     const stoppedSynchronously =
       controls.destroyed &&
-      controls.removers.length === 0 &&
-      controls.rowRemovers.length === 0;
+      controls.unsubscribe === null &&
+      controls.playbackKeyRemover === null &&
+      !newButton.isConnected &&
+      !shotRow.isConnected &&
+      !loadButton.isConnected;
     newButton.click();
     controls.run('capture');
+    loadButton.click();
     finish();
     await pending;
     await stopping;

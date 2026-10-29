@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Read-only badge view with the statusBadge.js contract: literal translated
+ * Read-only badge view: literal translated
  * text, controlled visibility and the shared gev-status-badge CSS surface.
  * Owners keep status derivation, machine-state attributes and announcement
  * policy; they pass those as ordinary attributes, which land on the badge.

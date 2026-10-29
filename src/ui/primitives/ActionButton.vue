@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Ordinary action with the actionButton.js contract: a native button on the
+ * Ordinary action: a native button on the
  * shared gev-action-button surface. The label is literal translated text (or
  * slot content); owners keep callbacks and disabled state.
  */

@@ -299,3 +299,25 @@ for (const commit of ['Enter', 'blur'])
     );
     assert.equal(patches[0].calibration.patch.headingDeg, 80);
   });
+
+test('summary typing follows the mounted view and stops before disposal can yield', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
+  const { controls } = fixture(t);
+  const summary = document.getElementById('cctv-summary');
+  controls._typeCctvSummary('<literal camera summary>');
+  t.mock.timers.tick(20);
+  assert.equal(summary.textContent, '<li');
+  assert.equal(summary.children.length, 0);
+  controls.destroy();
+  assert.equal(controls._cctvSummaryTypingTimer, null);
+  assert.equal(summary.isConnected, false);
+  t.mock.timers.tick(200);
+  assert.equal(summary.textContent, '<li');
+  const unmounted = new CctvControls({ elements: {}, cctv: {}, actions: {} });
+  try {
+    unmounted._typeCctvSummary('No view');
+    assert.equal(unmounted._cctvSummaryTypingTimer, null);
+  } finally {
+    unmounted.destroy();
+  }
+});

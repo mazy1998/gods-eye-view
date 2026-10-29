@@ -289,21 +289,22 @@ the user's later collapse choice, including body remounts. Mark the body
 `max-height` and puts the scroll offset back afterwards. Panel bodies only
 scroll on an open-card change, with one write, never on a refresh.
 
-Compose `createRailCards({ container, document, onParams, onOpen })` and
-`createRailTimeline({ container, document, onCommit, onPreview, onStep,
-onLatest, onPlay })`. Cards reconcile `{ id, title, badge, open, compact,
-compactStatus, blocks }` in place. Their full-width native button headers expose
-`aria-expanded` and `aria-controls`; articles expose `data-open`. The feature
-adapter owns accordion state. Generic cards do not select data or enable layers.
+Weather's owner mounts `WeatherCard.vue`, `WeatherBlocks.vue` and
+`WeatherTimeline.vue`. Cards reconcile `{ id, title, badge, open, compact,
+compactStatus, blocks }` in place. Their native headers expose `aria-expanded`
+and `aria-controls`; articles expose `data-open`. The feature owner retains
+accordion state and parameter dispatch. The views do not select data or enable
+layers. `createRailTimelineState` owns drag drafts, stable tick mapping and
+coalesced commits; the timeline view renders its snapshot and calls its actions.
 
 `blocks` is an ordered array of loose, optional `{ id, type, ... }` descriptors,
-rendered by `railCardBlocks.js`. There are no per-section disclosures:
+rendered by `WeatherBlocks.vue`. There are no per-section disclosures:
 
 - `summary`: `text`, a single summary line.
-- `list`: `list: { ariaLabel, items }`, reconciled by `syncRowList` in `rowList.js`.
+- `list`: `list: { ariaLabel, items }`, keyed by item id in the view.
 - `lines`: keyed `lines: [{ id, text, muted? }]` for details and status.
 - `settings`: `settings: [{ id, label, chips }]`; each labelled row has a 56 px
-  label column and a wrapping `syncChipGroup` from `chipGroup.js`.
+  label column and wrapping FilterChip components.
 - `legend`: `legend: { colors, labels, units?, zeroIndex?, categorical? }` for a
   ramp/scale (including a physical freezing anchor) or separate keyed swatches.
 - `actions`: keyed `actions: [{ id, label, params?, href?, onClick?, disabled?,
@@ -372,12 +373,11 @@ facade's asynchronous teardown can yield.
 
 ## Ordinary action buttons
 
-`src/ui/actionButton.js` is a native, listener-free view helper used by Scene
-presentation and sharing-toolbar owners. It receives translated text and explicit
+`src/ui/primitives/ActionButton.vue` renders a native button on the shared
+`gev-action-button` surface. It receives translated text and explicit
 presentation/accessibility properties. Feature controllers own action dispatch,
-state, persistence and cleanup. Static Scenes/CCTV templates use the same CSS
-surface and preserve IDs and layout hooks. The helper imports no application,
-renderer, storage or services; it belongs to the consuming package closures.
+state, persistence and cleanup. Existing IDs, layout hooks and native disabled
+behavior remain with the consuming feature.
 
 ## Display controls
 
@@ -741,13 +741,11 @@ DOM and platform middleware.
 
 ### Native form fields
 
-`src/ui/formField.js` constructs native numeric inputs without listeners or
-application state. Static selects and number inputs use the same `gev-field`
-surface, with explicit compact and inline densities. Feature owners retain
-option identity/order, bounds, parsing, draft values, input/change timing and
-teardown. CCTV effective-pose conversion and tuner/device operations remain
-feature responsibilities. A Vue replacement can reuse this contract and CSS;
-it replaces DOM construction, rather than adding a second state owner.
+`src/ui/primitives/NumberField.vue` and `SelectField.vue` render native inputs
+and selects on the `gev-field` surface, with explicit compact and inline
+densities. Feature owners retain option identity/order, bounds, parsing, draft
+values, input/change timing and teardown. CCTV effective-pose conversion and
+tuner/device operations remain feature responsibilities.
 
 The shared stylesheet owns field surfaces and disabled opacity; feature and theme
 palettes use `--gev-field-background`, `--gev-field-border-color`,
@@ -759,23 +757,17 @@ field rules separate, so Radio's palette remains an intentional exception.
 
 ### Read-only status badges
 
-`src/ui/statusBadge.js` constructs/updates ordinary badges without listeners,
-status inference or live-region policy. It consumes translated text and controlled
-visibility; appearance variants share CSS rather than mapping machine states to
-universal severity. CCTV owns frame/source and calibration rules and their data
-attributes, while Weather owns coverage labels. The keyed rail-card owner keeps
-node identity, header focus, disclosure and teardown. The shared adapter never
-creates another state store or announces all card updates. A Vue view can replace
-this adapter and retain these presentation inputs and styles.
+`src/ui/primitives/StatusBadge.vue` renders ordinary badges without status
+inference or live-region policy. It consumes translated `label`, controlled
+`hidden` and `appearance` inputs. Owner attributes (`id`, `data-*`, live-region
+policy) pass through. Appearance describes density and shape, not universal
+severity. CCTV owns frame/source and calibration rules, while Weather owns
+coverage labels. Vue retains keyed node identity and header focus; feature
+owners retain subscriptions and disposal.
 
-`src/ui/primitives/StatusBadge.vue` is that view, with the same `label`, `appearance` and
-`hidden` inputs. Owner attributes (`id`, `data-*`, live-region policy) pass
-through to the badge. `src/ui/mountView.js` mounts a view in place of the DOM
-an owner used to build, without a wrapper, so mounted hooks see connected
-nodes. It returns synchronous `update()` and idempotent `dispose()`. The CCTV
-calibration chip is mounted this way: the shell owns the mount and its
-disposal, and `CctvControls` supplies the label and `data-cal-badge` through
-`update()`. The other badges keep the DOM adapter.
+`src/ui/mountView.js` mounts views without a wrapper and exposes synchronous
+`update()` and idempotent `dispose()`. Feature owners dispose their mounted views
+and subscriptions together; the views do not introduce another state store.
 
 Components (`.vue`) are renderers with inline JavaScript and HTML blocks. Their
 CSS lives in `src/ui/styles`, so `<style>` blocks are refused. `build/vue.js`

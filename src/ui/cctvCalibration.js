@@ -10,7 +10,7 @@ const signedNormalizeDeg = (deg) => ((((deg + 180) % 360) + 360) % 360) - 180;
  * against the frozen basePose. ΔN/ΔE stay offset-denominated (absolute lat/lon
  * typing is user-hostile).
  */
-export const CCTV_CAL_FIELDS = {
+const CCTV_CAL_FIELDS = {
   heading: {
     label: msg('HDG'),
     unit: '°',

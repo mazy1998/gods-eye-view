@@ -90,7 +90,6 @@ export class CctvControls {
       _cctvPrevBtn: 'cctv-prev-btn',
       _cctvProjectionBtn: 'cctv-projection-btn',
       _cctvSelect: 'cctv-camera-select',
-      _cctvSummary: 'cctv-summary',
     };
     for (const [key, id] of Object.entries(ids))
       this[key] = body.querySelector(`#${id}`);

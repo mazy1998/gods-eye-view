@@ -34,6 +34,11 @@ function fixture() {
     selectedShotId: 'shot-a',
     running: false,
     hasRun: false,
+    progress: 0,
+    status: 'Ready',
+    runtime: '',
+    playbackActive: false,
+    keyboardEnabled: false,
   };
   const calls = [];
   const actions = Object.fromEntries(
@@ -60,7 +65,13 @@ function fixture() {
       },
     ]),
   );
-  const owner = new SceneControls({ read: () => state, actions, elements });
+  const channel = createStateChannel(() => state);
+  const owner = new SceneControls({
+    read: () => state,
+    actions,
+    elements,
+    subscribe: (listener) => channel.subscribe(listener),
+  });
   return {
     owner,
     state,
@@ -68,8 +79,13 @@ function fixture() {
     elements,
     calls,
     document,
+    publish(type, patch = {}) {
+      Object.assign(state, patch);
+      channel.publish({ type });
+    },
     restore() {
       owner.destroy();
+      channel.destroy();
       Object.assign(window, saved);
     },
   };
@@ -97,9 +113,9 @@ test('Scene controls render the supplied selection and running/download states',
     assert.equal(f.elements.stop.disabled, false);
     assert.equal(f.elements.download.disabled, false);
     assert.equal(f.elements.panel.classList.contains('running'), true);
-    f.owner.setProgress(2);
+    f.publish('progress-changed', { progress: 2 });
     assert.equal(f.elements.progress.style.width, '100%');
-    f.owner.setProgress(-1);
+    f.publish('progress-changed', { progress: -1 });
     assert.equal(f.elements.progress.textContent, '0%');
   } finally {
     f.restore();
@@ -126,7 +142,7 @@ test('Scene controls dispatch explicit actions and revoke replaced shot-row list
       ['renameShot', 'scene-a', 'shot-a', 'Renamed'],
       ['load', 'scene-a', 'shot-a'],
     ]);
-    f.owner.renderShotList();
+    f.publish('shots-changed');
     label.click();
     load.click();
     assert.equal(f.calls.length, 5);
@@ -149,7 +165,7 @@ test('Scene Escape and recording presentation follow playback and release on des
     f.state.running = true;
     f.owner.setPlaybackActive(true);
     f.owner.setPlaybackKeyboardEnabled(true);
-    f.owner.updateRuntime('Scene A / Shot A');
+    f.publish('runtime-changed', { runtime: 'Scene A / Shot A' });
     escape();
     assert.deepEqual(f.calls, [['stop', 'Stopped (Esc)']]);
     f.owner.destroy();
@@ -164,8 +180,10 @@ test('Scene Escape and recording presentation follow playback and release on des
       false,
     );
     assert.equal(f.elements.runtime.textContent, '');
-    assert.equal(f.owner.removers.length, 0);
-    assert.equal(f.owner.rowRemovers.length, 0);
+    assert.equal(f.owner.unsubscribe, null);
+    assert.equal(f.owner.playbackKeyRemover, null);
+    assert.equal(f.elements.new.isConnected, false);
+    assert.equal(f.elements.shots.isConnected, false);
   } finally {
     f.restore();
   }
@@ -416,7 +434,7 @@ test('the existing runtime overlay exposes Stop independently of the panel and t
   try {
     f.state.running = true;
     f.owner.setButtons(true);
-    f.owner.updateRuntime('Example / Overview');
+    f.publish('runtime-changed', { runtime: 'Example / Overview' });
     f.elements.panel.hidden = true;
     document.getElementById('scene-runtime-stop').click();
     assert.deepEqual(f.calls, [['stop', 'Stopped']]);
@@ -441,7 +459,7 @@ test('recording hides runtime Stop but preserves captions and restores Stop outs
   try {
     f.state.running = true;
     f.owner.setButtons(true);
-    f.owner.updateRuntime('Example / Overview');
+    f.publish('runtime-changed', { runtime: 'Example / Overview' });
     f.elements.panel.hidden = true;
     const stop = document.getElementById('scene-runtime-stop');
     assert.notEqual(getComputedStyle(stop).display, 'none');
@@ -453,9 +471,9 @@ test('recording hides runtime Stop but preserves captions and restores Stop outs
       f.elements.runtime.querySelector('span').textContent,
       'Example / Overview',
     );
-    f.owner.updateRuntime('');
+    f.publish('runtime-changed', { runtime: '' });
     assert.equal(getComputedStyle(f.elements.runtime).display, 'none');
-    f.owner.updateRuntime('Example / Overview');
+    f.publish('runtime-changed', { runtime: 'Example / Overview' });
     assert.notEqual(getComputedStyle(f.elements.runtime).display, 'none');
     document.body.classList.remove('recording-mode');
     assert.notEqual(getComputedStyle(stop).display, 'none');
@@ -487,7 +505,7 @@ test('collapsed Scenes shows only its header and keeps the independent playback 
     assert.notEqual(getComputedStyle(body).display, 'none');
     f.state.running = true;
     f.owner.setButtons(true);
-    f.owner.updateRuntime('Example / Overview');
+    f.publish('runtime-changed', { runtime: 'Example / Overview' });
     f.elements.panel.classList.add('collapsed');
     assert.equal(getComputedStyle(body).display, 'none');
     assert.notEqual(getComputedStyle(header).display, 'none');

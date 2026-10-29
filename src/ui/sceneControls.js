@@ -35,9 +35,6 @@ export class SceneControls {
     this.elements = elements;
     this.destroyed = false;
     this.actionGeneration = 0;
-    // Retained teardown diagnostics; Vue owns the local element listeners.
-    this.removers = [];
-    this.rowRemovers = [];
     this.playbackKeyRemover = null;
     this.renameDraft = null;
     this.tab = 'browse';
@@ -176,18 +173,6 @@ export class SceneControls {
     this.tab = tab;
     this._paint();
   }
-  renderSceneSelect() {
-    if (this.destroyed) return;
-    this.library = this.read();
-    this._paint();
-  }
-  renderShotList() {
-    if (this.destroyed) return;
-    this.library = this.read();
-    this.renameDraft = null;
-    this.listRevision++;
-    this._paint();
-  }
   beginRename(sceneId, shotId, title, label) {
     if (this.destroyed || this.renameDraft) return;
     const draft = { sceneId, shotId, title, value: title };
@@ -260,21 +245,9 @@ export class SceneControls {
     this.presentation.hasRun = this.read().hasRun;
     this._paint();
   }
-  setProgress(progress) {
-    if (!this.destroyed) {
-      this.presentation.progress = progress;
-      this._paint();
-    }
-  }
   updateStatus(status) {
     if (!this.destroyed) {
       this.presentation.status = status;
-      this._paint();
-    }
-  }
-  updateRuntime(runtime) {
-    if (!this.destroyed) {
-      this.presentation.runtime = runtime;
       this._paint();
     }
   }

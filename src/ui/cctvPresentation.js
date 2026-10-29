@@ -173,7 +173,7 @@ export function _renderCctvState(state) {
 }
 
 export function _typeCctvSummary(text) {
-  if (this.destroyed || !this._cctvSummary) return;
+  if (this.destroyed || !this._panelView) return;
   const nextText = String(text || '').trim() || t('No summary available.');
   if (nextText === this._lastCctvSummaryText) return;
   this._lastCctvSummaryText = nextText;

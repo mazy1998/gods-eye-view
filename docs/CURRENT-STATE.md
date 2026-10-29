@@ -1404,11 +1404,11 @@ The application supplies actions and retains effect settings, restore claims and
 rendering. Native keyboard editing, model modes and current defaults are preserved.
 Destroying the UI removes these listeners before asynchronous teardown.
 
-Ordinary sliders share the native range component in `ui/slider.js` and the
+Ordinary sliders share `ui/primitives/QuantitativeSlider.vue` and the
 `gev-quantitative-slider` surface in `ui/styles/slider.css`. Display, shader
 parameters, volume, replay speed, weather settings/history, imagery opacity and
 Street View's date filter use the same rail, thumb, value styling, keyboard focus and disabled state.
-Generated controls use `createSlider`; static templates apply the same class.
+The component renders a native range input; static controls apply the same class.
 Feature owners retain bounds, steps, formatted values, input/change timing and
 listener cleanup. The radio tuning dial, imagery comparison divider and event
 comparison/progression controls keep their specialized presentation and behavior.
@@ -1427,10 +1427,10 @@ boundaries preserve the current Tactical/Cyber appearance and native behavior.
 ## Ordinary status badges
 
 CCTV source/frame labels, calibration provenance and Weather coverage labels use
-`ui/statusBadge.js` and the `gev-status-badge` CSS surface. The listener-free
-adapter accepts already-translated `label` and `hidden` values; pill, box and plain
+`ui/primitives/StatusBadge.vue` and the `gev-status-badge` CSS surface. The view
+accepts already-translated `label` and `hidden` values; pill, box and plain
 appearances describe shape/density only. Static CCTV markup uses the same classes
-as generated rail-card badges. Repeated identical updates do not rewrite text or
+as the Weather card badges. Repeated identical updates do not rewrite text or
 replace nodes. Empty coverage remains hidden.
 
 Feature owners retain the status rules, machine-state attributes, translations
@@ -1441,18 +1441,18 @@ prior poses; unsaved edits override the label until save/reset. Coverage labels
 remain geographic scope, not health claims. Existing colors and the source
 badge's polite live region are preserved; coverage and calibration do not gain
 live regions. Interactive layer toggles, progress indicators and world overlays
-retain their specialized ownership. Vue can reuse the view contract and CSS while
-replacing DOM construction. Browser acceptance:
+retain their specialized ownership. Owners supply snapshots to the views and
+release their mounts and subscriptions during teardown. Browser acceptance:
 `QA_BASE_URL=http://127.0.0.1:4189 node scripts/qa-status-badges.mjs`.
 
 ## Ordinary action buttons
 
 Scene panel actions, shot LOAD/DEL actions, the EDIT DETAILS / SHARE SCENE
-bar and one-shot CCTV actions use `ui/actionButton.js` and the shared
+bar and one-shot CCTV actions use `ui/primitives/ActionButton.vue` and the shared
 `gev-action-button` surface in `ui/styles/action-button.css`. Static templates
-apply the same classes as generated buttons. The native builder accepts translated
+apply the same classes as the component. The view accepts translated
 text, default/danger variants, default/compact sizes and disabled/accessibility
-properties; it installs no listeners and owns no application state. Feature
+properties; it forwards native clicks and owns no application state. Feature
 controllers retain callbacks, enable/disable rules, confirmation prompts,
 persistence and teardown. The smaller shot actions retain their existing sizing
 and hover treatment. Feature CSS still owns panel layout and translated wrapping.
@@ -1461,7 +1461,7 @@ CCTV enable, coverage, auto-hop, projection and adjustment toggles, editable
 calibration-value chips and the scene authoring dialogs retain their specialized
 controls. Existing `scene-btn` hooks remain compatible with Street Level and
 legacy toggles. The shared CSS, explicit input/action boundary and behavior tests
-can carry to a Vue view while Vue replaces native DOM construction.
+are shared by the Vue controls and their native owner bindings.
 Browser acceptance: `QA_BASE_URL=http://127.0.0.1:4179 node scripts/qa-action-buttons.mjs`;
 `qa-scene-controls.mjs` also covers real Scene authoring/playback with native Space capture.
 

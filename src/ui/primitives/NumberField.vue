@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Native numeric input with the formField.js contract. It emits the raw input
+ * Native numeric input. It emits the raw input
  * text on `change` (or on every `input` when `live`); owners keep parsing,
  * bounds policy, drafts and commit timing.
  */
