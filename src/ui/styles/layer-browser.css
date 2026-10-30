@@ -90,6 +90,8 @@
   color: var(--gev-accent-text);
 }
 .layer-browser .data-toggle-btn {
+  /* Native focus scrolling must include the 2px outline and its 2px offset. */
+  scroll-margin-block: 4px;
   min-width: 40px;
   width: 40px;
   padding: 0;

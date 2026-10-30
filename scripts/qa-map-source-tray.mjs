@@ -752,6 +752,11 @@ try {
       && longSpaceReleased.events.every((event) => event.type !== 'click'),
     JSON.stringify(longSpaceReleased));
 
+  // End the voice fixture before independent tray and layer keyboard cases.
+  // A failed hold must not leave a pending session or error dock over them.
+  await page.evaluate(() => window.__godsEyeView.voiceCommands.stop());
+  await page.waitForFunction(() => window.__godsEyeView.voiceCommands.status === 'idle');
+
   if (forceKeyless) {
     await page.evaluate(async () => {
       const styleManager = window.__godsEyeView.styleManager;
