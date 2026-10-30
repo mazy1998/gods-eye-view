@@ -328,15 +328,15 @@
   text-align: end;
 }
 
-/* The drawer supplies the surface. Keep its borrowed panel and list scroller
-   intact; its collapse control sits in the drawer header. */
+/* The drawer and phone sheet supply the surface. Keep the borrowed panel
+   and list scroller intact; its collapse control sits in the host header. */
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed) {
   flex: 1 0 auto;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   > .data-panel-inner {
   padding: 0 0 53px;
@@ -348,7 +348,7 @@
   box-shadow: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   > .data-panel-inner
   > .panel-header {
@@ -356,19 +356,19 @@
 }
 
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   .layer-search {
   margin: 4px 4px 8px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   #data-toggles {
   padding: 0;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   .layer-browser {
   position: static;
@@ -381,7 +381,7 @@
 /* The 52px footer stays outside the list clip, with one extra pixel reserved
    above its separator so subpixel hit-testing cannot cover a row control. */
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel:not(.collapsed)
   .layer-footer {
   position: absolute;
@@ -392,7 +392,7 @@
   font-size: var(--gev-font-size-sm);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel
   .layer-footer
   .gev-action-button {
@@ -402,7 +402,7 @@
   box-shadow: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel
   .layer-footer
   .gev-action-button:hover {
@@ -418,7 +418,7 @@
 }
 
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel
   .layer-search {
   display: flex;
@@ -426,7 +426,7 @@
   gap: 8px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #data-panel
   .layer-search
   > .layer-filter {

@@ -449,10 +449,10 @@
   background: var(--gev-control-bg);
   border-color: var(--gev-border-subtle);
 }
-/* Borrowed content shares the drawer's material; standalone and collapsed
+/* Borrowed content shares the host's material; standalone and collapsed
    panels retain their own frame and disclosure. */
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   > .scene-panel-inner {
   padding: 0 4px 8px;
@@ -461,28 +461,28 @@
   backdrop-filter: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   > .scene-panel-inner {
   background: transparent;
   box-shadow: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   > .scene-panel-inner::before {
   display: none;
 }
-/* Its collapse control sits in the drawer header, which names the panel. */
+/* Its collapse control sits in the host header, which names the panel. */
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   > .scene-panel-inner
   > .panel-header {
   display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   .stories-controls {
   padding: 0;
@@ -491,7 +491,7 @@
   backdrop-filter: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
+  :is(.gev-legacy-host, .phone-sheet-panels)
   > #scene-panel:not(.collapsed)
   .stories-controls {
   background: transparent;

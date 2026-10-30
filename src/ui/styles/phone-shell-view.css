@@ -339,3 +339,56 @@ body.mobile-shell.recording-mode.scene-playback-mode
   flex: 0 0 auto;
   white-space: nowrap;
 }
+
+.phone-sheet-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+#mobile-sheet-panel-actions {
+  display: contents;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panel-actions
+  > .panel-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+  box-shadow: none;
+  color: var(--gev-text-muted);
+  font-family: var(--gev-font-sans);
+  line-height: 1;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panel-actions
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panel-actions
+  > .panel-collapse-btn:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .phone-sheet-panels
+  > :is(#data-panel, #scene-panel, #global-context-panel).collapsed {
+  display: none;
+}
+/* Provider choice shows with settings; the bare-map phone dock is one pill. */
+body.mobile-shell
+  #gev-voice-control:not(
+    :has(> .gev-voice-panel[data-view='settings']:not([hidden]))
+  )
+  > :is(.gev-voice-provider-field, .gev-voice-settings-button) {
+  display: none;
+}

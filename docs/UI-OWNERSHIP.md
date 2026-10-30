@@ -286,6 +286,9 @@ preferences and restoration. `PhoneShellView.vue` paints the four tabs and one
 sheet through `phoneChrome.js`; the body attribute projects owner state. The
 adapter moves the existing destination nodes to its empty native host with
 comment homes, restoring them before desktop chrome resumes or views unmount.
+The empty `mobile-sheet-panel-actions` slot carries the retained panel collapse
+buttons outside Cyber. The adapter returns those same buttons home on close,
+theme or host changes and disposal; PanelChrome keeps their listeners and state.
 Search, media, appearance, import/draw and panel owners retain their original
 controls and operations. Explicit panel reveals select the matching sheet; only
 a manual Inspect tab entry performs the tracked-aircraft Contacts transition.

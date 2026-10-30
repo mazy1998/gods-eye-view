@@ -35,9 +35,12 @@ const title = computed(() =>
     >
       <header class="phone-sheet-header">
         <h2>{{ title ? t(title) : '' }}</h2>
-        <IconButton :label="t('Close')" size="sm" @click="actions.close"
-          ><span class="material-symbols-outlined">close</span></IconButton
-        >
+        <div class="phone-sheet-header-actions">
+          <span id="mobile-sheet-panel-actions"></span>
+          <IconButton :label="t('Close')" size="sm" @click="actions.close"
+            ><span class="material-symbols-outlined">close</span></IconButton
+          >
+        </div>
       </header>
       <nav
         v-if="state.sheet === 'more'"
@@ -75,7 +78,7 @@ const title = computed(() =>
           "
           :appearance="appearance"
         />
-        <div id="mobile-sheet-panels" />
+        <div id="mobile-sheet-panels" class="phone-sheet-panels" />
       </div>
     </section>
     <nav

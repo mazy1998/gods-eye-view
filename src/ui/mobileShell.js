@@ -172,12 +172,43 @@ export function initMobileShell({
     sheet === 'more'
       ? destinationOf().panels
       : (MOBILE_SHEET_PANELS[sheet] ?? []);
+  // Keep the retained control beside Close while the sheet supplies its header.
+  // Its listener and collapse preference still belong to the panel owner.
+  const collapseHomes = new Map();
+  const placeCollapseControls = () => {
+    const actions = chrome?.headerActions;
+    if (!actions) return;
+    const cyber = documentRef.documentElement?.dataset.uiTheme === 'cyber';
+    for (const id of ['data-panel', 'global-context-panel', 'scene-panel']) {
+      const panel = element(id);
+      let entry = collapseHomes.get(id);
+      if (!entry) {
+        const button = panel?.querySelector(
+          `.panel-header > .panel-collapse-btn[data-collapse-target="${id}"]`,
+        );
+        if (!button) continue;
+        const home = documentRef.createComment('phone collapse control home');
+        button.before(home);
+        entry = { button, home };
+        collapseHomes.set(id, entry);
+      }
+      const { button, home } = entry;
+      const inHeader =
+        active && currentSheet && !cyber && chrome.host.contains(panel);
+      const focused = documentRef.activeElement === button;
+      if (inHeader && button.parentNode !== actions) actions.append(button);
+      else if (!inHeader && button.parentNode === actions) home.after(button);
+      else continue;
+      if (focused) button.focus({ preventScroll: true });
+    }
+  };
   const restoreNodes = () => {
     for (const { node, home } of placed.reverse()) {
       if (node.isConnected) home.replaceWith(node);
       else home.remove();
     }
     placed = [];
+    placeCollapseControls();
   };
   const placeNodes = (sheet) => {
     if (!chrome.host || !sheet) return;
@@ -195,6 +226,7 @@ export function initMobileShell({
       placed.push({ node, home });
       chrome.host.append(node);
     }
+    placeCollapseControls();
   };
   /**
    * Panel states from before the first sheet opened (`before`) and right after
@@ -377,6 +409,7 @@ export function initMobileShell({
     requestFrame?.(() => {
       if (borrowed === opened && opened.opening === opening) {
         opened.applied = panelStates();
+        placeCollapseControls();
         measureSheet();
       }
     });
@@ -625,8 +658,15 @@ export function initMobileShell({
       )
         setSheet('more', { force: true });
       else paint();
+      placeCollapseControls();
     });
     observer.observe(body, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(documentRef.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-ui-theme'],
+    });
+    if (chrome.host)
+      observer.observe(chrome.host, { childList: true, subtree: true });
     removers.push(() => observer.disconnect());
   }
 
@@ -690,6 +730,8 @@ export function initMobileShell({
       restoreNodes();
       destroyed = true;
       for (const remove of removers.splice(0)) remove();
+      for (const { home } of collapseHomes.values()) home.remove();
+      collapseHomes.clear();
       body.classList.remove(MOBILE_SHELL_CLASS);
       body.removeAttribute(MOBILE_SHEET_ATTR);
       body.style.removeProperty('--mobile-sheet-height');

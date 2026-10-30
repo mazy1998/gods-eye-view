@@ -468,3 +468,107 @@ test('opening voice settings releases the phone sheet before invoking the existi
   assert.equal(gears, 1);
   assert.equal(microphones, 0);
 });
+
+async function collapseControls(t, f) {
+  const { bindPanelDisclosure } = await import('./panelDisclosure.js');
+  const controls = new Map();
+  for (const id of ['data-panel', 'global-context-panel', 'scene-panel']) {
+    const panel = f.nodes.get(id);
+    panel.dataset.panelId = id;
+    const header = document.createElement('header');
+    header.className = 'panel-header';
+    header.innerHTML = `<span class="panel-title">${id}</span><button class="panel-collapse-btn" data-collapse-target="${id}">+</button>`;
+    panel.prepend(header);
+    const button = header.querySelector('button');
+    const binding = bindPanelDisclosure({
+      panel,
+      buttons: [button],
+      onChange: (collapsed, options) =>
+        f.chrome.setPanelCollapsed(id, collapsed, options),
+      onEscape: (event) => f.chrome._collapsePanelOnEscape(event, id),
+    });
+    t.after(() => binding.destroy());
+    controls.set(id, { panel, header, button });
+  }
+  return controls;
+}
+
+const mutations = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
+test('phone headers carry the same collapse controls, and clicking still reaches their panel owner', async (t) => {
+  const f = fixture(t, { realPanels: true });
+  const controls = await collapseControls(t, f);
+  const slot = document.getElementById('mobile-sheet-panel-actions');
+  for (const [id, sheet] of [
+    ['data-panel', 'layers'],
+    ['global-context-panel', 'inspect'],
+    ['scene-panel', 'more'],
+  ]) {
+    if (id === 'scene-panel') f.owner.setDestination('stories');
+    else f.owner.setSheet(sheet);
+    const { panel, header, button } = controls.get(id);
+    assert.equal(button.parentNode, slot);
+    button.click();
+    assert.equal(panel.classList.contains('collapsed'), true);
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.equal(button.parentNode, slot, 're-expand stays reachable');
+    button.click();
+    assert.equal(panel.classList.contains('collapsed'), false);
+    assert.equal(button.getAttribute('aria-expanded'), 'true');
+    f.owner.setSheet(null);
+    assert.equal(button.parentNode, header);
+  }
+  f.owner.destroy();
+  for (const { button, header } of controls.values())
+    assert.equal(button.parentNode, header);
+  assert.equal(
+    container.innerHTML.includes('phone collapse control home'),
+    false,
+  );
+});
+
+test('Cyber, desktop and focused modes return the phone collapse control home', async (t) => {
+  const f = fixture(t, { realPanels: true });
+  const controls = await collapseControls(t, f);
+  const { header, button } = controls.get('data-panel');
+  const slot = document.getElementById('mobile-sheet-panel-actions');
+  t.after(() => {
+    delete document.documentElement.dataset.uiTheme;
+    document.body.classList.remove('cockpit-mode');
+  });
+  f.owner.setSheet('layers');
+  assert.equal(button.parentNode, slot);
+  document.documentElement.dataset.uiTheme = 'cyber';
+  await mutations();
+  assert.equal(button.parentNode, header);
+  delete document.documentElement.dataset.uiTheme;
+  await mutations();
+  assert.equal(button.parentNode, slot);
+  f.resize(false);
+  assert.equal(button.parentNode, header);
+  f.resize(true);
+  f.owner.setSheet('layers');
+  document.body.classList.add('cockpit-mode');
+  await mutations();
+  assert.equal(f.owner.getSheet(), null);
+  assert.equal(button.parentNode, header);
+});
+
+test('a retained control returned by desktop chrome is adopted after the phone panel moved', async (t) => {
+  const f = fixture(t, { realPanels: true });
+  const controls = await collapseControls(t, f);
+  const { header, button } = controls.get('data-panel');
+  const desktopHeader = document.createElement('div');
+  container.append(desktopHeader);
+  desktopHeader.append(button);
+  f.owner.setSheet('layers');
+  assert.equal(button.parentNode, desktopHeader);
+  header.append(button);
+  await mutations();
+  assert.equal(button.parentNode.id, 'mobile-sheet-panel-actions');
+  f.owner.setSheet(null);
+  assert.equal(button.parentNode, header);
+});

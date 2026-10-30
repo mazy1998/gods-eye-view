@@ -4830,6 +4830,10 @@ async function main() {
     });
     check('mobile Context host is full-width and keeps the tuner contained', mobile.left >= 0 && mobile.right <= 390 && mobile.width >= 350 && mobile.radioWidth < mobile.width && mobile.radioVisible && mobile.scrollable && mobile.tunerInside, JSON.stringify(mobile));
     check('mobile playing state keeps both broadcast waves visible and on-screen', mobile.broadcastVisible && mobile.broadcastInsideViewport, JSON.stringify(mobile));
+    // The phone sheet may be closed after resizing. Reveal the same panel
+    // through its owner before stopping the test stream.
+    await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('radio-panel', false, { explicit: true }));
+    await page.waitForSelector('#radio-stop-btn', { visible: true });
     await page.click('#radio-stop-btn');
     const actionableConsoleErrors = [...consoleErrors];
     const externalFontFailures = [];

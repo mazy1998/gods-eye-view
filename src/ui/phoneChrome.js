@@ -20,6 +20,7 @@ export function createPhoneChrome({
     host: element.querySelector('#mobile-sheet-panels'),
     surface: element.querySelector('#mobile-sheet'),
     scrollArea: element.querySelector('.phone-sheet-scroll'),
+    headerActions: element.querySelector('#mobile-sheet-panel-actions'),
     update: (state) => view.update({ state }),
     destroy: () => view.dispose(),
   };
