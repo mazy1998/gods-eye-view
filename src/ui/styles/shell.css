@@ -265,6 +265,25 @@
   font: 18px / 1 var(--gev-font-sans);
   cursor: pointer;
 }
+/* One glyph for every header collapse, from its state: "−" open, "+"
+   collapsed. A right-rail panel's own ◀/▶ would read as Play here. The
+   phone sheet's header carries the same controls. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  > .panel-collapse-btn {
+  font-size: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  > .panel-collapse-btn::before {
+  content: '−';
+  font-size: 18px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  > .panel-collapse-btn[aria-expanded='false']::before {
+  content: '+';
+}
 :where(:root:not([data-ui-theme='cyber']))
   .gev-drawer-panel-actions
   > .panel-collapse-btn:hover {

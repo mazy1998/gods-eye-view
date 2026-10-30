@@ -1143,3 +1143,18 @@ test('a declined expansion leaves the visible, shared and saved collapse in agre
     .specs.find((spec) => spec.id === 'cctv-panel');
   assert.equal(shared?.collapsed ?? true, true, 'shared');
 });
+
+test("the drawer and phone sheet headers show every collapse control's state as − or +", () => {
+  const css = readFileSync(
+    new URL('./styles/shell.css', import.meta.url),
+    'utf8',
+  );
+  assert.match(
+    css,
+    /:is\(\.gev-drawer-panel-actions, #mobile-sheet-panel-actions\)\s*>\s*\.panel-collapse-btn::before\s*\{\s*content: '−';/,
+  );
+  assert.match(
+    css,
+    /:is\(\.gev-drawer-panel-actions, #mobile-sheet-panel-actions\)\s*>\s*\.panel-collapse-btn\[aria-expanded='false'\]::before\s*\{\s*content: '\+';/,
+  );
+});
