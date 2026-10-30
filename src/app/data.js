@@ -62,6 +62,8 @@ export function createApplicationData({
     drawerChannel: styleManager._drawer?.channel,
     phoneChannel: styleManager._mobileShell?.channel,
     openDetails: (panelId) => revealLayerDetails(styleManager, panelId),
+    noteLayerSwitch: (layerId, enabled) =>
+      styleManager._drawer?.noteLayerSwitch(layerId, enabled),
   });
   defer(() => presentation.destroy());
   onData?.(dataManager);

@@ -688,3 +688,29 @@ test('the phone owner makes Directions a portable Tools view without a second la
   assert.equal(container.querySelector('#directions-controls-body'), root);
   assert.equal(root.classList.contains('directions-view--hosted'), true);
 });
+
+test('a row switch tells the drawer before the layer changes, with its direction, and whether it took effect', async (t) => {
+  const order = [];
+  const { layers } = fixture(t, {
+    noteLayerSwitch: (id, enabled) => {
+      order.push(['note', id, enabled]);
+      return (switched) => order.push(['settle', id, switched]);
+    },
+    setEnabled: (id, enabled, options) => {
+      order.push(['set', id, enabled, options.origin]);
+      layers[0].enabled = enabled;
+    },
+  });
+  container.querySelector('.data-toggle-btn').click();
+  await Promise.resolve();
+  container.querySelector('.data-toggle-btn').click();
+  await Promise.resolve();
+  assert.deepEqual(order, [
+    ['note', 'flights', true],
+    ['set', 'flights', true, 'user'],
+    ['settle', 'flights', true],
+    ['note', 'flights', false],
+    ['set', 'flights', false, 'user'],
+    ['settle', 'flights', true],
+  ]);
+});

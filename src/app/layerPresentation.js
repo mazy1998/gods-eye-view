@@ -16,6 +16,7 @@ export class LayerPresentation {
       drawerChannel,
       phoneChannel,
       openDetails,
+      noteLayerSwitch,
     } = {},
   ) {
     this.manager = manager;
@@ -26,6 +27,7 @@ export class LayerPresentation {
     this.drawerChannel = drawerChannel;
     this.phoneChannel = phoneChannel;
     this.openDetails = openDetails;
+    this.noteLayerSwitch = noteLayerSwitch;
     this._panel = null;
     this.pendingVisible = false;
     this._unsubscribe = manager.subscribeActivity((change) => {
@@ -56,6 +58,7 @@ export class LayerPresentation {
         drawerChannel: this.drawerChannel,
         phoneChannel: this.phoneChannel,
         openDetails: this.openDetails,
+        noteLayerSwitch: this.noteLayerSwitch,
         getLayers: () => this.manager.getAll(),
         isEnabled: (id) => this.manager.isEnabled(id),
         setEnabled: (id, enabled, options) =>

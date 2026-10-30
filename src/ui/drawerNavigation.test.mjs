@@ -1021,3 +1021,125 @@ test('nested Cameras hosting keeps the complete shared panel state byte-identica
   assert.equal(panel.parentElement, cameras);
   assert.equal(shared(), before);
 });
+
+const cctvCollapsed = () =>
+  document.getElementById('cctv-panel').classList.contains('collapsed');
+
+test('a switch from the open list keeps it open and declines the expansion it causes, even after it settles', async (t) => {
+  const { drawer, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  drawer.open('layers');
+  // The switch settles, then the camera activation expands the panel.
+  drawer.noteLayerSwitch('cctv', true)(true);
+  setPanelCollapsed('cctv-panel', false, {});
+  await Promise.resolve();
+  assert.equal(destination(drawer), 'layers', 'the list stays open');
+  assert.ok(!hosted(drawer).includes('cctv-panel'));
+  assert.ok(cctvCollapsed(), 'the panel is not left expanded out of sight');
+});
+
+test('after a switch from the list, a shortcut, a camera pick or voice still opens Inspect', async (t) => {
+  const { drawer, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  drawer.open('layers');
+  drawer.noteLayerSwitch('cctv', true)(true);
+  setPanelCollapsed('cctv-panel', false, {});
+  await Promise.resolve();
+  // The camera owner asks to show the panel again, without explicit intent.
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect');
+  assert.ok(hosted(drawer).includes('cctv-panel'));
+});
+
+test('without a switch from the open list, or with the drawer closed, the camera panel opens Inspect', (t) => {
+  const { drawer, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  drawer.open('layers');
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect');
+  drawer.close();
+  setPanelCollapsed('cctv-panel', true, {});
+  drawer.noteLayerSwitch('cctv', true)();
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect');
+});
+
+test('a hold ends with its switch, a restore, a change of destination or switching off; details still opens the panel', (t) => {
+  const { drawer, setPanelCollapsed, panelChannel, restore } = fixture();
+  t.after(() => drawer.destroy());
+  const start = () => {
+    drawer.close();
+    setPanelCollapsed('cctv-panel', true, {});
+    drawer.open('layers');
+    return drawer.noteLayerSwitch('cctv', true);
+  };
+  // A switch that did not take effect (refused, failed) lets go.
+  start()(false);
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect', 'released');
+  // A share or history restore that keeps Layers clears the hold.
+  start();
+  restore(['data-panel']);
+  assert.equal(destination(drawer), 'layers');
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect', 'restored');
+  start();
+  drawer.open('map');
+  drawer.open('layers');
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect', 'left the list');
+  start();
+  drawer.noteLayerSwitch('cctv', false);
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect', 'switched off');
+  start();
+  panelChannel.publish({ type: 'panel-revealed', panelId: 'cctv-panel' });
+  assert.equal(destination(drawer), 'inspect', 'details reveals the panel');
+});
+
+test('a switch takes no hold on a camera panel that is already expanded', (t) => {
+  const { drawer, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  setPanelCollapsed('cctv-panel', false, {});
+  drawer.open('layers');
+  assert.ok(!cctvCollapsed(), 'expanded at home behind Layers');
+  drawer.noteLayerSwitch('cctv', true);
+  // Later shown from elsewhere: collapse and expand as a camera owner would.
+  setPanelCollapsed('cctv-panel', true, {});
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'inspect');
+});
+
+test('a declined expansion leaves the visible, shared and saved collapse in agreement', async (t) => {
+  const priorStorage = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'localStorage',
+  );
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: window.localStorage,
+    configurable: true,
+  });
+  t.after(() => {
+    if (priorStorage)
+      Object.defineProperty(globalThis, 'localStorage', priorStorage);
+    else delete globalThis.localStorage;
+  });
+  localStorage.clear();
+  const { drawer, chrome } = fixture({ chrome: true });
+  t.after(() => drawer.destroy());
+  const key = 'godsEyeView.v6.panelCollapsed.cctv-panel';
+  // The saved preference starts collapsed, as in a session that left it so.
+  localStorage.setItem(key, '1');
+  drawer.open('layers');
+  drawer.noteLayerSwitch('cctv', true)(true);
+  // The real owner publishes before it saves; the decline must come last.
+  chrome.setPanelCollapsed('cctv-panel', false, {});
+  await Promise.resolve();
+  assert.equal(destination(drawer), 'layers');
+  assert.ok(cctvCollapsed(), 'visible');
+  assert.equal(localStorage.getItem(key), '1', 'saved');
+  const shared = chrome
+    ._buildSharePanelState()
+    .specs.find((spec) => spec.id === 'cctv-panel');
+  assert.equal(shared?.collapsed ?? true, true, 'shared');
+});

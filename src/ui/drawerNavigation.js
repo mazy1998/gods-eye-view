@@ -8,7 +8,8 @@ import { flushViews } from './ownerState.js';
  * are moved without a collapse state, into the hosted node `homes` names for
  * them when there is one; `rows` names the Layers row whose group shows one.
  * `opens` lists nested panels whose expansion opens the destination of the
- * panel that contains them.
+ * panel that contains them. `switches` names the layer whose own switch-on
+ * expands a hosted panel.
  */
 export const DRAWER_DESTINATIONS = Object.freeze(
   [
@@ -40,6 +41,7 @@ export const DRAWER_DESTINATIONS = Object.freeze(
         'cctv-panel': '#global-context-cameras-btn',
         'street-level-panel': '#sl-status',
       },
+      switches: { 'cctv-panel': 'cctv', 'street-level-panel': 'street-level' },
     },
     {
       id: 'map',
@@ -149,6 +151,17 @@ export function createDrawerNavigation({
         .map((id) => [id, item.id]),
     ),
   ]);
+  // Panels a layer's own switch-on expands, by layer id.
+  const switchedPanels = new Map();
+  for (const item of DRAWER_DESTINATIONS)
+    for (const [panelId, layerId] of Object.entries(item.switches ?? {}))
+      switchedPanels.set(layerId, [
+        ...(switchedPanels.get(layerId) ?? []),
+        panelId,
+      ]);
+  // Panels a switch from the open list turned on: their next expansion is
+  // declined, so the list stays and the panel stays collapsed.
+  const held = new Set();
   let current = null;
   let resumeAfterCockpit = null;
   let resumeAfterPhone = null;
@@ -211,6 +224,22 @@ export function createDrawerNavigation({
     }
   }
 
+  /**
+   * Collapse a panel whose expansion a list switch caused, unless something
+   * since showed or collapsed it. Collapsed, a later request to show it (a
+   * shortcut, a camera pick, voice) expands it and opens its destination.
+   */
+  function decline(id) {
+    if (destroyed || isCollapsed(id) || destinationOf.get(id) === current)
+      return;
+    moving = true;
+    try {
+      setPanelCollapsed(id, true, {});
+    } finally {
+      moving = false;
+    }
+  }
+
   function borrow(destination) {
     borrowed = { before: new Map(), applied: new Map(), moved: [] };
     for (const id of [...destination.panels, ...(destination.elements ?? [])]) {
@@ -256,6 +285,7 @@ export function createDrawerNavigation({
     const destination = byId.get(id);
     if (!isActive() || !destination) return false;
     if (current === id) return true;
+    held.clear();
     moving = true;
     try {
       giveBack();
@@ -276,6 +306,7 @@ export function createDrawerNavigation({
    */
   function close({ focus = false } = {}) {
     if (!current) return;
+    held.clear();
     const previous = current;
     current = null;
     moving = true;
@@ -405,6 +436,7 @@ export function createDrawerNavigation({
             borrowed.before.set(id, isCollapsed(id));
             borrowed.applied.set(id, isCollapsed(id));
           }
+        held.clear();
         return followPanels(change.lead);
       }
       if (change?.type === 'panel-revealed') {
@@ -425,6 +457,13 @@ export function createDrawerNavigation({
         )
           continue;
         if (destination !== current) {
+          if (held.delete(id)) {
+            // The expansion's owner saves the panel's state after it
+            // publishes, so the panel is collapsed again once that write is
+            // done.
+            queueMicrotask(() => decline(id));
+            continue;
+          }
           open(destination);
           onRevealPanel(id);
           void revealNested(id);
@@ -557,6 +596,28 @@ export function createDrawerNavigation({
     },
     /** Open the destination the panels already show, as a share restore does. */
     followPanels,
+    /**
+     * The open destination's list switches a layer on: the next expansion of
+     * that layer's own collapsed panel, which the switch causes (a camera
+     * activation may land after the switch settles), is declined and the list
+     * stays open; its details control still opens the panel. Call the
+     * returned function with whether the switch took effect: one that did
+     * not lets the hold go. Switching off, a change of destination or a
+     * restore lets it go too.
+     */
+    noteLayerSwitch(layerId, enabled) {
+      const ids = switchedPanels.get(layerId) ?? [];
+      if (!enabled || !current || !isActive()) {
+        for (const id of ids) held.delete(id);
+        return () => {};
+      }
+      const holding = ids.filter((id) => isCollapsed(id));
+      for (const id of holding) held.add(id);
+      return (switched) => {
+        if (switched) return;
+        for (const id of holding) held.delete(id);
+      };
+    },
     /** Give every borrowed panel back and rest, as Cockpit entry needs. */
     suspend,
     /** Reopen the destination open at suspend, after Cockpit exit. */

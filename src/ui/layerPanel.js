@@ -157,6 +157,7 @@ export class LayerPanel {
     drawerChannel,
     phoneChannel,
     openDetails = () => {},
+    noteLayerSwitch = () => {},
   }) {
     this.weatherClock = weatherClock;
     this.channel = channel;
@@ -165,6 +166,7 @@ export class LayerPanel {
     this.drawerChannel = drawerChannel;
     this.phoneChannel = phoneChannel;
     this.openDetails = openDetails;
+    this.noteLayerSwitch = noteLayerSwitch;
     this._pending = new Set();
     this._imports = null;
     this._files = [];
@@ -393,11 +395,16 @@ export class LayerPanel {
     if (!layer || this._toggleState(layer).blocked) return;
     this._pending.add(id);
     this._pushView();
+    const enabled = !this.isEnabled(id);
+    // The drawer keeps this list open when the switch expands the layer's own
+    // panel elsewhere; a switch that does not take effect lets that go.
+    const settle = this.noteLayerSwitch(id, enabled);
     try {
-      await this.setEnabled(id, !this.isEnabled(id), { origin: 'user' });
+      await this.setEnabled(id, enabled, { origin: 'user' });
     } catch (error) {
       console.warn(`[Data] ${id} toggle error:`, error);
     } finally {
+      settle?.(this.isEnabled(id) === enabled);
       this._pending.delete(id);
       if (!this._destroyed) this._pushView();
     }
