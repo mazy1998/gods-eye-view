@@ -543,7 +543,7 @@ test('named voice settings exits Cockpit directly; Preview stays disabled and vi
   assert.equal(f.state.exits, 1);
   assert.deepEqual(
     f.state.visual.map(([id]) => id),
-    ['control-panel', 'control-panel', 'control-panel', 'scene-panel'],
+    ['pp-toggles', 'pp-toggles', 'pp-toggles', 'scene-panel'],
   );
   await assert.rejects(
     () => f.run('set_panel_open', { panelId: 'settings', open: true }),

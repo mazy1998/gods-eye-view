@@ -295,6 +295,51 @@ export function createFixtures(read) {
       ],
     });
   }
+  // Map & Look inside the real Display panel: its frame, DISPLAY header and
+  // divider stay strict; the tabs, tiles and footer are its structural
+  // exceptions. Seven style tiles and five map-source tiles show the columns.
+  const mapLook = palettes.find((f) => f.sheet === 'map-look');
+  const display = load('src/ui/templates/display-controls.html', '#pp-toggles');
+  const content = doc.createElement('template');
+  content.innerHTML = mapLook.html;
+  const view = content.content.querySelector('.map-look');
+  if (!view) throw Error('Missing Map & Look fixture');
+  const grow = (selector, count) => {
+    const first = view.querySelector(selector);
+    for (
+      let index = first.parentElement.children.length;
+      index < count;
+      index++
+    )
+      first.parentElement.append(first.cloneNode(true));
+  };
+  grow('.style-btn', 7);
+  grow('.map-stack-chip:not(.unavailable)', 5);
+  display.querySelector('.pp-panel-body').replaceChildren(view);
+  display.dataset.geometry = 'frame';
+  for (const [key, root, selector] of [
+    ['header', display, '.pp-header-row'],
+    ['title', display, '.pp-header-label'],
+    ['divider', display, '.panel-divider'],
+    ['collapse', display, '.panel-collapse-btn'],
+    ['tabs', view, '.gev-tabs'],
+    ['style-grid', view, '#style-buttons'],
+    ['style-tile', view, '.style-btn'],
+    ['style-tile-2', view, '.style-btn:nth-child(2)'],
+    ['adjustments', view, '.map-look-adjustments'],
+    ['hint', view, '.map-look-hint'],
+    ['source-chips', view, '#map-stack-chips'],
+    ['source-tile', view, '.map-stack-chip'],
+    ['source-tile-2', view, '.map-stack-chip:nth-child(2)'],
+    ['providers', view, '.map-look-providers'],
+  ])
+    root.querySelector(selector).dataset.geometry = key;
+  result.push({
+    id: 'map-look',
+    profile: 'drawer',
+    html: host(display.outerHTML),
+    structuralExceptions: mapLook.structuralExceptions,
+  });
   dom.window.close();
   const chrome = doc.createElement('template');
   chrome.innerHTML =
@@ -422,6 +467,11 @@ const portExceptions = [
 const structureReasons = Object.fromEntries(
   storiesFixture.structuralExceptions.map((e) => [e.id, e.reason]),
 );
+const mapLookReasons = Object.fromEntries(
+  palettes
+    .find((f) => f.sheet === 'map-look')
+    .structuralExceptions.map((e) => [e.id, e.reason]),
+);
 export const exceptions = [
   {
     fixture: 'shell-visibility',
@@ -473,5 +523,79 @@ export const exceptions = [
     reference,
     actual,
     reason: structureReasons[reason],
+  })),
+  ...[
+    ['frame', 'height', 587, 700, 'map-look-tabs'],
+    ['tabs', 'display', 'block', 'flex', 'map-look-tabs'],
+    ['tabs', 'width', 362, 354, 'map-look-tabs'],
+    ['tabs', 'height', 19, 40, 'map-look-tabs'],
+    ['tabs', 'x', 0, 4, 'map-look-tabs'],
+    ['tabs', 'y', 0, 4, 'map-look-tabs'],
+    ['style-grid', 'display', 'block', 'grid', 'style-tiles'],
+    ['style-grid', 'width', 362, 354, 'style-tiles'],
+    ['style-grid', 'height', 315, 434.125, 'style-tiles'],
+    ['style-tile', 'display', 'flex', 'grid', 'style-tiles'],
+    ['style-tile', 'position', 'relative', 'static', 'style-tiles'],
+    ['style-tile', 'width', 78, 171, 'style-tiles'],
+    ['style-tile', 'height', 45, 99.53125, 'style-tiles'],
+    ['style-tile', 'paddingTop', 14, 0, 'style-tiles'],
+    ['style-tile', 'paddingRight', 16, 0, 'style-tiles'],
+    ['style-tile', 'paddingBottom', 10, 0, 'style-tiles'],
+    ['style-tile', 'paddingLeft', 16, 0, 'style-tiles'],
+    ['style-tile-2', 'display', 'flex', 'grid', 'style-tiles'],
+    ['style-tile-2', 'position', 'relative', 'static', 'style-tiles'],
+    ['style-tile-2', 'width', 78, 171, 'style-tiles'],
+    ['style-tile-2', 'height', 45, 99.53125, 'style-tiles'],
+    ['style-tile-2', 'x', 0, 183, 'style-tiles'],
+    ['style-tile-2', 'y', 45, 0, 'style-tiles'],
+    ['style-tile-2', 'paddingTop', 14, 0, 'style-tiles'],
+    ['style-tile-2', 'paddingRight', 16, 0, 'style-tiles'],
+    ['style-tile-2', 'paddingBottom', 10, 0, 'style-tiles'],
+    ['style-tile-2', 'paddingLeft', 16, 0, 'style-tiles'],
+    ['adjustments', 'display', 'block', 'flex', 'image-adjustments'],
+    ['adjustments', 'width', 362, 354, 'image-adjustments'],
+    ['adjustments', 'height', 89, 103.59375, 'image-adjustments'],
+    ['adjustments', 'y', 315, 446.125, 'image-adjustments'],
+    ['adjustments', 'paddingTop', 0, 12, 'image-adjustments'],
+    ['hint', 'display', 'block', 'flex', 'panel-footer'],
+    ['hint', 'width', 362, 354, 'panel-footer'],
+    ['hint', 'height', 19, 27.59375, 'panel-footer'],
+    ['hint', 'y', 404, 561.71875, 'panel-footer'],
+    ['hint', 'paddingTop', 0, 12, 'panel-footer'],
+    ['source-chips', 'width', 362, 354, 'map-source-tiles'],
+    ['source-chips', 'height', 20, 148, 'map-source-tiles'],
+    ['source-chips', 'y', 41, 47.1875, 'map-source-tiles'],
+    ['source-tile', 'width', 69.1875, 173, 'map-source-tiles'],
+    ['source-tile', 'height', 20, 44, 'map-source-tiles'],
+    ['source-tile', 'paddingTop', 4, 8, 'map-source-tiles'],
+    ['source-tile', 'paddingRight', 7, 12, 'map-source-tiles'],
+    ['source-tile', 'paddingBottom', 4, 8, 'map-source-tiles'],
+    ['source-tile', 'paddingLeft', 7, 12, 'map-source-tiles'],
+    ['source-tile-2', 'width', 69.203125, 173, 'map-source-tiles'],
+    ['source-tile-2', 'height', 20, 44, 'map-source-tiles'],
+    ['source-tile-2', 'x', 73.1875, 181, 'map-source-tiles'],
+    ['source-tile-2', 'paddingTop', 4, 8, 'map-source-tiles'],
+    ['source-tile-2', 'paddingRight', 7, 12, 'map-source-tiles'],
+    ['source-tile-2', 'paddingBottom', 4, 8, 'map-source-tiles'],
+    ['source-tile-2', 'paddingLeft', 7, 12, 'map-source-tiles'],
+    ['providers', 'display', 'inline-block', 'flex', 'panel-footer'],
+    ['providers', 'width', 196.625, 354, 'panel-footer'],
+    ['providers', 'height', 19, 44, 'panel-footer'],
+    ['providers', 'x', 0, 4, 'panel-footer'],
+    ['providers', 'y', 511, 864.5, 'panel-footer'],
+    ['providers', 'paddingTop', 0, 8, 'panel-footer'],
+    ['providers', 'paddingBottom', 0, 8, 'panel-footer'],
+    ['providers', 'borderTopWidth', 2, 0, 'panel-footer'],
+    ['providers', 'borderRightWidth', 2, 0, 'panel-footer'],
+    ['providers', 'borderBottomWidth', 2, 0, 'panel-footer'],
+    ['providers', 'borderLeftWidth', 2, 0, 'panel-footer'],
+  ].map(([node, property, reference, actual, reason]) => ({
+    fixture: 'map-look',
+    profile: 'drawer',
+    node,
+    property,
+    reference,
+    actual,
+    reason: mapLookReasons[reason],
   })),
 ];

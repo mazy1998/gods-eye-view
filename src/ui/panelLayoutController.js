@@ -28,7 +28,6 @@ const LEFT_STACK_OBSTACLE_SELECTOR = [
   '#cesium-credits .cesium-credit-logoContainer',
   '#cesium-credits .cesium-credit-textContainer',
   '#location-bar',
-  '#control-panel',
   '#gev-voice-control',
   '#pp-toggles',
   '#param-slider-panel',
@@ -207,8 +206,13 @@ export class PanelLayoutController {
       this._sliderPanel.style.removeProperty('bottom');
       this._sliderPanel.style.removeProperty('left');
       this._sliderPanel.style.removeProperty('max-height');
+      // Map & Look keeps the parameters in its Look tab.
+      const lookSlot = this._ppToggles.querySelector(
+        '[data-map-look-slot="parameters"]',
+      );
       const detectionGroup = this._detectionBtn?.closest('.pp-toggle-group');
-      if (detectionGroup) detectionGroup.after(this._sliderPanel);
+      if (lookSlot) lookSlot.append(this._sliderPanel);
+      else if (detectionGroup) detectionGroup.after(this._sliderPanel);
       else this._ppToggles.append(this._sliderPanel);
     }
     if (typeof ResizeObserver !== 'undefined') {

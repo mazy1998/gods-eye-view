@@ -75,6 +75,12 @@ are easy to diagnose. A frame's natural height can differ when newly added
 controls consume space; such content-height exceptions are exact, while padding,
 header visibility and control placement remain separately checked.
 
+Map & Look renders inside the real Display panel. Its tabs, seven style tiles,
+five map-source tiles, image adjustments and footer are exact structure
+differences that reference `qa-cyber-map-look-structure.json`, the palette
+audit's reason manifest. The Display frame's header, title, divider and collapse
+geometry remain strict.
+
 Inspect has no geometry fixture because its restyle leaves Cyber's frame,
 header, divider and control geometry alone: every drawer layout rule in
 `inspect.css` excludes Cyber. The structural changes Cyber shares with the

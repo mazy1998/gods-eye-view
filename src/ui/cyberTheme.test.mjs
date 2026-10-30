@@ -233,20 +233,17 @@ test('Display and voice HUD routes preserve explicit Cyber entry and exit author
   const display = makeOwner();
   const hudLayout = new EventTarget();
   hudLayout.value = 'cyber';
-  const snowButton = new EventTarget();
-  snowButton.dataset = { style: 'snow' };
-  const controls = bindDisplayControls({
-    elements: { hudLayout, styleButtons: [snowButton] },
-    actions: {
-      setHudLayout: (value) => display.owner.setHudLayout(value),
-      setStyle: (value) =>
-        display.owner.setStyle(value, { userInitiated: true }),
-    },
-  });
+  const actions = {
+    setHudLayout: (value) => display.owner.setHudLayout(value),
+    setStyle: (value) =>
+      display.owner.setStyle(value, { userInitiated: true }),
+  };
+  const controls = bindDisplayControls({ elements: { hudLayout }, actions });
   hudLayout.dispatchEvent(new Event('change'));
   assert.equal(display.hud.getVariant(), 'cyber');
   assert.equal(display.owner.activeStyle, 'thermal');
-  snowButton.dispatchEvent(new Event('click'));
+  // The Look tab's Snow tile calls the shared Display operation.
+  actions.setStyle('snow');
   assert.equal(display.owner.activeStyle, 'snow');
   hudLayout.value = 'operator';
   hudLayout.dispatchEvent(new Event('change'));
@@ -432,11 +429,11 @@ test('Cyber dock pins escape the tray mask and its decoration overrides the lega
   assert.match(owner, /clip-path:\s*none;/);
   assert.match(owner, /isolation:\s*isolate;/);
 
-  // Including the tray owners beats #control-panel's more specific old
-  // ::after arrow positioning. Otherwise left:auto can collapse the frame.
+  // Naming the tray beats its more specific old ::after arrow positioning.
+  // Otherwise left:auto can collapse the frame.
   const decoration = cssRuleBody(
     cyberStyles,
-    /:root\[data-ui-theme='cyber'\]\s+#command-dock\s+:is\(#location-bar, #control-panel\)\s+\.dock-popover-content::after/,
+    /:root\[data-ui-theme='cyber'\]\s+#command-dock\s+#location-bar\s+\.dock-popover-content::after/,
   );
   assert.match(decoration, /inset:\s*0;/);
   assert.match(decoration, /width:\s*auto;/);
@@ -690,7 +687,7 @@ test('the Display selector, voice schema and final stylesheet expose Cyber', asy
   assert.match(cyberStyles, /#pp-toggles\.collapsed > \.pp-header-row/);
   assert.match(
     cyberStyles,
-    /\.panel-collapsible:not\(#location-bar\):not\(#control-panel\)::after/,
+    /\.panel-collapsible:not\(#location-bar\)::after/,
   );
   assert.match(cyberStyles, /clip-path: var\(--cyber-panel-frame\);/);
   assert.match(hud, /class="hud-sonar" aria-hidden="true"/);
@@ -793,7 +790,6 @@ test('the Display selector, voice schema and final stylesheet expose Cyber', asy
   assert.doesNotMatch(cyberStyles, /NAV 01  \/\/  COMMAND BUS  \/\/  VIS 03/);
   assert.match(cyberStyles, /data-layer-id='satellites'/);
   assert.match(cyberStyles, /#search-toggle::before/);
-  assert.match(cyberStyles, /VISUAL MATRIX  \/\/  03/);
   assert.match(cyberStyles, /body\.cockpit-mode #cockpit-hud/);
   assert.match(cyberStyles, /TARGET SCANNING  \/\/  LIVE VECTOR/);
   assert.match(
@@ -907,5 +903,12 @@ test('Cyber omits only the fictional classification and system header lines', ()
   assert.match(
     cyberStyles,
     /#intel-hud\[data-variant='cyber'\] \.hud-top-left \.hud-classification,\s*#intel-hud\[data-variant='cyber'\] \.hud-top-left \.hud-system\s*\{\s*display: none;\s*\}/,
+  );
+});
+
+test('Cyber paints a failed map-source status in its warning amber', () => {
+  assert.match(
+    cyberStyles,
+    /:root\[data-ui-theme='cyber'\] \.pp-stack-status\.warn\s*\{\s*color: #ffb84d;\s*\}/,
   );
 });

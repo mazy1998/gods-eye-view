@@ -57,12 +57,10 @@ export function createVoiceControl({ reset = false, panel = false } = {}) {
   root = view.element;
   if (commandDock) {
     const locationBar = document.getElementById('location-bar');
-    const controlPanel = document.getElementById('control-panel');
     // The shell's header may hold the location tray; its place in the dock
     // keeps this order for its return.
     if (locationBar?.parentNode === commandDock)
       commandDock.insertBefore(locationBar, root);
-    if (controlPanel) commandDock.appendChild(controlPanel);
   }
   const cardConnections = new Set();
   const controls = {

@@ -39,8 +39,7 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Map'),
       title: msg('Map & Look'),
       subtitle: msg('Change the map style and image appearance'),
-      // Visual Presets stays in the dock; Location moves to the header
-      // (shellChrome.js).
+      // Location moves to the header (shellChrome.js).
       panels: ['pp-toggles'],
       opens: ['param-slider-panel'],
     },
@@ -126,6 +125,8 @@ export function createDrawerNavigation({
   let current = null;
   let resumeAfterCockpit = null;
   let resumeAfterPhone = null;
+  // The lead panel of a restore made at phone width, kept for desktop width.
+  let leadAfterPhone = null;
   let cockpit = doc.body?.classList.contains('cockpit-mode') ?? false;
   let destroyed = false;
   // What the open destination changed: the state found and the state set.
@@ -253,10 +254,14 @@ export function createDrawerNavigation({
   /**
    * The first shown followed panel, in share-restore order, picks the
    * destination: an expanded Radio opens Layers, where it lives, before the
-   * Context that contains it at home.
+   * Context that contains it at home. A restore may name the panel it leads
+   * with, standing in for one that no longer exists (a retired dock tray).
    */
-  function followPanels() {
-    const first = restoreOrder.find((id) => followed.has(id) && shown(id));
+  function followPanels(lead = null) {
+    const first =
+      lead && followed.has(lead) && shown(lead)
+        ? lead
+        : restoreOrder.find((id) => followed.has(id) && shown(id));
     if (!first) return close();
     open(followed.get(first));
     void revealNested(first);
@@ -275,10 +280,13 @@ export function createDrawerNavigation({
       if (!isActive()) {
         // A panel the user expands on the phone, or a share or history
         // restore there, picks the destination back at desktop width, over
-        // the one open when the phone layout began.
-        if (
+        // the one open when the phone layout began. A restore keeps its lead
+        // until a later change supersedes it.
+        if (change?.type === 'panels-restored') {
+          resumeAfterPhone = null;
+          leadAfterPhone = change.lead ?? null;
+        } else if (
           change?.type === 'panel-revealed' ||
-          change?.type === 'panels-restored' ||
           Object.entries(panels).some(
             ([id, next]) =>
               destinationOf.has(id) &&
@@ -286,8 +294,10 @@ export function createDrawerNavigation({
               !previous[id].autoCollapsed &&
               !next.collapsed,
           )
-        )
+        ) {
           resumeAfterPhone = null;
+          leadAfterPhone = null;
+        }
         return;
       }
       if (change?.type === 'panels-restored') {
@@ -298,7 +308,7 @@ export function createDrawerNavigation({
             borrowed.before.set(id, isCollapsed(id));
             borrowed.applied.set(id, isCollapsed(id));
           }
-        return followPanels();
+        return followPanels(change.lead);
       }
       if (change?.type === 'panel-revealed') {
         const destination = destinationOf.get(change.panelId);
@@ -367,17 +377,19 @@ export function createDrawerNavigation({
     phoneLayout = phone.matches;
     if (phoneLayout) {
       resumeAfterPhone = current;
+      leadAfterPhone = null;
       close();
     }
     channel.publish({ type: 'active-changed' });
     if (!isActive()) {
-      if (!phoneLayout) resumeAfterPhone = null;
+      if (!phoneLayout) resumeAfterPhone = leadAfterPhone = null;
       return;
     }
     const resumed = resumeAfterPhone;
-    resumeAfterPhone = null;
+    const lead = leadAfterPhone;
+    resumeAfterPhone = leadAfterPhone = null;
     if (resumed) open(resumed);
-    else followPanels();
+    else followPanels(lead);
   };
   if (phone?.addEventListener) {
     phone.addEventListener('change', onPhone);

@@ -26,14 +26,7 @@
   );
 }
 
-#command-dock:has(#control-panel:not(.collapsed)) {
-  transform: translateX(
-    calc(-50% - (var(--dock-presets-open) - var(--dock-side-compact)) / 2)
-  );
-}
-
-#command-dock > #location-bar,
-#command-dock > #control-panel {
+#command-dock > #location-bar {
   flex: 0 0 var(--dock-side-compact);
   align-self: stretch;
   min-width: 0;
@@ -47,21 +40,12 @@
   flex-basis: var(--dock-location-open);
 }
 
-#command-dock > #control-panel:not(.collapsed) {
-  flex-basis: var(--dock-presets-open);
-}
-
 #command-dock > #location-bar {
   border-right: 1px solid rgba(123, 189, 211, 0.18);
 }
 
-#command-dock > #control-panel {
-  border-left: 1px solid rgba(123, 189, 211, 0.18);
-}
-
 #command-dock .panel-inner,
 #command-dock .location-inner,
-#command-dock #control-panel.collapsed .panel-inner,
 #command-dock #location-bar.collapsed .location-inner {
   display: flex;
   flex-direction: column;
@@ -71,8 +55,7 @@
 }
 
 #command-dock .panel-header,
-#command-dock .location-toolbar,
-#command-dock #control-panel.collapsed .panel-header {
+#command-dock .location-toolbar {
   flex: 0 0 auto;
   min-width: calc(var(--dock-side-compact) - 1.5rem);
   min-height: 1rem;
@@ -95,27 +78,17 @@
   font-size: 0.7rem;
 }
 
-#command-dock #control-panel .panel-title::after {
-  content: '‹';
-  margin-right: 0.45rem;
-  margin-left: 0;
-  float: left;
-}
-
 #command-dock #location-bar.collapsed .location-city-row,
 #command-dock #location-bar.collapsed .poi-row-container,
-#command-dock #location-bar.collapsed .location-bar-divider,
-#command-dock #control-panel.collapsed .button-grid {
+#command-dock #location-bar.collapsed .location-bar-divider {
   display: none !important;
 }
 
-#command-dock #location-bar:not(.collapsed) .location-toolbar,
-#command-dock #control-panel:not(.collapsed) .panel-header {
+#command-dock #location-bar:not(.collapsed) .location-toolbar {
   margin-bottom: 0.35rem;
 }
 
-#command-dock #location-bar:not(.collapsed) .location-city-row,
-#command-dock #control-panel:not(.collapsed) .button-grid {
+#command-dock #location-bar:not(.collapsed) .location-city-row {
   display: flex !important;
   animation: command-dock-reveal 220ms ease-out both;
 }
@@ -182,39 +155,6 @@
 }
 
 #command-dock .location-bar-divider.visible {
-  display: none;
-}
-
-#command-dock .button-grid {
-  flex-wrap: nowrap;
-  gap: 0.3rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-#command-dock .button-grid::-webkit-scrollbar {
-  display: none;
-}
-
-#command-dock .style-btn {
-  flex: 0 0 3.2rem;
-  min-width: 3.2rem;
-  min-height: 2.45rem;
-  gap: 0.1rem;
-  padding: 0.3rem 0.25rem;
-  border-radius: 0.2rem;
-}
-
-#command-dock .btn-icon {
-  font-size: 0.78rem;
-}
-
-#command-dock .btn-label {
-  font-size: 0.43rem;
-  letter-spacing: 0.02rem;
-}
-
-#command-dock .btn-key {
   display: none;
 }
 
@@ -401,29 +341,18 @@ body:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
     max-width: calc(100vw - 1rem);
   }
 
-  #command-dock:has(#location-bar:not(.collapsed)),
-  #command-dock:has(#control-panel:not(.collapsed)) {
+  #command-dock:has(#location-bar:not(.collapsed)) {
     transform: translateX(-50%);
   }
 
-  #command-dock:has(#location-bar:not(.collapsed)) > #control-panel,
-  #command-dock:has(#control-panel:not(.collapsed)) > #location-bar {
-    flex-basis: 0;
-    border: 0;
-  }
-
-  #command-dock:has(#location-bar:not(.collapsed)) > #gev-voice-control,
-  #command-dock:has(#control-panel:not(.collapsed)) > #gev-voice-control {
+  #command-dock:has(#location-bar:not(.collapsed)) > #gev-voice-control {
     flex-basis: 4.75rem;
     width: 4.75rem;
   }
 
   #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-visualizer,
   #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-kicker,
-  #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-readout,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-visualizer,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-kicker,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-readout {
+  #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-readout {
     visibility: hidden;
   }
 

@@ -44,8 +44,6 @@ export function bindDisplayControls({ elements, actions }) {
     ['sonarSectorSlider', 'setSonarSector'],
   ])
     listen(elements[name], 'input', action, integer);
-  for (const el of elements.styleButtons || [])
-    listen(el, 'click', 'setStyle', (el) => el.dataset.style);
   for (const [buttons, valueOf, action] of [
     [
       elements.allocationButtons || [],

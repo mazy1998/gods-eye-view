@@ -270,6 +270,8 @@ try {
     });
     manager.hud.setMode('on');
     manager.setStyle('normal');
+    // Scope is in Map & Look's Display tab.
+    manager.setMapLookTab('display');
   });
   const initial = await readScope();
   check(

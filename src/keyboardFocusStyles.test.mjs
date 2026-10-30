@@ -81,6 +81,6 @@ test('focusable controls do not animate the global outline', () => {
 test('opening a dock popover makes its controls keyboard-reachable immediately', () => {
   const base = ruleBodyContaining('#command-dock .dock-popover-content {', 'visibility: hidden');
   assert.match(base, /visibility\s+0s\s+linear\s+180ms/);
-  const open = ruleText('#command-dock #location-bar:not(.collapsed) .dock-popover-content,');
+  const open = ruleText('#command-dock #location-bar:not(.collapsed) .dock-popover-content {');
   assert.match(open, /transition-delay:\s*0s/);
 });

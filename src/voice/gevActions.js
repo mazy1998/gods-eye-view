@@ -114,6 +114,24 @@ const PANEL_ALIASES = new Map([
   ['imagery panel', 'recent-imagery-panel'],
 ]);
 
+// The Visual Presets tray's styles and map sources live in Map & Look now:
+// these names open it on the tab that holds what they ask for.
+const MAP_LOOK_TABS = new Map([
+  ['control-panel', 'look'],
+  ['styles', 'look'],
+  ['filters', 'look'],
+  ['visual styles', 'look'],
+  ['visual preset', 'look'],
+  ['visual presets', 'look'],
+  ['map stack', 'map'],
+  ['stack', 'map'],
+  ['basemap', 'map'],
+  ['map sources', 'map'],
+  ['sources', 'map'],
+  ['post processing', 'display'],
+  ['hud controls', 'display'],
+]);
+
 const PANEL_IDS = new Set([
   'data-panel',
   'location-bar',
@@ -751,12 +769,18 @@ export function createGevActionRunner({
     }
 
     if (name === 'set_panel_open') {
-      const panelId = normalizePanelId(args.panelId || args.panel);
+      const requested = String(args.panelId || args.panel || '').trim();
+      let panelId = normalizePanelId(requested);
       if (!panelId)
         throw new Error(
           `Unknown panel: ${args.panelId || args.panel || 'missing'}`,
         );
       const open = args.open !== false;
+      const tab = MAP_LOOK_TABS.get(requested.toLowerCase());
+      if (tab) {
+        if (open) styleManager?.setMapLookTab?.(tab);
+        panelId = 'pp-toggles';
+      }
       if (panelId === 'voice-settings' || panelId === 'voice-preview')
         return showVoicePanel(
           panelId === 'voice-settings' ? 'settings' : 'preview',

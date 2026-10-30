@@ -389,13 +389,11 @@
   );
 }
 
-:root[data-ui-theme='cyber']
-  .panel-collapsible:not(#location-bar):not(#control-panel) {
+:root[data-ui-theme='cyber'] .panel-collapsible:not(#location-bar) {
   position: relative;
 }
 
-:root[data-ui-theme='cyber']
-  .panel-collapsible:not(#location-bar):not(#control-panel)::after {
+:root[data-ui-theme='cyber'] .panel-collapsible:not(#location-bar)::after {
   position: absolute;
   z-index: 4;
   top: 0;
@@ -524,6 +522,11 @@
     0 0 12px rgba(196, 84, 84, 0.14);
 }
 
+/* A failed map-source switch leaves the status in Cyber's warning amber. */
+:root[data-ui-theme='cyber'] .pp-stack-status.warn {
+  color: #ffb84d;
+}
+
 :root[data-ui-theme='cyber'] .gev-segmented,
 :root[data-ui-theme='cyber'] .pp-mode-seg {
   border-color: rgba(206, 222, 226, 0.24);
@@ -605,7 +608,6 @@
   :where(
     .material-symbols-outlined,
     .pp-icon,
-    .btn-icon,
     .dock-label-icon,
     .first-run-arrow,
     .panel-collapse-btn
@@ -616,8 +618,7 @@
 
 /* Replace pictographic emoji with a single-colour instrument glyph set while
    Cyber is active. Data semantics and accessible labels remain unchanged. */
-:root[data-ui-theme='cyber'] .data-icon,
-:root[data-ui-theme='cyber'] #command-dock .btn-icon {
+:root[data-ui-theme='cyber'] .data-icon {
   display: inline-grid;
   place-items: center;
   width: 1.05rem;
@@ -630,8 +631,7 @@
   filter: none;
 }
 
-:root[data-ui-theme='cyber'] .data-icon::before,
-:root[data-ui-theme='cyber'] #command-dock .btn-icon::before {
+:root[data-ui-theme='cyber'] .data-icon::before {
   content: '◇';
   font-size: 0.82rem;
   font-weight: 500;
@@ -728,49 +728,6 @@
   content: '◉';
 }
 
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='normal']
-  .btn-icon::before {
-  content: '○';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='retro']
-  .btn-icon::before {
-  content: '▦';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='surveillance']
-  .btn-icon::before {
-  content: '◒';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='thermal']
-  .btn-icon::before {
-  content: '≋';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='anime']
-  .btn-icon::before {
-  content: '✦';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='noir']
-  .btn-icon::before {
-  content: '◐';
-}
-:root[data-ui-theme='cyber']
-  #command-dock
-  .style-btn[data-style='snow']
-  .btn-icon::before {
-  content: '❄︎';
-}
-
 :root[data-ui-theme='cyber'] :where(#bloom-toggle, #sharpen-toggle) {
   font-size: 0;
 }
@@ -805,7 +762,7 @@
     button[aria-pressed='true'],
     button[aria-selected='true']
   )
-  :where(.material-symbols-outlined, .pp-icon, .btn-icon, .dock-label-icon) {
+  :where(.material-symbols-outlined, .pp-icon, .dock-label-icon) {
   color: var(--cyber-red-bright);
 }
 
@@ -991,8 +948,7 @@
   pointer-events: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #location-bar,
-:root[data-ui-theme='cyber'] #command-dock > #control-panel {
+:root[data-ui-theme='cyber'] #command-dock > #location-bar {
   border: 1px solid rgba(112, 145, 153, 0.34);
   background:
     linear-gradient(135deg, rgba(62, 86, 94, 0.26), transparent 52%),
@@ -1006,12 +962,7 @@
   border-left-color: rgba(196, 84, 84, 0.68);
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #control-panel {
-  border-right-color: rgba(196, 84, 84, 0.68);
-}
-
-:root[data-ui-theme='cyber'] #command-dock > #location-bar::after,
-:root[data-ui-theme='cyber'] #command-dock > #control-panel::after {
+:root[data-ui-theme='cyber'] #command-dock > #location-bar::after {
   position: absolute;
   bottom: 0.22rem;
   color: rgba(165, 190, 196, 0.42);
@@ -1023,11 +974,6 @@
 :root[data-ui-theme='cyber'] #command-dock > #location-bar::after {
   content: 'LOC / GRID';
   left: 0.75rem;
-}
-
-:root[data-ui-theme='cyber'] #command-dock > #control-panel::after {
-  content: 'OPT / MATRIX';
-  right: 0.75rem;
 }
 
 :root[data-ui-theme='cyber'] #command-dock > #gev-voice-control {
@@ -1332,7 +1278,7 @@
 
 :root[data-ui-theme='cyber']
   #command-dock
-  :is(#location-bar, #control-panel)
+  #location-bar
   .dock-popover-content::after {
   content: '';
   position: absolute;
@@ -1373,13 +1319,7 @@
   content: 'NAVIGATION DECK  //  01';
 }
 
-:root[data-ui-theme='cyber'] #command-dock #control-panel-popover::before {
-  content: 'VISUAL MATRIX  //  03';
-}
-
-:root[data-ui-theme='cyber']
-  #command-dock
-  :where(.style-btn, .location-pill, .poi-pill) {
+:root[data-ui-theme='cyber'] #command-dock :where(.location-pill, .poi-pill) {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(142, 171, 178, 0.3);
@@ -1399,7 +1339,7 @@
 
 :root[data-ui-theme='cyber']
   #command-dock
-  :where(.style-btn, .location-pill, .poi-pill)::after {
+  :where(.location-pill, .poi-pill)::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1410,14 +1350,6 @@
   clip-path: polygon(0 0, 100% 0, 100% 100%);
   opacity: 0.72;
   pointer-events: none;
-}
-
-:root[data-ui-theme='cyber'] #command-dock .style-btn.active {
-  border-color: rgba(225, 102, 102, 0.78);
-  background:
-    linear-gradient(135deg, rgba(196, 84, 84, 0.42), transparent 72%),
-    rgba(60, 42, 43, 0.96);
-  box-shadow: 3px 0 0 var(--cyber-red) inset;
 }
 
 :root[data-ui-theme='cyber'] #command-dock #search-toggle {

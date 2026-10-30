@@ -167,6 +167,7 @@ export class StyleManager extends ShellFacade {
       },
       operations: {
         closeLocationSearch: () => this._navigation.locationField.close(),
+        showMapLookTab: (tab) => this.setMapLookTab(tab),
         _setRadioDisclosure: (...args) => this._setRadioDisclosure(...args),
         _syncCctvPanelViewport: (...args) =>
           this._syncCctvPanelViewport(...args),
@@ -254,7 +255,6 @@ export class StyleManager extends ShellFacade {
         _ppToggles: this._ppToggles,
         _sliderContainer: this._sliderContainer,
         _sliderPanel: this._sliderPanel,
-        _styleMiniValue: this._styleMiniValue,
       },
       operations: {
         _restorePanelState: (...args) => this._restorePanelState(...args),
@@ -269,6 +269,7 @@ export class StyleManager extends ShellFacade {
         _syncPanelCollapseButton: (...args) =>
           this._syncPanelCollapseButton(...args),
         _syncShareState: (...args) => this._syncShareState(...args),
+        setMapLookTab: (tab) => this.setMapLookTab(tab),
         setPanelCollapsed: (...args) => this.setPanelCollapsed(...args),
       },
       readHud: () => this.hud,
@@ -668,7 +669,6 @@ export class StyleManager extends ShellFacade {
     this._initRecordingOverlay();
     this._startAnimationLoop();
     this._startTrafficChipTicker();
-    this._updateStyleMiniStatus();
     this._updateLocationMiniStatus();
 
     this._shareRestoration.start();
@@ -890,10 +890,6 @@ export class StyleManager extends ShellFacade {
    */
   _applyRuntimeStaticHeaderText() {
     this._setHeaderText(
-      document.querySelector('#control-panel .panel-title'),
-      t('VISUAL PRESETS'),
-    );
-    this._setHeaderText(
       document.querySelector('#location-bar .location-toolbar-label'),
       t('LOCATION'),
     );
@@ -960,9 +956,10 @@ export class StyleManager extends ShellFacade {
   }
 
   /**
-   * Renders the owner-approved map stack chip row from the matching controller
-   * entries. Cesium ion/Bing chips remain keyboard-focusable but unavailable,
-   * with an accessible explanation, until a CESIUM_ION_TOKEN is configured.
+   * Publishes the map stacks to Map & Look's Map tab and wires its tiles to
+   * the selection owner. Cesium ion/Bing tiles remain keyboard-focusable but
+   * unavailable, with an accessible explanation, until a CESIUM_ION_TOKEN is
+   * configured.
    * @returns {void}
    */
   _initMapStackControl() {
@@ -975,8 +972,6 @@ export class StyleManager extends ShellFacade {
     });
     this._mapSourceControls?.destroy();
     this._mapSourceControls = createMapSourceControls({
-      container: this._mapStackChips,
-      statusElement: this._mapStackStatus,
       controller: this.mapStackController,
       subscribe: (onChange) => {
         window.addEventListener('gev:map-stack-changed', onChange);
@@ -986,7 +981,47 @@ export class StyleManager extends ShellFacade {
       claimSelection: () => this.shareLinkManager?.claimRestoreLane?.('map'),
       onStateChanged: () => this._syncShareState(),
       onError: (message) => this._showToast(message),
+      // A refresh re-renders the picker: tiles a caller still holds go inert.
+      onRefresh: () =>
+        this._displayViews.mapLook?.update({
+          pickerKey: (this._mapPickerKey = (this._mapPickerKey ?? 0) + 1),
+        }),
+      onPending: (value) => this._mapStack?.setPending(value),
     });
+    this._displayViews.mapLook?.update({
+      mapActions: {
+        setTab: (tab) => this.setMapLookTab(tab),
+        selectStack: (id) => {
+          void this._mapSourceControls?.select(id).catch(() => {});
+        },
+        openProviders: () => this._providerSettings?.open(),
+      },
+    });
+    this._mapStack.channel.subscribe(({ state }) =>
+      this._displayViews.mapLook?.update({ mapStack: state }),
+    );
+  }
+
+  /**
+   * Provider Settings, once it is known to work here: Map & Look's "Configure
+   * map providers" opens it. Where it cannot work there is no link.
+   * @param {{open(): void}} settings - The provider settings surface.
+   * @returns {void}
+   */
+  setProviderSettings(settings) {
+    this._providerSettings = settings;
+    this._displayViews.mapLook?.update({ providers: !!settings });
+  }
+
+  /**
+   * Show a Map & Look tab: 'map', 'look' or 'display'. The tab is the view's
+   * own state for the page's life; it is not persisted or shared.
+   * @param {string} tab
+   * @returns {void}
+   */
+  setMapLookTab(tab) {
+    if (!['map', 'look', 'display'].includes(tab)) return;
+    this._displayViews.mapLook?.update({ tab });
   }
 
   /**
@@ -999,17 +1034,6 @@ export class StyleManager extends ShellFacade {
   async _setMapStack(stackId, { syncShare = true } = {}) {
     if (!this.mapStackController) return;
     return this._mapSourceControls.select(stackId, { syncShare });
-  }
-
-  /**
-   * Syncs the map stack chip row and status chip with controller state. The
-   * lit chip always follows `state.activeId`, never the click — a rejected or
-   * superseded switch therefore leaves the genuinely active stack lit.
-   * @param {object} state - Map stack controller state.
-   * @returns {void}
-   */
-  _renderMapStackState(state) {
-    this._mapSourceControls?.render(state);
   }
 
   _setDetectionAllocation(strategy, { syncShare = true, persist = true } = {}) {
@@ -1035,24 +1059,6 @@ export class StyleManager extends ShellFacade {
     { restore = false, persist = true, syncShare = true } = {},
   ) {
     return this._panelChrome._setCommandDockPanelPinState(...arguments);
-  }
-
-  /**
-   * Configures intentional hover-expand / leave-collapse behavior on a panel.
-   * Uses separate open/close timers to prevent accidental flicker from fast
-   * mouse passes. Wheel events cancel pending opens to avoid surprise expansion
-   * during scroll-through.
-   * @param {string} panelId - DOM id of the panel element.
-   * @param {object} [options]
-   * @param {number} [options.openDelayMs=850] - Hover dwell time before auto-expanding.
-   * @param {number} [options.closeDelayMs=1000] - Delay after pointer leaves before collapsing.
-   * @returns {void}
-   */
-  _initAutoHoverPanel(
-    panelId,
-    { openDelayMs = 850, closeDelayMs = 1000 } = {},
-  ) {
-    return this._panelChrome._initAutoHoverPanel(...arguments);
   }
 
   _initGlobalContextPanel() {

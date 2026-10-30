@@ -340,7 +340,6 @@ html:not([lang='en']) #scene-panel .scene-controls .scene-btn {
   visibility: visible;
 }
 
-#control-panel.collapsed .button-grid,
 #data-panel.collapsed .data-toggle-list,
 #global-context-panel.collapsed #radio-panel,
 #global-context-panel.collapsed #military-awareness-panel,
@@ -389,7 +388,6 @@ html:not([lang='en']) #scene-panel .scene-controls .scene-btn {
   letter-spacing: 1.8px;
 }
 
-#control-panel.collapsed .panel-inner,
 #data-panel.collapsed .data-panel-inner,
 #cctv-panel.collapsed .cctv-panel-inner,
 #radio-panel.collapsed .radio-panel-inner,
@@ -399,7 +397,6 @@ html:not([lang='en']) #scene-panel .scene-controls .scene-btn {
   padding-bottom: 10px;
 }
 
-#control-panel.collapsed .panel-header,
 #data-panel.collapsed .panel-header,
 #cctv-panel.collapsed .panel-header,
 #radio-panel.collapsed .panel-header,

@@ -1,6 +1,4 @@
 import { clampScopeFeatherPct } from '../scopeMaskPolicy.js';
-import { STYLE_STATUS_LABELS } from './visualPresets.js';
-import { t } from '../i18n/index.js';
 import { UiLifetime } from './uiLifetime.js';
 import { createStateChannel } from '../app/stateChannel.js';
 import {
@@ -1511,6 +1509,21 @@ export class VisualSettings {
     if (this._cockpitDisplayPortalActive) return;
     this._sliderPanel.classList.remove('collapsed');
     this._syncPanelCollapseButton(this._sliderPanel);
+    // Focus on a control in another Map & Look tab is about to be hidden; the
+    // view moves it to the Look tab at once.
+    const lookPanel = this._sliderPanel.closest('[role="tabpanel"]');
+    const focusPanel = document.activeElement?.closest?.('[role="tabpanel"]');
+    const handFocus =
+      !!lookPanel &&
+      !!focusPanel &&
+      focusPanel !== lookPanel &&
+      !!this._ppToggles?.contains(focusPanel);
+    const lookTab = () =>
+      this._ppToggles?.querySelector(
+        `[role="tab"][aria-controls="${lookPanel.id}"]`,
+      );
+    // The parameters live on Map & Look's Look tab; show it before measuring.
+    this.setMapLookTab?.('look');
     this.setPanelCollapsed('pp-toggles', false, { explicit: true });
     this._lifetime.frame(() =>
       this._lifetime.frame(() => {
@@ -1519,6 +1532,14 @@ export class VisualSettings {
         const ownerRect = scrollOwner.getBoundingClientRect();
         const panelRect = this._sliderPanel.getBoundingClientRect();
         scrollOwner.scrollTop += panelRect.top - ownerRect.top - 8;
+        // The scroll can leave the tabs out of view, so focus that had to
+        // leave its tab lands on the first parameter the reveal shows, unless
+        // it has moved on from the Look tab since.
+        if (handFocus && document.activeElement === lookTab())
+          (
+            this._sliderPanel.querySelector('input[type="range"]') ??
+            this._sliderPanel.querySelector('.panel-collapse-btn')
+          )?.focus({ preventScroll: true });
       }),
     );
   }
@@ -1588,13 +1609,8 @@ export class VisualSettings {
       this._applyStylePresetDefaults(styleName);
     }
 
-    // Update button UI
-    document.querySelectorAll('.style-btn').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.style === styleName);
-    });
-
-    // The ACTIVE STYLE indicator is a view of this.channel (StyleIndicator.vue).
-    this._updateStyleMiniStatus(styleName);
+    // The style tiles and the ACTIVE STYLE indicator are views of
+    // this.channel (StyleTiles.vue, StyleIndicator.vue).
 
     // Update parameter sliders
     this._updateSliderPanel(styleName, { reveal: revealParameters });
@@ -1621,13 +1637,6 @@ export class VisualSettings {
 
   _startTransition(styleName, fromValue, toValue) {
     this._visualEffects.startTransition(styleName, fromValue, toValue);
-  }
-
-  _updateStyleMiniStatus(styleName = this.activeStyle) {
-    if (!this._styleMiniValue) return;
-    this._styleMiniValue.textContent = STYLE_STATUS_LABELS[styleName]
-      ? t(STYLE_STATUS_LABELS[styleName])
-      : String(styleName || 'normal').toUpperCase();
   }
 
   /** The HUD view shows visibility and layout; layout follows the change. */

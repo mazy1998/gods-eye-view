@@ -219,7 +219,6 @@
   "scripts/qa-geo-import-large.mjs",
   "src/ui/mapSource.js",
   "src/ui/mapSourceControls.js",
-  "src/ui/mapSourceControls.test.mjs",
   "src/mapStackChips.js",
   "scripts/qa-map-source-controls.mjs",
   "src/ui/layers.js",
@@ -1218,5 +1217,14 @@
   "src/ui/cockpitViews/cockpitVisionView.test.mjs",
   "src/ui/settings/SettingsView.vue",
   "src/ui/settings/settingsSurface.js",
-  "src/ui/settings/settingsView.dom.test.mjs"
+  "src/ui/settings/settingsView.dom.test.mjs",
+  "src/ui/mapLook/MapLookView.vue",
+  "src/ui/mapLook/StyleTiles.vue",
+  "src/ui/mapLook/StyleThumbnail.vue",
+  "src/ui/mapLook/MapStackPicker.vue",
+  "src/ui/mapLook/mapLookView.dom.test.mjs",
+  "src/ui/mapLook/mapStackPicker.dom.test.mjs",
+  "src/ui/mapSourceControls.dom.test.mjs",
+  "src/ui/styles/map-look.css",
+  "scripts/qa-cyber-map-look-structure.json"
 ]

@@ -31,7 +31,6 @@
 }
 
 #command-dock > #location-bar,
-#command-dock > #control-panel,
 #command-dock > #gev-voice-control {
   position: relative;
   inset: auto;
@@ -44,12 +43,6 @@
   grid-area: locations;
   min-width: 0;
   border-right: 1px solid rgba(123, 189, 211, 0.16);
-}
-
-#command-dock > #control-panel {
-  grid-area: presets;
-  min-width: 0;
-  border-left: 1px solid rgba(123, 189, 211, 0.16);
 }
 
 #command-dock > #gev-voice-control {
@@ -104,7 +97,6 @@
 
 #command-dock .panel-inner,
 #command-dock .location-inner,
-#command-dock #control-panel.collapsed .panel-inner,
 #command-dock #location-bar.collapsed .location-inner {
   height: 100%;
   padding: 8px 14px;
@@ -117,8 +109,7 @@
 }
 
 #command-dock .panel-header,
-#command-dock .location-toolbar,
-#command-dock #control-panel.collapsed .panel-header {
+#command-dock .location-toolbar {
   min-height: 18px;
   margin: 0 0 6px;
   padding: 0;
@@ -137,37 +128,8 @@
   display: none !important;
 }
 
-#command-dock #control-panel.collapsed .button-grid,
 #command-dock #location-bar.collapsed .location-city-row {
   display: flex !important;
-}
-
-#command-dock .button-grid {
-  gap: 6px;
-}
-
-#command-dock .style-btn {
-  min-width: 52px;
-  gap: 4px;
-  padding: 9px 8px 7px;
-  border-radius: 7px;
-}
-
-#command-dock .btn-icon {
-  font-size: 16px;
-}
-
-#command-dock .btn-label {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-#command-dock .btn-key {
-  top: 3px;
-  right: 4px;
-  font-size: 7px;
 }
 
 #command-dock .location-city-row {
@@ -265,11 +227,6 @@ body.recording-mode #cesium-credits {
     border-bottom: 1px solid rgba(123, 189, 211, 0.16);
   }
 
-  #command-dock > #control-panel {
-    border-top: 1px solid rgba(123, 189, 211, 0.16);
-    border-left: 0;
-  }
-
   #command-dock > #gev-voice-control {
     margin: -10px 0 0;
   }
@@ -298,7 +255,6 @@ body.recording-mode #cesium-credits {
 
   #command-dock .panel-inner,
   #command-dock .location-inner,
-  #command-dock #control-panel.collapsed .panel-inner,
   #command-dock #location-bar.collapsed .location-inner {
     padding: 7px 9px;
   }

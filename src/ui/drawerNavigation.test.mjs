@@ -702,3 +702,101 @@ test('Tools borrows the one Directions root, updates it in place, returns it on 
   assert.equal(document.getElementById(directions.id), null);
   assert.equal(directions.parentNode, null);
 });
+
+// The dock's Visual Presets tray retired into Map & Look. Links keep its
+// entry: written exactly as a default session wrote it, and an old link that
+// had it open opens Map & Look on Look, as the destination it leads with.
+test('links still write the retired Visual Presets tray as a default session did', (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  t.after(() => {
+    drawer.destroy();
+    chrome.destroy();
+  });
+  assert.equal(document.getElementById('control-panel'), null);
+  const { specs } = chrome._buildSharePanelState();
+  assert.deepEqual(specs[0], {
+    id: 'control-panel',
+    collapsed: true,
+    pinned: false,
+  });
+});
+
+test('an old link with the Visual Presets tray open opens Map & Look on Look', (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  const tabs = [];
+  chrome.showMapLookTab = (tab) => tabs.push(tab);
+  t.after(() => {
+    drawer.destroy();
+    chrome.destroy();
+  });
+  // The tray leads, before an expanded Data panel later in the order, and a
+  // collapsed Map & Look entry in the same link does not close it again.
+  chrome._restorePanelState({
+    specs: [
+      { id: 'control-panel', collapsed: false, pinned: false },
+      { id: 'data-panel', collapsed: false },
+      { id: 'pp-toggles', collapsed: true },
+    ],
+  });
+  assert.equal(destination(drawer), 'map');
+  assert.deepEqual(tabs, ['look']);
+  assert.equal(
+    document.getElementById('pp-toggles').classList.contains('collapsed'),
+    false,
+  );
+  // A pinned tray was open too.
+  drawer.open('inspect');
+  chrome._restorePanelState({
+    specs: [{ id: 'control-panel', collapsed: true, pinned: true }],
+  });
+  assert.equal(destination(drawer), 'map');
+});
+
+test('an old link restored at phone width with the tray open opens Map & Look back at desktop width', (t) => {
+  const { drawer, chrome, media } = fixture({ chrome: true });
+  const tabs = [];
+  chrome.showMapLookTab = (tab) => tabs.push(tab);
+  t.after(() => {
+    drawer.destroy();
+    chrome.destroy();
+  });
+  const restoreOnPhone = () => {
+    media.set(true);
+    chrome._restorePanelState({
+      specs: [
+        { id: 'control-panel', collapsed: false, pinned: false },
+        { id: 'data-panel', collapsed: false },
+      ],
+    });
+  };
+  restoreOnPhone();
+  assert.deepEqual(tabs, ['look']);
+  media.set(false);
+  // As a desktop restore of the same link does.
+  assert.equal(destination(drawer), 'map');
+
+  // A panel expanded on the phone after the restore supersedes its lead.
+  restoreOnPhone();
+  chrome.setPanelCollapsed('data-panel', true);
+  chrome.setPanelCollapsed('data-panel', false);
+  media.set(false);
+  assert.equal(destination(drawer), 'layers');
+});
+
+test("a default link's closed tray leaves the restore to the panels it opens", (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  const tabs = [];
+  chrome.showMapLookTab = (tab) => tabs.push(tab);
+  t.after(() => {
+    drawer.destroy();
+    chrome.destroy();
+  });
+  chrome._restorePanelState({
+    specs: [
+      { id: 'control-panel', collapsed: true, pinned: false },
+      { id: 'data-panel', collapsed: false },
+    ],
+  });
+  assert.equal(destination(drawer), 'layers');
+  assert.deepEqual(tabs, []);
+});

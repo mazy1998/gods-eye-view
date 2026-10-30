@@ -56,41 +56,36 @@ const check = (name, passed, detail = '') => {
   if (!passed) failures.push(name);
 };
 
-const trayMetrics = () => page.evaluate(() => {
-  const panel = document.getElementById('control-panel');
-  const popover = document.getElementById('control-panel-popover');
-  const row = document.getElementById('map-stack-chips');
-  const popoverRect = popover.getBoundingClientRect();
-  const chips = [...row.children].map((chip) => {
-    const rect = chip.getBoundingClientRect();
-    return {
-      id: chip.dataset.stackId,
-      left: rect.left,
-      right: rect.right,
-      top: rect.top,
-      bottom: rect.bottom,
-      pressed: chip.getAttribute('aria-pressed'),
-      ariaDisabled: chip.getAttribute('aria-disabled'),
-      ariaLabel: chip.getAttribute('aria-label'),
-    };
+// The Visual Presets tray retired into Map & Look: its style tiles sit in the
+// Look tab and its map-source tiles in the Map tab of the Map destination.
+const openMapLook = (tab) => page.evaluate((name) => {
+  const manager = window.__godsEyeView.styleManager;
+  manager.setMapLookTab(name);
+  manager.setPanelCollapsed('pp-toggles', false, { explicit: true });
+}, tab);
+// Both tile grids sit fully inside the drawer, unclipped, at a desktop width.
+const gridMetrics = (tab) => page.evaluate((name) => {
+  const drawer = document.getElementById('gev-drawer').getBoundingClientRect();
+  const selector = name === 'look' ? '#style-buttons .style-btn' : '#map-stack-chips .map-stack-chip';
+  const tiles = [...document.querySelectorAll(selector)].map((tile) => {
+    tile.scrollIntoView({ block: 'nearest' });
+    const rect = tile.getBoundingClientRect();
+    let clipped = false;
+    for (let node = tile.parentElement; node && node !== document.body; node = node.parentElement) {
+      const box = node.getBoundingClientRect();
+      if (getComputedStyle(node).overflow !== 'visible' && (rect.left < box.left - 0.5 || rect.right > box.right + 0.5
+        || rect.top < box.top - 0.5 || rect.bottom > box.bottom + 0.5)) clipped = true;
+    }
+    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, clipped };
   });
   return {
-    viewport: { width: innerWidth, height: innerHeight },
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    pinned: panel.classList.contains('dock-pinned'),
-    popover: {
-      left: popoverRect.left,
-      right: popoverRect.right,
-      top: popoverRect.top,
-      bottom: popoverRect.bottom,
-      width: popoverRect.width,
-    },
-    columns: getComputedStyle(row).gridTemplateColumns,
-    rows: new Set(chips.map((chip) => chip.top)).size,
-    chips,
+    drawer: { left: drawer.left, right: drawer.right, top: drawer.top, bottom: drawer.bottom },
+    tiles,
+    inside: tiles.length > 0 && tiles.every((tile) => tile.width > 0 && !tile.clipped
+      && tile.left >= drawer.left - 0.5 && tile.right <= drawer.right + 0.5
+      && tile.top >= drawer.top - 0.5 && tile.bottom <= drawer.bottom + 0.5),
   };
-});
-
+}, tab);
 // Observe rendered focus, including clipping by the scrolling style row. A
 // focus-visible match alone does not prove that the keyboard user sees a ring.
 const focusMetrics = (selector = '.style-btn') => page.evaluate((match) => {
@@ -192,14 +187,14 @@ const checkResponsiveStyleFocus = async (width) => {
     window.__godsEyeView.styleManager.mapStackController.getActiveId()
   ));
   if (width <= 720) {
-    // Phones show Presets in the More tab's sheet, which focuses its first
-    // visible control (Normal) when it opens; the tray toggle and pin are
-    // desktop chrome there.
+    // Phones show Map & Look in the More tab's sheet.
+    await page.evaluate(() => window.__godsEyeView.styleManager.setMapLookTab('look'));
     await openPhoneMoreSheet();
   } else {
-    await page.focus('#control-panel-toggle');
-    await pressTabs(2); // disclosure -> pin -> Normal
+    await openMapLook('look');
   }
+  await page.focus('#map-look-look-tab');
+  await pressTabs(1); // Look tab -> Normal
   for (const [index, style] of ['normal', 'thermal', 'snow'].entries()) {
     if (index) await pressTabs(3);
     const state = await styleFocusMetrics();
@@ -312,19 +307,12 @@ try {
   const presentation = await page.evaluate(() => ({
     ids: [...document.querySelectorAll('.map-stack-chip')].map((chip) => chip.dataset.stackId),
     retiredPanel: Boolean(document.getElementById('stack-panel')),
-    toggleTag: document.getElementById('control-panel-toggle')?.tagName,
-    controls: document.getElementById('control-panel-toggle')?.getAttribute('aria-controls'),
   }));
   check(
     'exact five-source presentation; the retired left Map Stack panel is gone',
     JSON.stringify(presentation.ids) === JSON.stringify([
       'photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'osm',
     ]) && !presentation.retiredPanel,
-    JSON.stringify(presentation),
-  );
-  check(
-    'compact wing is a semantic disclosure',
-    presentation.toggleTag === 'BUTTON' && presentation.controls === 'control-panel-popover',
     JSON.stringify(presentation),
   );
 
@@ -394,29 +382,6 @@ try {
     JSON.stringify(esriTileFailureFallback),
   );
 
-  // The tray's state changes are timer-driven: opening schedules the focus
-  // hand-off to a Map Source tile 240ms later (scheduleMapSourceFocus in
-  // ui.js). A fixed sleep races that timer rather than observing it settle —
-  // 300ms left only 60ms of margin, which is what made these checks flake on
-  // a clean checkout (#54). Wait on controller truth instead, the way the
-  // Bing-switch check further down already does.
-  // The wait only settles state; the check() below it is still the assertion,
-  // so a swallowed timeout surfaces as that check failing with real values
-  // rather than as an opaque puppeteer error.
-  const waitTray = (wantExpanded, wantFocus) => page.waitForFunction(
-    (expanded, focus) => {
-      const toggle = document.getElementById('control-panel-toggle');
-      if (toggle?.getAttribute('aria-expanded') !== expanded) return false;
-      if (!focus) return true;
-      const active = document.activeElement;
-      return focus === 'toggle'
-        ? active?.id === 'control-panel-toggle'
-        : active?.dataset?.stackId === focus;
-    },
-    { timeout: 2000 },
-    wantExpanded, wantFocus,
-  ).catch(() => {});
-
   await page.evaluate(() => window.__godsEyeView.styleManager._setMapStack('osm', { syncShare: false }));
   const keyboardSource = await page.evaluate(() => (
     window.__godsEyeView.styleManager.mapStackController.getActiveId()
@@ -425,148 +390,16 @@ try {
     keyboardSource === 'osm' && await page.evaluate(() => (
       document.querySelector('#map-stack-chips .map-stack-chip:last-child')?.dataset.stackId === 'osm'
     )));
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await waitTray('true', keyboardSource);
-  const keyboardOpen = await page.evaluate(() => ({
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    activeStack: document.activeElement?.dataset?.stackId || null,
-  }));
-  check(
-    'Enter opens the tray and hands focus to the selected Map Source tile',
-    keyboardOpen.expanded === 'true' && keyboardOpen.activeStack === keyboardSource,
-    JSON.stringify(keyboardOpen),
-  );
-
-  await page.keyboard.press('Escape');
-  await waitTray('false', 'toggle');
-  const keyboardClose = await page.evaluate(() => ({
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    activeId: document.activeElement?.id || null,
-  }));
-  check(
-    'Escape closes the tray and restores disclosure focus',
-    keyboardClose.expanded === 'false' && keyboardClose.activeId === 'control-panel-toggle',
-    JSON.stringify(keyboardClose),
-  );
-
-  await page.keyboard.press('Space');
-  await waitTray('true', keyboardSource);
-  const spaceOpen = await page.evaluate(() => ({
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    activeStack: document.activeElement?.dataset?.stackId || null,
-  }));
-  check(
-    'Space opens the tray through the same keyboard path',
-    spaceOpen.expanded === 'true' && spaceOpen.activeStack === keyboardSource,
-    JSON.stringify(spaceOpen),
-  );
-
-  await page.keyboard.press('Escape');
-  await page.keyboard.down('Enter');
-  await new Promise((resolve) => setTimeout(resolve, 320));
-  await page.keyboard.up('Enter');
-  await waitTray('true', keyboardSource); // let the hold's scheduled focus hand-off land
-  await page.keyboard.press('Escape');
-  await waitTray('false', 'toggle');
-  await page.keyboard.press('Enter');
-  await waitTray('true', keyboardSource);
-  const longHoldRecovery = await page.evaluate(() => ({
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    activeStack: document.activeElement?.dataset?.stackId || null,
-  }));
-  check(
-    'long Enter hold cannot strand the disclosure keyboard path',
-    longHoldRecovery.expanded === 'true' && longHoldRecovery.activeStack === keyboardSource,
-    JSON.stringify(longHoldRecovery),
-  );
-
-  // Force a delayed visible state while using the real controller and keyboard routes.
-  const hideTray = () => page.evaluate(() => {
-    const manager = window.__godsEyeView.styleManager;
-    manager.setPanelCollapsed('control-panel', true);
-    window.__qaTrayStyles = [...document.querySelectorAll('.map-stack-chip')]
-      .map((chip) => [chip, chip.style.cssText]);
-    for (const [chip] of window.__qaTrayStyles) chip.style.setProperty('visibility', 'hidden', 'important');
-    document.getElementById('control-panel-toggle').focus();
+  // Start from the control after the last style tile in the Look tab, then use
+  // the user's real Shift+Tab path into the styles.
+  await openMapLook('look');
+  await page.evaluate(() => {
+    const tabbable = [...document.querySelectorAll('#map-look-look button, #map-look-look input, #map-look-look select')]
+      .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length);
+    const snow = tabbable.findIndex((el) => el.matches('.style-btn[data-style="snow"]'));
+    (tabbable[snow + 1] ?? document.getElementById('map-look-display-tab')).focus();
   });
-  const showTray = () => page.evaluate(() => {
-    for (const [chip, cssText] of window.__qaTrayStyles) chip.style.cssText = cssText;
-    delete window.__qaTrayStyles;
-  });
-  await hideTray();
-  await page.keyboard.press('Enter');
-  await new Promise((resolve) => setTimeout(resolve, 350));
-  const delayedBefore = await page.evaluate(() => document.activeElement?.id);
-  await showTray();
-  await waitTray('true', keyboardSource);
-  const delayedAfter = await page.evaluate(() => document.activeElement?.dataset?.stackId);
-  check('a delayed visible tray receives selected-source focus after the first attempt',
-    delayedBefore === 'control-panel-toggle' && delayedAfter === keyboardSource,
-    JSON.stringify({ delayedBefore, delayedAfter, keyboardSource }));
-
-  await hideTray();
-  await page.keyboard.press('Enter');
-  await new Promise((resolve) => setTimeout(resolve, 350));
-  await page.keyboard.press('Tab');
-  const departure = await page.evaluate(() => {
-    window.__qaDepartedFocus = document.activeElement;
-    return document.activeElement !== document.getElementById('control-panel-toggle');
-  });
-  await showTray();
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  const focusRetained = await page.evaluate(() => {
-    const same = document.activeElement === window.__qaDepartedFocus;
-    delete window.__qaDepartedFocus;
-    return same;
-  });
-  check('Tab away during the opening transition revokes delayed focus', departure && focusRetained,
-    JSON.stringify({ departure, focusRetained }));
-
-  await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('control-panel', true, { explicit: true }));
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Escape');
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  check('Escape cancels the pending opening handoff', await page.evaluate(() => (
-    document.activeElement === document.body
-      && document.getElementById('control-panel').classList.contains('collapsed')
-  )));
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await waitTray('true', keyboardSource);
-
-  await page.keyboard.press('Escape');
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await page.keyboard.down('Shift');
-  await page.keyboard.press('Tab');
-  await page.keyboard.up('Shift');
-  const leftBeforeReturn = await page.evaluate(() => document.activeElement?.id !== 'control-panel-toggle');
-  await page.focus('#control-panel-toggle');
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  check('returning to the disclosure does not revive a cancelled keyboard opening',
-    leftBeforeReturn && await page.evaluate(() => document.activeElement?.id === 'control-panel-toggle'));
-
-  await page.keyboard.press('Escape');
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Escape');
-  await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('control-panel', false));
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  check('programmatic reopening cannot inherit a cancelled keyboard handoff', await page.evaluate(() => (
-    document.activeElement === document.body
-      && document.getElementById('control-panel-toggle').getAttribute('aria-expanded') === 'true'
-  )));
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Escape');
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter');
-  await waitTray('true', keyboardSource);
-
-  // Visual Styles precede the five Map Source tiles. Keep the existing opening
-  // handoff to selected OSM, then use the user's real Shift+Tab path into styles.
-  await pressTabs(5, true);
+  await pressTabs(1, true);
   const snowFocus = await styleFocusMetrics();
   check('Shift+Tab reaches Snow with a visible ring while Normal and OSM stay selected',
     hasVisibleStyleFocus(snowFocus, 'snow') && !snowFocus.selected
@@ -794,16 +627,9 @@ try {
   const activeBeforeIonAttempt = await page.evaluate(() => (
     window.__godsEyeView.styleManager.mapStackController.getActiveId()
   ));
-  // The long-Space test above deliberately blurs its style button. On a slower
-  // keyless rebuild that can give the tray's pending auto-close enough time to
-  // hide its chips before page.focus() runs. Focus the disclosure first to
-  // clear that close timer, then ensure the tray is visibly open so this check
-  // exercises the unavailable tile rather than a hidden element.
-  await page.focus('#control-panel-toggle');
-  await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed(
-    'control-panel', false, { persist: false, syncShare: false },
-  ));
-  await waitTray('true', null);
+  // Show the Map tab so this check exercises the unavailable tile rather than a
+  // hidden element.
+  await openMapLook('map');
   await page.focus('[data-stack-id="bing-aerial"]');
   const ionAvailable = await page.$eval(
     '[data-stack-id="bing-aerial"]',
@@ -1065,191 +891,33 @@ try {
     JSON.stringify(acquiringFailureArbitration),
   );
 
-  // Unpinned mouse-away dismissal AFTER a tile click. Chromium focuses a
-  // <button> on mouse press, so a close-guard reading plain
-  // `document.activeElement` left the tray permanently open once Map Source
-  // moved into it — switch a basemap and the popover never went away again
-  // (owner field report). The pin samples the exact mechanism: focus IS parked
-  // inside the panel and is NOT `:focus-visible`, and the tray closes anyway.
-  const setControlPanelPinned = (wanted) => page.evaluate((want) => {
-    const panel = document.getElementById('control-panel');
-    if (panel.classList.contains('dock-pinned') !== want) {
-      document.querySelector('.dock-pin-btn[data-pin-target="control-panel"]').click();
-    }
-    return panel.classList.contains('dock-pinned');
-  }, wanted);
-  const readTrayState = () => page.evaluate(() => {
-    const panel = document.getElementById('control-panel');
-    const active = document.activeElement;
-    let focusVisible = null;
-    try { focusVisible = active?.matches?.(':focus-visible') ?? null; } catch { focusVisible = null; }
-    return {
-      collapsed: panel.classList.contains('collapsed'),
-      expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-      focusInside: panel.contains(active),
-      focusVisible,
-    };
-  });
-  const clickTileThenLeave = async (stackId) => {
-    await page.evaluate(() => window.__godsEyeView.styleManager
-      .setPanelCollapsed('control-panel', false, { explicit: true }));
-    await new Promise((resolve) => setTimeout(resolve, 240));
-    await page.click(`[data-stack-id="${stackId}"]`);
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    const afterClick = await readTrayState();
-    await page.mouse.move(20, 20); // leave the dock entirely → pointerleave
-    // Past the 420 ms unpinned close delay with room for a slow frame.
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return { afterClick, afterLeave: await readTrayState() };
-  };
-
-  // The OTHER half of the same rule, asserted positively: a KEYBOARD user who
-  // tabbed to a tile and pressed Enter must keep the tray, because closing it
-  // out from under them would strand the caret in a hidden surface. Same
-  // mouse-away that dismisses after a click, opposite outcome — so a fix that
-  // simply deleted the focus guard would fail here.
-  await setControlPanelPinned(false);
-  await page.evaluate(() => window.__godsEyeView.styleManager
-    .setPanelCollapsed('control-panel', true, { explicit: true }));
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  await page.focus('#control-panel-toggle');
-  await page.keyboard.press('Enter'); // opens and hands focus to the active tile
-  const selectedForHold = await page.evaluate(() => window.__godsEyeView.styleManager.mapStackController.getActiveId());
-  await waitTray('true', selectedForHold);
-  // Keyless starts on OSM, the last tile. Tab forward there correctly leaves
-  // the tray, so navigate to a neighbouring tile in the available direction.
-  const activeIsLastTile = await page.evaluate(() => {
-    const chips = [...document.querySelectorAll('#map-stack-chips .map-stack-chip')];
-    return document.activeElement === chips.at(-1);
-  });
-  if (activeIsLastTile) await page.keyboard.down('Shift');
-  await page.keyboard.press('Tab');
-  if (activeIsLastTile) await page.keyboard.up('Shift');
-  await page.keyboard.press('Enter'); // activate it from the keyboard
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  const keyboardAfterActivate = await page.evaluate(() => ({
-    focusedStack: document.activeElement?.dataset?.stackId || null,
-    isChip: !!document.activeElement?.classList?.contains('map-stack-chip'),
-  }));
-  // Enter the tray with the pointer and leave again, so a real pointerleave
-  // schedules the close this pin expects to be declined.
-  const chipPoint = await page.$eval('#map-stack-chips .map-stack-chip', (chip) => {
-    const rect = chip.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  });
-  await page.mouse.move(chipPoint.x, chipPoint.y);
-  await new Promise((resolve) => setTimeout(resolve, 120));
-  await page.mouse.move(20, 20);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  const keyboardHold = await readTrayState();
-  check(
-    'keyboard activation of a tile HOLDS the tray open through the same mouse-away',
-    keyboardAfterActivate.isChip === true
-      && keyboardHold.collapsed === false
-      && keyboardHold.expanded === 'true'
-      && keyboardHold.focusInside === true
-      && keyboardHold.focusVisible === true,
-    JSON.stringify({ keyboardAfterActivate, keyboardHold }),
-  );
-
-  await setControlPanelPinned(false);
-  const dismissAfterTileClick = await clickTileThenLeave('osm');
-  const pinnedForHold = await setControlPanelPinned(true);
-  const pinnedHold = await clickTileThenLeave('photoreal');
-  await setControlPanelPinned(false);
-  await page.evaluate(() => window.__godsEyeView.styleManager
-    ._setMapStack('photoreal', { syncShare: false }));
-  // Approach the disclosure before opening: the previous mouse-away case
-  // intentionally leaves a pending close, so an unattended programmatic reopen
-  // can disappear while the next real pointer click is being dispatched.
-  const pinApproach = await page.$eval('#control-panel-toggle', (toggle) => {
-    const rect = toggle.getBoundingClientRect();
-    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-  });
-  await page.mouse.move(pinApproach.x, pinApproach.y);
-  await page.evaluate(() => window.__godsEyeView.styleManager
-    .setPanelCollapsed('control-panel', false, { explicit: true }));
-  await new Promise((resolve) => setTimeout(resolve, 240));
-  check(
-    'a tile click does not exempt the unpinned tray from mouse-away auto-dismiss',
-    dismissAfterTileClick.afterClick.collapsed === false
-      && dismissAfterTileClick.afterClick.focusInside === true
-      && dismissAfterTileClick.afterClick.focusVisible === false
-      && dismissAfterTileClick.afterLeave.collapsed === true
-      && dismissAfterTileClick.afterLeave.expanded === 'false'
-      && pinnedForHold === true
-      && pinnedHold.afterLeave.collapsed === false,
-    JSON.stringify({ dismissAfterTileClick, pinnedForHold, pinnedHold }),
-  );
-
-  await page.click('.dock-pin-btn[data-pin-target="control-panel"]');
-  const desktop = await trayMetrics();
-  check(
-    'desktop tray is one row and fully inside the viewport',
-    desktop.rows === 1
-      && desktop.popover.left >= 0
-      && desktop.popover.right <= desktop.viewport.width,
-    JSON.stringify(desktop),
-  );
-
+  // Both tile grids sit fully inside the drawer, unclipped, at desktop widths
+  // (phone widths are the phone sheet's).
+  for (const width of [1440, 1024, 721]) {
+    await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
+    await waitForShellSettled();
+    await openMapLook('look');
+    const styles = await gridMetrics('look');
+    await openMapLook('map');
+    const sources = await gridMetrics('map');
+    check(`${width} px style and map-source tiles sit fully inside the drawer`,
+      styles.inside && sources.inside && styles.tiles.length === 7 && sources.tiles.length === 5,
+      JSON.stringify({ styles, sources }));
+  }
+  await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
+  await waitForShellSettled();
   await checkResponsiveStyleFocus(1000);
 
   await page.setViewport({ width: 620, height: 900, deviceScaleFactor: 1 });
   await new Promise((resolve) => setTimeout(resolve, 180));
   await waitForShellSettled();
-  await openPhoneMoreSheet();
-  const at620 = await trayMetrics();
-  check(
-    '620 px tray uses two rows without clipping',
-    at620.expanded === 'true'
-      && at620.pinned
-      && at620.rows === 2
-      && at620.popover.left >= 0
-      && at620.popover.right <= at620.viewport.width,
-    JSON.stringify(at620),
-  );
 
   await checkResponsiveStyleFocus(620);
 
   await page.setViewport({ width: 480, height: 900, deviceScaleFactor: 1 });
   await new Promise((resolve) => setTimeout(resolve, 180));
-  const at480 = await trayMetrics();
-  const allRectsInside = at480.chips.every((chip) => (
-    chip.left >= 0 && chip.right <= at480.viewport.width
-      && chip.top >= 0 && chip.bottom <= at480.viewport.height
-  ));
-  check(
-    '480 px live resize keeps the open tray and every tile in bounds',
-    at480.expanded === 'true'
-      && at480.pinned
-      && at480.rows === 2
-      && at480.popover.left >= 0
-      && at480.popover.right <= at480.viewport.width
-      && allRectsInside,
-    JSON.stringify(at480),
-  );
   await page.screenshot({ path: path.join(shotsDir, '480-open.png') });
   await checkResponsiveStyleFocus(480);
-
-  // Pinning and the compact wing are the narrow desktop dock (721–900 px);
-  // phones use the tab bar instead.
-  await page.setViewport({ width: 800, height: 900, deviceScaleFactor: 1 });
-  await waitForShellSettled();
-  await waitForDockSettled();
-  await page.click('.dock-pin-btn[data-pin-target="control-panel"]');
-  await waitForDockSettled();
-  await page.click('#control-panel-toggle');
-  const cdp = await page.createCDPSession();
-  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
-  const toggleRect = await page.$eval('#control-panel-toggle', (toggle) => {
-    const rect = toggle.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  });
-  await page.touchscreen.tap(toggleRect.x, toggleRect.y);
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  const touchOpen = await page.$eval('#control-panel-toggle', (toggle) => toggle.getAttribute('aria-expanded'));
-  check('coarse-pointer tap opens the compact wing', touchOpen === 'true', `aria-expanded=${touchOpen}`);
-  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
 
   // Retired and unknown stack ids take the SAME path. `bing-road` was the fifth
   // source behind the retired left Map Stack panel; deleting it from
@@ -1319,7 +987,7 @@ try {
   await page.mouse.move(20, 20);
   await page.evaluate(() => {
     const manager = window.__godsEyeView.styleManager;
-    for (const id of ['control-panel', 'location-bar']) {
+    for (const id of ['location-bar']) {
       manager._setCommandDockPanelPinState(id, false, { persist: false, syncShare: false });
       manager.setPanelCollapsed(id, true, { persist: false, syncShare: false });
     }
@@ -1405,27 +1073,11 @@ try {
         && searchEscape.focusedId === 'location-bar-toggle' && searchEscape.locationExpanded === 'false'
         && !searchEscape.searchExpanded && searchEscape.searchValue === '', JSON.stringify({ typedSearch, searchEscape }));
 
-    await page.focus('#control-panel-toggle');
-    await page.keyboard.press('Enter'); // begin the Map Source handoff
-    const siblingTab = await tabTo('#location-bar-toggle', { backwards: true, limit: 30 });
+    // Open and pin Location, so its pin can be removed by keyboard.
+    await page.focus('#location-bar-toggle');
     await page.keyboard.press('Enter');
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-    const siblingState = await locationState();
-    check('Location: sibling opening cancels pending Map Source focus',
-      siblingTab.reached && siblingState.focusedId === 'location-bar-toggle'
-        && siblingState.locationExpanded === 'true'
-        && await page.$eval('#control-panel-toggle', (toggle) => toggle.getAttribute('aria-expanded') === 'false'),
-      JSON.stringify(siblingState));
     await tabTo('.dock-pin-btn[data-pin-target="location-bar"]', { limit: 3 });
     await page.keyboard.press('Enter');
-    await page.focus('#control-panel-toggle');
-    await page.keyboard.press('Enter');
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const pinnedSibling = await locationState();
-    check('Location: pinned tray survives sibling opening',
-      pinnedSibling.pinned && pinnedSibling.locationExpanded === 'true'
-        && await page.$eval('#control-panel-toggle', (toggle) => toggle.getAttribute('aria-expanded') === 'true'),
-      JSON.stringify(pinnedSibling));
     await page.focus('#location-bar-toggle');
     await tabTo('.dock-pin-btn[data-pin-target="location-bar"]', { limit: 3 });
     await page.keyboard.press('Enter');
@@ -1456,7 +1108,6 @@ try {
       }
       await page.evaluate(() => {
         const manager = window.__godsEyeView.styleManager;
-        manager.setPanelCollapsed('control-panel', true, { persist: false, syncShare: false });
         manager.setPanelCollapsed('location-bar', true, { persist: false, syncShare: false });
       });
       await page.focus('#location-search');
@@ -1479,7 +1130,7 @@ try {
       window.__qaLocationFocus?.restore();
       delete window.__qaLocationFocus;
       const manager = window.__godsEyeView.styleManager;
-      for (const id of ['control-panel', 'location-bar']) {
+      for (const id of ['location-bar']) {
         manager._setCommandDockPanelPinState(id, false, { persist: false, syncShare: false });
         manager.setPanelCollapsed(id, true, { persist: false, syncShare: false });
       }

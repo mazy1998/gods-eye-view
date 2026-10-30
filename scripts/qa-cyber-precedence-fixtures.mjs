@@ -1,6 +1,7 @@
 import layersStructure from './qa-cyber-layers-structure.json' with { type: 'json' };
 import storiesStructure from './qa-cyber-stories-structure.json' with { type: 'json' };
 import inspectStructure from './qa-cyber-inspect-structure.json' with { type: 'json' };
+import mapLookStructure from './qa-cyber-map-look-structure.json' with { type: 'json' };
 /** CSS-only samples mirroring the interactive classes/contexts of each port. */
 const b = (key, cls = '', attrs = '', text = key) =>
   `<button type="button" data-audit="${key}" class="${cls}" ${attrs}>${text}</button>`;
@@ -406,6 +407,10 @@ const toolsDirectionsHtml = `<div class="gev-drawer-body"><div class="gev-legacy
 const settingsAppearanceHtml = `<section class="gev-settings gev-surface"><div id="corner-actions">${b('provider-launcher', '', 'id="key-setup-chip"')}${b('locale-launcher', 'locale-picker-button')}</div><div class="gev-settings-providers"><aside id="key-setup" class="visible key-setup-embedded" data-audit="provider-frame"><header class="key-setup-header">${b('provider-close', 'key-setup-close')}</header><h2 id="key-setup-title" data-audit="provider-title">Power up the globe</h2><div class="key-setup-rows">${['false', 'true'].map((set) => `<section class="key-setup-row" data-set="${set}" data-audit="provider-row-${set}"><div class="key-setup-row-head"><strong>Provider</strong><span class="key-setup-state" data-audit="provider-state-${set}">${set === 'true' ? 'Configured' : 'Not configured'}</span><span class="key-setup-led" data-audit="provider-led-${set}"></span><span class="key-setup-exposed" data-audit="provider-exposed-${set}">Browser-side</span><span class="key-setup-external" data-audit="provider-external-${set}">External</span></div><div class="key-setup-fields">${input(`provider-password-${set}`, '', 'password')}</div><a href="#" class="key-setup-get" data-audit="provider-link-${set}">Get key</a>${b(`provider-remove-${set}`, 'key-setup-remove')}${b(`provider-oauth-${set}`, 'key-setup-cloud-auth-toggle', 'data-state-disabled')}</section>`).join('')}</div>${b('provider-more', 'gev-action-button key-setup-more', 'aria-expanded="false"', '+ 7 more providers')}<footer class="key-setup-footer">${b('provider-save', 'key-setup-apply', 'data-state-disabled')}</footer></aside></div><details class="gev-settings-storage"><summary data-audit="provider-storage">How keys are stored</summary></details></section>`;
 
 const cockpitHtml = `<section id="cockpit-hud" data-layer="flights"><div class="cockpit-topline"><div class="cockpit-vision-controls" role="group" data-audit="vision-group">${b('vision-previous', 'cockpit-vision-nav', 'id="cockpit-vision-previous"', '<span class="material-symbols-outlined">chevron_left</span><small data-probe="label">PREV</small>')}${b('vision-current', 'cockpit-vision-current', 'id="cockpit-vision-current" data-cockpit-vision="optical"', '<small data-probe="kicker">CURRENT</small><strong id="cockpit-vision-current-label" data-probe="value">NORMAL</strong>')}${b('vision-next', 'cockpit-vision-nav', 'id="cockpit-vision-next"', '<small>NEXT</small><span class="material-symbols-outlined">chevron_right</span>')}</div></div><aside id="cockpit-context" class="cockpit-context-window" data-state="uncertain" data-audit="contact-frame"><header class="cockpit-context-header"><div><span class="cockpit-context-kicker" data-audit="contact-kicker">CONTACT</span><strong id="cockpit-context-subject" data-audit="contact-subject">EJA353 · 250 KM</strong></div><nav class="cockpit-context-actions">${b('contact-previous', '', 'id="cockpit-context-previous" disabled', '<span class="material-symbols-outlined">skip_previous</span>')}${b('contact-next', '', 'id="cockpit-context-next"', '<span class="material-symbols-outlined">skip_next</span>')}${b('contact-toggle', '', 'id="cockpit-context-toggle" aria-expanded="true"', '<span class="material-symbols-outlined">chevron_left</span>')}</nav><span class="cockpit-context-qualifier" data-audit="contact-qualifier">CONTEXT ONLY</span></header><div class="cockpit-context-cohorts"><div data-context-cohort="flights" data-audit="cohort"><span data-probe="label-2">FLT</span><strong data-probe="count">12</strong><small data-probe="source">OpenSky</small></div><div class="unknown" data-context-cohort="military" data-audit="cohort-unknown"><span>MIL</span><strong data-probe="count-2">—</strong><small>adsb.lol</small></div></div><div class="cockpit-context-nearest"><span id="cockpit-context-direction" class="material-symbols-outlined" data-audit="contact-direction">navigation</span><div><small data-audit="nearest-caption">NEAREST OBSERVED / MAPPED</small><strong id="cockpit-context-nearest-label" data-audit="nearest-value">N30126</strong></div><span id="cockpit-context-bearing" data-audit="bearing">045°</span><span id="cockpit-context-distance" data-audit="distance">14 KM</span></div><footer class="cockpit-context-footer"><span id="cockpit-context-uncertainty" data-audit="uncertainty">AVAILABLE INPUTS ONLY</span>${b('weather', 'cockpit-context-weather', 'id="cockpit-weather-toggle" data-state-pressed', '<span data-probe="label-3">WX</span><strong id="cockpit-weather-state" data-probe="state">ON</strong>')}<time id="cockpit-context-updated" data-audit="updated">12:00:00Z</time></footer></aside><aside id="cockpit-signal-stream" class="cockpit-signal-window" data-audit="brief-frame"><section id="cockpit-route" class="cockpit-route-card" data-audit="route-card"><div class="cockpit-route-heading"><span class="cockpit-route-kicker" data-audit="route-kicker">ESTIMATED FLIGHT PLAN</span><small id="cockpit-route-status" data-audit="route-status">ARROW · ESTIMATED DIRECTION</small></div><div class="cockpit-route-endpoints"><div class="cockpit-route-airport" data-audit="route-airport"><span data-probe="label-4">FROM</span><strong id="cockpit-route-from" data-probe="value-2">AUS</strong></div><span class="cockpit-route-arrow material-symbols-outlined" data-audit="route-arrow">east</span></div></section><header class="cockpit-signal-header"><div class="cockpit-brief-heading"><span id="cockpit-brief-kicker" class="cockpit-signal-kicker" data-audit="brief-kicker"><i data-probe="dot"></i> LIVE SIGNALS</span><strong id="cockpit-brief-subtitle" data-audit="brief-subtitle">OBSERVED / MAPPED PINGS</strong></div><nav class="cockpit-brief-actions">${b('brief-previous', '', 'id="cockpit-brief-previous"', '<span class="material-symbols-outlined">chevron_left</span>')}<span id="cockpit-brief-position" data-audit="brief-position">1 / 3</span>${b('brief-auto', '', 'id="cockpit-brief-auto" data-state-pressed', 'CYCLE OFF')}${b('brief-collapse', '', 'id="cockpit-signal-toggle" aria-expanded="true"', '<span class="material-symbols-outlined">right_panel_close</span>')}</nav></header><div class="cockpit-brief-stage"><section data-cockpit-brief-page="signals"><ol id="cockpit-signal-list" class="cockpit-signal-list"><li class="track" data-audit="signal-track"><time data-probe="time">12:00</time><div><strong data-probe="title">TRACK LOCKED</strong><span data-probe="detail">SWA5004</span></div></li><li class="military actionable" data-audit="signal-military"><time>12:01</time><div>${b('signal-target', 'cockpit-signal-target', '', '<span class="cockpit-signal-target-label" data-probe="label-5">RCH123</span><span class="cockpit-signal-target-rule"></span>')}<span>MIL · 20 KM</span></div></li><li class="warning" data-audit="signal-warning"><time>12:02</time><div><strong data-probe="title-2">FEED UNAVAILABLE</strong><span>adsb.lol</span></div></li><li class="nearby" data-audit="signal-nearby"><time>12:03</time><div><strong>NEARBY</strong><span>N30126</span></div></li></ol></section><section data-cockpit-brief-page="news"><p id="cockpit-news-status" class="cockpit-brief-status" data-state="unavailable" data-audit="news-status">NEWS UNAVAILABLE</p><ol id="cockpit-news-list" class="cockpit-news-list"><li data-audit="news-item"><a href="#" data-audit="news-link"><strong data-probe="title-3">Headline</strong><span data-probe="meta">Source · 2 h</span></a></li></ol></section><section data-cockpit-brief-page="local"><div class="cockpit-local-place" data-audit="local-place"><strong data-probe="value-3">Austin</strong><small data-probe="coordinates">30.27 N · 97.74 W</small></div><div class="cockpit-local-grid" data-audit="local-grid"><div data-audit="local-cell"><span data-probe="label-6">TEMP</span><strong data-probe="value-4">21°C</strong><small data-probe="note">FEELS 20°C</small></div></div><a class="cockpit-weather-credit" href="#" data-audit="weather-credit">Open-Meteo</a></section></div><footer class="cockpit-signal-footer"><span id="cockpit-brief-source" data-audit="brief-source">SOURCE-BACKED EVENTS</span><nav class="cockpit-brief-tabs">${b('brief-tab', '', 'data-cockpit-brief-index="0" aria-current="true"', 'SIG')}${b('brief-tab-other', '', 'data-cockpit-brief-index="1"', 'NEWS')}</nav></footer></aside><aside id="cockpit-utility-controls" class="cockpit-utility-controls"><div class="cockpit-utility-control"><div class="cockpit-utility-launcher" data-cockpit-launcher="display" data-audit="display-launcher"><span data-probe="label-7">DISPLAY</span><span class="cockpit-utility-divider" data-probe="divider"></span>${b('display-glyph', 'cockpit-utility-glyph', 'id="cockpit-display-toggle-btn" aria-expanded="false"', '+')}</div></div><div class="cockpit-utility-control is-expanded"><div class="cockpit-utility-launcher" data-cockpit-launcher="radio" data-audit="radio-launcher"><span data-probe="label-8">RADIO</span><span class="cockpit-utility-divider" data-probe="divider-2"></span>${b('radio-glyph', 'cockpit-utility-glyph', 'id="cockpit-radio-toggle-btn" aria-expanded="true"', '−')}</div><div id="cockpit-radio-panel" class="cockpit-utility-popover cockpit-radio-compact" data-audit="radio-popover"><strong id="cockpit-radio-station" class="cockpit-radio-station" data-audit="radio-station">KUTX 98.9</strong>${b('radio-enable', 'panel-layer-toggle', 'id="cockpit-radio-enable-btn" data-state-pressed', 'ENABLED')}<div class="cockpit-radio-transport">${b('radio-previous', '', 'id="cockpit-radio-prev-btn"', '◀◀')}${b('radio-play', '', 'id="cockpit-radio-play-btn" data-state-active', '▶')}</div><label class="cockpit-radio-volume" for="cockpit-radio-volume" data-audit="radio-volume"><span data-probe="label-9">VOLUME</span>${input('radio-volume-input', 'gev-quantitative-slider', 'range', 'id="cockpit-radio-volume" min="0" max="100"')}<output id="cockpit-radio-volume-value" class="gev-slider-value" data-probe="value-5">80%</output></label></div></div></aside></section>`;
+// Map & Look in the drawer: its tabs, the style tiles and map-source tiles
+// Cyber skins as it did in the dock, the image adjustments and the footer.
+const mapLookHtml = `<div class="gev-legacy-host"><div id="pp-toggles" class="panel-collapsible"><div class="pp-panel-body"><div class="map-look"><div class="gev-tabs" role="tablist">${b('map-look-tab', 'gev-tab', 'role="tab" aria-selected="false"', 'Map')}${b('map-look-tab-selected', 'gev-tab', 'role="tab" aria-selected="true"', 'Look')}</div><section class="map-look-panel"><div id="style-buttons" class="map-look-style-grid">${b('style-tile', 'style-btn', 'data-style="noir" aria-pressed="false" data-state-active data-state-pressed', '<span class="map-look-thumb" data-thumb="noir"></span><span class="btn-label" data-probe="label">Noir</span><span class="btn-key" data-probe="key">6</span>')}</div><section class="map-look-adjustments"><h3 class="map-look-heading" data-audit="adjustments-heading">Image adjustments</h3><div class="map-look-slot"><div class="pp-toggle-group">${b('adjustment', 'pp-toggle-btn', 'data-state-active data-state-pressed', '<span class="pp-icon">*</span><span class="pp-label" data-probe="label">Sharpen</span>')}<div class="pp-slider-row visible"><span class="pp-slider-mini-label" data-audit="intensity-label">Intensity</span>${input('intensity', 'gev-quantitative-slider pp-slider', 'range')}<span class="pp-slider-value" data-audit="intensity-value">49%</span></div></div></div></section><p class="map-look-hint" data-audit="hint"><span class="map-look-hint-icon"></span>Style shortcuts 1–7</p></section><section class="map-look-panel"><section class="map-source-section"><div class="map-source-heading" data-audit="source-heading"><span>MAP SOURCE</span><span id="map-stack-status" class="pp-stack-status" data-probe="status">OSM</span></div><div class="map-source-heading" data-audit="source-heading-warn"><span>MAP SOURCE</span><span class="pp-stack-status warn" data-probe="status">OSM</span></div><div id="map-stack-chips" class="map-stack-chip-row">${b('source-tile', 'map-stack-chip', 'aria-pressed="false" data-state-active data-state-pressed', '<span class="map-stack-chip-label" data-probe="label">OSM</span>')}${b('source-unavailable', 'map-stack-chip unavailable', 'aria-disabled="true"', '<span class="map-stack-chip-label">Bing Aerial</span><span class="map-stack-chip-req" data-probe="req">ION</span>')}</div></section></section>${b('providers', 'map-look-providers', '', '<span>Configure map providers</span><span class="map-look-providers-chevron">›</span>')}</div></div></div></div>`;
+
 export const fixtures = [
   {
     sheet: 'feedback-views',
@@ -492,4 +497,65 @@ export const fixtures = [
     outsideClasses: ['gev-surface', 'directions-view'],
   },
   { sheet: 'cockpit-views', html: cockpitHtml },
+  {
+    sheet: 'map-look',
+    html: mapLookHtml,
+    outsideClasses: ['map-look'],
+    structuralExceptions: mapLookStructure,
+    exceptions: [
+      {
+        variant: 'providers',
+        state: 'rest',
+        comparison: 'sheet',
+        properties: [
+          'backgroundColor',
+          'borderTop',
+          'borderRight',
+          'borderBottom',
+          'borderLeft',
+          'color',
+        ],
+        reason:
+          'The providers link is a new control; without its sheet the browser button default shows.',
+      },
+      {
+        variant: 'providers',
+        state: 'hover',
+        comparison: 'sheet',
+        properties: ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'],
+        reason:
+          'The providers link is a new control; without its sheet the browser button default shows.',
+      },
+      {
+        variant: 'providers',
+        state: 'focus',
+        comparison: 'sheet',
+        properties: [
+          'backgroundColor',
+          'borderTop',
+          'borderRight',
+          'borderBottom',
+          'borderLeft',
+          'color',
+        ],
+        reason:
+          'The providers link is a new control; without its sheet the browser button default shows.',
+      },
+      {
+        variant: 'providers',
+        state: 'active',
+        comparison: 'sheet',
+        properties: [
+          'backgroundColor',
+          'borderTop',
+          'borderRight',
+          'borderBottom',
+          'borderLeft',
+          'color',
+        ],
+        reason:
+          'The providers link is a new control; without its sheet the browser button default shows.',
+      },
+    ],
+  },
 ];

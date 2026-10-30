@@ -7,10 +7,12 @@ import { PanelLayoutController } from './panelLayoutController.js';
 import {
   bindPanelDisclosure,
   collapsePanelOnEscape,
-  createHoverDisclosure,
 } from './panelDisclosure.js';
 export const SHARE_PANEL_STATE_SPECS = Object.freeze([
-  { id: 'control-panel', pinnable: true },
+  // The dock's Visual Presets tray moved into Map & Look. Links keep its
+  // frozen entry: written collapsed and unpinned, as a default session wrote
+  // it; an old link that expands it opens Map & Look on Look.
+  { id: 'control-panel', pinnable: true, retired: true },
   { id: 'location-bar', pinnable: true },
   { id: 'data-panel' },
   { id: 'cctv-panel' },
@@ -135,19 +137,10 @@ export class PanelChrome {
         allowStored: !this._initialShareState,
       });
     }
-    // The command dock starts compact. Location uses click and Escape;
-    // visual presets retain their existing hover disclosure.
-    this.setPanelCollapsed('control-panel', true, {
-      syncShare: false,
-      persist: false,
-    });
+    // The command dock starts compact; Location uses click and Escape.
     this.setPanelCollapsed('location-bar', true, {
       syncShare: false,
       persist: false,
-    });
-    this._initAutoHoverPanel('control-panel', {
-      openDelayMs: 140,
-      closeDelayMs: 420,
     });
     this._initCommandDockPins();
     this._initCommandDockTrayMetrics();
@@ -251,41 +244,6 @@ export class PanelChrome {
 
   _maybeNotifyLayoutReset() {
     return this._panelPosition._maybeNotifyLayoutReset();
-  }
-
-  _initAutoHoverPanel(
-    panelId,
-    { openDelayMs = 850, closeDelayMs = 1000 } = {},
-  ) {
-    const panel = document.getElementById(panelId);
-    if (!panel) return;
-    this._hoverPanelControls ??= new Map();
-    this._hoverPanelControls.get(panelId)?.destroy();
-    const controller = createHoverDisclosure({
-      panel,
-      documentRef: document,
-      disclosure: panel.querySelector(`[data-dock-toggle-target="${panelId}"]`),
-      openDelayMs,
-      closeDelayMs,
-      // A phone sheet holds its trays open; the tab bar closes them.
-      isActive: () =>
-        !this._disposed &&
-        !globalThis.document?.body?.hasAttribute?.('data-mobile-sheet'),
-      onChange: (collapsed, options) =>
-        this.setPanelCollapsed(panelId, collapsed, options),
-      onEscape: (event) => this._collapsePanelOnEscape(event, panelId),
-      focusTarget:
-        panelId === 'control-panel'
-          ? () =>
-              panel.querySelector('.map-stack-chip.active') ||
-              panel.querySelector('.map-stack-chip')
-          : null,
-    });
-    this._hoverPanelControls.set(panelId, controller);
-    if (panelId === 'control-panel') {
-      this._cancelMapSourceFocus?.();
-      this._cancelMapSourceFocus = controller.cancelPendingFocus;
-    }
   }
 
   _restorePanelCollapsedState(panelId, options1) {
@@ -407,6 +365,10 @@ export class PanelChrome {
   _buildSharePanelState() {
     const specs = [];
     for (const spec of SHARE_PANEL_STATE_SPECS) {
+      if (spec.retired) {
+        specs.push({ id: spec.id, collapsed: true, pinned: false });
+        continue;
+      }
       const panelEl = document.getElementById(spec.id);
       if (!panelEl) continue;
       // Responsive auto-collapse is presentation only; the recipient should
@@ -432,12 +394,31 @@ export class PanelChrome {
     if (!panelState || !Array.isArray(panelState.specs)) return;
     const specsById = new Map(panelState.specs.map((spec) => [spec.id, spec]));
     const panelIds = [];
+    // An old link with the Visual Presets tray open or pinned opens its
+    // successor, Map & Look on Look, as the destination the restore leads
+    // with: the first expanded panel picks the destination.
+    const presets = specsById.get('control-panel');
+    const lead =
+      presets?.collapsed === false || presets?.pinned === true
+        ? 'pp-toggles'
+        : null;
     // Views see the restored set once, not each panel on the way there.
     this._restoringPanels = true;
     try {
+      if (lead) {
+        this.showMapLookTab?.('look');
+        this.setPanelCollapsed(lead, false, {
+          restore: true,
+          persist: false,
+          syncShare: false,
+        });
+        panelIds.push(lead);
+      }
       for (const spec of SHARE_PANEL_STATE_SPECS) {
         const state = specsById.get(spec.id);
-        if (!state || typeof state.collapsed !== 'boolean') continue;
+        if (spec.retired || !state || typeof state.collapsed !== 'boolean')
+          continue;
+        if (spec.id === lead) continue;
         panelIds.push(spec.id);
         if (spec.pinnable && typeof state.pinned === 'boolean') {
           this._setCommandDockPanelPinState(spec.id, state.pinned, {
@@ -458,7 +439,7 @@ export class PanelChrome {
       this._restoringPanels = false;
     }
     // Hosts settle on the restored state before the share link reads it.
-    this.channel.publish({ type: 'panels-restored', panelIds });
+    this.channel.publish({ type: 'panels-restored', panelIds, lead });
     this.shareLinkManager?.onPanelStateChange?.();
   }
 
@@ -472,8 +453,6 @@ export class PanelChrome {
       syncShare = true,
     } = {},
   ) {
-    if (panelId === 'control-panel' && collapsed)
-      this._cancelMapSourceFocus?.();
     const panelEl = document.getElementById(panelId);
     if (!panelEl) return;
     if (explicit && !restore)
@@ -620,25 +599,6 @@ export class PanelChrome {
         syncShare,
       });
     }
-    if (!nextCollapsed && !restore && panelId === 'location-bar') {
-      const otherPanel = document.getElementById('control-panel');
-      if (otherPanel && !otherPanel.classList.contains('dock-pinned')) {
-        this.setPanelCollapsed('control-panel', true, {
-          restore,
-          persist,
-          syncShare,
-        });
-      }
-    } else if (!nextCollapsed && !restore && panelId === 'control-panel') {
-      const otherPanel = document.getElementById('location-bar');
-      if (otherPanel && !otherPanel.classList.contains('dock-pinned')) {
-        this.setPanelCollapsed('location-bar', true, {
-          restore,
-          persist,
-          syncShare,
-        });
-      }
-    }
     panelEl.classList.toggle('collapsed', nextCollapsed);
     if (
       nextCollapsed &&
@@ -714,9 +674,6 @@ export class PanelChrome {
     for (const control of this._panelDisclosureControls || [])
       control.destroy();
     this._panelDisclosureControls = [];
-    this._hoverPanelControls?.forEach((control) => control.destroy());
-    this._hoverPanelControls?.clear();
-    this._cancelMapSourceFocus?.();
     this.channel.destroy();
   }
 }

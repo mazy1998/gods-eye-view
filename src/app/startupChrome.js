@@ -43,9 +43,13 @@ export function startApplicationChrome({
     return surface;
   });
   // Own the pending initializer too; it must not reveal a dialog after abort.
-  void keySetup.catch(() =>
-    console.error('Provider settings initialization failed'),
-  );
+  void keySetup
+    .then((settings) => {
+      // Null where the surface cannot work (a prod build, a LAN visitor).
+      if (settings && !disposed && !signal.aborted)
+        styleManager.setProviderSettings?.(settings);
+    })
+    .catch(() => console.error('Provider settings initialization failed'));
   return async () => {
     disposed = true;
     clearTimeout(delayTimer);

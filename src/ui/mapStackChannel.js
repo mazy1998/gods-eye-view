@@ -4,8 +4,8 @@ import { createStateChannel } from '../app/stateChannel.js';
  * A view's read of the map-stack controller: the active stack, whether a
  * switch is in flight, the last error, and each stack's availability. It
  * publishes on every settled activation, silent fallbacks included
- * (`controller.subscribe`), and on the status feed the legacy chips follow
- * (`gev:map-stack-changed`). It never syncs share state, so share links are
+ * (`controller.subscribe`), and on the status feed (`gev:map-stack-changed`),
+ * switches in flight included. It never syncs share state, so share links are
  * unchanged (K11). Operations stay with the existing map-source controls.
  * @param {{controller: object, eventTarget?: EventTarget}} options
  * @returns {{channel: object, destroy: Function}}
@@ -14,22 +14,33 @@ export function createMapStackChannel({
   controller,
   eventTarget = globalThis.window,
 }) {
+  // A selection marks itself pending before the controller starts switching.
+  let pending = false;
   const channel = createStateChannel(() => {
     const state = controller.getState();
     return {
       activeId: state.activeId ?? null,
-      status: state.status,
+      status: pending ? 'switching' : state.status,
       lastError: state.lastError ?? null,
       switchOrigin: state.switchOrigin ?? null,
       stacks: controller
         .getStacks()
         .map(
-          ({ id, label, shortLabel, kind, available, unavailableReason }) => ({
+          ({
+            id,
+            label,
+            shortLabel,
+            kind,
+            available,
+            requiresIon,
+            unavailableReason,
+          }) => ({
             id,
             label,
             shortLabel: shortLabel ?? null,
             kind: kind ?? null,
             available,
+            requiresIon: requiresIon === true,
             unavailableReason: unavailableReason ?? null,
           }),
         ),
@@ -42,6 +53,12 @@ export function createMapStackChannel({
   let destroyed = false;
   return {
     channel,
+    /** Show a selection in flight until it settles, whatever the controller says. */
+    setPending(value) {
+      if (destroyed || pending === !!value) return;
+      pending = !!value;
+      channel.publish({ type: 'stack-pending' });
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;

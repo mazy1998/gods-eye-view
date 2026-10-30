@@ -6,6 +6,24 @@ import CelestialGroup from './displayViews/CelestialGroup.vue';
 import CleanViewToggle from './displayViews/CleanViewToggle.vue';
 import ImageAdjustmentGroup from './displayViews/ImageAdjustmentGroup.vue';
 import StyleParametersView from './displayViews/StyleParametersView.vue';
+import MapLookView from './mapLook/MapLookView.vue';
+
+// Which tab slot each wrapper moves into, in the order the tab shows them.
+const SLOTS = {
+  parameters: ['#param-slider-panel'],
+  adjustments: [
+    '[data-display-group="sharpen"]',
+    '[data-display-group="bloom"]',
+  ],
+  display: [
+    '[data-display-group="hud"]',
+    '[data-display-group="detection"]',
+    '[data-display-group="models3d"]',
+    '[data-display-group="scope"]',
+    '[data-display-group="celestial"]',
+    '[data-display-view="clean-view"]',
+  ],
+};
 
 const GROUPS = {
   hud: HudGroup,
@@ -26,6 +44,24 @@ const GROUPS = {
  */
 export function mountDisplayViews(mount, doc = document) {
   const views = {};
+  // Map & Look's tabs come first; each wrapper then moves once into its slot,
+  // where Cockpit's portal can still take it and give it back.
+  const body = doc.querySelector('#pp-toggles .pp-panel-body');
+  if (body) {
+    views.mapLook = mount(MapLookView, {
+      parent: body,
+      before: body.firstChild,
+    });
+    for (const [name, selectors] of Object.entries(SLOTS)) {
+      const slot = views.mapLook.element.querySelector(
+        `[data-map-look-slot="${name}"]`,
+      );
+      for (const selector of selectors) {
+        const node = doc.querySelector(selector);
+        if (slot && node) slot.append(node);
+      }
+    }
+  }
   for (const [name, component] of Object.entries(GROUPS)) {
     const wrapper = doc.querySelector(`[data-display-group="${name}"]`);
     if (!wrapper) continue;

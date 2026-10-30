@@ -152,7 +152,7 @@ function fixture({
     const root =
       id === 'data-panel'
         ? 'left-panel-stack'
-        : ['location-bar', 'control-panel'].includes(id)
+        : id === 'location-bar'
           ? 'command-dock'
           : 'right-context-rail';
     rails[root].append(panel);
@@ -265,8 +265,8 @@ test('one sheet at a time, presented with aria-expanded and a backdrop', () => {
 });
 
 test('sheets borrow panels and put them back exactly as they were', () => {
-  // The user left Data Layers and Presets open on desktop.
-  const kept = ['data-panel', 'control-panel'];
+  // The user left Data Layers and Map & Look open on desktop.
+  const kept = ['data-panel', 'pp-toggles'];
   const { calls, press, collapsed } = fixture({ expanded: kept });
   press('cameras');
   assert.equal(collapsed('cctv-panel'), false);
@@ -325,6 +325,12 @@ test('focus moves into the sheet and returns to the tab on close', () => {
   document.dispatchEvent(escape);
   assert.equal(escape.defaultPrevented, true);
   assert.equal(document.activeElement, tab('layers'));
+
+  // A roving tab set's unselected tabs are out of the tab order.
+  dataPanel.children[2].setAttribute('tabindex', '-1');
+  dataPanel.append(element('button', document));
+  press('layers');
+  assert.equal(document.activeElement, dataPanel.children[3]);
 });
 
 test('the share link keeps the state from before the sheets', () => {
@@ -621,7 +627,7 @@ test('native controls and custom sliders keep touch gestures', () => {
     if (tag === 'editable') control.setAttribute('contenteditable', 'true');
     const child = document.createElement('span');
     control.append(child);
-    document.getElementById('control-panel').append(control);
+    document.getElementById('pp-toggles').append(control);
     touchEvent(document, 'touchstart', child);
     assert.equal(
       touchEvent(document, 'touchmove', child, { y: 120 }).defaultPrevented,

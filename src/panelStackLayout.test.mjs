@@ -219,7 +219,7 @@ test('parameterized Display presets keep one stable scroll owner', () => {
   const ui = readShellSource();
   const css = readStylesheet(new URL('../style.css', import.meta.url));
 
-  assert.match(css, /#pp-toggles:not\(\.collapsed\) > \.pp-panel-body > #param-slider-panel\.active\s*\{[\s\S]*?flex:\s*0 0 auto;[\s\S]*?max-height:\s*none;[\s\S]*?overflow-y:\s*visible;/);
+  assert.match(css, /#pp-toggles:not\(\.collapsed\) \.map-look-slot > #param-slider-panel\.active\s*\{[\s\S]*?flex:\s*0 0 auto;[\s\S]*?max-height:\s*none;[\s\S]*?overflow-y:\s*visible;/);
   assert.match(ui, /readDisplayScrollTop: \(\) =>\s*this\._displayPortalScrollRestoreOwner === 'standard'[\s\S]*?this\._standardDisplayScrollTop[\s\S]*?displayPanelScroller\(this\._ppToggles\)\?\.scrollTop \|\| 0/);
   assert.match(rightRail, /scroller\.scrollTop = Math\.min\(displayScrollTop, maxScrollTop\);/);
   assert.match(
@@ -264,16 +264,16 @@ test('expanded left panels integrate their headers with the container shell', ()
   );
 });
 
-test('Map Source uses five compact tiles in the bottom Visual Presets tray', () => {
+test('Map Source lives in Map & Look; the dock tray and the left stack panel are gone', () => {
   const html = expandApplicationHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
   const css = readStylesheet(new URL('../style.css', import.meta.url));
 
   assert.doesNotMatch(html, /id="stack-panel"/);
-  assert.match(html, /id="control-panel"[\s\S]*?class="map-source-section"[\s\S]*?id="map-stack-chips"/);
+  assert.doesNotMatch(html, /id="control-panel"/);
   assert.match(
     css,
-    /\.map-stack-chip-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/,
-    'the desktop source selector keeps all five tiles on one row',
+    /\.map-look \.map-stack-chip-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+    'the Map tab sets the sources in two columns',
   );
 });
 

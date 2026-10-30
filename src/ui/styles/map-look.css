@@ -1,0 +1,421 @@
+/* Map & Look: its tabs, the style tiles, the image adjustments and the map
+   source tiles. Layout is unscoped; every palette rule excludes Cyber, whose
+   own sheet skins these controls as it did in the dock. */
+.map-look {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-3);
+  width: 100%;
+  min-width: 0;
+  /* Room for a 2px focus ring at 2px offset inside the panel's scroller. */
+  box-sizing: border-box;
+  padding: 4px;
+}
+#pp-toggles.collapsed .map-look {
+  display: none;
+}
+/* In the drawer, Map & Look sits on the drawer's own surface, under its
+   heading and close button: the panel's own frame and DISPLAY header stay for
+   Cyber, the right rail and phones. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #pp-toggles:not(.collapsed) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #pp-toggles:not(.collapsed)
+  > .pp-header-row {
+  display: none;
+}
+.map-look [hidden] {
+  display: none !important;
+}
+.map-look-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-3);
+  min-width: 0;
+}
+.map-look-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+  min-width: 0;
+}
+.map-look-slot:empty {
+  display: none;
+}
+.map-look-slot > .pp-toggle-group,
+.map-look-slot > #param-slider-panel,
+.map-look-slot > #clean-view-toggle {
+  width: 100%;
+}
+
+/* Style tiles: a picture, then the label and its 1–7 key. */
+.map-look-style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--gev-space-3);
+}
+.map-look .style-btn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border-radius: var(--gev-radius-md);
+  overflow: hidden;
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  text-align: left;
+  cursor: pointer;
+  /* Focus scrolling keeps the whole focus ring in view. */
+  scroll-margin: 8px;
+}
+.map-look .style-btn .map-look-thumb {
+  grid-column: 1 / -1;
+}
+.map-look .style-btn .btn-label {
+  min-width: 0;
+  padding: var(--gev-space-1) var(--gev-space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.map-look .style-btn .btn-key {
+  padding: var(--gev-space-1) var(--gev-space-2);
+  font: var(--gev-font-size-xs) / 1.3 var(--gev-font-sans);
+}
+.map-look .style-btn:focus-visible {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn .btn-key {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn.active {
+  border-color: var(--gev-accent);
+  box-shadow: 0 0 0 1px var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn:focus-visible {
+  outline-color: var(--gev-focus-ring);
+}
+
+/* The pictures: one motif, a filter and at most one overlay per style. */
+.map-look-thumb {
+  display: block;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+}
+.map-look-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.map-look-thumb-scanlines,
+.map-look-thumb-tube,
+.map-look-thumb-snow {
+  display: none;
+}
+[data-thumb='retro'] .map-look-thumb-scanlines,
+[data-thumb='surveillance'] .map-look-thumb-tube,
+[data-thumb='snow'] .map-look-thumb-snow {
+  display: inline;
+}
+[data-thumb='retro'] svg {
+  filter: grayscale(1) contrast(1.25) brightness(0.9);
+}
+[data-thumb='surveillance'] svg {
+  filter: grayscale(1) sepia(1) hue-rotate(55deg) saturate(5) brightness(0.95);
+}
+[data-thumb='thermal'] svg {
+  filter: grayscale(1) contrast(1.7) brightness(1.15);
+}
+[data-thumb='anime'] svg {
+  filter: saturate(1.9) contrast(1.15) hue-rotate(-12deg);
+}
+[data-thumb='noir'] svg {
+  filter: grayscale(1) contrast(2) brightness(0.85);
+}
+[data-thumb='snow'] svg {
+  filter: grayscale(0.7) brightness(1.55) contrast(0.85);
+}
+
+/* Image adjustments: a label and its switch, the intensity below it. */
+.map-look-heading {
+  margin: 0;
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+}
+.map-look-adjustments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+  padding-top: var(--gev-space-3);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-adjustments {
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-heading {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-adjustments
+  .pp-toggle-btn {
+  position: relative;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn
+  .pp-icon {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn
+  .pp-label {
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  box-sizing: border-box;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 21px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn.active::after {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn.active::before {
+  right: 3px;
+  background: var(--gev-on-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-toggle-btn:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-adjustments
+  .pp-slider-row {
+  padding: 0 0 0 var(--gev-space-4);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Cyber's Display rows keep their own layout, without this label. */
+.map-look-adjustments .pp-slider-mini-label {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-slider-mini-label {
+  display: inline;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-adjustments
+  .pp-slider-value {
+  color: var(--gev-text);
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+
+/* The shortcut hint and the providers link close the tab. */
+.map-look-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-2);
+  margin: 0;
+  padding-top: var(--gev-space-3);
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+}
+.map-look-hint-icon {
+  width: 18px;
+  height: 12px;
+  border: 1px solid;
+  border-radius: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-hint {
+  border-top: 1px solid var(--gev-border-subtle);
+  color: var(--gev-text-muted);
+}
+.map-look-providers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: var(--gev-space-2) 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+.map-look-providers:focus-visible {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-offset: 2px;
+}
+.map-look-providers-chevron {
+  font-size: var(--gev-font-size-lg);
+  line-height: 1;
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-providers {
+  border-top: 1px solid var(--gev-border-subtle);
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-providers:hover {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-providers:focus-visible {
+  outline-color: var(--gev-focus-ring);
+}
+
+/* Map sources: one tile per stack, in two columns. */
+.map-look .map-source-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gev-space-2);
+}
+.map-look .map-source-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-source-heading {
+  color: var(--gev-text-muted);
+}
+.map-look .map-stack-chip-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gev-space-2);
+}
+.map-look .map-stack-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gev-space-2);
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--gev-space-2) var(--gev-space-3);
+  border-radius: var(--gev-radius-md);
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  text-align: left;
+  cursor: pointer;
+  scroll-margin: 8px;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.map-look .map-stack-chip-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.map-look .map-stack-chip-req {
+  font: var(--gev-font-size-2xs) / 1 var(--gev-font-mono);
+  letter-spacing: 0.06em;
+}
+/* Rest, hover, active, then unavailable: the selected ring survives hover,
+   and a source that cannot load never lights up. The focus ring is the only
+   outline, so no later state can erase it. */
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-stack-chip {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-stack-chip:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-stack-chip.active {
+  border-color: var(--gev-accent);
+  box-shadow: 0 0 0 1px var(--gev-accent);
+}
+.map-look .map-stack-chip.unavailable {
+  cursor: not-allowed;
+  opacity: var(--gev-disabled-opacity);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .map-stack-chip.unavailable {
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .map-stack-chip:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-stack-chip-req {
+  color: var(--gev-warning-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .pp-stack-status {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look .pp-stack-status.warn {
+  color: var(--gev-warning-text);
+}

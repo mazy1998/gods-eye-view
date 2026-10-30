@@ -93,6 +93,7 @@ export function validateExceptions(entries) {
         'voice',
         'shell-visibility',
         'settings',
+        'map-look',
       ].includes(e.fixture) ||
       !e.node ||
       !e.property ||

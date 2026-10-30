@@ -227,3 +227,31 @@ test('Stories geometry uses the shared content order and enough cards to exercis
   );
   dom.window.close();
 });
+
+test('Map & Look geometry keeps the Display frame strict and exempts only its structure', async () => {
+  const { createFixtures, exceptions } =
+    await import('../../scripts/qa-cyber-geometry-fixtures.mjs');
+  const { readFileSync } = await import('node:fs');
+  const { JSDOM } = await import('jsdom');
+  const fixture = createFixtures((file) =>
+    readFileSync(new URL('../../' + file, import.meta.url), 'utf8'),
+  ).find((entry) => entry.id === 'map-look');
+  const dom = new JSDOM(fixture.html);
+  const doc = dom.window.document;
+  assert.ok(
+    doc.querySelector(
+      '#pp-toggles[data-geometry="frame"] > .pp-header-row[data-geometry="header"] > .pp-header-label[data-geometry="title"]',
+    ),
+  );
+  assert.ok(doc.querySelector('#pp-toggles > .pp-panel-body > .map-look'));
+  assert.equal(doc.querySelectorAll('.style-btn').length, 7);
+  assert.equal(doc.querySelectorAll('.map-stack-chip').length, 5);
+  dom.window.close();
+  const reasons = new Set(fixture.structuralExceptions.map((e) => e.reason));
+  const own = exceptions.filter((e) => e.fixture === 'map-look');
+  assert.ok(own.length > 0);
+  for (const e of own) {
+    assert.ok(reasons.has(e.reason), `${e.node}.${e.property}`);
+    assert.ok(!['header', 'title', 'divider', 'collapse'].includes(e.node));
+  }
+});

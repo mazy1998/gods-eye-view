@@ -196,6 +196,7 @@ test('the map-stack channel follows settled activations and the status feed, and
     getStacks: () => [
       { id: 'photoreal', label: 'Google 3D', shortLabel: '3D', kind: 'photoreal', available: false, unavailableReason: 'Needs a key', factory: () => {} },
       { id: 'esri-imagery', label: 'Esri', kind: 'imagery', available: true, unavailableReason: null },
+      { id: 'bing-aerial', label: 'Bing Aerial', kind: 'imagery', available: false, requiresIon: true, unavailableReason: 'Needs ion' },
     ],
     subscribe: (listener) => {
       subscribers.add(listener);
@@ -212,8 +213,11 @@ test('the map-stack channel follows settled activations and the status feed, and
     shortLabel: '3D',
     kind: 'photoreal',
     available: false,
+    requiresIon: false,
     unavailableReason: 'Needs a key',
   });
+  // The ion badge reads the stack's own flag.
+  assert.equal(channel.getSnapshot().stacks[2].requiresIon, true);
   active = 'osm'; // a silent automatic fallback still settles
   for (const listener of subscribers) listener();
   events.dispatchEvent(new Event('gev:map-stack-changed'));

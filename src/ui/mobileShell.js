@@ -27,7 +27,7 @@ export const MOBILE_SHEET_PANELS = Object.freeze({
   cameras: Object.freeze(['cctv-panel', 'street-level-panel']),
   context: Object.freeze(['global-context-panel']),
   search: Object.freeze(['location-bar']),
-  more: Object.freeze(['control-panel', 'pp-toggles']),
+  more: Object.freeze(['pp-toggles']),
 });
 
 export const MOBILE_TABS = Object.freeze([
@@ -252,11 +252,13 @@ export function initMobileShell({
         'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
       ) ?? [];
     // Sheets hide some panel chrome (tray toggles, pins) that stays in the
-    // DOM, and a panel's own collapse control is a poor first stop.
+    // DOM, and a panel's own collapse control is a poor first stop. A roving
+    // tab set's unselected tabs are out of the tab order.
     return (
       [...controls].find(
         (control) =>
           control.getClientRects().length > 0 &&
+          control.getAttribute?.('tabindex') !== '-1' &&
           !control.matches?.('.panel-collapse-btn'),
       ) ?? null
     );

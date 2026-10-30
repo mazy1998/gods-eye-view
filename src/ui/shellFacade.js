@@ -461,22 +461,6 @@ export class ShellFacade {
     this._panelChrome._panelDisclosureControls = value;
   }
 
-  get _hoverPanelControls() {
-    return this._panelChrome._hoverPanelControls;
-  }
-
-  set _hoverPanelControls(value) {
-    this._panelChrome._hoverPanelControls = value;
-  }
-
-  get _cancelMapSourceFocus() {
-    return this._panelChrome._cancelMapSourceFocus;
-  }
-
-  set _cancelMapSourceFocus(value) {
-    this._panelChrome._cancelMapSourceFocus = value;
-  }
-
   get _cockpitContextCollapsedForDataPanel() {
     return this._panelChrome._cockpitContextCollapsedForDataPanel;
   }
@@ -1304,15 +1288,6 @@ export class ShellFacade {
 
   _updateLocationMiniStatus(...args) {
     return this._locationNavigation._updateLocationMiniStatus(...args);
-  }
-
-  /**
-   * Updates the collapsed mini-status readout with the active style label.
-   * @param {string} [styleName=this.activeStyle] - Style name to display.
-   * @returns {void}
-   */
-  _updateStyleMiniStatus(styleName = this.activeStyle) {
-    return this._visualSettings._updateStyleMiniStatus(...arguments);
   }
 
   _initOrbit(...args) {

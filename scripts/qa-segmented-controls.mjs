@@ -35,12 +35,15 @@ try {
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60000 },
   );
-  await page.evaluate(() =>
-    window.__godsEyeView.styleManager.setPanelCollapsed('pp-toggles', false, {
+  await page.evaluate(() => {
+    const manager = window.__godsEyeView.styleManager;
+    manager.setPanelCollapsed('pp-toggles', false, {
       persist: false,
       syncShare: false,
-    }),
-  );
+    });
+    // The 3D models and detection modes are in Map & Look's Display tab.
+    manager.setMapLookTab('display');
+  });
 
   const surface = await page.evaluate(() => {
     const groups = [...document.querySelectorAll('[role="radiogroup"]')];

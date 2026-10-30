@@ -51,4 +51,5 @@
 
 @import './src/ui/styles/directions.css';
 @import './src/ui/styles/cockpit-views.css';
+@import './src/ui/styles/map-look.css';
 @import './src/ui/styles/cyber.css';

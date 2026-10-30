@@ -151,7 +151,6 @@ test('panel chrome wires Escape for every declared collapse target', () => {
   const init = method('_initPanelChrome', '_collapsePanelOnEscape');
   assert.match(init, /for \(const \[targetId, buttons\] of targets\)/);
   assert.match(init, /bindPanelDisclosure\(\{[\s\S]*?onEscape: \(event\) => this\._collapsePanelOnEscape\(event, targetId\)/);
-  assert.match(source, /createHoverDisclosure\(\{[\s\S]*?onEscape: \(event\) => this\._collapsePanelOnEscape\(event, panelId\)/);
 });
 
 test('Cockpit Escape collapses Contact or Live Signals before exiting Cockpit', () => {

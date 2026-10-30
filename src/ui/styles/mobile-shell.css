@@ -230,8 +230,7 @@ body.mobile-shell #command-dock > * {
   pointer-events: auto;
 }
 
-body.mobile-shell #location-bar,
-body.mobile-shell #control-panel {
+body.mobile-shell #location-bar {
   display: none;
 }
 
@@ -240,8 +239,7 @@ body.mobile-shell[data-mobile-sheet] #command-dock {
   bottom: calc(var(--mobile-tab-space) + var(--mobile-sheet-height, 0px) + 8px);
 }
 
-body.mobile-shell[data-mobile-sheet='search'] #command-dock > #location-bar,
-body.mobile-shell[data-mobile-sheet='more'] #command-dock > #control-panel {
+body.mobile-shell[data-mobile-sheet='search'] #command-dock > #location-bar {
   position: relative;
   inset: auto;
   display: flex;
@@ -276,15 +274,8 @@ body.mobile-shell[data-mobile-sheet='more'] #right-context-rail {
   border-radius: 0;
 }
 
-/* Presets and Location show their popover inline instead of as a floating
-   tray; the dock scrolls, so a tray above it would be clipped. */
-body.mobile-shell[data-mobile-sheet='more']
-  #command-dock
-  #control-panel
-  .panel-inner,
-body.mobile-shell[data-mobile-sheet='more']
-  #command-dock
-  #control-panel-popover,
+/* Location shows its popover inline instead of as a floating tray; the dock
+   scrolls, so a tray above it would be clipped. */
 body.mobile-shell[data-mobile-sheet='search']
   #command-dock
   #location-bar
@@ -307,11 +298,6 @@ body.mobile-shell[data-mobile-sheet='search']
 }
 
 /* The tab names the sheet; the tray toggle and pin have nothing to do here. */
-body.mobile-shell[data-mobile-sheet='more'] #command-dock #control-panel-toggle,
-body.mobile-shell[data-mobile-sheet='more']
-  #command-dock
-  #control-panel
-  .dock-pin-btn,
 body.mobile-shell[data-mobile-sheet='search']
   #command-dock
   #location-bar-toggle,
@@ -324,10 +310,6 @@ body.mobile-shell[data-mobile-sheet='search']
   #location-bar
   .dock-pin-btn {
   display: none;
-}
-
-body.mobile-shell[data-mobile-sheet='more'] #style-buttons {
-  flex-wrap: wrap;
 }
 
 /* Search: the field takes the full width; the place pills scroll beneath it. */

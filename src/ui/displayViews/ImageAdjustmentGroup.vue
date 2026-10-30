@@ -47,6 +47,7 @@ const act = (name, ...args) => props.actions?.[name]?.(...args);
     :class="{ active: adjustment.enabled }"
     :id="`${kind}-toggle`"
     :title="t(spec.title)"
+    :aria-pressed="String(adjustment.enabled)"
     @click="act(spec.toggle)"
   >
     <span class="pp-icon">{{ spec.icon }}</span>
@@ -57,6 +58,9 @@ const act = (name, ...args) => props.actions?.[name]?.(...args);
     :class="{ visible: adjustment.enabled }"
     :id="`${kind}-slider-row`"
   >
+    <span class="pp-slider-mini-label" aria-hidden="true">{{
+      t('Intensity')
+    }}</span>
     <input
       type="range"
       class="gev-quantitative-slider pp-slider"

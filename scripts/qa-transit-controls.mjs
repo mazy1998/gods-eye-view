@@ -71,20 +71,11 @@ export function chooseLiveCities(now = new Date()) {
  */
 export async function selectStyle(page, name, params = {}, wait = pause) {
   let how = 'button';
-  // The presets live in the bottom control panel, which auto-dismisses when
-  // the pointer leaves it: pin it open the way a user does, once.
+  // The presets live in Map & Look's Look tab: open it the way a user does.
   await page.evaluate(() => {
-    const panel = document.getElementById('control-panel');
-    if (panel && !panel.classList.contains('dock-pinned')) {
-      document
-        .querySelector('.dock-pin-btn[data-pin-target="control-panel"]')
-        ?.click();
-    }
-    window.__godsEyeView.styleManager.setPanelCollapsed?.(
-      'control-panel',
-      false,
-      { explicit: true },
-    );
+    const manager = window.__godsEyeView.styleManager;
+    manager.setMapLookTab?.('look');
+    manager.setPanelCollapsed?.('pp-toggles', false, { explicit: true });
   });
   await wait(400);
   try {
@@ -166,6 +157,8 @@ export async function detectOn(page, wait = pause) {
       document
         .querySelector('.panel-collapse-btn[data-collapse-target="pp-toggles"]')
         ?.click();
+    // Detection is in Map & Look's Display tab.
+    window.__godsEyeView?.styleManager?.setMapLookTab?.('display');
   });
   await page.waitForFunction(
     () =>

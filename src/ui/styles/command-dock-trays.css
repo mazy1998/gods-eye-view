@@ -45,24 +45,15 @@
   -webkit-mask-image: url('/location.svg');
 }
 
-#command-dock .dock-label-icon-presets {
-  mask-image: url('/visual-presets.svg');
-  -webkit-mask-image: url('/visual-presets.svg');
-}
-
-#command-dock :is(#location-bar, #control-panel):hover .dock-label-icon,
-#command-dock :is(#location-bar, #control-panel).dock-pinned .dock-label-icon {
+#command-dock #location-bar:hover .dock-label-icon,
+#command-dock #location-bar.dock-pinned .dock-label-icon {
   background: var(--accent);
   filter: drop-shadow(0 0 0.35rem rgba(0, 212, 255, 0.28));
 }
 
-#command-dock :is(#location-bar, #control-panel):hover .location-toolbar-label,
-#command-dock :is(#location-bar, #control-panel):hover .panel-title {
+#command-dock #location-bar:hover .location-toolbar-label,
+#command-dock #location-bar:hover .panel-title {
   color: var(--accent);
-}
-
-#command-dock #control-panel .panel-header {
-  justify-content: center;
 }
 
 #command-dock #location-bar .dock-tray-toggle {
@@ -85,41 +76,12 @@
   border-radius: 3px;
 }
 
-#command-dock #control-panel .dock-tray-toggle {
-  box-sizing: border-box;
-  width: 100%;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  font: inherit;
-  cursor: pointer;
-  outline: none;
-}
-
-#command-dock #control-panel .dock-tray-toggle:focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--accent) 80%, transparent);
-  outline-offset: 3px;
-  border-radius: 3px;
-}
-
-#command-dock #control-panel .panel-title {
-  justify-content: center;
-  width: 100%;
-  text-align: center;
-}
-
-#command-dock #control-panel .panel-divider {
-  display: none;
-}
-
-#command-dock .location-toolbar-label,
-#command-dock #control-panel .panel-title {
+#command-dock .location-toolbar-label {
   position: relative;
   padding-bottom: 0.4rem;
 }
 
-#command-dock .location-toolbar-label::after,
-#command-dock #control-panel .panel-title::after {
+#command-dock .location-toolbar-label::after {
   content: '';
   position: absolute;
   right: 0;
@@ -133,13 +95,8 @@
   background: linear-gradient(to right, rgba(232, 234, 237, 0.3), transparent);
 }
 
-#command-dock #control-panel .panel-title::after {
-  background: linear-gradient(to left, rgba(232, 234, 237, 0.3), transparent);
-}
-
 #command-dock .panel-title::after,
-#command-dock .location-toolbar-label::after,
-#command-dock #control-panel .panel-title::after {
+#command-dock .location-toolbar-label::after {
   content: none;
   display: none;
 }
@@ -166,8 +123,7 @@
   transform: translateY(-0.12rem);
 }
 
-#command-dock #location-bar:not(.collapsed) .dock-pin-btn,
-#command-dock #control-panel:not(.collapsed) .dock-pin-btn {
+#command-dock #location-bar:not(.collapsed) .dock-pin-btn {
   display: grid;
 }
 
@@ -194,9 +150,6 @@
 
 #command-dock.dock-has-pinned-tray
   #location-bar:not(.collapsed):not(.dock-pinned)
-  .dock-popover-content,
-#command-dock.dock-has-pinned-tray
-  #control-panel:not(.collapsed):not(.dock-pinned)
   .dock-popover-content {
   bottom: calc(100% + 1.2rem + var(--dock-pinned-stack-height));
 }
@@ -212,8 +165,7 @@
 }
 
 #command-dock .location-pill,
-#command-dock .poi-pill,
-#command-dock .btn-label {
+#command-dock .poi-pill {
   font-size: 0.56rem;
 }
 

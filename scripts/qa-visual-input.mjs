@@ -127,6 +127,8 @@ try {
     }),
   );
   const hudBefore = await page.evaluate(() => {
+    // The HUD layout select is in Map & Look's Display tab.
+    window.__godsEyeView.styleManager.setMapLookTab('display');
     document.getElementById('hud-layout-select').focus();
     return window.__godsEyeView.styleManager.hud.visible;
   });
@@ -142,6 +144,8 @@ try {
   );
   const displayBefore = await page.evaluate(() => {
     const manager = window.__godsEyeView.styleManager;
+    // Bloom is in Map & Look's Look tab.
+    manager.setMapLookTab('look');
     manager._setBloomEnabled(true);
     manager._bloomSlider.value = '80';
     manager._bloomSlider.dispatchEvent(new Event('input', { bubbles: true }));

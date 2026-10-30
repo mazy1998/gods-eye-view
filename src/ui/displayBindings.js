@@ -84,11 +84,9 @@ export class DisplayBindings {
     // The Display controls' one lifetime: destroying it releases the native
     // binder and disconnects the Display views, whose controls then go inert.
     const binder = (this._displayBinder = bindDisplayControls({
-      // The Display and Look groups are views calling displayActions
-      // (S11b-1, S11b-2); the dock's style buttons stay native until the Map
-      // & Look view takes them over (S11b-3), and the exit stays native.
+      // Map & Look's tabs are views calling displayActions; the clean-view
+      // exit, which stays on screen outside them, stays native.
       elements: {
-        styleButtons: document.querySelectorAll('.style-btn'),
         cleanViewExitButton: this._cleanViewExitBtn,
       },
       actions: this.displayActions,

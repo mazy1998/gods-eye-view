@@ -45,7 +45,9 @@ try {
       window.__qaMapSelections.push(id);
       return original.call(this, id);
     };
-    manager.setPanelCollapsed('control-panel', false, {
+    // Map sources live in Map & Look's Map tab.
+    manager.setMapLookTab('map');
+    manager.setPanelCollapsed('pp-toggles', false, {
       persist: false,
       syncShare: false,
     });
@@ -119,7 +121,9 @@ try {
   await page.evaluate(async () => {
     const manager = window.__godsEyeView.styleManager;
     await manager.setMapStack('photoreal');
-    manager.setPanelCollapsed('control-panel', false, {
+    // Map sources live in Map & Look's Map tab.
+    manager.setMapLookTab('map');
+    manager.setPanelCollapsed('pp-toggles', false, {
       persist: false,
       syncShare: false,
     });
@@ -174,13 +178,14 @@ try {
       document.getElementById('left-panel-stack')?.dataset.layoutMode ===
       'mobile',
   );
-  await page.evaluate(() =>
-    window.__godsEyeView.styleManager.setPanelCollapsed(
-      'control-panel',
-      false,
-      { persist: false, syncShare: false },
-    ),
-  );
+  await page.evaluate(() => {
+    const manager = window.__godsEyeView.styleManager;
+    manager.setMapLookTab('map');
+    manager.setPanelCollapsed('pp-toggles', false, {
+      persist: false,
+      syncShare: false,
+    });
+  });
   await page.screenshot({ path: 'qa-shots/map-source-controls/narrow.png' });
   check(
     'destroyed controls cannot issue requests from retained chips',
