@@ -1,0 +1,224 @@
+/* Appearance-only styling; credential fields and all actions stay owner-managed. */
+:where(:root:not([data-ui-theme='cyber'])) #key-setup,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup-chip,
+:where(:root:not([data-ui-theme='cyber'])) .locale-picker-button {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border-subtle);
+  box-shadow: var(--gev-elevation-2);
+  font-family: var(--gev-font-sans);
+  letter-spacing: 0;
+  color-scheme: var(--gev-color-scheme);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup {
+  padding: 24px;
+  border-radius: var(--gev-radius-lg);
+  font-size: 14px;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup-chip,
+:where(:root:not([data-ui-theme='cyber'])) .locale-picker-button {
+  min-height: 36px;
+  border-radius: var(--gev-radius-pill);
+  font-size: 12px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup-chip:is(:hover, :focus-visible),
+:where(:root:not([data-ui-theme='cyber']))
+  .locale-picker-button:is(:hover, :focus-visible),
+:where(:root:not([data-ui-theme='cyber']))
+  .locale-picker.is-open
+  > button.locale-picker-button {
+  background: var(--gev-surface-overlay);
+  box-shadow:
+    inset 0 0 0 999px var(--gev-control-bg-hover),
+    var(--gev-elevation-2);
+  color: var(--gev-text);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup-chip
+  .material-symbols-outlined,
+:where(:root:not([data-ui-theme='cyber'])) .locale-picker-button > svg {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-scanline {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup h2 {
+  margin: 12px 0 0;
+  font: 600 24px / 1.25 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup-description,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-unlocks,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-note {
+  color: var(--gev-text-muted);
+  font: 13px / 1.5 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-header,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-footer {
+  color: var(--gev-text-muted);
+  font: 12px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-kicker {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-rows {
+  gap: 12px;
+  margin-top: 20px;
+  scrollbar-color: var(--gev-border) transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-rows::-webkit-scrollbar-thumb {
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-row {
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--gev-radius-md);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-row[data-set='true'] {
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-row-head {
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-row-head
+  strong {
+  font-size: 16px;
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-led {
+  background: var(--gev-text-muted);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-row[data-set='true']
+  .key-setup-led {
+  background: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-tier {
+  font-size: 12px;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-exposed,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-external {
+  padding: 3px 6px;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-exposed {
+  color: var(--gev-warning-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-get {
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-get:is(:hover, :focus-visible) {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-fields input {
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 10px 12px;
+  font: 13px / 1.4 var(--gev-font-sans);
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-fields
+  input::placeholder {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-fields
+  input:focus {
+  border-color: var(--gev-focus-ring);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-cloud-auth {
+  flex-wrap: wrap;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-state {
+  color: var(--gev-text-muted);
+  font: 12px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-close,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-remove {
+  min-height: 32px;
+  padding: 6px 10px;
+  font: 12px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-remove {
+  color: var(--gev-danger-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  :is(.key-setup-cloud-auth-toggle, .key-setup-close, .key-setup-remove):is(
+    :hover,
+    :focus-visible
+  ) {
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-remove:is(:hover, :focus-visible) {
+  color: var(--gev-danger-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-apply {
+  min-height: 44px;
+  padding: 10px 18px;
+  font: 600 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  color: var(--gev-on-accent);
+  background: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-apply:is(:hover, :focus-visible) {
+  filter: none;
+  background: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  :is(button, input, a):focus-visible,
+:where(:root:not([data-ui-theme='cyber'])) #key-setup-chip:focus-visible,
+:where(:root:not([data-ui-theme='cyber'])) .locale-picker-button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-color: var(--gev-focus-ring) !important;
+  outline-offset: 2px;
+}

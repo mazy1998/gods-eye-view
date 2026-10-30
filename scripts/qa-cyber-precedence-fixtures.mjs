@@ -401,6 +401,8 @@ const toolsDirectionsHtml = `<div class="gev-drawer-body"><div class="gev-legacy
   )
   .replaceAll('data-audit="', 'data-audit="tools-')}</div></div>`;
 
+const settingsAppearanceHtml = `<div id="corner-actions">${b('provider-launcher', '', 'id="key-setup-chip"')}${b('locale-launcher', 'locale-picker-button')}</div><aside id="key-setup" class="visible"><header class="key-setup-header">${b('provider-close', 'key-setup-close')}</header><div class="key-setup-rows">${['false', 'true'].map((set) => `<section class="key-setup-row" data-set="${set}" data-audit="provider-row-${set}"><div class="key-setup-row-head"><strong>Provider</strong><span class="key-setup-led" data-audit="provider-led-${set}"></span><span class="key-setup-exposed" data-audit="provider-exposed-${set}">Browser-side</span><span class="key-setup-external" data-audit="provider-external-${set}">External</span><a href="#" class="key-setup-get" data-audit="provider-link-${set}">Get key</a></div><div class="key-setup-fields">${input(`provider-password-${set}`, '', 'password')}</div>${b(`provider-remove-${set}`, 'key-setup-remove')}${b(`provider-oauth-${set}`, 'key-setup-cloud-auth-toggle', 'data-state-disabled')}</section>`).join('')}</div><footer class="key-setup-footer">${b('provider-save', 'key-setup-apply', 'data-state-disabled')}</footer></aside>`;
+
 export const fixtures = [
   {
     sheet: 'feedback-views',
@@ -444,6 +446,7 @@ export const fixtures = [
   { sheet: 'shell', html: shellHtml, exceptions: railEdges },
   cameraFixture,
   { sheet: 'voice-dock-view', html: voiceHtml },
+  { sheet: 'settings-appearance', html: settingsAppearanceHtml },
   storiesFixture,
   { sheet: 'voice-card-view', html: voiceCardHtml },
 

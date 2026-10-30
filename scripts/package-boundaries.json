@@ -936,6 +936,7 @@
       "src/ui/styles/voice-card.css",
       "src/ui/styles/first-run.css",
       "src/ui/styles/provider-settings.css",
+      "src/ui/styles/settings-appearance.css",
       "src/ui/styles/weather.css",
       "src/ui/styles/recent-imagery.css"
     ],

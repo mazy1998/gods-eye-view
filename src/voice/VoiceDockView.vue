@@ -135,8 +135,10 @@ const tabIndex = (state, view) =>
       aria-describedby="gev-voice-help"
     >
       <span class="gev-mic-orbit"><img :src="MIC_ICON" alt="" /></span>
+      <span class="gev-voice-invitation">{{ t('VOICE CONTROL') }}</span>
       <span class="gev-mic-label">{{ state.micLabel }}</span>
     </button>
+    <span class="gev-voice-shortcut">{{ t('Hold Space to talk') }}</span>
     <!-- Bars are plain DOM added once: realtimeInput sets them every frame. -->
     <div ref="visualizer" class="gev-voice-visualizer" aria-hidden="true"></div>
     <div class="gev-voice-readout">
