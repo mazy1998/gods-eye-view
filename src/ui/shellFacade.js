@@ -942,6 +942,11 @@ export class ShellFacade {
     return this._radioControls?._setCockpitDisclosure?.(...args);
   }
 
+  /** The open Cockpit utility disclosure: 'display', 'radio' or null. */
+  _cockpitDisclosure() {
+    return this._radioControls?._cockpitDisclosure ?? null;
+  }
+
   _setRadioDisclosure(...args) {
     return this._radioControls?._setRadioDisclosure?.(...args);
   }

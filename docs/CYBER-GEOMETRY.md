@@ -82,6 +82,10 @@ other appearances (content order, labels, the selected contact) are listed with
 their reasons in `qa-cyber-inspect-structure.json`, which the palette audit's
 Inspect fixture carries.
 
+Cockpit has no geometry fixture either: `cockpit-views.css` sets only colours
+and panel material, outside Cyber, and Cockpit's layout stays in
+`cockpit.css` for every theme.
+
 Tools fixtures follow the destination element list: the shell hosts Import and
 Draw as direct children of the legacy host, outside the hidden Map panel.
 Historical revisions without that placement retain a separate home-layout

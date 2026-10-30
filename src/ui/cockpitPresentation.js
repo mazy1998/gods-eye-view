@@ -171,18 +171,29 @@ function rollTokenClass(character) {
     : 'cockpit-roll-token';
 }
 
+/**
+ * Paint a readout that rolls its digits toward the new value.
+ * @param {Element|null} element
+ * @param {string} text
+ * @param {number|null} numericValue
+ * @param {{text?: string, value?: number, at?: number}} history the
+ *   instrument's last shown text and value and when it last rolled, kept by
+ *   its owner and updated here
+ * @param {{circularRange?: number|null, immediate?: boolean}} [options]
+ */
 export function setCockpitRollingValue(
   element,
   text,
   numericValue,
+  history,
   { circularRange = null, immediate = false } = {},
 ) {
   if (!element) return;
   const nextText = String(text);
-  const previousText = element.dataset.rollingText;
-  const previousValue = Number(element.dataset.rollingValue);
+  const previousText = history.text;
+  const previousValue = Number(history.value);
   const nowMs = performance.now();
-  const lastRollMs = Number(element.dataset.rollingAt);
+  const lastRollMs = Number(history.at);
   if (
     !immediate &&
     previousText !== undefined &&
@@ -192,11 +203,9 @@ export function setCockpitRollingValue(
   ) {
     return;
   }
-  element.dataset.rollingText = nextText;
-  element.dataset.rollingAt = String(nowMs);
-  if (Number.isFinite(numericValue))
-    element.dataset.rollingValue = String(numericValue);
-  else delete element.dataset.rollingValue;
+  history.text = nextText;
+  history.at = nowMs;
+  history.value = Number.isFinite(numericValue) ? numericValue : undefined;
   element.setAttribute('aria-label', nextText);
 
   if (immediate || previousText === undefined || previousText === nextText) {

@@ -57,9 +57,13 @@ export function updateHud(
   const speedKt = Number.isFinite(info.velocityMps)
     ? info.velocityMps * 1.94384
     : null;
-  setCockpitRollingValue(this.speed, formatSpeedRulerTick(speedKt), speedKt, {
-    immediate: forceContext,
-  });
+  setCockpitRollingValue(
+    this.speed,
+    formatSpeedRulerTick(speedKt),
+    speedKt,
+    this.rollingReadouts.speed,
+    { immediate: forceContext },
+  );
   if (this.speedRim)
     this.speedRim.classList.toggle('unavailable', speedKt === null);
   if (this.speedRimValue)
@@ -90,6 +94,7 @@ export function updateHud(
         ? formatNumber(displayedAltitudeFt)
         : '-----',
       displayedAltitudeFt,
+      this.rollingReadouts.altitude,
       { immediate: forceContext },
     );
   }
@@ -120,6 +125,7 @@ export function updateHud(
     this.headingValue,
     String(Math.round(heading) % 360).padStart(3, '0'),
     heading,
+    this.rollingReadouts.heading,
     { circularRange: 360, immediate: forceContext },
   );
   if (this.compassTape) {
@@ -245,54 +251,15 @@ export function updateRoute(info) {
 }
 
 export function syncWeatherToggle(enabled) {
-  if (!this.weatherToggle) return;
-  const active = !!enabled;
-  this.weatherToggle.setAttribute('aria-pressed', String(active));
-  const weatherLabel = active
-    ? t('Disable cockpit weather effects')
-    : t('Enable cockpit weather effects');
-  this.weatherToggle.setAttribute('aria-label', weatherLabel);
-  this.weatherToggle.title = weatherLabel;
-  if (this.weatherState) {
-    this.weatherState.textContent = active ? t('ON') : t('OFF');
-  }
+  this.weatherEnabled = !!enabled;
+  this.publishContactView();
 }
 
 export function setVisionMode(mode, { revealParameters = false } = {}) {
   const next = normalizeCockpitVisionMode(mode);
+  const changed = next !== this.visionMode;
   this.visionMode = next;
-  const labels = {
-    optical: t('NORMAL'),
-    crt: t('CRT'),
-    nvg: t('NVG'),
-    thermal: t('FLIR'),
-    anime: t('ANIME'),
-    noir: t('NOIR'),
-    snow: t('SNOW'),
-  };
-  const names = {
-    optical: t('Normal'),
-    crt: t('CRT'),
-    nvg: t('Night vision'),
-    thermal: t('Thermal'),
-    anime: t('Anime'),
-    noir: t('Noir'),
-    snow: t('Snow'),
-  };
-  if (this.visionCurrent) {
-    this.visionCurrent.dataset.cockpitVision = next;
-    this.visionCurrent.setAttribute(
-      'aria-label',
-      t('Current cockpit vision style: {style}. Activate for next style.', {
-        style: names[next],
-      }),
-    );
-    this.visionCurrent.title = t('Current style: {style} — click for next', {
-      style: names[next],
-    });
-  }
-  if (this.visionCurrentLabel)
-    this.visionCurrentLabel.textContent = labels[next];
+  if (changed) this.visionChannel.publish();
   this.onVisionChange?.(next, this.active, { revealParameters });
 }
 

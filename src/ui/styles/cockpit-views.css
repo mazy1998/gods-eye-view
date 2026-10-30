@@ -1,0 +1,468 @@
+/* Cockpit's panels take the appearance's colours; cockpit.css keeps their
+   geometry. The instruments drawn over the scene keep the HUD accent (flights
+   cyan, military amber), whose legibility depends on the imagery rather than
+   the appearance, and Cyber keeps its own look. The expanded Display control
+   keeps the material its borrowed Display groups are styled for.
+   Selector lists keep ids and classes apart, because :is() takes its most
+   specific argument and would otherwise outrank the state rules below. */
+
+/* Panel material. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-window,
+    .cockpit-signal-window,
+    .cockpit-vision-controls,
+    .cockpit-utility-control:not(.is-expanded) > .cockpit-utility-launcher,
+    .cockpit-utility-control.is-expanded:has([data-cockpit-launcher='radio'])
+  ) {
+  border-color: var(--gev-border-subtle);
+  background: var(--gev-surface-base);
+  box-shadow: var(--gev-elevation-2);
+  color: var(--gev-text);
+  text-shadow: none;
+  backdrop-filter: var(--gev-backdrop-blur);
+  -webkit-backdrop-filter: var(--gev-backdrop-blur);
+  scrollbar-color: var(--gev-border) transparent;
+}
+/* The top edge still tells an uncertain or held readout from a live one. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-context[data-state='uncertain'] {
+  border-top-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-context[data-state='lost'] {
+  border-top-color: var(--gev-warning);
+}
+
+/* Dividers. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-context-header, .cockpit-signal-header, .cockpit-local-place) {
+  border-bottom-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-context-footer, .cockpit-signal-footer) {
+  border-top-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-route-card {
+  border-bottom-color: var(--gev-border-subtle);
+  color: var(--gev-text);
+}
+
+/* Values, labels and accents. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-subject,
+    #cockpit-context-nearest-label,
+    #cockpit-context-distance
+  ) {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-weather strong,
+    .cockpit-context-cohorts strong,
+    .cockpit-signal-header strong,
+    .cockpit-news-list strong,
+    .cockpit-local-place strong,
+    .cockpit-local-grid strong,
+    .cockpit-route-airport strong,
+    .cockpit-radio-station,
+    .cockpit-vision-current strong
+  ) {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-brief-position {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-qualifier,
+    .cockpit-context-cohorts small,
+    .cockpit-context-nearest small,
+    .cockpit-context-footer,
+    .cockpit-signal-list time,
+    .cockpit-signal-list span,
+    .cockpit-news-list span,
+    .cockpit-brief-status,
+    .cockpit-local-place small,
+    .cockpit-local-grid small,
+    .cockpit-weather-credit,
+    .cockpit-signal-footer,
+    .cockpit-route-heading small,
+    .cockpit-radio-volume
+  ) {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-context-bearing, #cockpit-radio-volume-value) {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-kicker,
+    .cockpit-context-cohorts span,
+    .cockpit-signal-kicker,
+    .cockpit-signal-list strong,
+    .cockpit-signal-target,
+    .cockpit-local-grid span,
+    .cockpit-route-kicker,
+    .cockpit-route-airport > span,
+    .cockpit-vision-current small
+  ) {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-context-direction, .cockpit-route-arrow) {
+  color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-kicker
+  i {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-context[data-state='uncertain']
+  #cockpit-context-uncertainty {
+  color: var(--gev-accent-text);
+}
+/* Unknown counts, a held readout and unavailable feeds share the warning
+   colour, as they share amber today. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-context[data-state='lost']
+  #cockpit-context-uncertainty {
+  color: var(--gev-warning-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-cohorts > div.unknown strong,
+    .cockpit-brief-status[data-state='unavailable'],
+    .cockpit-signal-list li.warning strong,
+    .cockpit-signal-list li.military .cockpit-signal-target
+  ) {
+  color: var(--gev-warning-text);
+}
+
+/* Wells and rows. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-cohorts > div,
+    .cockpit-signal-list li,
+    .cockpit-news-list li,
+    .cockpit-local-grid > div,
+    .cockpit-route-airport
+  ) {
+  background: var(--gev-surface-raised);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-cohorts > div,
+    .cockpit-news-list li,
+    .cockpit-route-airport
+  ) {
+  border-left-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-context-cohorts
+  > div.unknown {
+  border-left-color: var(--gev-warning);
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-local-grid {
+  background: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  li {
+  border-left-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  :is(li.track, li.current) {
+  border-left-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  li.nearby {
+  border-left-color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  :is(li.military, li.warning) {
+  border-left-color: var(--gev-warning);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  li.actionable:is(:hover, :focus-within) {
+  border-left-color: var(--gev-accent);
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-target:is(:hover, :focus-visible) {
+  color: var(--gev-text);
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-news-list
+  a:is(:hover, :focus-visible) {
+  background: var(--gev-control-bg-hover);
+  outline: 2px solid var(--gev-focus-ring);
+}
+
+/* Buttons. Every button rule carries the same id weight, so the pressed,
+   hover and disabled rules outrank the resting ones by their states. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-previous,
+    #cockpit-context-next,
+    #cockpit-context-toggle,
+    #cockpit-radio-enable-btn,
+    .cockpit-brief-actions button,
+    .cockpit-radio-transport button
+  ) {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  box-shadow: none;
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud #cockpit-brief-auto {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-weather-toggle {
+  border-color: var(--gev-border);
+  background: transparent;
+  color: var(--gev-text-muted);
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-weather-toggle[aria-pressed='false']
+  strong {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-vision-previous, #cockpit-vision-next) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-previous,
+    #cockpit-context-next,
+    #cockpit-context-toggle,
+    #cockpit-weather-toggle,
+    #cockpit-vision-previous,
+    #cockpit-vision-next,
+    #cockpit-radio-enable-btn,
+    .cockpit-brief-actions button,
+    .cockpit-radio-transport button
+  ):hover:not(:disabled, [aria-pressed='true'], .active) {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-previous,
+    #cockpit-context-next,
+    #cockpit-context-toggle,
+    #cockpit-radio-enable-btn,
+    .cockpit-brief-actions button,
+    .cockpit-radio-transport button
+  ):disabled {
+  border-color: var(--gev-border-subtle);
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+/* Pressed and current controls share the accent tint. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-brief-auto[aria-pressed='true'],
+    #cockpit-weather-toggle[aria-pressed='true'],
+    #cockpit-radio-enable-btn[aria-pressed='true'],
+    #cockpit-vision-current,
+    .cockpit-radio-transport button.active
+  ) {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-previous,
+    #cockpit-context-next,
+    #cockpit-context-toggle,
+    #cockpit-weather-toggle,
+    #cockpit-vision-previous,
+    #cockpit-vision-current,
+    #cockpit-vision-next,
+    #cockpit-radio-enable-btn,
+    .cockpit-brief-actions button,
+    .cockpit-brief-tabs button,
+    .cockpit-radio-transport button,
+    .cockpit-signal-target
+  ):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-tabs
+  button {
+  border-bottom-color: var(--gev-border-subtle);
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-tabs
+  button[aria-current='true'] {
+  border-bottom-color: var(--gev-accent);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-tabs
+  button:hover {
+  color: var(--gev-text);
+}
+
+/* Utility launchers and the Radio popover. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-control:not(
+    .is-expanded:has([data-cockpit-launcher='display'])
+  )
+  .cockpit-utility-launcher {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-control:not(
+    .is-expanded:has([data-cockpit-launcher='display'])
+  )
+  .cockpit-utility-divider {
+  background: var(--gev-border-subtle);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-control:not(
+    .is-expanded:has([data-cockpit-launcher='display'])
+  )
+  .cockpit-utility-glyph {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-control:not(
+    .is-expanded:has([data-cockpit-launcher='display'])
+  )
+  .cockpit-utility-glyph:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-control:not(
+    .is-expanded:has([data-cockpit-launcher='display'])
+  )
+  .cockpit-utility-glyph:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-radio-compact {
+  border-top-color: var(--gev-border-subtle);
+}
+
+/* The Radio volume sits outside a .gev-surface, where the shared slider
+   would tokenise its track. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume::-webkit-slider-runnable-track {
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume::-moz-range-track,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume::-moz-range-progress {
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume::-webkit-slider-thumb {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume::-moz-range-thumb {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+
+/* Reset and Exit float over the scene beside the Cockpit. */
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #view-switcher
+  button {
+  border-color: var(--gev-border-subtle);
+  background: var(--gev-surface-base);
+  color: var(--gev-text);
+  box-shadow: var(--gev-elevation-2);
+  text-shadow: none;
+  backdrop-filter: var(--gev-backdrop-blur);
+  -webkit-backdrop-filter: var(--gev-backdrop-blur);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #view-switcher
+  button:hover {
+  border-color: var(--gev-border);
+  background: var(--gev-surface-raised);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #view-switcher
+  button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}

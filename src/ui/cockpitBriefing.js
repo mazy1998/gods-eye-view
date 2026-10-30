@@ -129,15 +129,48 @@ export function stopBriefRotation() {
   this.briefTimer = null;
 }
 
+/** What the News and Local pages show before any region is known. */
+export function emptyBriefView() {
+  return {
+    news: {
+      statusText: t('ACQUIRING REGIONAL NEWS'),
+      statusState: '',
+      statusHidden: false,
+      articles: [],
+    },
+    local: {
+      place: t('RESOLVING REGION'),
+      coordinates: '--',
+      temperature: '—',
+      wind: '—',
+      windDirection: '—',
+      condition: t('UNKNOWN'),
+      cloud: '—',
+      precipitation: '—',
+    },
+  };
+}
+
+/** Update what the News and Local pages show; publish when it changed. */
+export function setBriefView({ news = {}, local = {} }) {
+  this.briefView = {
+    news: { ...this.briefView.news, ...news },
+    local: { ...this.briefView.local, ...local },
+  };
+  const signature = JSON.stringify(this.briefView);
+  if (signature === this._briefSignature) return;
+  this._briefSignature = signature;
+  this.briefChannel.publish();
+}
+
 export function updateLocalPosition(info) {
-  if (!this.localCoordinates) return;
   if (!Number.isFinite(info.latitude) || !Number.isFinite(info.longitude)) {
-    this.localCoordinates.textContent = t('POSITION UNAVAILABLE');
+    this.setBriefView({ local: { coordinates: t('POSITION UNAVAILABLE') } });
     return;
   }
   const lat = formatCockpitCoordinate(info.latitude, 'N', 'S');
   const lon = formatCockpitCoordinate(info.longitude, 'E', 'W');
-  this.localCoordinates.textContent = `${lat} · ${lon}`;
+  this.setBriefView({ local: { coordinates: `${lat} · ${lon}` } });
 }
 
 export function maybeRefreshRegionalBrief(info) {
@@ -155,6 +188,7 @@ export function maybeRefreshRegionalBrief(info) {
     this.regionalBriefRequestToken += 1;
     this.regionalBriefSubjectId = subjectId;
     this.regionalBrief = null;
+    this.regionalBriefStatus = null;
     this.regionalBriefAnchor = null;
     this.regionalBriefFetchedAt = 0;
   }
@@ -208,99 +242,77 @@ export function maybeRefreshRegionalBrief(info) {
 }
 
 export function renderRegionalBriefStatus(status, info) {
-  if (this.newsStatus) {
-    this.newsStatus.hidden = false;
-    this.newsStatus.dataset.state = status;
-    this.newsStatus.textContent =
+  this.regionalBriefStatus = status;
+  this.setBriefView({
+    news: {
+      statusHidden: false,
+      statusState: status,
+      statusText:
+        status === 'loading'
+          ? t('ACQUIRING REGIONAL NEWS')
+          : t('REGIONAL NEWS UNAVAILABLE'),
+      ...(status === 'unavailable' ? { articles: [] } : {}),
+    },
+    local:
       status === 'loading'
-        ? t('ACQUIRING REGIONAL NEWS')
-        : t('REGIONAL NEWS UNAVAILABLE');
-  }
-  if (status === 'unavailable') this.newsList?.replaceChildren();
-  if (this.localPlace && status === 'loading')
-    this.localPlace.textContent = t('RESOLVING REGION');
-  if (this.localPlace && status === 'unavailable')
-    this.localPlace.textContent = t('REGION UNAVAILABLE');
+        ? { place: t('RESOLVING REGION') }
+        : status === 'unavailable'
+          ? { place: t('REGION UNAVAILABLE') }
+          : {},
+  });
   this.updateLocalPosition(info);
 }
 
 export function renderRegionalBrief(payload, info) {
+  this.regionalBriefStatus = 'loaded';
   const articles = Array.isArray(payload?.articles) ? payload.articles : [];
-  if (this.newsStatus) {
-    this.newsStatus.hidden = articles.length > 0;
-    this.newsStatus.dataset.state = payload?.newsStatus || 'unavailable';
-    this.newsStatus.textContent =
-      payload?.newsStatus === 'empty'
-        ? t('NO RECENT LOCATION MATCHES')
-        : t('REGIONAL NEWS UNAVAILABLE');
-  }
-  if (this.newsList) {
-    this.newsList.replaceChildren(
-      ...articles.slice(0, 4).map((article) => {
-        const entry = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = article.url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        const title = document.createElement('strong');
-        title.textContent = article.title;
-        const metadata = document.createElement('span');
-        metadata.textContent = t('{domain} · {age}', {
-          domain: article.domain || t('SOURCE'),
-          age: formatCockpitBriefAge(article.publishedAt),
-        });
-        link.append(title, metadata);
-        entry.append(link);
-        return entry;
-      }),
-    );
-  }
-
+  const weather = payload?.weather;
+  const condition = this.services.weatherCodeLabel(weather?.weatherCode);
+  const conditionKey = WEATHER_CONDITION_KEYS[condition];
   const placeLabel =
     payload?.place?.label || payload?.place?.country || t('REGION UNAVAILABLE');
-  if (this.localPlace) this.localPlace.textContent = placeLabel.toUpperCase();
+  this.setBriefView({
+    news: {
+      statusHidden: articles.length > 0,
+      statusState: payload?.newsStatus || 'unavailable',
+      statusText:
+        payload?.newsStatus === 'empty'
+          ? t('NO RECENT LOCATION MATCHES')
+          : t('REGIONAL NEWS UNAVAILABLE'),
+      // Source-backed links, shown as text and opened apart from this page.
+      articles: articles.slice(0, 4).map((article, index) => ({
+        key: `${index}:${article.url}`,
+        url: String(article.url ?? ''),
+        title: String(article.title ?? ''),
+        meta: t('{domain} · {age}', {
+          domain: article.domain || t('SOURCE'),
+          age: formatCockpitBriefAge(article.publishedAt),
+        }),
+      })),
+    },
+    local: {
+      place: placeLabel.toUpperCase(),
+      temperature: Number.isFinite(weather?.temperatureC)
+        ? `${Math.round(weather.temperatureC)}°C`
+        : '—',
+      wind: Number.isFinite(weather?.windKph)
+        ? t('{value} KM/H', { value: Math.round(weather.windKph) })
+        : '—',
+      windDirection: formatCockpitWindDirection(weather?.windDirectionDeg),
+      condition: conditionKey ? t(conditionKey) : condition,
+      cloud: Number.isFinite(weather?.cloudCoverPct)
+        ? t('CLOUD {pct}%', { pct: Math.round(weather.cloudCoverPct) })
+        : t('CLOUD UNKNOWN'),
+      precipitation: Number.isFinite(weather?.precipitationMm)
+        ? formatNumber(weather.precipitationMm, {
+            useGrouping: false,
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })
+        : '—',
+    },
+  });
   this.updateLocalPosition(info);
-  const weather = payload?.weather;
-  if (this.localTemperature) {
-    this.localTemperature.textContent = Number.isFinite(weather?.temperatureC)
-      ? `${Math.round(weather.temperatureC)}°C`
-      : '—';
-  }
-  if (this.localWind) {
-    this.localWind.textContent = Number.isFinite(weather?.windKph)
-      ? t('{value} KM/H', { value: Math.round(weather.windKph) })
-      : '—';
-  }
-  if (this.localWindDirection) {
-    this.localWindDirection.textContent = formatCockpitWindDirection(
-      weather?.windDirectionDeg,
-    );
-  }
-  if (this.localCondition) {
-    const condition = this.services.weatherCodeLabel(weather?.weatherCode);
-    const conditionKey = WEATHER_CONDITION_KEYS[condition];
-    this.localCondition.textContent = conditionKey
-      ? t(conditionKey)
-      : condition;
-  }
-  if (this.localCloud) {
-    this.localCloud.textContent = Number.isFinite(weather?.cloudCoverPct)
-      ? t('CLOUD {pct}%', {
-          pct: Math.round(weather.cloudCoverPct),
-        })
-      : t('CLOUD UNKNOWN');
-  }
-  if (this.localPrecipitation) {
-    this.localPrecipitation.textContent = Number.isFinite(
-      weather?.precipitationMm,
-    )
-      ? formatNumber(weather.precipitationMm, {
-          useGrouping: false,
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        })
-      : '—';
-  }
   if (this.signalStream)
     this.signalStream.dataset.regionalStatus = payload?.status || 'partial';
   if (this.briefPageIndex === 1 && this.briefSource) {

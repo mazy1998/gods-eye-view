@@ -19,6 +19,9 @@ import { CockpitCoordinator } from './cockpitCoordinator.js';
 import { ContextControls } from './context.js';
 import { CctvControls } from './cctv.js';
 import { mountView } from './mountView.js';
+import { mountCockpitContact } from './cockpitContact.js';
+import { mountCockpitBriefingPages } from './cockpitBriefingPages.js';
+import { mountCockpitVision } from './cockpitVision.js';
 import { createMapStackChannel } from './mapStackChannel.js';
 import StyleIndicator from './StyleIndicator.vue';
 import ShellDrawer from './ShellDrawer.vue';
@@ -237,7 +240,6 @@ export class StyleManager extends ShellFacade {
         setScopeMaskFeather: services.setScopeMaskFeather,
       },
       elements: {
-        _cockpitDisplayToggleBtn: this._cockpitDisplayToggleBtn,
         _detectionDensityValue: this._detectionDensityValue,
         _ppToggles: this._ppToggles,
         _sliderContainer: this._sliderContainer,
@@ -252,6 +254,7 @@ export class StyleManager extends ShellFacade {
         _scheduleRightPanelLayout: (...args) =>
           this._scheduleRightPanelLayout(...args),
         _setCockpitDisclosure: (...args) => this._setCockpitDisclosure(...args),
+        _cockpitDisclosure: () => this._cockpitDisclosure(),
         _setMapStack: (...args) => this._setMapStack(...args),
         _syncPanelCollapseButton: (...args) =>
           this._syncPanelCollapseButton(...args),
@@ -443,6 +446,28 @@ export class StyleManager extends ShellFacade {
         this._drawer?.resume();
       },
     });
+    this._cockpitContact = mountCockpitContact(
+      (...args) => this._mountView(...args),
+      {
+        panel: document.getElementById('cockpit-context'),
+        cockpit: this._cockpitCoordinator.cockpitView,
+      },
+    );
+    this._cockpitBriefingPages = mountCockpitBriefingPages(
+      (...args) => this._mountView(...args),
+      {
+        news: document.querySelector('[data-cockpit-brief-page="news"]'),
+        local: document.querySelector('[data-cockpit-brief-page="local"]'),
+        cockpit: this._cockpitCoordinator.cockpitView,
+      },
+    );
+    this._cockpitVision = mountCockpitVision(
+      (...args) => this._mountView(...args),
+      {
+        group: document.querySelector('.cockpit-vision-controls'),
+        cockpit: this._cockpitCoordinator.cockpitView,
+      },
+    );
 
     // Full-globe sun/moon ring. It is a crisp screen-space overlay above the
     // Cesium canvas but below the HUD/detection/readout z ladder.
@@ -1897,9 +1922,10 @@ export class StyleManager extends ShellFacade {
     this._updateHudButtonState();
 
     this._lifetime.listen(this._cockpitDisplayToggleBtn, 'click', () => {
-      const open =
-        this._cockpitDisplayToggleBtn.getAttribute('aria-expanded') === 'true';
-      this._setCockpitDisclosure?.('display', !open);
+      this._setCockpitDisclosure?.(
+        'display',
+        this._cockpitDisclosure() !== 'display',
+      );
     });
     this._initCockpitDisplayPortal();
   }
@@ -1957,6 +1983,9 @@ export class StyleManager extends ShellFacade {
     this._unsubscribeDisplayViews?.();
     this._contactsPanel?.dispose();
     this._missionPanels?.dispose();
+    this._cockpitContact?.dispose();
+    this._cockpitBriefingPages?.dispose();
+    this._cockpitVision?.dispose();
     for (const view of this._views) view.dispose();
     this._views.clear();
     this._navigation.stop();

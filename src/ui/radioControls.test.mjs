@@ -26,12 +26,15 @@ class Element extends EventTarget {
   querySelector() {
     return null;
   }
+  closest() {
+    return null;
+  }
   focus() {
     this.focusCount++;
   }
 }
 
-function fixture() {
+function fixture(extraElements = {}) {
   const prior = { document: globalThis.document, window: globalThis.window };
   const document = new EventTarget();
   document.getElementById = () => null;
@@ -67,6 +70,8 @@ function fixture() {
     scheduleLayout() {},
     getLifecycle: () => null,
     preservePanelStateDuringClear: () => false,
+    setSignalCollapsed: () => calls.push('collapse-briefing'),
+    revealStyleParameters() {},
   };
   const controls = new RadioControls({
     view: {
@@ -79,6 +84,7 @@ function fixture() {
       _radioPanel: panel,
       _radioEnableBtn: enable,
       _radioNextBtn: next,
+      ...extraElements,
     },
     radio,
     actions,
@@ -192,6 +198,34 @@ test('the tuner interaction owner retains its slot independently of the slider',
     );
     f.controls._radioTunerSlider.value = '9';
     assert.equal(f.controls._radioTunerSlot, 4);
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('the open Cockpit disclosure is held by Radio, not read from its launchers', () => {
+  const radioToggle = new Element();
+  const displayToggle = new Element();
+  const f = fixture({
+    _cockpitRadioToggleBtn: radioToggle,
+    _cockpitDisplayToggleBtn: displayToggle,
+  });
+  try {
+    radioToggle.dispatchEvent(new Event('click'));
+    assert.equal(f.controls._cockpitDisclosure, 'radio');
+    assert.equal(radioToggle.getAttribute('aria-expanded'), 'true');
+    assert.ok(f.calls.includes('collapse-briefing'));
+    // A launcher that says otherwise does not change what a click does.
+    radioToggle.setAttribute('aria-expanded', 'false');
+    radioToggle.dispatchEvent(new Event('click'));
+    assert.equal(f.controls._cockpitDisclosure, null);
+    f.controls._setCockpitDisclosure('display', true);
+    assert.equal(f.controls._cockpitDisclosure, 'display');
+    assert.equal(radioToggle.getAttribute('aria-expanded'), 'false');
+    // Closing either kind closes both, as before.
+    f.controls._setCockpitDisclosure('radio', false);
+    assert.equal(f.controls._cockpitDisclosure, null);
+    assert.equal(displayToggle.getAttribute('aria-expanded'), 'false');
   } finally {
     f.cleanup();
   }

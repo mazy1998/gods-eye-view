@@ -1,4 +1,5 @@
 /** Coordinate Cockpit lifecycle through supplied aircraft, terrain, rendering and briefing operations. */
+import { createStateChannel } from '../app/stateChannel.js';
 import {
   readAircraftInfo,
   dispatchCockpitModeChanged,
@@ -19,8 +20,10 @@ import {
   cycleVisionMode,
   clearPredictiveRoute,
 } from './cockpitInstruments.js';
-import { updateContext } from './cockpitContext.js';
+import { emptyContextReadout, updateContext } from './cockpitContext.js';
 import {
+  emptyBriefView,
+  setBriefView,
   showBriefPage,
   setBriefAutoRotate,
   startBriefRotation,
@@ -113,13 +116,8 @@ export class CockpitViewController {
     this.routeDirectionLabel = document.getElementById(
       'cockpit-route-direction-label',
     );
-    this.visionPrevious = document.getElementById('cockpit-vision-previous');
-    this.visionCurrent = document.getElementById('cockpit-vision-current');
-    this.visionCurrentLabel = document.getElementById(
-      'cockpit-vision-current-label',
-    );
-    this.visionNext = document.getElementById('cockpit-vision-next');
     this.visionMode = 'optical';
+    this.visionChannel = createStateChannel(() => ({ mode: this.visionMode }));
     this.onVisionChange = onVisionChange;
     this.getInitialVisionMode =
       typeof getInitialVisionMode === 'function'
@@ -135,30 +133,14 @@ export class CockpitViewController {
     this.isEntryAllowed =
       typeof isEntryAllowed === 'function' ? isEntryAllowed : () => true;
     this.context = document.getElementById('cockpit-context');
-    this.contextSubject = document.getElementById('cockpit-context-subject');
-    this.contextNearestLabel = document.getElementById(
-      'cockpit-context-nearest-label',
-    );
-    this.contextBearing = document.getElementById('cockpit-context-bearing');
-    this.contextDistance = document.getElementById('cockpit-context-distance');
-    this.contextDirection = document.getElementById(
-      'cockpit-context-direction',
-    );
-    this.contextUncertainty = document.getElementById(
-      'cockpit-context-uncertainty',
-    );
-    this.contextUpdated = document.getElementById('cockpit-context-updated');
-    this.contextCohorts = new Map(
-      Array.from(document.querySelectorAll('[data-context-cohort]')).map(
-        (element) => [element.dataset.contextCohort, element],
-      ),
-    );
-    this.contextPrevious = document.getElementById('cockpit-context-previous');
-    this.contextNext = document.getElementById('cockpit-context-next');
-    this.contextToggle = document.getElementById('cockpit-context-toggle');
-    this.weatherToggle = document.getElementById('cockpit-weather-toggle');
-    this.weatherState = document.getElementById('cockpit-weather-state');
+    // The weather toggle's state: set by a click and by every state the
+    // weather effects report. A click asks for the opposite of it.
+    this.weatherEnabled = false;
     this.contextCollapsed = false;
+    // The Contact panel's last derived readout; a lost contact holds it.
+    this.contextReadout = emptyContextReadout();
+    this.contactChannel = createStateChannel(() => this.contactView());
+    this._contactSignature = '';
     this.signalStream = document.getElementById('cockpit-signal-stream');
     this.signalList = document.getElementById('cockpit-signal-list');
     this.signalToggle = document.getElementById('cockpit-signal-toggle');
@@ -175,24 +157,13 @@ export class CockpitViewController {
     this.briefTabs = Array.from(
       document.querySelectorAll('[data-cockpit-brief-index]'),
     );
-    this.newsStatus = document.getElementById('cockpit-news-status');
-    this.newsList = document.getElementById('cockpit-news-list');
-    this.localPlace = document.getElementById('cockpit-local-place');
-    this.localCoordinates = document.getElementById(
-      'cockpit-local-coordinates',
-    );
-    this.localTemperature = document.getElementById(
-      'cockpit-local-temperature',
-    );
-    this.localWind = document.getElementById('cockpit-local-wind');
-    this.localWindDirection = document.getElementById(
-      'cockpit-local-wind-direction',
-    );
-    this.localCondition = document.getElementById('cockpit-local-condition');
-    this.localCloud = document.getElementById('cockpit-local-cloud');
-    this.localPrecipitation = document.getElementById(
-      'cockpit-local-precipitation',
-    );
+    // What the briefing's News and Local pages show.
+    this.briefView = emptyBriefView();
+    this.briefChannel = createStateChannel(() => this.briefView);
+    this._briefSignature = '';
+    // Each rolling readout's last text and value and when it last rolled:
+    // a new value rolls from these, at most once per 220 ms.
+    this.rollingReadouts = { speed: {}, altitude: {}, heading: {} };
     this.signalCollapsed = false;
     this.signalUserCollapsed = false;
     this.signalItems = [];
@@ -202,6 +173,9 @@ export class CockpitViewController {
     this.briefTimer = null;
     this.lastAircraftInfo = null;
     this.regionalBrief = null;
+    // Where the regional brief stands for the current subject: null before a
+    // request, 'loading', 'unavailable', or 'loaded' with regionalBrief set.
+    this.regionalBriefStatus = null;
     this.regionalBriefAnchor = null;
     this.regionalBriefFetchedAt = 0;
     this.regionalBriefAbort = null;
@@ -238,28 +212,6 @@ export class CockpitViewController {
     this._listen(this.entry, 'click', () => this.enter());
     this._listen(this.tr3bToggle, 'click', () => this.toggleTrackedTr3b());
     this._listen(this.mapViewButton, 'click', () => this.exit());
-    this._listen(this.visionPrevious, 'click', () => this.cycleVisionMode(-1));
-    this._listen(this.visionCurrent, 'click', () => this.cycleVisionMode(1));
-    this._listen(this.visionNext, 'click', () => this.cycleVisionMode(1));
-    this._listen(this.contextPrevious, 'click', () =>
-      this.navigateContext(-1, { origin: 'user' }),
-    );
-    this._listen(this.contextNext, 'click', () =>
-      this.navigateContext(1, { origin: 'user' }),
-    );
-    this._listen(this.contextToggle, 'click', () =>
-      this.setContextCollapsed(!this.contextCollapsed),
-    );
-    this._listen(this.weatherToggle, 'click', () => {
-      const enabled =
-        this.weatherToggle.getAttribute('aria-pressed') !== 'true';
-      this.syncWeatherToggle(enabled);
-      window.dispatchEvent(
-        new CustomEvent('gev:cockpit-weather-toggle', {
-          detail: { enabled },
-        }),
-      );
-    });
     this._listen(window, 'gev:cockpit-weather-state', (event) => {
       this.syncWeatherToggle(event?.detail?.enabled !== false);
     });
@@ -319,6 +271,42 @@ export class CockpitViewController {
   navigateContext(direction, options) {
     return navigateContext.call(this, direction, options);
   }
+  /** The Contact panel's collapse control, while its view shows it. */
+  get contextToggle() {
+    return this.context?.querySelector('#cockpit-context-toggle') ?? null;
+  }
+  /** What the Contact panel shows: its readout, collapse and weather state. */
+  contactView() {
+    return {
+      ...this.contextReadout,
+      collapsed: this.contextCollapsed,
+      weatherEnabled: this.weatherEnabled,
+    };
+  }
+  getContactView() {
+    return this.contactChannel.getSnapshot();
+  }
+  subscribeContactView(listener, options) {
+    return this.contactChannel.subscribe(listener, options);
+  }
+  /** Publish the Contact panel when what it shows has changed. */
+  publishContactView() {
+    const signature = JSON.stringify(this.contactView());
+    if (signature === this._contactSignature) return;
+    this._contactSignature = signature;
+    this.contactChannel.publish();
+  }
+  toggleContactPanel() {
+    this.setContextCollapsed(!this.contextCollapsed);
+  }
+  /** Ask the weather effects for the opposite of the toggle's state. */
+  toggleWeather() {
+    const enabled = !this.weatherEnabled;
+    this.syncWeatherToggle(enabled);
+    window.dispatchEvent(
+      new CustomEvent('gev:cockpit-weather-toggle', { detail: { enabled } }),
+    );
+  }
   _adoptTrackedEntity(nowMs, suppliedInfo) {
     return _adoptTrackedEntity.call(this, nowMs, suppliedInfo);
   }
@@ -363,6 +351,21 @@ export class CockpitViewController {
   }
   stopBriefRotation() {
     return stopBriefRotation.call(this);
+  }
+  getVisionView() {
+    return this.visionChannel.getSnapshot();
+  }
+  subscribeVisionView(listener, options) {
+    return this.visionChannel.subscribe(listener, options);
+  }
+  getBriefView() {
+    return this.briefChannel.getSnapshot();
+  }
+  subscribeBriefView(listener, options) {
+    return this.briefChannel.subscribe(listener, options);
+  }
+  setBriefView(view) {
+    return setBriefView.call(this, view);
   }
   updateLocalPosition(info) {
     return updateLocalPosition.call(this, info);

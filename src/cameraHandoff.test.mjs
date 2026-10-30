@@ -2,7 +2,6 @@ import { LayerBindings } from './ui/layerBindings.js';
 import { readShellSource, shellMethod } from './testSupport/readShellSource.mjs';
 import { readLayerSource } from './testSupport/readLayerSource.mjs';
 import { enter as cockpitEnter, navigateContext } from './ui/cockpitTrackingController.js';
-import { CockpitViewController } from './ui/cockpitController.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -137,13 +136,17 @@ test('voice Cockpit next/previous shares the manual Context navigation path', ()
   // and the voice verb both hand off through the owning layer's tracker, which
   // is what stamps. Divergence here is how a voice-only camera path escapes
   // the arbiter.
-  assert.match(
-    CockpitViewController.toString(),
-    /this\._listen\(this\.contextPrevious, 'click', \(\) =>\s*this\.navigateContext\(-1, \{ origin: 'user' \}\),?\s*\);/,
+  const contactControls = fs.readFileSync(
+    new URL('./ui/cockpitContact.js', import.meta.url),
+    'utf8',
   );
   assert.match(
-    CockpitViewController.toString(),
-    /this\._listen\(this\.contextNext, 'click', \(\) =>\s*this\.navigateContext\(1, \{ origin: 'user' \}\),?\s*\);/,
+    contactControls,
+    /onPrevious: \(\) => cockpit\.navigateContext\(-1, \{ origin: 'user' \}\),/,
+  );
+  assert.match(
+    contactControls,
+    /onNext: \(\) => cockpit\.navigateContext\(1, \{ origin: 'user' \}\),/,
   );
   const funnel = navigateContext.toString();
   assert.match(funnel, /const navigationOptions = wasActive\s*\? \{ \.\.\.options, aircraftOnly: true \}\s*: options;/);

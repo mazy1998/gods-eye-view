@@ -160,13 +160,16 @@ test('Cockpit vision cycle exposes every map preset exactly once', () => {
     cycleVisionMode.toString(),
     /const modes = COCKPIT_VISION_MODES;/,
   );
-  assert.match(
-    setVisionMode.toString(),
-    /const labels = \{\s*optical: t\('NORMAL'\),\s*crt: t\('CRT'\),\s*nvg: t\('NVG'\),\s*thermal: t\('FLIR'\),\s*anime: t\('ANIME'\),\s*noir: t\('NOIR'\),\s*snow: t\('SNOW'\),?\s*\};/,
+  const visionView = fs.readFileSync(
+    path.join(ROOT, 'src', 'ui', 'cockpitViews', 'CockpitVisionView.vue'),
+    'utf8',
   );
-  assert.doesNotMatch(setVisionMode.toString(), /none: 'NONE'/);
+  assert.match(
+    visionView,
+    /const LABELS = \{\s*optical: \(\) => t\('NORMAL'\),\s*crt: \(\) => t\('CRT'\),\s*nvg: \(\) => t\('NVG'\),\s*thermal: \(\) => t\('FLIR'\),\s*anime: \(\) => t\('ANIME'\),\s*noir: \(\) => t\('NOIR'\),\s*snow: \(\) => t\('SNOW'\),?\s*\};/,
+  );
+  assert.doesNotMatch(visionView, /none: /);
   assert.doesNotMatch(ui, /getInheritedVisionLabel/);
-  assert.match(html, /id="cockpit-vision-current-label"[^>]*>NORMAL<\/strong>/);
   assert.match(
     cockpitEnter.toString(),
     /this\.setVisionMode\(this\.getInitialVisionMode\(\)\)/,
@@ -287,14 +290,19 @@ test('the Contact panel never hides itself out from under its own NEXT button', 
   );
   // PREVIOUS/NEXT must be written before any early return, so the operator can
   // always step off the current contact — including a lost one.
-  const navIndex = body.indexOf('this.contextNext.disabled');
+  const navIndex = body.indexOf('const canNext =');
   const lostIndex = body.indexOf('if (readout.contactLost)');
+  assert.match(
+    body.slice(lostIndex),
+    /state: 'lost',[\s\S]*?canPrevious,[\s\S]*?canNext,/,
+    'the held CONTACT LOST readout carries the live navigation state',
+  );
   assert.ok(
     navIndex >= 0 && lostIndex > navIndex,
     'nav state must be written before the CONTACT LOST return',
   );
   assert.equal(
-    (body.match(/this\.contextNext\.disabled/g) || []).length,
+    (body.match(/const canNext =/g) || []).length,
     1,
     'one owner for the NEXT enabled state, reached by every visible path',
   );
@@ -1112,7 +1120,7 @@ test('Cockpit Display portals shared HUD, Detection, Parameters, and 3D controls
   );
   assert.match(
     ui,
-    /_revealCockpitStyleParameters\(\{ openDisplay = false \} = \{\}\) \{[\s\S]*?openDisplay[\s\S]*?_setCockpitDisclosure\?\.\('display', true\)[\s\S]*?aria-expanded'\) !== 'true'[\s\S]*?classList\.remove\('collapsed'\)/,
+    /_revealCockpitStyleParameters\(\{ openDisplay = false \} = \{\}\) \{[\s\S]*?const displayOpen = this\._cockpitDisclosure\?\.\(\) === 'display';[\s\S]*?openDisplay && !displayOpen[\s\S]*?_setCockpitDisclosure\?\.\('display', true\)[\s\S]*?if \(!displayOpen\) return;[\s\S]*?classList\.remove\('collapsed'\)/,
   );
   assert.match(
     radioBindings,
@@ -1195,41 +1203,24 @@ test('cockpit aircraft handoff invalidates the prior world-position anchor', () 
   assert.match(match, /this\.lastFrameMs = nowMs;/);
 });
 
-test('cockpit weather control is off before JavaScript restores an explicit opt-in', () => {
-  const match = html.match(
-    /<button\s+id="cockpit-weather-toggle"[\s\S]*?<\/button>/,
-  );
-  assert.ok(match, 'cockpit weather toggle markup is missing');
-  assert.match(match[0], /aria-label="Enable cockpit weather effects"/);
-  assert.match(match[0], /aria-pressed="false"/);
-  assert.match(match[0], /id="cockpit-weather-state">OFF</);
-});
-
-test('cockpit summary presents the focused item as Contact', () => {
-  const match = html.match(/<aside id="cockpit-context"[\s\S]*?<\/aside>/);
+test('cockpit summary is the Contact panel its view fills', () => {
+  // The panel's content, weather control included, is rendered and tested
+  // by its view (cockpitViews/cockpitContactView.test.mjs).
+  const match = html.match(/<aside id="cockpit-context"[^>]*>/);
   assert.ok(match, 'cockpit Contact summary is missing');
   assert.match(match[0], /aria-label="Contact cockpit summary"/);
-  assert.match(match[0], /class="cockpit-context-kicker">CONTACT</);
-  assert.match(match[0], /aria-label="Contact navigation"/);
-  assert.match(
-    match[0],
-    /aria-label="Previous — prior visited contact in the 250 km window"/,
-  );
-  assert.match(
-    match[0],
-    /aria-label="Next — nearest unvisited contact in the 250 km window"/,
-  );
-  assert.match(match[0], /aria-label="Collapse Contact panel"/);
-  assert.doesNotMatch(match[0], />GLOBAL CONTEXT</);
-  assert.match(
-    setContextCollapsed.toString(),
-    /expanded \? t\('Collapse Contact panel'\) : t\('Expand Contact panel'\)/,
-  );
+  assert.match(match[0], /\bhidden\b/);
+  assert.doesNotMatch(html, />GLOBAL CONTEXT</);
 });
 
 test('Cockpit Contact navigation omits the redundant Focus camera action', () => {
-  assert.match(html, /id="cockpit-context-previous"/);
-  assert.match(html, /id="cockpit-context-next"/);
+  const contactView = fs.readFileSync(
+    path.join(ROOT, 'src', 'ui', 'cockpitViews', 'CockpitContactView.vue'),
+    'utf8',
+  );
+  assert.match(contactView, /id="cockpit-context-previous"/);
+  assert.match(contactView, /id="cockpit-context-next"/);
+  assert.doesNotMatch(contactView, /id="cockpit-context-focus"/);
   assert.doesNotMatch(html, /id="cockpit-context-focus"/);
   assert.doesNotMatch(ui, /contextFocus|militaryAwarenessLayer\.focusCurrent/);
 });

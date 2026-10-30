@@ -1176,6 +1176,7 @@
   "src/voice/voiceCardCompat.test.mjs",
   "src/ui/styles/voice-card-view.css",
   "src/ui/styles/directions.css",
+  "src/ui/styles/cockpit-views.css",
   "src/ui/directionsView.test.mjs",
   "src/ui/displayViews/ImageAdjustmentGroup.vue",
   "src/ui/displayViews/StyleParametersView.vue",
@@ -1203,5 +1204,16 @@
   "src/ui/contextViews/missionPanelViews.test.mjs",
   "src/ui/styles/inspect.css",
   "src/ui/styles/inspectMissionReplay.test.mjs",
-  "scripts/qa-cyber-inspect-structure.json"
+  "scripts/qa-cyber-inspect-structure.json",
+  "src/ui/cockpitOwnerState.test.mjs",
+  "src/ui/cockpitContact.js",
+  "src/ui/cockpitViews/CockpitContactView.vue",
+  "src/ui/cockpitViews/cockpitContactView.test.mjs",
+  "src/ui/cockpitBriefingPages.js",
+  "src/ui/cockpitViews/CockpitNewsView.vue",
+  "src/ui/cockpitViews/CockpitLocalView.vue",
+  "src/ui/cockpitViews/cockpitBriefingPages.test.mjs",
+  "src/ui/cockpitVision.js",
+  "src/ui/cockpitViews/CockpitVisionView.vue",
+  "src/ui/cockpitViews/cockpitVisionView.test.mjs"
 ]

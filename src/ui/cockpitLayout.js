@@ -33,19 +33,7 @@ export function setContextCollapsed(collapsed) {
   this.contextCollapsed = Boolean(collapsed);
   if (this.context)
     this.context.dataset.collapsed = String(this.contextCollapsed);
-  if (this.contextToggle) {
-    const expanded = !this.contextCollapsed;
-    this.contextToggle.setAttribute('aria-expanded', String(expanded));
-    this.contextToggle.setAttribute(
-      'aria-label',
-      expanded ? t('Collapse Contact panel') : t('Expand Contact panel'),
-    );
-    this.contextToggle.title = t(
-      expanded ? msg('Collapse contact panel') : msg('Expand contact panel'),
-    );
-    const icon = this.contextToggle.querySelector('.material-symbols-outlined');
-    if (icon) icon.textContent = expanded ? 'chevron_left' : 'chevron_right';
-  }
+  this.publishContactView();
   if (this.active && wasCollapsed && !this.contextCollapsed) {
     window.dispatchEvent(new CustomEvent('gev:cockpit-context-expanded'));
   }

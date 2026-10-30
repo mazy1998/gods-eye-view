@@ -9,6 +9,9 @@ export class RadioControls {
     this._view = view;
     this._radioTunerView = {};
     this._radioEnablePending = false;
+    // Which Cockpit utility disclosure is open: 'display', 'radio' or null.
+    // The two are mutually exclusive; their launchers only reflect this.
+    this._cockpitDisclosure = null;
     this.radio = radio;
     this.actions = actions;
     this.canvas = canvas;

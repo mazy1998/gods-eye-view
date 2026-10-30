@@ -28,6 +28,11 @@ export function bindRadioControls() {
     if (this.destroyed) return;
     const displayOpen = kind === 'display' && Boolean(expanded);
     const radioOpen = kind === 'radio' && Boolean(expanded);
+    this._cockpitDisclosure = displayOpen
+      ? 'display'
+      : radioOpen
+        ? 'radio'
+        : null;
     if (displayOpen || radioOpen) this.actions.setSignalCollapsed(true);
     if (this._cockpitDisplayPanel)
       this._cockpitDisplayPanel.hidden = !displayOpen;
@@ -420,9 +425,7 @@ export function bindRadioControls() {
     this._radioEnableBtn?.focus({ preventScroll: true });
   });
   this.listen(this._cockpitRadioToggleBtn, 'click', () => {
-    const open =
-      this._cockpitRadioToggleBtn.getAttribute('aria-expanded') === 'true';
-    setCockpitDisclosure('radio', !open);
+    setCockpitDisclosure('radio', this._cockpitDisclosure !== 'radio');
   });
   this.listen(
     document,
@@ -480,10 +483,8 @@ export function bindRadioControls() {
     'keydown',
     (event) => {
       if (event.key !== 'Escape') return;
-      const displayOpen =
-        this._cockpitDisplayToggleBtn?.getAttribute('aria-expanded') === 'true';
-      const radioOpen =
-        this._cockpitRadioToggleBtn?.getAttribute('aria-expanded') === 'true';
+      const displayOpen = this._cockpitDisclosure === 'display';
+      const radioOpen = this._cockpitDisclosure === 'radio';
       if (!displayOpen && !radioOpen) return;
       const nestedPanel = event.target?.closest?.(
         '.panel-collapsible:not(.collapsed), #param-slider-panel:not(.collapsed)',
