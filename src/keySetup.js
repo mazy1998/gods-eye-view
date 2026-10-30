@@ -626,7 +626,7 @@ export async function initKeySetup({
         if (!available) {
           say(
             t('ChatGPT sign-in timed out. Click {button} to try again.', {
-              button: t('USE CHATGPT OAUTH'),
+              button: t('Local OAuth'),
             }),
           );
           return;

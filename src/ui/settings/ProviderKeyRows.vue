@@ -39,6 +39,24 @@ const additional = computed(() =>
   keys.value.filter((key) => !primary.includes(key.id)),
 );
 
+const placeholder = (key, envVar) => {
+  if (envVar.endsWith('CLIENT_ID'))
+    return key.set ? t('Paste replacement client ID') : t('Paste client ID');
+  if (envVar.endsWith('CLIENT_SECRET'))
+    return key.set
+      ? t('Paste replacement client secret')
+      : t('Paste client secret');
+  if (envVar.endsWith('TOKEN'))
+    return key.set ? t('Paste replacement token') : t('Paste token');
+  return key.set ? t('Paste replacement API key') : t('Paste API key');
+};
+const linkLabel = (key) =>
+  key.set
+    ? t('Manage ↗')
+    : key.id === 'cesium-ion'
+      ? t('Get a token ↗')
+      : t('Get key ↗');
+
 const TIER_DOTS = { metered: '🔴', paid: '🔴', free: '🟡' };
 const tierTitle = (tier) =>
   tier === 'metered'
@@ -72,9 +90,12 @@ watch(
       <strong>{{
         embedded ? productNames[key.id] || key.title : key.title
       }}</strong>
-      <span v-if="embedded" class="key-setup-state">{{
-        key.set ? t('Configured') : t('Not configured')
-      }}</span>
+      <span
+        v-if="embedded"
+        class="key-setup-state"
+        :title="tierTitle(key.tier)"
+        >{{ key.set ? t('Configured') : t('Not configured') }}</span
+      >
       <span class="key-setup-tier" :title="tierTitle(key.tier)">{{
         TIER_DOTS[key.tier] || ''
       }}</span>
@@ -105,7 +126,7 @@ watch(
         :href="key.getUrl"
         target="_blank"
         rel="noopener noreferrer"
-        >{{ key.set ? t('MANAGE ↗') : t('GET KEY ↗') }}</a
+        >{{ linkLabel(key) }}</a
       >
     </div>
     <p class="key-setup-unlocks">{{ t(key.unlocks) }}</p>
@@ -120,11 +141,7 @@ watch(
         spellcheck="false"
         :data-env-var="envVar"
         :aria-label="envVar"
-        :placeholder="
-          key.set
-            ? t('{envVar} saved — paste to replace', { envVar })
-            : t('paste {envVar}', { envVar })
-        "
+        :placeholder="placeholder(key, envVar)"
       />
       <button
         v-if="key.managed === 'file'"
@@ -145,13 +162,19 @@ watch(
       :href="key.getUrl"
       target="_blank"
       rel="noopener noreferrer"
-      >{{ key.set ? t('MANAGE ↗') : t('GET KEY ↗') }}</a
+      >{{ linkLabel(key) }}</a
     >
-    <div v-if="key.id === 'openai'" class="key-setup-cloud-auth">
+    <div
+      v-if="key.id === 'openai'"
+      class="key-setup-cloud-auth"
+      :class="{
+        'key-setup-cloud-auth--oauth': owner.cloudVoiceAuth === 'oauth',
+      }"
+      role="group"
+      :aria-label="t('Voice authentication')"
+    >
       <span class="key-setup-cloud-auth-state">{{
-        owner.cloudVoiceAuth === 'oauth'
-          ? t('VOICE AUTH · CHATGPT OAUTH')
-          : t('VOICE AUTH · API KEY')
+        owner.cloudVoiceAuth === 'oauth' ? t('Local OAuth') : t('API key')
       }}</span>
       <!-- Stays focusable while busy; the owner ignores repeats. -->
       <button
@@ -168,11 +191,7 @@ watch(
         :aria-disabled="String(owner.oauthBusy)"
         @click="onToggleCloudVoiceAuth()"
       >
-        {{
-          owner.cloudVoiceAuth === 'oauth'
-            ? t('USE API KEY')
-            : t('USE CHATGPT OAUTH')
-        }}
+        {{ owner.cloudVoiceAuth === 'oauth' ? t('API key') : t('Local OAuth') }}
       </button>
     </div>
   </section>
@@ -191,5 +210,21 @@ watch(
         ? t('Fewer providers')
         : t('+ {count} more providers', { count: additional.length })
     }}
+    <svg
+      class="key-setup-more-chevron"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d="m9 5 7 7-7 7"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
   </button>
 </template>

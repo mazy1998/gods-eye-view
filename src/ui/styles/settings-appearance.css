@@ -131,6 +131,7 @@
   font-size: 12px;
   letter-spacing: 0;
   color: var(--gev-accent-text);
+  text-transform: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup
@@ -159,19 +160,7 @@
   input:focus {
   border-color: var(--gev-focus-ring);
 }
-:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-cloud-auth {
-  flex-wrap: wrap;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  #key-setup
-  .key-setup-cloud-auth-state {
-  color: var(--gev-text-muted);
-  font: 12px / 1.4 var(--gev-font-sans);
-  letter-spacing: 0;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  #key-setup
-  .key-setup-cloud-auth-toggle,
+
 :where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-close,
 :where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-remove {
   min-height: 32px;
@@ -417,15 +406,111 @@
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup.key-setup-embedded
   .key-setup-tier {
-  grid-area: 2 / 1;
+  display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup.key-setup-embedded
   .key-setup-exposed {
-  grid-area: 2 / 2;
+  grid-row: 2;
+  grid-column: 1 / -1;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup.key-setup-embedded
   .key-setup-external {
   grid-column: 1 / -1;
+}
+
+/* Embedded cards keep one state pill; exposure remains a quiet restriction hint. */
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  :is(.key-setup-exposed, .key-setup-external) {
+  grid-column: 1 / -1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--gev-text-muted);
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-cloud-auth {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-state,
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--gev-radius-sm);
+  font: 13px / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-state {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle {
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth--oauth
+  .key-setup-cloud-auth-state {
+  order: 2;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  font: 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: start;
+  color: var(--gev-text);
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-more-chevron {
+  flex: none;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-more[aria-expanded='true']
+  .key-setup-more-chevron {
+  transform: rotate(90deg);
+}
+:root[data-ui-theme='cyber'] .key-setup-more-chevron {
+  display: none;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
 }
