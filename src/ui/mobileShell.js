@@ -710,7 +710,16 @@ export function initMobileShell({
     isPresenting: () => presenting,
     reveal,
     setDestination,
-    toggle: (sheet) => setSheet(nextSheet(currentSheet, sheet)),
+    /**
+     * Open a sheet, or close it when it is open: true when the shell did
+     * either, so a caller's own fallback (the Layers shortcut toggling the
+     * panel in Cockpit) runs only where the shell is not in use.
+     */
+    toggle: (sheet) => {
+      if (destroyed || !active || sheetBlocked(body)) return false;
+      // setSheet returns nothing once it has closed the open sheet.
+      return setSheet(nextSheet(currentSheet, sheet)) ?? true;
+    },
     setSheet,
     getSheet: () => currentSheet,
     /**

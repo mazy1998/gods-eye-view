@@ -16,7 +16,12 @@ const ORDER = SHARE_PANEL_STATE_SPECS.map((spec) => spec.id);
  * Today's stacks and panels, with a PanelChrome-shaped channel over them, or
  * with PanelChrome itself owning them (`chrome`).
  */
-function fixture({ phone = false, chrome = false, isPhonePresenting } = {}) {
+function fixture({
+  phone = false,
+  chrome = false,
+  isPhonePresenting,
+  onRevealPanel,
+} = {}) {
   document.body.insertAdjacentHTML(
     'beforeend',
     `<div id="left-panel-stack">
@@ -49,7 +54,11 @@ function fixture({ phone = false, chrome = false, isPhonePresenting } = {}) {
   const setPanelCollapsed = (id, collapsed, options) => {
     calls.push([id, collapsed, options]);
     document.getElementById(id).classList.toggle('collapsed', collapsed);
-    panelChannel.publish({ type: 'panel-changed', panelId: id });
+    panelChannel.publish(
+      options?.presentation
+        ? { type: 'panel-changed', panelId: id, presentation: true }
+        : { type: 'panel-changed', panelId: id },
+    );
   };
   const listeners = new Set();
   const media = {
@@ -87,6 +96,7 @@ function fixture({ phone = false, chrome = false, isPhonePresenting } = {}) {
     restoreOrder: ORDER,
     phone: media,
     isPhonePresenting,
+    onRevealPanel,
   });
   document.body.append(drawer.host);
   // As PanelChrome restores a share or history state: the listed panels only.
@@ -129,7 +139,11 @@ test('opening moves the very same panels into the drawer, expanded, and closing 
   );
   assert.equal(panel.classList.contains('collapsed'), false);
   assert.deepEqual(calls, [
-    ['data-panel', false, { persist: false, syncShare: false }],
+    [
+      'data-panel',
+      false,
+      { persist: false, syncShare: false, presentation: true },
+    ],
   ]);
   drawer.close();
   assert.equal(panel.parentElement.id, 'left-panel-stack');
@@ -275,6 +289,50 @@ test("Radio's home in Layers is the Audio group, after its layer row, and expand
   assert.equal(radio.previousSibling, home, 'back in its place in Context');
 });
 
+test('Radio borrowed before the Layers list renders moves into the Audio group once it does', async (t) => {
+  const { drawer } = fixture();
+  t.after(() => drawer.destroy());
+  // A stored preference opens Layers at startup, before its list mounts.
+  drawer.open('layers');
+  const radio = document.getElementById('radio-panel');
+  assert.equal(radio.parentElement, drawer.host);
+  const focus = document.createElement('button');
+  radio.append(focus);
+  focus.focus();
+  document
+    .getElementById('data-panel')
+    .insertAdjacentHTML(
+      'beforeend',
+      '<section data-layer-group="Audio"><div data-layer-id="radio"></div></section>',
+    );
+  await Promise.resolve();
+  const audio = document.querySelector('[data-layer-group="Audio"]');
+  assert.equal(radio.parentElement, audio);
+  assert.equal(document.activeElement, focus, 'focus moves with it');
+  drawer.close();
+  assert.equal(drawer.host.contains(radio), false);
+});
+
+test("a directly hosted panel's details scroll it into view in its open destination", async (t) => {
+  const { drawer, setPanelCollapsed } = fixture();
+  t.after(() => drawer.destroy());
+  // Weather has been on the map for a while, its panel collapsed.
+  const weather = document.getElementById('weather-panel');
+  weather.classList.add('collapsed');
+  weather.hidden = false;
+  await Promise.resolve();
+  drawer.open('layers');
+  setPanelCollapsed('weather-panel', true, {});
+  const scrolled = [];
+  weather.scrollIntoView = (options) => scrolled.push(options);
+  // The Weather row's details arrow, with Layers already open.
+  setPanelCollapsed('weather-panel', false, { explicit: true });
+  assert.equal(destination(drawer), 'layers');
+  await flushViews();
+  await flushViews();
+  assert.deepEqual(scrolled.at(-1), { block: 'nearest' });
+});
+
 test("a publication during the drawer's own borrowing cannot move it elsewhere", (t) => {
   const { drawer } = fixture();
   t.after(() => drawer.destroy());
@@ -290,6 +348,38 @@ test("a publication during the drawer's own borrowing cannot move it elsewhere",
   drawer.close();
   assert.equal(
     document.getElementById('data-panel').classList.contains('collapsed'),
+    true,
+  );
+});
+
+test("voice opening Context keeps Context shown while the drawer borrows Inspect's camera panels", (t) => {
+  const revealed = [];
+  const { drawer, chrome } = fixture({
+    chrome: true,
+    onRevealPanel: (id) => revealed.push(id),
+  });
+  t.after(() => drawer.destroy());
+  // Voice expands Context from the closed drawer. Opening Inspect expands
+  // the collapsed camera panels inside that panel's own notification, so
+  // theirs are delivered after it.
+  chrome.setPanelCollapsed('global-context-panel', false, { explicit: true });
+  assert.equal(destination(drawer), 'inspect');
+  assert.equal(revealed.at(-1), 'global-context-panel');
+  assert.equal(revealed.includes('cctv-panel'), false);
+});
+
+test('expanding Radio in Layers while Context is collapsed stays on Layers', (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  t.after(() => drawer.destroy());
+  drawer.open('layers');
+  const seen = [];
+  drawer.channel.subscribe(({ state }) => seen.push(state.destination));
+  // PanelChrome expands Radio's collapsed Context first, to contain it.
+  chrome.setPanelCollapsed('radio-panel', false, { explicit: true });
+  assert.equal(destination(drawer), 'layers');
+  assert.equal(seen.includes('inspect'), false, `went through ${seen}`);
+  assert.equal(
+    drawer.host.contains(document.getElementById('radio-panel')),
     true,
   );
 });
@@ -438,6 +528,40 @@ test('a share or history restore on the phone picks the destination back at desk
   media.set(true);
   restore([]);
   media.set(false);
+  assert.equal(destination(drawer), null);
+});
+
+test("a restore on the phone leaves the restore's lead panel to the phone shell", (t) => {
+  const revealed = [];
+  const { drawer, panelChannel } = fixture({
+    phone: true,
+    onRevealPanel: (id) => revealed.push(id),
+  });
+  t.after(() => drawer.destroy());
+  // An old link: the Visual Presets tray and CCTV expanded, Data collapsed,
+  // led by the tray, as the phone shell presents it.
+  for (const id of ['pp-toggles', 'cctv-panel'])
+    document.getElementById(id).classList.remove('collapsed');
+  panelChannel.publish({
+    type: 'panels-restored',
+    panelIds: ORDER,
+    lead: 'pp-toggles',
+  });
+  assert.deepEqual(revealed, ['pp-toggles']);
+  assert.equal(destination(drawer), null);
+});
+
+test('startup following on a phone leaves the panels to the phone shell', (t) => {
+  const revealed = [];
+  const { drawer } = fixture({
+    phone: true,
+    onRevealPanel: (id) => revealed.push(id),
+  });
+  t.after(() => drawer.destroy());
+  // A stored preference left CCTV expanded and Data collapsed.
+  document.getElementById('cctv-panel').classList.remove('collapsed');
+  drawer.followPanels();
+  assert.deepEqual(revealed, []);
   assert.equal(destination(drawer), null);
 });
 
@@ -598,6 +722,39 @@ test("a Cockpit round trip through PanelChrome's hooks leaves the panels' own st
   assert.equal(stored(), before, 'no stored preference changed');
 });
 
+test('in Cockpit the camera panels stand in the visible left stack, and go back to Context after', (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  t.after(() => {
+    document.body.classList.remove('cockpit-mode');
+    drawer.destroy();
+    chrome.destroy();
+  });
+  // Their home is Context's Cameras view, inside the rail Cockpit hides.
+  const cameras = document.createElement('section');
+  cameras.id = 'context-cameras-view';
+  document.getElementById('global-context-panel').append(cameras);
+  const cctv = document.getElementById('cctv-panel');
+  cameras.append(cctv);
+  drawer.open('inspect');
+  document.body.classList.add('cockpit-mode');
+  drawer.suspend();
+  chrome.enterCockpit();
+  const stack = document.getElementById('left-panel-stack');
+  assert.deepEqual(
+    [...stack.children].map((node) => node.id),
+    ['data-panel', 'cctv-panel', 'scene-panel'],
+  );
+  // Opening CCTV's details there shows it.
+  chrome.setPanelCollapsed('cctv-panel', false, { explicit: true });
+  assert.equal(cctv.parentElement, stack);
+  document.body.classList.remove('cockpit-mode');
+  chrome.exitCockpit();
+  drawer.resume();
+  assert.equal(destination(drawer), 'inspect');
+  drawer.close();
+  assert.equal(cctv.parentElement, cameras, 'home in Context again');
+});
+
 test('the shell suspends the drawer before Cockpit snapshots and resumes it after Cockpit restores', () => {
   const shell = readFileSync(
     new URL('./applicationShell.js', import.meta.url),
@@ -645,6 +802,28 @@ test('closing with focus returns it to the opener, or to the rail button when th
   drawer.open('stories', { focusReturn: opener });
   drawer.close({ focus: true });
   assert.equal(document.activeElement, opener);
+});
+
+test('a switch that takes the focused control away hands focus into the new destination', (t) => {
+  const { drawer } = fixture();
+  t.after(() => drawer.destroy());
+  document
+    .getElementById('scene-panel')
+    .insertAdjacentHTML('beforeend', '<button id="scene-play"></button>');
+  document
+    .getElementById('data-panel')
+    .insertAdjacentHTML('beforeend', '<input id="layer-search" />');
+  document.body.insertAdjacentHTML('beforeend', '<button id="map"></button>');
+  drawer.open('stories');
+  document.getElementById('scene-play').focus();
+  // The Layers shortcut, pressed on a Stories control.
+  drawer.toggle('layers');
+  assert.equal(destination(drawer), 'layers');
+  assert.equal(document.activeElement.id, 'layer-search');
+  // Focus outside the drawer stays where it is.
+  document.getElementById('map').focus();
+  drawer.toggle('stories');
+  assert.equal(document.activeElement.id, 'map');
 });
 
 test('destroy returns every panel and ends the channel', () => {

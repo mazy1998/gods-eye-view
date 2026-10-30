@@ -259,6 +259,9 @@ export class VisualSettings {
     this._detectionUserOverridden = false;
     this._cockpitVisionMode = 'optical';
     this._cockpitVisionRestore = null;
+    // The style the parameter panel shows: the map style, or Cockpit's
+    // vision stage while one is active (null when it has none).
+    this._parameterStyle = this.activeStyle;
     this._contactsDetectionRestore = null;
     let storedDetectionAllocation = 'ELASTIC';
     try {
@@ -1206,6 +1209,7 @@ export class VisualSettings {
     const { isCelestialRingStyleSupported } = this.services;
     return {
       ...this.getVisualState(),
+      parameterStyle: this._parameterStyle,
       celestial: {
         enabled: !!this.readCelestialRing?.()?.enabled,
         eligible: !!isCelestialRingStyleSupported?.(this.activeStyle),
@@ -1470,13 +1474,15 @@ export class VisualSettings {
   }
 
   /**
-   * The parameter panel follows the active style: the StyleParameters view
-   * renders the rows from the published style and values; this owner keeps
-   * the panel's own active state, layout and reveal.
+   * The parameter panel shows one style's parameters: the active style, or
+   * Cockpit's vision stage. The StyleParameters view renders the rows from
+   * the published `parameterStyle` and values; this owner keeps the panel's
+   * own active state, layout and reveal.
    */
   _updateSliderPanel(styleName, { reveal = false } = {}) {
     const shader = STYLES[styleName];
     const shown = !!shader?.uniforms && styleName !== 'normal';
+    this._parameterStyle = shown ? styleName : null;
     this.publishState();
     if (!shown) {
       this._sliderPanel.classList.remove('active');

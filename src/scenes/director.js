@@ -252,7 +252,6 @@ export class SceneDirector {
       this._loadAbort?.abort();
       this._loadGeneration++;
       this.viewer.camera.cancelFlight();
-      clearTimeout(this._storageToastTimer);
       await Promise.allSettled(this._pendingWork || []);
       this._clock.destroy();
       this._cancelActiveSceneTravel();
@@ -360,21 +359,17 @@ export class SceneDirector {
     }
   }
 
-  /** Surface a "scene not saved" notice via the global toast + scene status line. */
+  /**
+   * Surface a "scene not saved" notice on the scene status line and as a
+   * shell toast. The shell's feedback owner renders the toast; writing into
+   * its markup here would detach what it renders from.
+   */
   _toastStorageError(
     message = t('Scene not saved — browser storage unavailable'),
   ) {
     this._updateStatus(message);
     try {
-      const toast = document.getElementById('toast');
-      if (toast) {
-        toast.textContent = message;
-        toast.classList.add('visible');
-        clearTimeout(this._storageToastTimer);
-        this._storageToastTimer = setTimeout(() => {
-          toast.classList.remove('visible');
-        }, 2600);
-      }
+      this.styleManager?._showToast?.(message);
     } catch {
       /* toast is best-effort */
     }

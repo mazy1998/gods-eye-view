@@ -74,6 +74,37 @@ test('Normal has no rows, and a style change replaces them', (t) => {
   assert.equal(document.querySelectorAll('.param-slider-row').length, 0);
 });
 
+test("Cockpit vision's parameter target picks the rows and receives their writes", (t) => {
+  const calls = [];
+  // FLIR over a Noir map: the rows edit the thermal stage Cockpit shows.
+  const view = mount(StyleParametersView, {
+    props: {
+      state: {
+        style: 'noir',
+        parameterStyle: 'thermal',
+        styleParams: { noir: defaults('noir'), thermal: thermal() },
+      },
+      actions: { setStyleParam: (...args) => calls.push(args) },
+    },
+  });
+  t.after(() => view.dispose());
+  const rows = [...document.querySelectorAll('.param-slider-row')];
+  assert.equal(rows.length, Object.keys(STYLES.thermal.uniforms).length);
+  assert.equal(rows[0].children[0].textContent, 'Sensitivity');
+  rows[0].children[1].value = '0.4';
+  rows[0].children[1].dispatchEvent(new Event('input', { bubbles: true }));
+  assert.deepEqual(calls, [['thermal', 'sensitivity', 0.4]]);
+  // Optical vision has no parameters, whatever the map style.
+  view.update({
+    state: {
+      style: 'noir',
+      parameterStyle: null,
+      styleParams: { noir: defaults('noir'), thermal: thermal() },
+    },
+  });
+  assert.equal(document.querySelectorAll('.param-slider-row').length, 0);
+});
+
 test('a row a style change replaced stays inert, even back on its style', (t) => {
   const calls = [];
   const view = mount(StyleParametersView, {

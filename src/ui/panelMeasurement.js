@@ -20,7 +20,7 @@ export function measurePanelNaturalHeight(panel, getComputedStyle) {
   const paddingBottom = parseFloat(innerStyle.paddingBottom) || 0;
   let contentBottom = parseFloat(innerStyle.paddingTop) || 0;
 
-  for (const child of inner.children) {
+  for (const child of laidOutChildren(inner, getComputedStyle)) {
     const childStyle = getComputedStyle(child);
     if (childStyle.display === 'none' || childStyle.visibility === 'hidden')
       continue;
@@ -41,4 +41,20 @@ export function measurePanelNaturalHeight(panel, getComputedStyle) {
     (parseFloat(panelStyle.paddingTop) || 0) +
     (parseFloat(panelStyle.paddingBottom) || 0);
   return Math.ceil(contentBottom + paddingBottom + wrapperChrome);
+}
+
+/**
+ * The children that take part in a node's layout: a `display: contents`
+ * child has no box of its own (a view's mount point), so its children stand
+ * in its place.
+ * @param {Element} node
+ * @param {Function} getComputedStyle
+ * @returns {Element[]}
+ */
+function laidOutChildren(node, getComputedStyle) {
+  return [...node.children].flatMap((child) =>
+    getComputedStyle(child).display === 'contents'
+      ? laidOutChildren(child, getComputedStyle)
+      : [child],
+  );
 }

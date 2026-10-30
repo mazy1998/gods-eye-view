@@ -308,6 +308,20 @@ test('one sheet at a time, presented with aria-expanded and a backdrop', () => {
   assert.equal(document.getElementById('mobile-sheet-backdrop').hidden, true);
 });
 
+test('toggling a sheet reports closing it as handled; a blocked shell handles nothing', () => {
+  const { document, shell } = fixture();
+  // The Layers shortcut falls back to the panel's own visibility when the
+  // shell does not handle it, so a close must count as handled.
+  assert.equal(shell.toggle('layers'), true);
+  assert.equal(shell.getSheet(), 'layers');
+  assert.equal(shell.toggle('layers'), true);
+  assert.equal(shell.getSheet(), null);
+  assert.equal(shell.toggle('layers'), true);
+  assert.equal(shell.getSheet(), 'layers');
+  document.body.classList.add('cockpit-mode');
+  assert.equal(shell.toggle('layers'), false);
+});
+
 test('sheets borrow panels and put them back exactly as they were', () => {
   // The user left Data Layers and Map & Look open on desktop.
   const kept = ['data-panel', 'pp-toggles'];

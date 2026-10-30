@@ -416,6 +416,23 @@ test('natural height includes visible content, margins and wrapper chrome, exclu
   );
 });
 
+test('natural height measures through a display: contents wrapper to its content', () => {
+  // CCTV's controls body has no box of its own; its view's surface does.
+  const panel = element('panel');
+  const inner = element('inner', { top: 100 });
+  const header = element('header', { top: 100, height: 24 });
+  const body = element('body', { top: 0, height: 0 });
+  body.computed.display = 'contents';
+  const surface = element('surface', { top: 124, height: 600 });
+  body.children = [surface];
+  panel.children = [inner];
+  inner.children = [header, body];
+  assert.equal(
+    measurePanelNaturalHeight(panel, (node) => node.computed),
+    624,
+  );
+});
+
 // Reproduce the allocation-dependent readings seen beside the weather card.
 // Outside measurement, CCTV is 391 px in focus and 629 px in normal mode;
 // Removing only the allocation leaves focus CSS active: its next reading is

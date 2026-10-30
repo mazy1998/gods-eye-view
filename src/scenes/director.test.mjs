@@ -1919,6 +1919,27 @@ test('a delayed import cannot publish after disposal', async () => {
   } finally { restore(); }
 });
 
+test("a storage notice goes through the shell's feedback owner, never into the toast's own markup", () => {
+  const { director, styleManager, restore } = makeDirector();
+  const writes = [];
+  const toast = {
+    classList: { add: () => writes.push('class'), remove() {} },
+    set textContent(value) { writes.push(value); },
+  };
+  const getElementById = globalThis.document.getElementById;
+  globalThis.document.getElementById = (id) => (id === 'toast' ? toast : null);
+  try {
+    const shown = [];
+    styleManager._showToast = (message) => shown.push(message);
+    director._toastStorageError('Scene not saved — quota');
+    assert.deepEqual(shown, ['Scene not saved — quota']);
+    assert.deepEqual(writes, [], 'the feedback owner keeps the toast');
+  } finally {
+    globalThis.document.getElementById = getElementById;
+    restore();
+  }
+});
+
 test('invalid authored edits cannot persist an unreadable project over a good save', () => {
   const { director, restore } = makeDirector();
   try {

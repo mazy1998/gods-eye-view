@@ -86,7 +86,14 @@ export const DRAWER_DESTINATIONS = Object.freeze(
 );
 
 /** Expanded for the drawer only: not persisted and not shared. */
-const BORROW = Object.freeze({ persist: false, syncShare: false });
+// The drawer's own expansions and collapses only present a panel; their
+// notifications say so, because one made during another panel's notification
+// is delivered after the drawer's handling of that one has ended.
+const BORROW = Object.freeze({
+  persist: false,
+  syncShare: false,
+  presentation: true,
+});
 // Hosted panels whose collapse control the drawer header carries: each
 // destination's own panel. Sections inside one (Inspect's cameras and Radio)
 // keep their disclosures.
@@ -240,6 +247,29 @@ export function createDrawerNavigation({
     }
   }
 
+  // A destination's own view can render a nested panel's home after the
+  // drawer borrowed the panel: a stored preference opens Layers at startup
+  // before its list mounts. The panel waits at the host's root and moves
+  // into its home once that appears, so the list's filters and tabs apply.
+  const waiting = new Map();
+  const homeObserver = doc.defaultView?.MutationObserver
+    ? new doc.defaultView.MutationObserver(rehome)
+    : null;
+  function rehome() {
+    for (const [node, selector] of waiting) {
+      const home = host.querySelector(selector);
+      if (!home) continue;
+      waiting.delete(node);
+      if (node.parentNode !== host) continue;
+      const focused = node.contains(doc.activeElement)
+        ? doc.activeElement
+        : null;
+      home.append(node);
+      focused?.focus({ preventScroll: true });
+    }
+    if (!waiting.size) homeObserver?.disconnect();
+  }
+
   function borrow(destination) {
     borrowed = { before: new Map(), applied: new Map(), moved: [] };
     for (const id of [...destination.panels, ...(destination.elements ?? [])]) {
@@ -248,7 +278,12 @@ export function createDrawerNavigation({
       const placeholder = doc.createComment(`gev-drawer-home:${id}`);
       node.before(placeholder);
       const home = destination.homes?.[id];
-      (home ? (host.querySelector(home) ?? host) : host).append(node);
+      const target = home ? host.querySelector(home) : host;
+      (target ?? host).append(node);
+      if (!target) {
+        waiting.set(node, home);
+        homeObserver?.observe(host, { childList: true, subtree: true });
+      }
       borrowed.moved.push({ node, placeholder });
     }
     for (const id of destination.panels) {
@@ -264,6 +299,8 @@ export function createDrawerNavigation({
   function giveBack() {
     const previous = borrowed;
     borrowed = null;
+    waiting.clear();
+    homeObserver?.disconnect();
     if (!previous) return;
     for (const { node, placeholder } of previous.moved)
       if (placeholder.parentNode) {
@@ -280,12 +317,38 @@ export function createDrawerNavigation({
         setPanelCollapsed(id, before, BORROW);
   }
 
+  // The drawer's section once a view mounts it, or the host alone.
+  const drawerRoot = () => host.closest('.gev-drawer') ?? host;
+  const FOCUSABLE =
+    'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+  const focusable = (node) =>
+    !node.closest('[hidden]') &&
+    (typeof node.checkVisibility !== 'function' || node.checkVisibility());
+
+  /**
+   * Focus that was in the drawer and that a switch took away (its panel back
+   * on a hidden rail, its view unmounted) moves to the new destination's
+   * first control, else the drawer header's, else its rail button, so
+   * keyboard use carries on where the drawer now is.
+   */
+  function handFocusIn(id) {
+    const root = drawerRoot();
+    if (root.contains(doc.activeElement)) return;
+    const content = root.querySelector('.gev-drawer-body') ?? host;
+    const target =
+      [...content.querySelectorAll(FOCUSABLE)].find(focusable) ??
+      [...root.querySelectorAll(FOCUSABLE)].find(focusable) ??
+      doc.querySelector(`.gev-rail-item[data-destination="${id}"]`);
+    target?.focus({ preventScroll: true });
+  }
+
   /** Open a destination; the one already open stays as it is. */
   function open(id, { focusReturn = null } = {}) {
     const destination = byId.get(id);
     if (!isActive() || !destination) return false;
     if (current === id) return true;
     held.clear();
+    const hadFocus = drawerRoot().contains(doc.activeElement);
     moving = true;
     try {
       giveBack();
@@ -295,7 +358,9 @@ export function createDrawerNavigation({
     } finally {
       moving = false;
     }
+    // The shell paints the drawer for this change before publish returns.
     channel.publish({ type: 'opened', destination: id });
+    if (hadFocus) handFocusIn(id);
     return true;
   }
 
@@ -323,15 +388,23 @@ export function createDrawerNavigation({
     if (focus) target?.focus();
   }
 
-  // A nested panel (Radio) sits deep in its destination; showing it scrolls
-  // to it there, as it showed inside its container before. A Layers filter or
-  // tab may hide its row's group: the list's own reveal shows the group first,
-  // and the scroll waits for that paint.
+  // Showing a panel in its destination scrolls to it there. A nested panel
+  // (Radio) sits deep in its destination, as it showed inside its container
+  // before: a Layers filter or tab may hide its row's group, so the list's
+  // own reveal shows the group first, and the scroll waits for that paint.
   async function revealNested(id) {
     const destination = byId.get(destinationOf.get(id));
     const home = destination?.homes?.[id];
-    const node = hostOf.has(id) && !home ? null : doc.getElementById(id);
+    const node = doc.getElementById(id);
     if (!node || !host.contains(node)) return;
+    // A panel the destination hosts directly (Weather, Recent Imagery) has no
+    // ancestor or row to show first: it scrolls into view once its expanded
+    // content has painted, so the controls its details opened are on screen.
+    if (hostOf.has(id) && !home) {
+      await flushViews();
+      if (host.contains(node)) node.scrollIntoView?.({ block: 'nearest' });
+      return;
+    }
     // A restored child can be expanded while its borrowed host is collapsed.
     // Re-borrow the ancestors without changing their restored/share preference.
     for (
@@ -369,6 +442,13 @@ export function createDrawerNavigation({
     } else node.scrollIntoView?.({ block: 'nearest' });
   }
 
+  // The panel a restore leads with, when shown, or else the first shown
+  // followed panel in share-restore order: the phone shell's rule too.
+  const firstShown = (lead = null) =>
+    lead && followed.has(lead) && shown(lead)
+      ? lead
+      : restoreOrder.find((id) => followed.has(id) && shown(id));
+
   /**
    * The first shown followed panel, in share-restore order, picks the
    * destination: an expanded Radio opens Layers, where it lives, before the
@@ -376,10 +456,10 @@ export function createDrawerNavigation({
    * with, standing in for one that no longer exists (a retired dock tray).
    */
   function followPanels(lead = null) {
-    const first =
-      lead && followed.has(lead) && shown(lead)
-        ? lead
-        : restoreOrder.find((id) => followed.has(id) && shown(id));
+    // Resting, the drawer follows nothing: on a phone the phone shell
+    // presents the panels, and back at desktop width the drawer follows them.
+    if (!isActive()) return;
+    const first = firstShown(lead);
     if (!first) return close();
     open(followed.get(first));
     onRevealPanel(first);
@@ -389,21 +469,29 @@ export function createDrawerNavigation({
   // A panel expanded outside the drawer opens its destination, and so does an
   // explicit request to show one that is already expanded: in one drawer,
   // expanded is not visible. Presentation changes (a rail's automatic
-  // restore) and a share restore in progress do not; a restore picks its
-  // destination once it ends.
+  // restore, the drawer's own borrowing) and a share restore in progress do
+  // not; a restore picks its destination once it ends. A panel expanded to
+  // contain a nested one (Context for Radio) is part of that one's reveal,
+  // whose own change follows.
   removers.push(
     panelChannel.subscribe(({ state, change }) => {
       const previous = panels;
       panels = state.panels ?? {};
-      if (moving || state.restoring) return;
+      if (
+        moving ||
+        state.restoring ||
+        change?.presentation ||
+        change?.revealing
+      )
+        return;
       if (!isActive()) {
         // Borrowing a sheet is presentation, not a new panel preference.
         if (isPhonePresenting()) return;
         if (change?.type === 'panel-revealed') onRevealPanel(change.panelId);
         else if (change?.type === 'panels-restored') {
-          const first = restoreOrder.find(
-            (id) => followed.has(id) && shown(id),
-          );
+          // The phone shell presents the restore's lead; revealing another
+          // panel here would take its sheet away.
+          const first = firstShown(change.lead);
           if (first) onRevealPanel(first);
         }
         // A panel the user expands on the phone, or a share or history

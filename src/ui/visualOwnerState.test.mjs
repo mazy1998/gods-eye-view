@@ -19,7 +19,7 @@ function replaceDocument(t, value) {
 }
 
 /** A VisualSettings with fake services and whichever elements a case passes. */
-function visualOwner(t, { elements = {}, syncs = [] } = {}) {
+function visualOwner(t, { elements = {}, syncs = [], operations = {} } = {}) {
   replaceDocument(t, {
     documentElement: {
       dataset: {},
@@ -31,7 +31,7 @@ function visualOwner(t, { elements = {}, syncs = [] } = {}) {
   return new VisualSettings({
     viewer: { scene: {} },
     elements,
-    operations: { _syncShareState: () => syncs.push('share') },
+    operations: { _syncShareState: () => syncs.push('share'), ...operations },
     services: {
       governorRequestRender() {},
       holdContinuousRender() {},
@@ -129,6 +129,35 @@ test('story shots keep their visual state; views get the display settings too', 
   const seen = [];
   owner.channel.subscribe(({ state }) => seen.push(state));
   assert.deepEqual(seen[0], owner.getViewState(), 'the channel carries the view state');
+});
+
+test("the parameter panel's target reaches views; shared and story state keep the map style", (t) => {
+  const classes = new Set();
+  const owner = visualOwner(t, {
+    elements: {
+      _sliderPanel: {
+        classList: {
+          add: (name) => classes.add(name),
+          remove: (name) => classes.delete(name),
+          contains: (name) => classes.has(name),
+        },
+      },
+    },
+    operations: { _scheduleRightPanelLayout() {} },
+  });
+  const seen = [];
+  owner.channel.subscribe(({ state }) => seen.push(state.parameterStyle));
+  // Cockpit's FLIR vision over the Normal map shows the thermal parameters.
+  owner._updateSliderPanel('thermal');
+  assert.equal(owner.getViewState().parameterStyle, 'thermal');
+  assert.equal(owner.getViewState().style, 'normal');
+  assert.equal(classes.has('active'), true);
+  assert.equal('parameterStyle' in owner.getVisualState(), false);
+  // Optical vision has none.
+  owner._updateSliderPanel(null);
+  assert.equal(owner.getViewState().parameterStyle, null);
+  assert.equal(classes.has('active'), false);
+  assert.deepEqual(seen, ['normal', 'thermal', null]);
 });
 
 test('sonar changes reach views once, without a share sync', (t) => {

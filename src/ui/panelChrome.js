@@ -25,6 +25,14 @@ export const SHARE_PANEL_STATE_SPECS = Object.freeze([
   { id: 'pp-toggles' },
   { id: 'param-slider-panel' },
 ]);
+/**
+ * Panels whose home, Context's Cameras view, is in the right rail Cockpit
+ * hides: in Cockpit they stand in the left stack after Data, in this order.
+ */
+const COCKPIT_LEFT_STACK_PANEL_IDS = Object.freeze([
+  'cctv-panel',
+  'street-level-panel',
+]);
 /** Standard map-view panels cleared out of the way on a fresh Cockpit entry. */
 const COCKPIT_ENTRY_COLLAPSE_PANEL_IDS = Object.freeze([
   'data-panel',
@@ -67,6 +75,7 @@ export class PanelChrome {
     this.channel = createStateChannel(() => this._readPanelState());
     this._restoringPanels = false;
     this._cockpitPanelRestore = null;
+    this._cockpitPanelHomes = null;
     this._cockpitContextCollapsedForDataPanel = false;
     this._panelPosition = new PanelPositionControls({
       syncPanelCollapseButton: (panel) => this._syncPanelCollapseButton(panel),
@@ -275,7 +284,20 @@ export class PanelChrome {
     this._syncPanelCollapseButton(panelEl);
   }
 
-  _syncPanelCollapseButton(panelEl) {
+  /**
+   * @param {HTMLElement} panelEl
+   * @param {{ presentation?: boolean, revealing?: string|null }} [options]
+   *   Said in the panel's notification, since it may be delivered after the
+   *   handling of the change that caused it has ended:
+   *   - `presentation` marks a change a host made to show the panel somewhere
+   *     (a drawer borrowing it), not a change of the panel's own state;
+   *   - `revealing` names the nested panel this one expanded to contain
+   *     (Context for Radio), whose own change follows.
+   */
+  _syncPanelCollapseButton(
+    panelEl,
+    { presentation = false, revealing = null } = {},
+  ) {
     const isRightRail = [
       'pp-toggles',
       'cctv-panel',
@@ -354,7 +376,12 @@ export class PanelChrome {
     if (panelEl.id === 'radio-panel' || panelEl.id === 'global-context-panel') {
       this._syncContextRadioLauncherState();
     }
-    this.channel.publish({ type: 'panel-changed', panelId: panelEl.id });
+    this.channel.publish({
+      type: 'panel-changed',
+      panelId: panelEl.id,
+      ...(presentation && { presentation: true }),
+      ...(revealing && { revealing }),
+    });
   }
 
   /** Collapse, presentation-only auto-collapse and dock pin of each panel. */
@@ -461,6 +488,8 @@ export class PanelChrome {
       restore = false,
       persist = true,
       syncShare = true,
+      presentation = false,
+      revealing = null,
     } = {},
   ) {
     const panelEl = document.getElementById(panelId);
@@ -607,6 +636,8 @@ export class PanelChrome {
         restore,
         persist,
         syncShare,
+        presentation,
+        revealing: panelId,
       });
     }
     panelEl.classList.toggle('collapsed', nextCollapsed);
@@ -619,7 +650,7 @@ export class PanelChrome {
       this._cockpitContextCollapsedForDataPanel = false;
       this.cockpitView.setContextCollapsed(false);
     }
-    this._syncPanelCollapseButton(panelEl);
+    this._syncPanelCollapseButton(panelEl, { presentation, revealing });
     if (persist !== false)
       this._savePanelCollapsedState(panelId, nextCollapsed);
     if (panelId === 'pp-toggles') {
@@ -663,8 +694,10 @@ export class PanelChrome {
     }
     this.cockpitView?.setContextCollapsed(false);
     this.cockpitView?.setSignalCollapsed(false, { user: true });
+    this._placeCockpitPanels();
   }
   exitCockpit() {
+    this._returnCockpitPanels();
     const restore = this._cockpitPanelRestore;
     this._cockpitPanelRestore = null;
     this._cockpitContextCollapsedForDataPanel = false;
@@ -676,8 +709,46 @@ export class PanelChrome {
       });
     }
   }
+  /** Stand the camera panels in the left stack, after Data, for Cockpit. */
+  _placeCockpitPanels() {
+    const stack = document.getElementById('left-panel-stack');
+    if (!stack || this._cockpitPanelHomes) return;
+    this._cockpitPanelHomes = [];
+    const data = document.getElementById('data-panel');
+    let after = data?.parentNode === stack ? data : null;
+    for (const id of COCKPIT_LEFT_STACK_PANEL_IDS) {
+      const panel = document.getElementById(id);
+      if (!panel?.parentNode || panel.parentNode === stack) continue;
+      const home = document.createComment(`gev-cockpit-home:${id}`);
+      panel.before(home);
+      this._movePanel(panel, () =>
+        after ? after.after(panel) : stack.prepend(panel),
+      );
+      after = panel;
+      this._cockpitPanelHomes.push({ panel, home });
+    }
+    this._scheduleLeftPanelLayout({ reconsiderAutoCollapse: true });
+  }
+  /** Put the camera panels back in Context, before the drawer borrows again. */
+  _returnCockpitPanels() {
+    const homes = this._cockpitPanelHomes;
+    this._cockpitPanelHomes = null;
+    for (const { panel, home } of homes ?? []) {
+      if (!home.parentNode) continue;
+      this._movePanel(panel, () => home.replaceWith(panel));
+    }
+  }
+  /** Move a panel, keeping focus on the control in it that had it. */
+  _movePanel(panel, move) {
+    const focused = panel.contains(document.activeElement)
+      ? document.activeElement
+      : null;
+    move();
+    focused?.focus({ preventScroll: true });
+  }
   destroy() {
     if (this._disposed) return;
+    this._returnCockpitPanels();
     this._disposed = true;
     this._lifetime.destroy();
     this._panelLayout.destroy();

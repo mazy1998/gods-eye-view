@@ -1,8 +1,10 @@
 <script setup>
 /**
- * Look → the selected style's parameters, one slider per uniform. Renders
- * inside #param-sliders (styleManager._sliderContainer), within the panel
- * Cockpit's portal moves. VisualSettings owns the values (setStyleParam).
+ * Look → the selected style's parameters, one slider per uniform: the style
+ * VisualSettings publishes as `parameterStyle` (Cockpit's vision stage while
+ * one is active), or the map style for a state without one. Renders inside
+ * #param-sliders (styleManager._sliderContainer), within the panel Cockpit's
+ * portal moves. VisualSettings owns the values (setStyleParam).
  */
 import { computed, useTemplateRef } from 'vue';
 import { formatNumber, t } from '../../i18n/index.js';
@@ -21,10 +23,12 @@ const formatParam = (value, digits) =>
     useGrouping: false,
   });
 const rows = computed(() => {
-  const style = props.state?.style;
+  const state = props.state;
+  const style =
+    state && 'parameterStyle' in state ? state.parameterStyle : state?.style;
   const uniforms = STYLES[style]?.uniforms;
   if (!uniforms || style === 'normal') return [];
-  const values = props.state.styleParams?.[style] ?? {};
+  const values = state.styleParams?.[style] ?? {};
   return Object.entries(uniforms).map(([name, metadata]) => {
     const digits = metadata.max <= 1 ? 2 : 1;
     return {
@@ -57,7 +61,7 @@ const set = (row, event) => {
 <template>
   <div
     v-for="row in rows"
-    :key="`${state.style}:${row.name}`"
+    :key="`${row.style}:${row.name}`"
     class="param-slider-row"
   >
     <span class="param-label">{{ t(row.label) }}</span>
