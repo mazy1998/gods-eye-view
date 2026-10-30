@@ -329,7 +329,9 @@ body.mobile-shell.recording-mode.scene-playback-mode
 }
 
 /* Tools borrows these cards directly; Map & Look keeps only its own controls. */
-#mobile-sheet-panels > #pp-toggles :is(#geo-import-group, #draw-group) {
+#mobile-sheet-panels
+  > #pp-toggles
+  :is(#geo-import-group, #draw-group, #tools-scene-import) {
   display: none;
 }
 

@@ -681,16 +681,21 @@ test('Tools borrows the one Directions root, updates it in place, returns it on 
   input.value = 'retained route draft';
   directions.append(input);
   home.append(directions);
+  const footer = document.createElement('footer');
+  footer.id = 'tools-scene-import';
+  home.append(footer);
   drawer.open('tools');
   assert.deepEqual(hosted(drawer), [
     'geo-import-group',
     'draw-group',
     'directions-controls-body',
+    'tools-scene-import',
   ]);
   assert.equal(document.getElementById(directions.id), directions);
   assert.deepEqual(calls, [], 'moving a section claims no PanelChrome state');
   media.set(true);
   assert.equal(directions.parentNode, home);
+  assert.equal(footer.parentNode, home);
   assert.equal(input.value, 'retained route draft');
   media.set(false);
   assert.equal(directions.parentNode, drawer.host);

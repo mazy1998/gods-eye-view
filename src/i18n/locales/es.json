@@ -2969,7 +2969,6 @@
   "Clear board": "Borrar pizarra",
   "Drop map files onto the globe": "Suelta archivos de mapas sobre el globo",
   "Session only — files clear when you reload": "Solo durante la sesión: los archivos se borran al recargar",
-  "Import scene": "Importar escena",
   "Close": "Cerrar",
   "Destinations": "Destinos",
   "Choose what appears on the globe": "Elige qué aparece en el globo",
@@ -3082,5 +3081,13 @@
   "Paste replacement client ID": "Pega el nuevo ID del cliente",
   "Paste replacement client secret": "Pega el nuevo secreto del cliente",
   "Paste replacement token": "Pega el nuevo token",
-  "Paste replacement API key": "Pega la nueva clave de API"
+  "Paste replacement API key": "Pega la nueva clave de API",
+  "Import a scene": "Importar una escena",
+  "Start": "Inicio",
+  "Travel mode": "Modo de viaje",
+  "{count} files": {
+    "one": "{count} archivo",
+    "many": "{count} archivos",
+    "other": "{count} archivos"
+  }
 }

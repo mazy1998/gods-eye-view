@@ -368,6 +368,76 @@ export function createFixtures(read) {
     properties: ['visible', 'display'],
     html: `<style>.material-symbols-outlined{display:block}</style><nav class="gev-rail"><button class="gev-rail-item"><span class="gev-rail-icon material-symbols-outlined" data-geometry="rail-circle"><span class="gev-rail-glyph material-symbols-outlined">layers</span></span><span class="gev-rail-label">Layers</span></button></nav><div id="intel-hud"></div>${indicator.outerHTML}${corner.outerHTML}`,
   });
+  // Supplement the original frame geometry with every real Tools control.
+  // Structural content additions may change row height; none may hide an
+  // existing header, field, action or state under Cyber.
+  result.push({
+    id: 'tools-visibility',
+    profile: 'drawer',
+    html: palettes
+      .find((f) => f.sheet === 'tool-views')
+      .html.replaceAll('data-audit=', 'data-geometry='),
+    properties: ['visible'],
+  });
+  // Constrain the real card: an unconstrained fixture cannot expose a label
+  // squeezed by a long heading. Metadata may wrap; state always fits one line.
+  for (const width of [366, 320])
+    for (const state of ['OFF', 'ON']) {
+      const markup = doc.createElement('template');
+      markup.innerHTML = palettes.find((f) => f.sheet === 'tool-views').html;
+      const card = markup.content.querySelector('#directions-controls-body');
+      const draw = markup.content.querySelector('#draw-group');
+      const toggle = card.querySelector('.gev-tools-route-toggle');
+      const label = toggle.querySelector('.gev-toggle-label');
+      for (const element of [card, draw]) {
+        element.style.width = width + 'px';
+        element.style.boxSizing = 'border-box';
+      }
+      for (const row of draw.querySelectorAll('.pp-slider-row')) row.remove();
+      toggle.setAttribute('aria-checked', String(state === 'ON'));
+      label.textContent = state;
+      toggle.dataset.geometry = 'switch';
+      label.dataset.geometry = 'state';
+      card.querySelector('.gev-tools-subtitle').dataset.geometry = 'metadata';
+      draw.querySelector('.gev-tools-subtitle').dataset.geometry =
+        'draw-metadata';
+      result.push({
+        id: `tools-header-${width}-${state.toLowerCase()}`,
+        profile: 'drawer',
+        html: host(card.outerHTML + draw.outerHTML),
+        properties: ['visible'],
+        expectedGeometry: [
+          {
+            node: 'state',
+            property: 'textLines',
+            value: 1,
+            reason:
+              'The visible switch state stays on one line, including at a narrow drawer width.',
+          },
+          {
+            node: 'switch',
+            property: 'height',
+            value: 24,
+            reason:
+              'The state control retains the existing compact Cyber target height.',
+          },
+          {
+            node: 'metadata',
+            property: 'fontSize',
+            value: 9,
+            reason:
+              'Directions metadata uses the compact Cyber metadata type, below its heading.',
+          },
+          {
+            node: 'draw-metadata',
+            property: 'fontSize',
+            value: 9,
+            reason:
+              'Draw metadata must not be larger than its compact Cyber title.',
+          },
+        ],
+      });
+    }
   return result;
 }
 const reasons = {

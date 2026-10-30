@@ -2825,7 +2825,6 @@
   "Clear board": "清空画板",
   "Drop map files onto the globe": "将地图文件拖放到地球上",
   "Session only — files clear when you reload": "仅限本次会话 — 重新加载后文件将清除",
-  "Import scene": "导入场景",
   "Close": "关闭",
   "Destinations": "目的地",
   "Choose what appears on the globe": "选择地球上显示的内容",
@@ -2938,5 +2937,11 @@
   "Paste replacement client ID": "粘贴新的客户端 ID",
   "Paste replacement client secret": "粘贴新的客户端密钥",
   "Paste replacement token": "粘贴新的令牌",
-  "Paste replacement API key": "粘贴新的 API 密钥"
+  "Paste replacement API key": "粘贴新的 API 密钥",
+  "Import a scene": "导入场景",
+  "Start": "起点",
+  "Travel mode": "出行方式",
+  "{count} files": {
+    "other": "{count} 个文件"
+  }
 }

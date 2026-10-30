@@ -651,3 +651,30 @@ test('the file chooser retains its compact Cyber skin and matches its audit fixt
     f.tool.destroy();
   }
 });
+
+test('the scene import footer remains one live control when the shell borrows it and is removed on teardown', async () => {
+  const t = setup();
+  const footer = t.document.getElementById('tools-scene-import');
+  const home = footer.parentNode;
+  assert.equal(footer.previousElementSibling.id, 'geo-import-group');
+  const button = footer.querySelector('#geo-import-scene');
+  const sceneImport = instrument(document.createElement('button'));
+  sceneImport.id = 'scene-import-btn';
+  home.append(sceneImport);
+  const drawer = document.createElement('div');
+  home.append(drawer);
+  drawer.append(footer);
+  await t.tool.importFiles([file('map.geojson')]);
+  assert.equal(
+    footer.parentNode,
+    drawer,
+    'owner updates keep the borrowed footer in place',
+  );
+  button.click();
+  assert.equal(sceneImport.clicks, 1);
+  t.tool.destroy();
+  assert.equal(document.getElementById('tools-scene-import'), null);
+  assert.equal(footer.isConnected, false);
+  button.click();
+  assert.equal(sceneImport.clicks, 1, 'a retained footer button is inert');
+});

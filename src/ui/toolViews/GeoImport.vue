@@ -1,7 +1,10 @@
 <script setup>
+import { onBeforeUnmount, ref } from 'vue';
 import { formatNumber, t, tn } from '../../i18n/index.js';
 import ActionButton from '../primitives/ActionButton.vue';
 defineProps({ state: { type: Object, required: true } });
+const footer = ref(null);
+onBeforeUnmount(() => footer.value?.remove());
 // Standard file-format names are product identifiers, not translated UI copy.
 const FORMATS = ['GeoJSON', 'KML', 'KMZ', 'GPX'];
 const countLabel = (file) =>
@@ -29,9 +32,24 @@ const description = (file) =>
     <h3 class="gev-tools-title">{{ t('Import') }}</h3>
     <span
       class="gev-tools-count"
+      :class="{ 'gev-tools-count--empty': !state.files.length }"
       :title="`${t('Imported files')}: ${formatNumber(state.files.length)}`"
-      >{{ formatNumber(state.files.length) }}</span
+      >{{
+        tn(state.files.length, '{count} file', '{count} files', {
+          count: formatNumber(state.files.length),
+        })
+      }}</span
     >
+    <svg
+      class="gev-tools-chevron"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   </header>
   <div class="gev-tools-drop-guide">
     <svg
@@ -67,7 +85,17 @@ const description = (file) =>
     hidden
     :aria-label="t('Choose GeoJSON, KML, KMZ or GPX files')"
   />
-  <p class="gev-tools-meta">
+  <p class="gev-tools-meta gev-tools-session-note">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6m0-10v1" />
+    </svg>
     {{ t('Session only — files clear when you reload') }}
   </p>
   <ul
@@ -143,11 +171,28 @@ const description = (file) =>
     aria-live="polite"
     >{{ state.hint }}</span
   >
-  <ActionButton
-    id="geo-import-scene"
-    class="gev-tools-scene-link"
-    size="compact"
-    :label="t('Import scene')"
-    >{{ t('Import scene') }}<span aria-hidden="true">→</span></ActionButton
+  <footer
+    ref="footer"
+    id="tools-scene-import"
+    class="gev-tools gev-tools-footer"
   >
+    <ActionButton
+      id="geo-import-scene"
+      class="gev-tools-scene-link"
+      size="compact"
+      :label="`${t('Import a scene')} — ${t('Stories')} / ${t('Create')}`"
+      ><span>{{ t('Import a scene') }}</span
+      ><span aria-hidden="true">→</span
+      ><span>{{ t('Stories') }} / {{ t('Create') }}</span
+      ><svg
+        class="gev-tools-chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        aria-hidden="true"
+      >
+        <path d="m9 6 6 6-6 6" /></svg
+    ></ActionButton>
+  </footer>
 </template>

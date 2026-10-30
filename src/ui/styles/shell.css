@@ -474,7 +474,9 @@
   min-height: 38px;
   box-sizing: border-box;
 }
-.gev-legacy-host > #pp-toggles :is(#geo-import-group, #draw-group) {
+.gev-legacy-host
+  > #pp-toggles
+  :is(#geo-import-group, #draw-group, #tools-scene-import) {
   display: none;
 }
 .gev-legacy-host > #data-panel #directions-controls-body {

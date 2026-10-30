@@ -18,7 +18,12 @@ export const MOBILE_MORE_DESTINATIONS = Object.freeze(
       id: 'tools',
       label: msg('Tools'),
       panels: [],
-      elements: ['geo-import-group', 'draw-group', 'directions-controls-body'],
+      elements: [
+        'geo-import-group',
+        'draw-group',
+        'directions-controls-body',
+        'tools-scene-import',
+      ],
     },
     {
       id: 'settings',

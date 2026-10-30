@@ -45,6 +45,8 @@ export function initGeoFileImport({
     parent: host,
     props: { state: { files: [], hint: '' } },
   });
+  // The shell borrows the footer separately, after the other tool cards.
+  host.after(doc.getElementById('tools-scene-import'));
   const button = doc.getElementById('geo-import-button');
   const input = doc?.getElementById('geo-import-input');
   const listEl = doc?.getElementById('geo-import-list');

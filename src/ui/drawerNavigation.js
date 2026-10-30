@@ -65,7 +65,12 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       subtitle: msg('Import, draw, and plan routes'),
       panels: [],
       // The existing views move from Display/Layers; their home hides them.
-      elements: ['geo-import-group', 'draw-group', 'directions-controls-body'],
+      elements: [
+        'geo-import-group',
+        'draw-group',
+        'directions-controls-body',
+        'tools-scene-import',
+      ],
     },
     {
       id: 'settings',

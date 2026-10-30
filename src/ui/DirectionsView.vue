@@ -68,7 +68,13 @@ watch(
         <circle cx="18" cy="6" r="3" />
         <path d="M6 15V8a2 2 0 0 1 2-2h2m-1 12h7a2 2 0 0 0 2-2v-3" />
       </svg>
-      <h3 class="gev-tools-title">{{ t('Directions') }}</h3>
+      <div class="gev-tools-heading-copy">
+        <h3 class="gev-tools-title">{{ t('Directions') }}</h3>
+        <span class="gev-tools-subtitle"
+          >{{ t('Start') }} · {{ t('Destination') }} ·
+          {{ t('Travel mode') }}</span
+        >
+      </div>
       <ToggleSwitch
         class="gev-tools-route-toggle"
         :model-value="enabled"
@@ -80,6 +86,16 @@ watch(
         :title="toggleState?.title"
         @update:model-value="toggleLayer()"
       />
+      <svg
+        class="gev-tools-chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        aria-hidden="true"
+      >
+        <path d="m9 6 6 6-6 6" />
+      </svg>
     </header>
     <LayerText class="data-toggle-meta" :text="summary" :hidden="!expanded" />
     <div

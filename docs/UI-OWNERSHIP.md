@@ -89,6 +89,10 @@ The existing `#geo-import-group` and `#draw-group` containers can move intact
 into Tools. Their owners mount and dispose the views, so moving a container
 does not recreate a file list, annotation engine, pointer lease or drop listener.
 
+The Import view also owns `#tools-scene-import`, borrowed after the cards as a
+footer on desktop and phone. Its original scene-import button and handler stay
+live during borrowing and are removed on teardown.
+
 The session import channel now publishes `{files, hint}`. Each file includes
 its existing identity/count/visibility fields plus the owner's fixed `color`
 and `ownStyles` flag. The rows render that snapshot; show/hide, fly-to and remove

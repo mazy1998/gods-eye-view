@@ -21,7 +21,7 @@ function fixture(
   container.innerHTML = `<div id="left-panel-stack"><section id="data-panel" class="collapsed"><button>Layers control</button><section id="directions-controls-body"><button>Set A</button></section></section><section id="scene-panel" class="collapsed"><button id="scene-stop">Stop</button></section></div>
     <div id="right-context-rail">${['weather-panel', 'recent-imagery-panel', 'global-context-panel', 'cctv-panel', 'street-level-panel', 'pp-toggles'].map((id) => `<section id="${id}" class="collapsed"><button>${id}</button></section>`).join('')}</div>
     <div id="command-dock"><section id="location-bar" class="collapsed"><input id="location-search"><button>Place</button></section></div>
-    <div id="tools-home"><section id="geo-import-group"><input type="file"></section><section id="draw-group"><button>Draw</button></section></div>
+    <div id="tools-home"><section id="geo-import-group"><input type="file"></section><section id="draw-group"><button>Draw</button></section><footer id="tools-scene-import"><button id="geo-import-scene">Import a scene</button></footer></div>
     <section id="radio-panel" class="collapsed"><button>Radio</button></section><div id="corner-actions"><button id="provider-launcher">Providers</button><div id="locale-picker"><button>Language</button></div></div><div id="desktop-search"></div>`;
   t.mock.method(HTMLElement.prototype, 'getClientRects', () => [
     { width: 20, height: 20 },
@@ -197,7 +197,12 @@ test('More destinations reuse native controls and the existing appearance owner'
   f.destination('tools').click();
   assert.deepEqual(
     [...f.host().children].map((node) => node.id),
-    ['geo-import-group', 'draw-group', 'directions-controls-body'],
+    [
+      'geo-import-group',
+      'draw-group',
+      'directions-controls-body',
+      'tools-scene-import',
+    ],
   );
   f.destination('settings').click();
   assert.equal(document.querySelectorAll('#gev-appearance-settings').length, 1);

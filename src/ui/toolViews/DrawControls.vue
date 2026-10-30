@@ -31,10 +31,25 @@ defineProps({ state: { type: Object, required: true } });
       >
         <path d="m3 21 1-6L16 3l5 5L9 20l-6 1Zm10-15 5 5M4 15l5 5" />
       </svg>
-      <span class="pp-label">{{ t('Draw') }}</span>
+      <span class="gev-tools-heading-copy"
+        ><span class="pp-label">{{ t('Draw') }}</span
+        ><span class="gev-tools-subtitle"
+          >{{ t('Area') }} · {{ t('Line') }} · {{ t('Pin') }}</span
+        ></span
+      >
       <span class="gev-tools-state" aria-hidden="true">{{
         t(state.active ? 'ON' : 'OFF')
       }}</span>
+      <svg
+        class="gev-tools-chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        aria-hidden="true"
+      >
+        <path d="m9 6 6 6-6 6" />
+      </svg>
     </button>
   </h3>
   <div
