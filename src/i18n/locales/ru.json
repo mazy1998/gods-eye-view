@@ -1352,6 +1352,8 @@
     "many": "Воспроизводит все {count} историй",
     "other": "Воспроизводит все {count} истории"
   },
+  "GEV stories": "Истории GEV",
+  "Your stories": "Ваши истории",
   "{count} shots": {
     "one": "{count} кадр",
     "few": "{count} кадра",

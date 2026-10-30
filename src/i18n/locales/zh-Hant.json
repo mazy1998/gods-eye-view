@@ -1340,6 +1340,8 @@
   "Plays all {count} stories": {
     "other": "播放全部 {count} 個故事"
   },
+  "GEV stories": "GEV 故事",
+  "Your stories": "你的故事",
   "{count} shots": {
     "other": "{count} 個鏡頭"
   },

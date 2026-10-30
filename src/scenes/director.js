@@ -413,9 +413,10 @@ export class SceneDirector {
       subscribe: (listener) => this.subscribe(listener),
       read: () => ({
         // The panel shows display titles; shots keep the stored title for
-        // editing and matching.
+        // editing and matching. Built-in stories are the app's own recipes.
         scenes: this._project.scenes.map((scene) => ({
           ...scene,
+          builtIn: SCENE_RECIPES.some((recipe) => recipe.id === scene.id),
           title: displaySceneTitle(scene),
           shots: scene.shots.map((shot) => ({
             ...shot,

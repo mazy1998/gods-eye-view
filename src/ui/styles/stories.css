@@ -25,6 +25,16 @@
   max-height: min(42vh, 360px);
   overflow: auto;
 }
+/* The app's own stories and the ones made here are headed in the list. */
+.stories-library-heading {
+  margin: 4px 0 0;
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-library-heading {
+  color: var(--gev-text-muted);
+}
 .stories-recipe {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) 18px;

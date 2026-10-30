@@ -1331,6 +1331,8 @@
     "many": "Reproduce las {count} historias",
     "other": "Reproduce las {count} historias"
   },
+  "GEV stories": "Historias de GEV",
+  "Your stories": "Tus historias",
   "{count} shots": {
     "one": "{count} plano",
     "many": "{count} de planos",

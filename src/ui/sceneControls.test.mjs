@@ -643,3 +643,65 @@ test('Play summary names the selected scene and counts the playlist it runs from
     f.restore();
   }
 });
+
+test("Browse heads the app's own stories and the ones made here, in list order", () => {
+  const f = fixture();
+  try {
+    const scene = (id, builtIn) => ({
+      id,
+      title: id,
+      builtIn,
+      shots: [{ id: `${id}-1`, title: '1', durationSec: 1, holdSec: 0 }],
+    });
+    f.publish('library-changed', {
+      scenes: [scene('a', true), scene('b', true), scene('mine', false)],
+    });
+    f.owner.read = () => f.state;
+    f.publish('shots-changed');
+    const library = document.querySelector('#stories-browse .stories-library');
+    assert.deepEqual(
+      [...library.children].map((node) =>
+        node.matches('.stories-library-heading')
+          ? `# ${node.textContent.trim()}`
+          : node.dataset.sceneRecipeId,
+      ),
+      ['# GEV stories', 'a', 'b', '# Your stories', 'mine'],
+    );
+  } finally {
+    f.restore();
+  }
+});
+
+test("the director marks the app's own recipes as built-in for the panel", async () => {
+  const { SCENE_RECIPES } = await import('../scenes/recipes.js');
+  const f = fixture();
+  const previousStorage = globalThis.localStorage;
+  let director;
+  try {
+    f.owner.destroy();
+    const own = { ...f.state.scenes[0], id: 'my-story' };
+    globalThis.localStorage = {
+      getItem: () =>
+        JSON.stringify({
+          version: 3,
+          scenes: [{ ...f.state.scenes[0], id: SCENE_RECIPES[0].id }, own],
+        }),
+      setItem() {},
+    };
+    director = new SceneDirector({ camera: { cancelFlight() {} } }, {}, {});
+    const marks = [
+      ...document.querySelectorAll('#stories-browse [data-scene-recipe-id]'),
+    ].map((card) => card.dataset.sceneRecipeId);
+    const headings = [
+      ...document.querySelectorAll('#stories-browse .stories-library-heading'),
+    ].map((node) => node.textContent.trim());
+    assert.ok(
+      marks.includes(SCENE_RECIPES[0].id) && marks.includes('my-story'),
+    );
+    assert.deepEqual(headings, ['GEV stories', 'Your stories']);
+  } finally {
+    await director?.destroy();
+    globalThis.localStorage = previousStorage;
+    f.restore();
+  }
+});
