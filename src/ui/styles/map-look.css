@@ -455,7 +455,9 @@
   #pp-toggles
   .map-look-slot
   .pp-mode-btn.active {
-  color: var(--gev-accent-text);
+  /* Accent text on the tint falls below AA at this 9px size in Light; the
+     tint and its border mark the choice. */
+  color: var(--gev-text);
   background: var(--gev-accent-tint);
   box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
 }
