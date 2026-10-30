@@ -452,3 +452,86 @@
   height: 30px;
   margin: 0;
 }
+
+/* Category navigation keeps the original rows mounted for borrowed controls. */
+.layer-browser .layer-category,
+.layer-browser .layer-route-link {
+  display: flex;
+  align-items: center;
+  gap: var(--gev-space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: 12px;
+  text-align: start;
+  white-space: normal;
+}
+.layer-browser .layer-category > span:nth-child(2),
+.layer-browser .layer-route-link > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.layer-browser .layer-category > .material-symbols-outlined,
+.layer-browser .layer-route-link > .material-symbols-outlined {
+  flex: none;
+  font-size: 20px;
+}
+.layer-browser .layer-route-row {
+  padding: 12px 0;
+  border-bottom: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-category,
+:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-route-link {
+  border: 0;
+  border-bottom: 1px solid var(--gev-border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 400 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-route-link {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-category:hover,
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-route-link:hover {
+  background: var(--gev-control-bg-hover);
+}
+
+.layer-browser .layer-category-back {
+  margin: var(--gev-space-2) var(--gev-space-3);
+}
+
+:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-category-back {
+  min-height: 36px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--gev-accent-text);
+  font: 400 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-category:hover:not(:disabled) {
+  color: var(--gev-text);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-route-link:hover:not(:disabled) {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-category-back:hover:not(:disabled) {
+  color: var(--gev-accent-text);
+  background: var(--gev-control-bg-hover);
+  border-color: transparent;
+}

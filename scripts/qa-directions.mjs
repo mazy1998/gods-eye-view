@@ -239,7 +239,7 @@ try {
   });
   await sleep(3000);
 
-  // ── 1. Open the DATA LAYERS panel, then toggle the row on. ──────────────
+  // ── 1. Open Layers, follow route planning, then enable its Tools card. ──────────────
   const opened = await page.evaluate(() => {
     const panel = document.getElementById('data-panel');
     if (!panel) return false;
@@ -258,7 +258,12 @@ try {
     const row = document.querySelector(
       '#data-toggles [data-layer-id="directions"]',
     );
-    const button = row?.querySelector('.data-toggle-btn');
+    const link = row?.querySelector('.layer-route-link');
+    link?.scrollIntoView({ block: 'center' });
+    link?.click();
+    const button = link
+      ? document.querySelector('#directions-controls-body [role="switch"]')
+      : row?.querySelector('.data-toggle-btn');
     if (!button) return false;
     button.scrollIntoView({ block: 'center' });
     button.click();
@@ -266,12 +271,12 @@ try {
   });
   await sleep(1200);
   check(
-    'the Directions row is in the Data Layers panel and toggles on',
+    'route planning remains reachable from Layers and its shared Tools switch toggles on',
     toggled,
   );
   await page.evaluate(() => {
     const details = document.querySelector(
-      '#data-toggles [data-layer-id="directions"] .layer-details',
+      '#data-toggles [data-layer-id="directions"] :is(.layer-route-link, .layer-details)',
     );
     if (details?.getAttribute('aria-controls') === 'directions-controls-body')
       details.click();

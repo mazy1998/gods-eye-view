@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse, babelParse } from 'vue/compiler-sfc';
 
 const SRC_ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = path.resolve(SRC_ROOT, '..');
@@ -29,13 +30,98 @@ function sourceFiles(directory = SRC_ROOT) {
     if (entry.isDirectory()) files.push(...sourceFiles(absolute));
     else if (
       entry.isFile() &&
-      /\.(js|mjs|html)$/.test(entry.name) &&
+      /\.(js|mjs|html|vue)$/.test(entry.name) &&
       !entry.name.endsWith('.test.mjs')
     ) {
       files.push(absolute);
     }
   }
   return [...files.sort(), INDEX_HTML];
+}
+
+/** Static icon text, expressions and file-local icon maps in a component. */
+function vueGlyphs(source) {
+  const { descriptor, errors } = parse(source);
+  assert.deepEqual(errors, []);
+  const bindings = new Map();
+  for (const script of [descriptor.script, descriptor.scriptSetup]) {
+    if (!script) continue;
+    const ast = babelParse(script.content, {
+      sourceType: 'module',
+      plugins: ['typescript'],
+    });
+    for (const statement of ast.program.body) {
+      const declaration = statement.declaration ?? statement;
+      if (declaration.type !== 'VariableDeclaration') continue;
+      for (const item of declaration.declarations)
+        if (item.id.type === 'Identifier')
+          bindings.set(item.id.name, item.init);
+    }
+  }
+  const found = new Set();
+  const add = (text) => {
+    if (/^[a-z][a-z0-9_]+$/.test(text)) found.add(text);
+  };
+  const values = (node, seen = new Set()) => {
+    if (!node) return;
+    if (node.type === 'StringLiteral') add(node.value);
+    else if (node.type === 'Identifier' && !seen.has(node.name)) {
+      values(bindings.get(node.name), new Set([...seen, node.name]));
+    } else if (node.type === 'ObjectExpression') {
+      for (const property of node.properties) values(property.value, seen);
+    } else if (node.type === 'ArrayExpression') {
+      for (const item of node.elements) values(item, seen);
+    } else if (node.type === 'ConditionalExpression') {
+      values(node.consequent, seen);
+      values(node.alternate, seen);
+    } else if (node.type === 'LogicalExpression') {
+      values(node.left, seen);
+      values(node.right, seen);
+    } else if (
+      node.type === 'MemberExpression' ||
+      node.type === 'OptionalMemberExpression'
+    ) {
+      values(node.object, seen);
+    } else if (node.type === 'NewExpression' && node.callee.name === 'Map') {
+      for (const argument of node.arguments) values(argument, seen);
+    } else if (node.type === 'CallExpression') {
+      if (
+        node.callee.object?.name === 'Object' &&
+        node.callee.property?.name === 'entries'
+      )
+        for (const argument of node.arguments) values(argument, seen);
+      else if (node.callee.type === 'MemberExpression')
+        values(node.callee.object, seen);
+    }
+  };
+  const visit = (node) => {
+    const icon =
+      node.type === 1 &&
+      node.props.some(
+        (prop) =>
+          (prop.type === 6 &&
+            prop.name === 'class' &&
+            prop.value?.content.includes('material-symbols-outlined')) ||
+          (prop.type === 7 &&
+            prop.name === 'bind' &&
+            prop.arg?.content === 'class' &&
+            prop.exp?.content.includes('material-symbols-outlined')),
+      );
+    if (icon)
+      for (const child of node.children) {
+        if (child.type === 2) add(child.content.trim());
+        if (child.type === 5) {
+          const ast = babelParse(`const glyph = (${child.content.content});`, {
+            sourceType: 'module',
+            plugins: ['typescript'],
+          });
+          values(ast.program.body[0].declarations[0].init);
+        }
+      }
+    for (const child of node.children ?? []) visit(child);
+  };
+  if (descriptor.template?.ast) visit(descriptor.template.ast);
+  return found;
 }
 
 /**
@@ -61,6 +147,8 @@ function referencedGlyphs() {
     const add = (glyph) => {
       if (!found.has(glyph)) found.set(glyph, relative);
     };
+    if (file.endsWith('.vue'))
+      for (const glyph of vueGlyphs(source)) add(glyph);
     for (const match of source.matchAll(SPAN_TEXT)) add(match[1]);
     for (const match of source.matchAll(TEXT_ASSIGNMENT)) {
       const statement = match[1].replaceAll('?.', '.');
@@ -107,5 +195,29 @@ test('the unused Material Icons Round family is not loaded', () => {
     html,
     /Material\+Icons\+Round/,
     'index.html loads an icon font nothing renders',
+  );
+});
+
+test('Vue icon maps and conditional text are checked without enrolling unrelated labels or conditions', () => {
+  const source = `<script setup>
+    const categoryIcons = { Space: 'satellite_alt', Events: 'sensors' };
+    const icons = new Map(Object.entries({ 'gnss-integrity': 'gps_off' }));
+    const labels = { idle: 'irrelevant' };
+    </script><template>
+    <span class="material-symbols-outlined">{{ categoryIcons[group] }}</span>
+    <span class="material-symbols-outlined">{{ status === 'idle' ? 'expand_more' : 'chevron_right' }}</span>
+    <span :class="{ 'material-symbols-outlined': true }">{{ icons.get(id) }}</span>
+    <p>{{ labels.idle }}</p></template>`;
+  assert.deepEqual([...vueGlyphs(source)].sort(), [
+    'chevron_right',
+    'expand_more',
+    'gps_off',
+    'satellite_alt',
+    'sensors',
+  ]);
+  const incomplete = new Set(['chevron_right', 'gps_off', 'satellite_alt']);
+  assert.deepEqual(
+    [...vueGlyphs(source)].filter((glyph) => !incomplete.has(glyph)).sort(),
+    ['expand_more', 'sensors'],
   );
 });

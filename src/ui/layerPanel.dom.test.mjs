@@ -477,12 +477,20 @@ test('Directions follows the drawer destination without losing the phone disclos
   layers[0].enabled = true;
   panel._refreshTogglePanel();
   const root = container.querySelector('#directions-controls-body');
-  const details = container.querySelector('.layer-details');
+  const details = container.querySelector('.layer-route-link');
   const controls = root.querySelector('.data-toggle-controls');
+  assert.equal(controls.hidden, false, 'fallback retains its expanded default');
+  assert.notEqual(root.style.display, 'none');
+  assert.equal(details.textContent.includes('Tools'), false);
   details.click();
   panel._pushView();
-  assert.equal(controls.hidden, true, 'phone details still collapse');
+  assert.equal(
+    controls.hidden,
+    true,
+    'fallback closes in place without a Tools host',
+  );
   assert.equal(details.getAttribute('aria-expanded'), 'false');
+  assert.equal(root.style.display, 'none');
   assert.deepEqual(calls, []);
   active = true;
   drawerChannel.publish({ type: 'active-changed' });
@@ -519,7 +527,7 @@ test('Directions follows the drawer destination without losing the phone disclos
   active = false;
   drawerChannel.publish({ type: 'active-changed' });
   assert.equal(details.getAttribute('aria-expanded'), 'false');
-  assert.equal(controls.hidden, true, 'the phone disclosure was retained');
+  assert.equal(controls.hidden, true, 'the fallback disclosure was retained');
   details.click();
   panel._pushView();
   assert.equal(controls.hidden, false);
@@ -537,7 +545,7 @@ test('Directions follows the drawer destination without losing the phone disclos
   assert.equal(document.getElementById('directions-controls-body'), null);
 });
 
-test('the Tools and Layers switches share one Directions transaction', async (t) => {
+test('the Tools switch owns the Directions transaction while Layers only navigates', async (t) => {
   const layer = {
     id: 'directions',
     name: 'Directions',
@@ -569,17 +577,18 @@ test('the Tools and Layers switches share one Directions transaction', async (t)
   const tools = container.querySelector(
     '#directions-controls-body [role=switch]',
   );
-  const layers = container.querySelector('.data-toggle-top [role=switch]');
+  assert.equal(container.querySelector('.data-toggle-top [role=switch]'), null);
+  const link = container.querySelector('.layer-route-link');
+  assert.match(link.textContent, /Route planning.*Tools \/ Directions/s);
   tools.click();
   assert.equal(calls, 1);
   assert.equal(tools.getAttribute('aria-busy'), 'true');
-  assert.equal(layers.getAttribute('aria-busy'), 'true');
-  layers.click();
+  tools.click();
   assert.equal(calls, 1);
   finish();
   await Promise.resolve();
   assert.equal(tools.getAttribute('aria-checked'), 'true');
-  assert.equal(layers.getAttribute('aria-checked'), 'true');
+  assert.equal(container.querySelector('.data-toggle-top [role=switch]'), null);
   panel.destroy();
   tools.click();
   assert.equal(calls, 1);
@@ -685,5 +694,78 @@ test('the real disclosure remains expandable and focused after collapse and them
   } finally {
     disclosure.destroy();
     view.dispose();
+  }
+});
+
+test('category navigation keeps rows mounted while search, active and reveals expose every group', async (t) => {
+  const { nextTick } = await import('vue');
+  const ids = [
+    'flights',
+    'satellites',
+    'wind',
+    'cctv',
+    'alpr-cameras',
+    'earthquakes',
+    'radio',
+  ];
+  const layers = ids.map((id) => ({
+    id,
+    name: id,
+    enabled: true,
+    showInTogglePanel: true,
+    stats: {},
+  }));
+  fixture(t, {
+    getLayers: () => layers,
+    setEnabled() {
+      throw new Error('Navigation must not toggle a layer');
+    },
+    setLayerParams() {
+      throw new Error('Navigation must not change layer parameters');
+    },
+  });
+  const row = (id) => container.querySelector(`[data-layer-id="${id}"]`);
+  const shown = (node) =>
+    ![node, ...ancestors(node)].some(
+      (el) => el.style.display === 'none' || el.hidden,
+    );
+  function* ancestors(node) {
+    for (let el = node.parentElement; el; el = el.parentElement) yield el;
+  }
+  const identities = new Map(ids.map((id) => [id, row(id)]));
+  assert.equal(shown(row('flights')), true);
+  assert.equal(shown(row('radio')), true);
+  for (const id of ids.slice(1, -1)) assert.equal(shown(row(id)), false, id);
+  const categories = [...container.querySelectorAll('.layer-category')];
+  assert.equal(categories.length, 5);
+  categories[0].click();
+  await nextTick();
+  assert.equal(shown(row('satellites')), true);
+  assert.equal(categories[0].getAttribute('aria-expanded'), 'true');
+  container.querySelector('.layer-category-back').click();
+  await nextTick();
+  assert.equal(shown(row('satellites')), false);
+  assert.equal(document.activeElement, categories[0]);
+  const input = container.querySelector('.layer-filter');
+  for (const id of ids) {
+    input.value = row(id).dataset.layerName;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+    assert.equal(shown(row(id)), true, `search ${id}`);
+  }
+  input.value = '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  container.querySelectorAll('[role=tab]')[1].click();
+  await nextTick();
+  for (const id of ids) assert.equal(shown(row(id)), true, `active ${id}`);
+  container.querySelectorAll('[role=tab]')[2].click();
+  await nextTick();
+  for (const id of ids) {
+    container.dispatchEvent(
+      new CustomEvent('gev:focus-layer-row', { detail: id }),
+    );
+    await nextTick();
+    assert.equal(shown(row(id)), true, `reveal ${id}`);
+    assert.equal(row(id), identities.get(id));
   }
 });

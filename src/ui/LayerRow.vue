@@ -10,6 +10,7 @@ const props = defineProps({
   chip: Function,
   listItem: Function,
   details: Function,
+  navigationOnly: Boolean,
 });
 // Icons belong to the view; custom catalog entries retain their supplied glyph.
 const icons = new Map(
@@ -65,11 +66,14 @@ watch(
 <template>
   <div
     class="data-toggle-row"
-    :class="{ 'data-toggle-row--count-line': row.countLine }"
+    :class="{
+      'data-toggle-row--count-line': row.countLine,
+      'layer-route-row': navigationOnly,
+    }"
     :data-layer-id="row.id"
     :data-layer-name="row.englishName"
   >
-    <div class="data-toggle-top">
+    <div v-if="!navigationOnly" class="data-toggle-top">
       <div class="data-toggle-left">
         <span
           class="data-icon"
@@ -117,9 +121,29 @@ watch(
         </button>
       </div>
     </div>
+    <button
+      v-else
+      type="button"
+      class="gev-action-button layer-route-link"
+      :aria-controls="row.detailsPanel || 'directions-controls-body'"
+      :aria-expanded="row.detailsPanel ? undefined : String(expanded)"
+      @click="
+        row.detailsPanel ? details(row.detailsPanel) : (expanded = !expanded)
+      "
+    >
+      <span v-if="row.detailsPanel"
+        >{{ t('Route planning') }} <span aria-hidden="true">→</span>
+        {{ t('Tools / Directions') }}</span
+      >
+      <span v-else>{{ t('Directions') }}</span>
+      <span class="material-symbols-outlined" aria-hidden="true">{{
+        row.detailsPanel || !expanded ? 'chevron_right' : 'expand_more'
+      }}</span>
+    </button>
     <DirectionsView
       v-if="row.id === 'directions'"
-      :hosted="Boolean(row.detailsPanel)"
+      v-show="row.detailsPanel || !navigationOnly || expanded"
+      :hosted="navigationOnly || Boolean(row.detailsPanel)"
       :enabled="row.enabled"
       :toggle-state="row.toggle"
       :toggle="() => toggle(row.id)"

@@ -2,31 +2,62 @@
   {
     "id": "search-glyph",
     "reason": "The existing finder gains a leading search glyph and a wrapper in every appearance; the input keeps its owner and behavior.",
-    "expected": { "glyph": "search", "wrapper": "layer-search" }
+    "expected": {
+      "glyph": "search",
+      "wrapper": "layer-search"
+    }
   },
   {
     "id": "layer-icons",
     "reason": "Known layer rows use monochrome local outline glyphs, while custom layers retain their supplied icon. Labels, catalog and feed semantics stay unchanged.",
-    "expected": { "iconWidth": 20 }
+    "expected": {
+      "iconWidth": 20
+    }
   },
   {
     "id": "row-spacing",
     "reason": "Rows use compact padding and a shared separator layout in every appearance. Cyber retains its original 12px names and 10px metadata.",
-    "expected": { "padding": "6px 12px" }
+    "expected": {
+      "padding": "6px 12px"
+    }
   },
   {
     "id": "switch-shape",
     "reason": "The existing layer switch has a 40 by 24px track and an 18px thumb in every appearance; state and activation semantics remain shared.",
-    "expected": { "trackWidth": 40, "trackHeight": 24, "thumbSize": 18 }
+    "expected": {
+      "trackWidth": 40,
+      "trackHeight": 24,
+      "thumbSize": 18
+    }
   },
   {
     "id": "metadata-indent",
     "reason": "Metadata aligns with names after the 20px icon and its gap; Cyber keeps its existing type size and palette.",
-    "expected": { "indent": 28 }
+    "expected": {
+      "indent": 28
+    }
   },
   {
     "id": "footer-spacing",
     "reason": "The existing count and Clear controls share the compact footer spacing. Cyber keeps the scrolling footer and 9px Clear label; only other appearances anchor it outside the row clip.",
-    "expected": { "cyberClearFontSize": 9 }
+    "expected": {
+      "cyberClearFontSize": 9
+    }
+  },
+  {
+    "id": "category-navigation",
+    "reason": "All appearances use in-place category disclosures; Transport and Audio stay expanded. Search and Active expose matching rows across every category, and reveals open their category before scrolling. Mounted layer controls, Cyber type and palette remain shared.",
+    "expected": {
+      "categoryMinHeight": 52,
+      "expandedGroups": ["Transport", "Audio"]
+    }
+  },
+  {
+    "id": "directions-link",
+    "reason": "Layers presents route planning as a navigation link to the one mounted Tools view. The route toggle, playback of steps and state stay in that existing view; hosts without Tools retain its in-place disclosure.",
+    "expected": {
+      "label": "Route planning → Tools / Directions",
+      "minHeight": 52
+    }
   }
 ]
