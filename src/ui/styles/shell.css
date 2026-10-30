@@ -519,10 +519,13 @@ body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
 body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #title-bar {
   left: calc(var(--gev-rail-width) + 24px);
 }
-body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #intel-hud {
-  left: var(--gev-rail-width);
-  width: auto;
-  right: 0;
+/* Resize applies viewport styles before the phone shell's class callback. */
+@media not all and (max-width: 720px) {
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #intel-hud {
+    left: var(--gev-rail-width);
+    width: auto;
+    right: 0;
+  }
 }
 /* Outside Cyber, the style readout follows the HUD’s on/off choice. */
 :where(:root:not([data-ui-theme='cyber']))
