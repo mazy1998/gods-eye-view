@@ -46,14 +46,14 @@ export const DRAWER_DESTINATIONS = Object.freeze(
     },
     {
       id: 'stories',
-      icon: 'movie',
+      icon: 'local_movies',
       label: msg('Stories'),
       subtitle: msg('Watch a story or create your own'),
       panels: ['scene-panel'],
     },
     {
       id: 'tools',
-      icon: 'construction',
+      icon: 'design_services',
       label: msg('Tools'),
       subtitle: msg('Import, draw, and plan routes'),
       panels: [],

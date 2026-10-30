@@ -184,6 +184,33 @@ export function createFixtures(read) {
     };
   });
   dom.window.close();
+  const chrome = doc.createElement('template');
+  chrome.innerHTML =
+    read('src/ui/templates/scene-chrome.html') +
+    read('src/ui/templates/provider-settings.html');
+  const indicator = chrome.content.querySelector('#style-indicator');
+  const corner = chrome.content.querySelector('#corner-actions');
+  if (!indicator || !corner) throw Error('Missing shell visibility controls');
+  indicator.dataset.geometry = 'style-readout';
+  const value = doc.createElement('span');
+  value.className = 'indicator-value';
+  value.textContent = 'FLIR';
+  indicator.append(value);
+  corner.dataset.geometry = 'corner-row';
+  corner.querySelector('#key-setup-chip')?.remove();
+  const locale = corner.querySelector('#locale-picker');
+  if (!locale) throw Error('Missing language picker host');
+  locale.innerHTML =
+    '<button class="locale-picker-button" data-geometry="language-chip">EN</button>';
+  result.push({
+    id: 'shell-visibility',
+    profile: 'default',
+    // Only presence and layout mode are compared here; the shell's frame
+    // geometry has its own mounted comparisons. The font's display rule is
+    // supplied locally so the audit never depends on an installed font.
+    properties: ['visible', 'display'],
+    html: `<style>.material-symbols-outlined{display:block}</style><nav class="gev-rail"><button class="gev-rail-item"><span class="gev-rail-icon material-symbols-outlined" data-geometry="rail-circle"><span class="gev-rail-glyph material-symbols-outlined">layers</span></span><span class="gev-rail-label">Layers</span></button></nav><div id="intel-hud"></div>${indicator.outerHTML}${corner.outerHTML}`,
+  });
   return result;
 }
 const reasons = {
@@ -284,6 +311,15 @@ const structureReasons = Object.fromEntries(
   storiesFixture.structuralExceptions.map((e) => [e.id, e.reason]),
 );
 export const exceptions = [
+  {
+    fixture: 'shell-visibility',
+    node: 'rail-circle',
+    property: 'display',
+    reference: 'block',
+    actual: 'flex',
+    reason:
+      'The shared rail centres its glyph in the existing circle using a flex wrapper; Cyber keeps its circle frame, palette and typography. This visible layout-mode change is deliberate.',
+  },
   ...portExceptions,
   ...[
     ['library', 'display', 'block', 'grid', 'library-cap'],

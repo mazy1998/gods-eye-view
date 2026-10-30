@@ -217,6 +217,7 @@ try {
     'Use the correct accounting display',
   );
   await page.screenshot({ path: path.join(output, `${auth}-usage.png`) });
+  await page.click('.gev-rail-item[data-destination="settings"]');
   await page.click('#key-setup-chip');
   await page.waitForSelector('[data-cloud-voice-auth-toggle]', {
     visible: true,

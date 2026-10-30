@@ -47,14 +47,14 @@ const railItem = ([id, icon], current) =>
     id,
     'gev-rail-item',
     `data-destination="${id}" aria-controls="gev-drawer" aria-expanded="${current}"${current ? ' aria-current="true"' : ''}${id === 'tools' ? ' disabled' : ''}`,
-    `<span class="gev-rail-icon material-symbols-outlined" aria-hidden="true" data-probe="icon">${icon}</span><span class="gev-rail-label" data-probe="label">${id}</span>`,
+    `<span class="gev-rail-icon material-symbols-outlined" aria-hidden="true" data-probe="icon"><span class="material-symbols-outlined">${icon}</span></span><span class="gev-rail-label" data-probe="label">${id}</span>`,
   );
 const railItems = [
   ['layers', 'layers'],
   ['inspect', 'my_location'],
   ['map', 'map'],
-  ['stories', 'movie'],
-  ['tools', 'construction'],
+  ['stories', 'local_movies'],
+  ['tools', 'design_services'],
   ['settings', 'settings'],
 ];
 // The header, map controls, status bar and Settings → Appearance, holding

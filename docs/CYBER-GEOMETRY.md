@@ -25,6 +25,13 @@ remote-font timing. The fixtures cover the Layers frame and finder, Stories
 frame and transport controls, Import/Draw cards and inputs, and the voice frame,
 status, microphone and orbit. Each measured node has a unique `data-geometry`.
 
+The shell visibility fixture retains the real style-readout and corner-row
+templates, with the rail visible and the HUD off. It compares presence and
+display mode for the readout, language chip and rail circle; shell frame
+dimensions still need mounted-app checks. A local display rule models the icon
+font without a network request. The circle's visible block-to-flex change has
+an exact centring exception; hiding the readout or language chip always fails.
+
 The report retains both snapshots, mismatches and allowed differences. It checks
 visibility, display/position modes, backdrop blur, border widths, radius, padding,
 box dimensions and offsets relative to the parent. Header/title/divider and

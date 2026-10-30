@@ -10,6 +10,9 @@
   --gev-status-height: 32px;
   --gev-map-control-size: 40px;
 }
+:root:not([data-ui-theme='cyber']) {
+  --gev-header-height: 56px;
+}
 
 .gev-rail {
   position: fixed;
@@ -98,6 +101,39 @@
     background-color var(--transition-fast),
     border-color var(--transition-fast);
 }
+/* The circle retains the legacy icon class for Cyber's paint. Its explicit
+   flex layout beats the font stylesheet; the glyph has its own centred box. */
+.gev-rail-icon.material-symbols-outlined {
+  display: inline-flex;
+}
+.gev-rail-icon > .material-symbols-outlined {
+  flex: none;
+  line-height: 1;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail {
+  padding-bottom: 28px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail-mark {
+  gap: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail-items {
+  gap: 12px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail-item {
+  gap: 8px;
+  font-size: 14px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail-label {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-rail-icon {
+  width: 56px;
+  height: 56px;
+}
 .gev-rail-item:hover:not(:disabled) .gev-rail-icon {
   background: var(--gev-control-bg-hover);
 }
@@ -108,6 +144,12 @@
   border-color: var(--gev-accent-tint-border);
   background: var(--gev-accent-tint);
   color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-rail-item[aria-current='true']
+  .gev-rail-icon {
+  border-width: 2px;
+  border-color: var(--gev-accent);
 }
 .gev-rail-item[aria-current='true']::before {
   position: absolute;
@@ -161,6 +203,43 @@
   box-shadow: none;
   backdrop-filter: none;
 }
+:where(:root:not([data-ui-theme='cyber'])) .gev-drawer-header.gev-surface {
+  padding-bottom: 12px;
+}
+/* The shell owns the inset; the standalone PanelHeader keeps its defaults. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-header
+  > .gev-panel-header {
+  padding: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-header
+  .gev-panel-header-title {
+  font: 600 22px / 1.25 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-header
+  .gev-panel-header-subtitle {
+  font: 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-header
+  .gev-panel-header-actions {
+  margin-top: -4px;
+  margin-right: -4px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-drawer-header .gev-icon-button {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-header
+  .gev-icon-button:hover:not(:disabled) {
+  background: var(--gev-control-bg-hover);
+}
 .gev-drawer-body {
   display: flex;
   flex: 1;
@@ -192,6 +271,58 @@
   margin: 0;
   color: var(--gev-text-muted);
   font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+/* The drawer supplies one material. These are only the outer borrowed
+   frames; media, lists, result cards and their own scrollers stay intact. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > :is(#weather-panel, #recent-imagery-panel, #cctv-panel, #street-level-panel)
+  > :is(
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .cctv-panel-inner,
+    .street-level-panel-inner
+  ),
+:where(:root:not([data-ui-theme='cyber'])) .gev-legacy-host > #pp-toggles,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-body
+  > .gev-appearance-settings {
+  --text-primary: var(--gev-text);
+  --text-secondary: var(--gev-text-muted);
+  --text-dim: var(--gev-text-muted);
+  --glass-bg: var(--gev-control-bg);
+  --glass-border: var(--gev-border);
+  --menu-bg: var(--gev-surface-overlay);
+  color: var(--gev-text);
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-body
+  > .gev-appearance-settings {
+  padding: 0 4px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-appearance-heading {
+  font-size: 15px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-appearance-settings
+  .gev-segment {
+  font: 13px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #corner-actions
+  :is(#key-setup-chip, .locale-picker-button) {
+  box-shadow: none;
 }
 
 /* The legacy-skinned host: borrowed panels lay out as a column in the drawer
@@ -333,6 +464,21 @@ body:not(.mobile-shell):not(.cockpit-mode) #intel-hud {
   width: auto;
   right: 0;
 }
+/* Outside Cyber, the style readout follows the HUD’s on/off choice. */
+:where(:root:not([data-ui-theme='cyber']))
+  body:not(:has(#intel-hud.active))
+  #style-indicator {
+  display: none;
+}
+/* Desktop Settings borrows these same controls. Their map-side home stays
+   quiet while the rail is available; phones and Cockpit keep their row. */
+@media not all and (max-width: 720px) {
+  :where(:root:not([data-ui-theme='cyber']))
+    body:has(.gev-rail:not([hidden]))
+    > #corner-actions {
+    display: none;
+  }
+}
 
 /* Clean view and recording hide the working chrome, the rail included. */
 body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
@@ -385,6 +531,10 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   width: min(100%, 640px);
   min-width: 0;
 }
+:where(:root:not([data-ui-theme='cyber'])) .gev-header-center {
+  position: relative;
+  width: min(100%, 472px);
+}
 .gev-header-count {
   color: var(--gev-text-muted);
   font: var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
@@ -415,6 +565,10 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 #gev-header-brand > #title-bar .title-logo {
   width: 28px;
   height: 28px;
+}
+:where(:root:not([data-ui-theme='cyber'])) #gev-header-brand > #title-bar h1 {
+  font-size: 14px;
+  letter-spacing: 1.8px;
 }
 
 /* Search: the field with its search button, and its results below it. */
@@ -448,6 +602,20 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   padding: 6px 4px;
   border: 0;
   background: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-search
+  > .gev-location-search.gev-surface {
+  padding-right: 40px;
+}
+:where(:root:not([data-ui-theme='cyber'])) #gev-header-search #location-search {
+  font: 14px / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-search
+  #location-search::placeholder {
+  font-style: normal;
 }
 #gev-header-search > .gev-location-results {
   position: absolute;
@@ -488,8 +656,9 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   #gev-header-places
   > #location-bar
   .location-inner {
-  border-color: transparent;
+  border: 0;
   background: transparent;
+  box-shadow: none;
   backdrop-filter: none;
 }
 /* As in the design, the header shows no tray summary or dock glyph; the
@@ -576,6 +745,57 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   border: 1px solid var(--gev-border-subtle);
   border-radius: var(--gev-radius-md);
 }
+/* Places is the trailing affordance of the search field. The existing
+   disclosure, focus return and popup stay with their original nodes. */
+:where(:root:not([data-ui-theme='cyber'])) #gev-header-places {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) #gev-header-places > #location-bar {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-toggle {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  border-color: transparent;
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  #location-bar-toggle
+  .location-toolbar-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  #location-bar-toggle::after {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  #location-bar-toggle:is(:hover, :focus-visible) {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
 
 /* Globe actions: Clear selected layers and Share view. */
 #gev-header-actions > #top-center-actions {
@@ -588,6 +808,14 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   padding: 0 var(--gev-space-3);
   border-radius: var(--gev-radius-md);
   font: var(--gev-font-size-sm) / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber'])) #gev-header-actions .share-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 0;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M12 16V3m-4 4 4-4 4 4M5 13v7h14v-7'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 /* On the header's surface the actions take its tokens; Cyber keeps its
    hexagons. */
@@ -622,6 +850,11 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 }
 .gev-map-controls.gev-surface {
   border-radius: var(--gev-radius-pill);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-map-controls {
+  bottom: calc(var(--gev-status-height) + 16px);
+  gap: 6px;
+  padding: 6px;
 }
 #gev-map-controls > button {
   display: flex;
@@ -658,6 +891,30 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 #gev-map-controls .material-symbols-outlined {
   font-size: 20px;
 }
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-map-controls
+  #tilt-map-view
+  .material-symbols-outlined {
+  width: 22px;
+  height: 22px;
+  font-size: 0;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m12 3 9 5v8l-9 5-9-5V8Zm0 10 9-5M3 8l9 5v8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+:where(:root:not([data-ui-theme='cyber'])) #gev-map-controls .camera-compass-n {
+  top: auto;
+  bottom: 3px;
+  font: 600 12px / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-map-controls
+  #north-up-view
+  .camera-compass-needle {
+  position: absolute;
+  top: 3px;
+  font-size: 15px;
+}
 
 /* Status bar: position and clock, then the provider attribution. */
 .gev-status-bar {
@@ -678,6 +935,9 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 }
 .gev-status-credits {
   min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-status-bar {
+  padding-inline: 16px;
 }
 #gev-status-bar #gev-status-credits .cesium-widget-credits {
   position: static;

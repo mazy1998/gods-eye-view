@@ -76,8 +76,9 @@ function navigate(event, from) {
         <span
           class="gev-rail-icon material-symbols-outlined"
           aria-hidden="true"
-          >{{ item.icon }}</span
         >
+          <span class="material-symbols-outlined">{{ item.icon }}</span>
+        </span>
         <span class="gev-rail-label">{{ t(item.label) }}</span>
       </button>
     </div>

@@ -78,7 +78,9 @@ export function validateExceptions(entries) {
   for (const e of entries) {
     if (
       hidesContent(e) ||
-      !['layers', 'stories', 'tools', 'voice'].includes(e.fixture) ||
+      !['layers', 'stories', 'tools', 'voice', 'shell-visibility'].includes(
+        e.fixture,
+      ) ||
       !e.node ||
       !e.property ||
       !Object.hasOwn(e, 'reference') ||
@@ -186,6 +188,8 @@ export async function audit(options) {
       };
       for (const [node, values] of Object.entries(snapshots[0]))
         for (const [property, reference] of Object.entries(values)) {
+          if (fixture.properties && !fixture.properties.includes(property))
+            continue;
           const actual = snapshots[1][node]?.[property];
           if (compare(reference, actual, options.tolerance)) continue;
           const difference = { node, property, reference, actual };

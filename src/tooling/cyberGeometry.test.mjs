@@ -126,6 +126,32 @@ test('finder expectations cannot mix plain and icon-wrapper geometry', () => {
   );
 });
 
+test('shell visibility audits the map readout and language chip with the HUD off', async () => {
+  const { createFixtures } =
+    await import('../../scripts/qa-cyber-geometry-fixtures.mjs');
+  const { readFileSync } = await import('node:fs');
+  const { JSDOM } = await import('jsdom');
+  const fixture = createFixtures((file) =>
+    readFileSync(new URL('../../' + file, import.meta.url), 'utf8'),
+  ).find((entry) => entry.id === 'shell-visibility');
+  assert.deepEqual(fixture.properties, ['visible', 'display']);
+  const dom = new JSDOM(fixture.html);
+  const doc = dom.window.document;
+  assert.ok(doc.querySelector('.gev-rail:not([hidden])'));
+  assert.ok(doc.querySelector('#intel-hud:not(.active)'));
+  assert.ok(
+    doc.querySelector('#style-indicator[data-geometry="style-readout"]'),
+  );
+  assert.ok(
+    doc.querySelector('body > #corner-actions[data-geometry="corner-row"]'),
+  );
+  assert.equal(
+    doc.querySelector('#corner-actions .locale-picker-button').dataset.geometry,
+    'language-chip',
+  );
+  dom.window.close();
+});
+
 test('Stories geometry uses the shared content order and enough cards to exercise its cap', async () => {
   const { createFixtures } =
     await import('../../scripts/qa-cyber-geometry-fixtures.mjs');
