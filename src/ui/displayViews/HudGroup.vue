@@ -7,6 +7,7 @@
 import { t } from '../../i18n/index.js';
 import { msg } from '../../i18n/marker.js';
 import { displayDefaults } from './displayDefaults.js';
+import { sliderFill } from './sliderFill.js';
 
 const props = defineProps({
   state: { type: Object, default: null },
@@ -150,6 +151,7 @@ const SONAR = [
       :max="max"
       step="1"
       :value="view().sonar[name]"
+      :style="sliderFill(view().sonar[name], min, max)"
       :aria-label="t(aria)"
       :title="title ? t(title) : undefined"
       @input="act(action, integer($event))"

@@ -7,6 +7,7 @@
 import { computed, useTemplateRef } from 'vue';
 import { formatNumber, t } from '../../i18n/index.js';
 import { STYLES } from '../visualPresets.js';
+import { sliderFill } from './sliderFill.js';
 
 const props = defineProps({
   state: { type: Object, default: null },
@@ -35,6 +36,7 @@ const rows = computed(() => {
       step: metadata.max <= 1 ? '0.01' : '0.1',
       value: values[name],
       text: formatParam(Number(values[name]), digits),
+      fill: sliderFill(values[name], metadata.min, metadata.max),
     };
   });
 });
@@ -67,6 +69,7 @@ const set = (row, event) => {
       :max="row.max"
       :step="row.step"
       :value="row.value"
+      :style="row.fill"
       :aria-label="t(row.label)"
       @input="set(row, $event)"
     />

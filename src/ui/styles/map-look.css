@@ -14,6 +14,77 @@
 #pp-toggles.collapsed .map-look {
   display: none;
 }
+/* The drawer's body is no surface of its own: the legacy controls Map & Look
+   hosts take the drawer's appearance through these properties. */
+:where(:root:not([data-ui-theme='cyber'])) .map-look {
+  --text-primary: var(--gev-text);
+  --text-secondary: var(--gev-text-muted);
+  --text-dim: var(--gev-text-muted);
+  --accent: var(--gev-accent);
+  --accent-dim: var(--gev-accent-tint);
+  --accent-glow: var(--gev-accent-tint);
+  --glass-bg: transparent;
+  --glass-border: var(--gev-border-subtle);
+  --glass-border-hover: var(--gev-border);
+  color: var(--gev-text);
+  color-scheme: var(--gev-color-scheme);
+}
+/* Sliders: a track filled up to the thumb in the accent, and a light thumb.
+   The fill is an inset shadow as long as the view's --gev-slider-fill, in
+   units of the input's own width (a container), so it needs no gradient. */
+:where(:root:not([data-ui-theme='cyber'])) .map-look .gev-quantitative-slider {
+  height: 18px;
+  container-type: inline-size;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-border);
+  box-shadow: inset var(--gev-slider-fill) 0 0 0 var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  box-sizing: border-box;
+  border: 1px solid var(--gev-border-subtle);
+  background: var(--gev-control-thumb);
+  box-shadow: var(--gev-elevation-1);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--gev-border-subtle);
+  background: var(--gev-control-thumb);
+  box-shadow: var(--gev-elevation-1);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look
+  .gev-quantitative-slider:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
 /* In the drawer, Map & Look sits on the drawer's own surface, under its
    heading and close button: the panel's own frame and DISPLAY header stay for
    Cyber, the right rail and phones. */
@@ -102,8 +173,14 @@
   background: var(--gev-surface-raised);
   border-color: var(--gev-border);
 }
+:where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn .btn-label {
+  padding-block: 6px;
+  font-size: var(--gev-font-size-md);
+  font-weight: 500;
+}
 :where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn .btn-key {
   color: var(--gev-text-muted);
+  font-size: var(--gev-font-size-sm);
 }
 :where(:root:not([data-ui-theme='cyber'])) .map-look .style-btn:hover {
   background: var(--gev-control-bg-hover);
@@ -153,10 +230,12 @@
   filter: grayscale(1) contrast(2) brightness(0.85);
 }
 [data-thumb='snow'] svg {
-  filter: grayscale(0.7) brightness(1.55) contrast(0.85);
+  filter: grayscale(0.75) brightness(1.4) contrast(0.95);
 }
 
-/* Image adjustments: a label and its switch, the intensity below it. */
+/* The tabs' controls: a label and its switch on one row, its settings inset
+   below, and quiet dividers between groups instead of boxed cards. Cyber keeps
+   its own Display rows. */
 .map-look-heading {
   margin: 0;
   font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
@@ -172,10 +251,33 @@
 }
 :where(:root:not([data-ui-theme='cyber'])) .map-look-heading {
   color: var(--gev-text-muted);
+  font-size: var(--gev-font-size-md);
+  font-weight: 500;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #pp-toggles
-  .map-look-adjustments
+  .map-look-slot
+  > .pp-toggle-group {
+  gap: var(--gev-space-1);
+  padding: var(--gev-space-2) 0;
+}
+/* Sharpen and Bloom sit close under their heading, as one list. */
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot[data-map-look-slot='adjustments']
+  > .pp-toggle-group {
+  padding: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot[data-map-look-slot='display']
+  > *
+  + * {
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
   .pp-toggle-btn {
   position: relative;
   justify-content: space-between;
@@ -189,68 +291,99 @@
   -webkit-backdrop-filter: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
+  .map-look-slot
   .pp-toggle-btn
   .pp-icon {
   display: none;
 }
+/* #pp-toggles outranks the legacy per-control label colours (Detection's mode
+   tint, Scope's checked accent). */
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
+  #pp-toggles
+  .map-look-slot
   .pp-toggle-btn
   .pp-label {
   color: var(--gev-text);
-  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
   letter-spacing: normal;
   text-transform: none;
 }
+/* A switch for each on/off control; Scope keeps its native checkbox and
+   clean view is an action. */
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
-  .pp-toggle-btn::after {
+  .map-look-slot
+  .pp-toggle-btn:not(.pp-scope-toggle, #clean-view-toggle)::after {
   content: '';
   flex: 0 0 auto;
-  width: 40px;
-  height: 22px;
+  width: 44px;
+  height: 24px;
   box-sizing: border-box;
   border: 1px solid var(--gev-border);
   border-radius: var(--gev-radius-pill);
   background: var(--gev-control-bg);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
-  .pp-toggle-btn::before {
+  .map-look-slot
+  .pp-toggle-btn:not(.pp-scope-toggle, #clean-view-toggle)::before {
   content: '';
   position: absolute;
   top: 50%;
-  right: 21px;
-  width: 16px;
-  height: 16px;
-  margin-top: -8px;
+  right: 23px;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
   border-radius: 50%;
-  background: var(--gev-text-muted);
+  background: var(--gev-control-thumb);
+  box-shadow: var(--gev-elevation-1);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
-  .pp-toggle-btn.active::after {
+  .map-look-slot
+  .pp-toggle-btn.active:not(.pp-scope-toggle, #clean-view-toggle)::after {
   border-color: var(--gev-accent);
   background: var(--gev-accent);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
-  .pp-toggle-btn.active::before {
+  .map-look-slot
+  .pp-toggle-btn.active:not(.pp-scope-toggle, #clean-view-toggle)::before {
   right: 3px;
-  background: var(--gev-on-accent);
+  background: var(--gev-control-thumb);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
+  .map-look-slot
   .pp-toggle-btn:focus-visible {
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #pp-toggles
-  .map-look-adjustments
+  .map-look-slot
+  #clean-view-toggle {
+  justify-content: center;
+  margin: var(--gev-space-2) 0;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-md);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  #clean-view-toggle:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .pp-slider-row.visible {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--gev-space-3);
+  align-items: center;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
   .pp-slider-row {
-  padding: 0 0 0 var(--gev-space-4);
+  padding: 0 0 var(--gev-space-1) var(--gev-space-4);
   border: 0;
   border-radius: 0;
   background: none;
@@ -261,21 +394,155 @@
 .map-look-adjustments .pp-slider-mini-label {
   display: none;
 }
+/* The label column fits the label, 84–136px; a longer translation wraps.
+   #pp-toggles outranks the legacy monospace column width, which other
+   languages size from their longest label. */
 :where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
+  #pp-toggles
+  .map-look-slot
   .pp-slider-mini-label {
   display: inline;
+  min-width: 84px;
+  max-width: 136px;
   color: var(--gev-text-muted);
-  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
   letter-spacing: normal;
   text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
-
-:where(:root:not([data-ui-theme='cyber']))
-  .map-look-adjustments
-  .pp-slider-value {
+:where(:root:not([data-ui-theme='cyber'])) .map-look-slot .pp-slider-value {
+  min-width: 44px;
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber'])) .map-look-slot .pp-select {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
   color: var(--gev-text);
   font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* One-of-many choices: a quiet track with the chosen segment tinted. */
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .pp-mode-seg {
+  border-color: var(--gev-border-subtle);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .pp-mode-btn {
+  color: var(--gev-text-muted);
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .pp-mode-btn:hover {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .pp-mode-btn.active {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
+}
+
+/* The selected style's parameters: a section like Image adjustments rather
+   than a raised card, with the same rows. The legacy title is upper case, so
+   it is lowered and its first letter raised again. */
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  > #param-slider-panel {
+  padding: var(--gev-space-3) 0 0;
+  border: 0;
+  border-top: 1px solid var(--gev-border-subtle);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-panel-header {
+  margin-bottom: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-panel-title {
+  display: inline-block;
+  color: var(--gev-text-muted);
+  font: 500 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: lowercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-panel-title::first-letter {
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  #param-slider-panel
+  .param-panel-divider {
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  #param-panel-collapse-btn {
+  border-color: transparent;
+  background: none;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  #param-panel-collapse-btn:hover {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-slider-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--gev-space-3);
+  align-items: center;
+  margin-bottom: var(--gev-space-2);
+  padding-left: var(--gev-space-4);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-label {
+  min-width: 84px;
+  max-width: 136px;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #pp-toggles
+  .map-look-slot
+  .param-value {
+  min-width: 44px;
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
   letter-spacing: normal;
 }
 
@@ -289,14 +556,18 @@
   font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
 }
 .map-look-hint-icon {
-  width: 18px;
-  height: 12px;
-  border: 1px solid;
-  border-radius: 2px;
+  flex: none;
+  width: 20px;
+  height: 14px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
 }
 :where(:root:not([data-ui-theme='cyber'])) .map-look-hint {
   border-top: 1px solid var(--gev-border-subtle);
   color: var(--gev-text-muted);
+  font-size: var(--gev-font-size-md);
 }
 .map-look-providers {
   display: flex;
@@ -317,12 +588,24 @@
   outline-offset: 2px;
 }
 .map-look-providers-chevron {
-  font-size: var(--gev-font-size-lg);
-  line-height: 1;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 :where(:root:not([data-ui-theme='cyber'])) .map-look-providers {
   border-top: 1px solid var(--gev-border-subtle);
   color: var(--gev-accent-text);
+  font-weight: 600;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .map-look-providers
+  .map-look-providers-chevron {
+  color: var(--gev-text-muted);
 }
 :where(:root:not([data-ui-theme='cyber'])) .map-look-providers:hover {
   color: var(--gev-text);

@@ -3,6 +3,7 @@
 import { computed } from 'vue';
 import { t } from '../../i18n/index.js';
 import { displayDefaults } from './displayDefaults.js';
+import { sliderFill } from './sliderFill.js';
 
 const props = defineProps({
   state: { type: Object, default: null },
@@ -37,6 +38,7 @@ const act = (name, ...args) => props.actions?.[name]?.(...args);
       min="0"
       max="200"
       :value="scope.featherPct"
+      :style="sliderFill(scope.featherPct, 0, 200)"
       :disabled="!scope.enabled"
       :aria-label="t('Scope edge feather')"
       :title="t('Scope edge feather as a percentage of the keyhole radius')"

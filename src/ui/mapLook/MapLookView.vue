@@ -103,7 +103,17 @@ watch(
         <div class="map-look-slot" data-map-look-slot="adjustments"></div>
       </section>
       <p class="map-look-hint">
-        <span class="map-look-hint-icon" aria-hidden="true"></span>
+        <svg
+          class="map-look-hint-icon"
+          viewBox="0 0 20 14"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect x="0.75" y="0.75" width="18.5" height="12.5" rx="2" />
+          <path
+            d="M4 4.5h1.5M7.5 4.5H9M11 4.5h1.5M14.5 4.5H16M4 7h1.5M7.5 7H9M11 7h1.5M14.5 7H16M6 9.75h8"
+          />
+        </svg>
         {{ t('Style shortcuts 1–7') }}
       </p>
     </section>
@@ -123,7 +133,14 @@ watch(
       @click="mapActions?.openProviders?.()"
     >
       <span>{{ t('Configure map providers') }}</span>
-      <span class="map-look-providers-chevron" aria-hidden="true">›</span>
+      <svg
+        class="map-look-providers-chevron"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M6 3.5 10.5 8 6 12.5" />
+      </svg>
     </button>
   </div>
 </template>

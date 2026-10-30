@@ -8,6 +8,7 @@ import { computed, ref } from 'vue';
 import { t } from '../../i18n/index.js';
 import { msg } from '../../i18n/marker.js';
 import { displayDefaults } from './displayDefaults.js';
+import { sliderFill } from './sliderFill.js';
 
 const props = defineProps({
   state: { type: Object, default: null },
@@ -75,6 +76,7 @@ const commitFade = () => {
       max="100"
       step="25"
       :value="detection.density"
+      :style="sliderFill(detection.density, 0, 100)"
       :aria-label="t('Detection label density')"
       @input="act('setDensity', $event.target.value)"
     />
@@ -128,6 +130,7 @@ const commitFade = () => {
       max="40"
       step="1"
       :value="detection.fadePct"
+      :style="sliderFill(detection.fadePct, 0, 40)"
       :aria-label="t('Detection fade distance')"
       :title="
         t(
@@ -157,6 +160,7 @@ const commitFade = () => {
       max="100"
       step="1"
       :value="detection.outsideOpacityPct"
+      :style="sliderFill(detection.outsideOpacityPct, 0, 100)"
       :aria-label="t('Detection opacity outside the keyhole')"
       :title="
         t('World-overlay label and card opacity beyond the fade distance')

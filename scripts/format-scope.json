@@ -1178,6 +1178,8 @@
   "src/ui/styles/cockpit-views.css",
   "src/ui/directionsView.test.mjs",
   "src/ui/displayViews/ImageAdjustmentGroup.vue",
+  "src/ui/displayViews/sliderFill.js",
+  "src/ui/displayViews/sliderFill.test.mjs",
   "src/ui/displayViews/StyleParametersView.vue",
   "src/ui/appearance.js",
   "src/ui/appearance.test.mjs",

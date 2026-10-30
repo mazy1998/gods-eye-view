@@ -7,6 +7,7 @@ import { computed } from 'vue';
 import { t } from '../../i18n/index.js';
 import { msg } from '../../i18n/marker.js';
 import { displayDefaults } from './displayDefaults.js';
+import { sliderFill } from './sliderFill.js';
 
 const props = defineProps({
   kind: { type: String, required: true },
@@ -68,6 +69,7 @@ const act = (name, ...args) => props.actions?.[name]?.(...args);
       min="0"
       :max="spec.max"
       :value="adjustment.intensity"
+      :style="sliderFill(adjustment.intensity, 0, spec.max)"
       :aria-label="t(spec.aria)"
       @input="act(spec.set, parseInt($event.target.value, 10))"
     />
