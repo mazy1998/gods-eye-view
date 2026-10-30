@@ -30,8 +30,9 @@
 }
 
 /* The drawer's own surface replaces the panel frame. The compact Radio
-   control and the collapse control keep a slim row of their own above the
-   tabs, so reading and Tab order still follow the page. */
+   control keeps a slim row of its own above the tabs, so reading and Tab
+   order still follow the page; the collapse control sits in the drawer
+   header. */
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
   > #global-context-panel:not(.collapsed)

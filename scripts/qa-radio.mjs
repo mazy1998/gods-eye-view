@@ -1592,7 +1592,7 @@ async function main() {
       if (inspect.getAttribute('aria-current') !== 'true') inspect.click();
       const context = document.getElementById('global-context-panel');
       if (!context.classList.contains('collapsed'))
-        context.querySelector('[data-collapse-target="global-context-panel"]').click();
+        document.querySelector('[data-collapse-target="global-context-panel"]').click();
     });
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
@@ -1792,7 +1792,7 @@ async function main() {
           contextCollapsed: contextPanel.classList.contains('layout-auto-collapsed'),
           contextHiddenWhileDisplayOwnsLane: contextPanel.getBoundingClientRect().height === 0
             && contextPanel.getAttribute('aria-hidden') === 'true',
-          contextAriaExpanded: contextPanel.querySelector('[data-collapse-target="global-context-panel"]')?.getAttribute('aria-expanded'),
+          contextAriaExpanded: document.querySelector('[data-collapse-target="global-context-panel"]')?.getAttribute('aria-expanded'),
         };
 
         manager.setPanelCollapsed('scene-panel', true);
@@ -1806,7 +1806,7 @@ async function main() {
           dataAriaExpanded: document.querySelector('[data-collapse-target="data-panel"]')?.getAttribute('aria-expanded'),
           contextExpanded: !contextPanel.classList.contains('collapsed'),
           contextAutoMarkerCleared: !contextPanel.classList.contains('layout-auto-collapsed'),
-          contextAriaExpanded: contextPanel.querySelector('[data-collapse-target="global-context-panel"]')?.getAttribute('aria-expanded'),
+          contextAriaExpanded: document.querySelector('[data-collapse-target="global-context-panel"]')?.getAttribute('aria-expanded'),
         };
 
         manager.setPanelCollapsed('global-context-panel', true);

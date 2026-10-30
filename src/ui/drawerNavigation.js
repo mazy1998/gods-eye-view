@@ -72,8 +72,14 @@ export const DRAWER_DESTINATIONS = Object.freeze(
 
 /** Expanded for the drawer only: not persisted and not shared. */
 const BORROW = Object.freeze({ persist: false, syncShare: false });
-// Hosted panels whose collapse control the drawer header carries.
-const HEADER_COLLAPSE_PANELS = Object.freeze(['data-panel', 'scene-panel']);
+// Hosted panels whose collapse control the drawer header carries: each
+// destination's own panel. Sections inside one (Inspect's cameras and Radio)
+// keep their disclosures.
+const HEADER_COLLAPSE_PANELS = Object.freeze([
+  'data-panel',
+  'scene-panel',
+  'global-context-panel',
+]);
 
 /**
  * Own which drawer destination is open, and host its legacy panels while it

@@ -952,3 +952,45 @@ test("PanelChrome keeps a hosted panel's moved collapse control truthful", async
   assert.equal(button.textContent, '−');
   assert.equal(button.getAttribute('aria-expanded'), 'true');
 });
+
+test("Inspect's Context collapse control joins the drawer header; its sections keep theirs", async (t) => {
+  const { drawer } = await collapseFixture(t);
+  document
+    .getElementById('left-panel-stack')
+    .insertAdjacentHTML(
+      'beforeend',
+      ['global-context-panel', 'cctv-panel', 'street-level-panel']
+        .map(
+          (id) =>
+            `<div id="${id}" data-panel-id="${id}" class="panel-collapsible"><div class="panel-inner"><div class="panel-header"><span class="panel-title">${id}</span><button class="panel-collapse-btn" data-collapse-target="${id}">▶</button></div></div></div>`,
+        )
+        .join(''),
+    );
+  const button = (id) =>
+    document.querySelector(`[data-collapse-target="${id}"]`);
+  drawer.open('inspect');
+  assert.equal(
+    button('global-context-panel').parentElement,
+    drawer.headerActions,
+  );
+  for (const id of ['cctv-panel', 'street-level-panel'])
+    assert.equal(button(id).parentElement.className, 'panel-header');
+  drawer.close();
+  assert.equal(
+    button('global-context-panel').parentElement.className,
+    'panel-header',
+  );
+});
+
+test('the real Context header carries the collapse control the drawer looks for', () => {
+  const template = document.createElement('template');
+  template.innerHTML = readFileSync(
+    new URL('./templates/context.html', import.meta.url),
+    'utf8',
+  );
+  assert.ok(
+    template.content.querySelector(
+      '#global-context-panel .panel-header > .panel-collapse-btn[data-collapse-target="global-context-panel"]',
+    ),
+  );
+});
