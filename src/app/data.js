@@ -32,9 +32,14 @@ export function createApplicationData({
     clearChannel: styleManager._contextControls?.clearChannel,
     clearSelectedLayers: () => styleManager.clearSelectedLayers(),
     drawerChannel: styleManager._drawer?.channel,
+    phoneChannel: styleManager._mobileShell?.channel,
     openDetails: (panelId) => {
       if (panelId === 'directions-controls-body') {
-        if (!styleManager._drawer?.open('tools')) return false;
+        const phone = styleManager._mobileShell;
+        const opened = phone?.channel.getSnapshot()?.active
+          ? phone.setDestination('tools')
+          : styleManager._drawer?.open('tools');
+        if (!opened) return false;
         const section = document.getElementById(panelId);
         section?.focus({ preventScroll: true });
         section?.scrollIntoView?.({ block: 'nearest' });

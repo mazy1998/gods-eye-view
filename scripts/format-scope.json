@@ -1228,5 +1228,11 @@
   "src/ui/mapLook/mapStackPicker.dom.test.mjs",
   "src/ui/mapSourceControls.dom.test.mjs",
   "src/ui/styles/map-look.css",
-  "scripts/qa-cyber-map-look-structure.json"
+  "scripts/qa-cyber-map-look-structure.json",
+  "src/ui/PhoneShellView.vue",
+  "src/ui/phoneChrome.js",
+  "src/ui/phoneDestinations.js",
+  "src/ui/styles/phone-shell-view.css",
+  "src/ui/phoneShell.dom.test.mjs",
+  "scripts/qa-phone-shell.mjs"
 ]

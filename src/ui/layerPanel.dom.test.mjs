@@ -769,3 +769,25 @@ test('category navigation keeps rows mounted while search, active and reveals ex
     assert.equal(row(id), identities.get(id));
   }
 });
+
+test('the phone owner makes Directions a portable Tools view without a second layer state', (t) => {
+  let active = true;
+  const phoneChannel = createStateChannel(() => ({ active }));
+  t.after(() => phoneChannel.destroy());
+  const calls = [];
+  const { panel, layers } = fixture(t, {
+    phoneChannel,
+    openDetails: (id) => calls.push(id),
+  });
+  layers[0].id = 'directions';
+  panel._refreshTogglePanel();
+  const root = container.querySelector('#directions-controls-body');
+  const details = container.querySelector('.layer-route-link');
+  assert.ok(root.classList.contains('directions-view--hosted'));
+  details.click();
+  assert.deepEqual(calls, ['directions-controls-body']);
+  active = false;
+  phoneChannel.publish();
+  assert.equal(container.querySelector('#directions-controls-body'), root);
+  assert.equal(root.classList.contains('directions-view--hosted'), true);
+});

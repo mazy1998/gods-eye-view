@@ -94,39 +94,38 @@ test('all themes keep the same Radio controls nested in Context', () => {
   assert.equal(mini.parentElement, dock);
 });
 
-test('Radio borrowed by the drawer stays there until the drawer returns it', () => {
-  const panel = node(),
-    context = node(),
-    inner = node(),
-    header = node(),
-    dock = node(),
-    mini = node(),
-    host = node();
-  context.selectors['.global-context-panel-inner'] = inner;
-  context.selectors['.panel-header'] = header;
-  header.append(dock);
-  dock.append(mini);
-  host.append(panel);
-  panel.closest = (selector) =>
-    selector === '.gev-legacy-host' && panel.parentElement === host
-      ? host
-      : null;
-  const nodes = {
-    'radio-panel': panel,
-    'global-context-panel': context,
-    'context-radio-dock': dock,
-    'context-radio-mini': mini,
-  };
-  const doc = {
-    documentElement: { dataset: {} },
-    getElementById: (id) => nodes[id],
-  };
-  syncRadioPanelPlacement(doc);
-  assert.equal(panel.parentElement, host);
-  inner.append(panel);
-  syncRadioPanelPlacement(doc);
-  assert.equal(panel.parentElement, inner);
-});
+for (const selector of ['.gev-legacy-host', '#mobile-sheet-panels'])
+  test(`Radio borrowed by ${selector} stays there until its host returns it`, () => {
+    const panel = node(),
+      context = node(),
+      inner = node(),
+      header = node(),
+      dock = node(),
+      mini = node(),
+      host = node();
+    context.selectors['.global-context-panel-inner'] = inner;
+    context.selectors['.panel-header'] = header;
+    header.append(dock);
+    dock.append(mini);
+    host.append(panel);
+    panel.closest = (target) =>
+      target === selector && panel.parentElement === host ? host : null;
+    const nodes = {
+      'radio-panel': panel,
+      'global-context-panel': context,
+      'context-radio-dock': dock,
+      'context-radio-mini': mini,
+    };
+    const doc = {
+      documentElement: { dataset: {} },
+      getElementById: (id) => nodes[id],
+    };
+    syncRadioPanelPlacement(doc);
+    assert.equal(panel.parentElement, host);
+    inner.append(panel);
+    syncRadioPanelPlacement(doc);
+    assert.equal(panel.parentElement, inner);
+  });
 
 test('placement is inert before the complete shell exists', () => {
   assert.doesNotThrow(() => syncRadioPanelPlacement(null));

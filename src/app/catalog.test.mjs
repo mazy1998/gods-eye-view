@@ -179,6 +179,11 @@ test('Directions details opens Tools without claiming the share-panel lane', asy
   const calls = [],
     releases = [];
   const drawerChannel = { subscribe: () => () => {} };
+  let phoneActive = false;
+  const phoneChannel = {
+    subscribe: () => () => {},
+    getSnapshot: () => ({ active: phoneActive }),
+  };
   const { presentation } = createApplicationData({
     scene: { viewer: {} },
     controls: {
@@ -186,6 +191,13 @@ test('Directions details opens Tools without claiming the share-panel lane', asy
         _drawer: {
           channel: drawerChannel,
           open: (id) => calls.push(['drawer', id]),
+        },
+        _mobileShell: {
+          channel: phoneChannel,
+          setDestination: (id) => {
+            calls.push(['phone', id]);
+            return true;
+          },
         },
         attachDataManager() {},
         setPanelCollapsed: (...args) => calls.push(['panel', ...args]),
@@ -207,5 +219,9 @@ test('Directions details opens Tools without claiming the share-panel lane', asy
     false,
     { explicit: true },
   ]);
+  phoneActive = true;
+  presentation.panel.openDetails('directions-controls-body');
+  assert.deepEqual(calls.at(-1), ['phone', 'tools']);
+  assert.equal(presentation.panel.phoneChannel, phoneChannel);
   for (const release of releases.reverse()) await release();
 });

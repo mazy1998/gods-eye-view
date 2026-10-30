@@ -10,9 +10,13 @@ export function syncRadioPanelPlacement(doc) {
     context?.querySelector('.global-context-panel-inner');
   const header = context?.querySelector('.panel-header');
   if (!panel || !parent || !header || !dock || !mini) return;
-  // The drawer's Layers destination hosts Radio while it is open, and puts it
-  // back in Context where it found it.
-  if (panel.parentElement !== parent && !panel.closest?.('.gev-legacy-host'))
+  // The active desktop or phone destination borrows Radio and returns it
+  // to Context when it closes.
+  if (
+    panel.parentElement !== parent &&
+    !panel.closest?.('.gev-legacy-host') &&
+    !panel.closest?.('#mobile-sheet-panels')
+  )
     parent.append(panel);
   if (dock.parentElement !== header)
     header.insertBefore(dock, header.querySelector('.panel-collapse-btn'));

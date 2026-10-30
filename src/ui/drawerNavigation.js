@@ -95,6 +95,7 @@ export function createDrawerNavigation({
   setPanelCollapsed,
   restoreOrder,
   phone = null,
+  isPhonePresenting = () => false,
 }) {
   const host = doc.createElement('div');
   host.id = 'gev-legacy-host';
@@ -278,6 +279,8 @@ export function createDrawerNavigation({
       panels = state.panels ?? {};
       if (moving || state.restoring) return;
       if (!isActive()) {
+        // Borrowing a sheet is presentation, not a new panel preference.
+        if (isPhonePresenting()) return;
         // A panel the user expands on the phone, or a share or history
         // restore there, picks the destination back at desktop width, over
         // the one open when the phone layout began. A restore keeps its lead

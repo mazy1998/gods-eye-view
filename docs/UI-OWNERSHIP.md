@@ -209,13 +209,12 @@ The Directions layer already owns mode, A/B placement, routing, selected steps
 and cinematic flight. No DOM draft extraction is needed. Its existing descriptor
 and row notification feed the single LayerPanel subscription. `DirectionsView`
 accepts `controls`, `summary`, `expanded`, and chip/list-item ID callbacks. The
-Transport row supplies those props and keeps the shared layer visibility switch.
+Layers route-planning link opens the portable Tools card.
 Tools borrows the same `#directions-controls-body` root through drawer element
-hosting. LayerPanel reads the drawer channel's `active` flag: desktop details
-opens Tools without a PanelChrome/share-panel change, while phones retain the
-row's local disclosure. The hosted Layers panel hides the section at home.
+hosting. LayerPanel follows the active drawer or phone channel: the route link opens
+Tools without a PanelChrome/share-panel change. The hosted Layers panel hides the section at home.
 The Tools card names Directions and projects the same enabled, busy and blocked
-state into a second switch that calls the existing LayerPanel toggle action.
+state into its switch, which calls the existing LayerPanel toggle action.
 Opening details focuses the borrowed section after synchronous drawer painting.
 LayerPanel re-reads each current descriptor and dispatches existing owner params
 with user origin. The view adds no request, pointer owner, application state,
@@ -267,3 +266,21 @@ cards stay mounted behind a disclosure. The provider links follow their fields
 in keyboard order. Voice invokes the existing settings action without starting
 a session. Language & help borrows the existing picker, closing its menu through
 its owner before returning it, and uses the existing appearance owner.
+
+## Phone destinations
+
+`mobileShell.js` owns the current phone sheet, More destination, borrowed panel
+preferences and restoration. `PhoneShellView.vue` paints the four tabs and one
+sheet through `phoneChrome.js`; the body attribute projects owner state. The
+adapter moves the existing destination nodes to its empty native host with
+comment homes, restoring them before desktop chrome resumes or views unmount.
+Search, media, appearance, import/draw and panel owners retain their original
+controls and operations. Explicit panel reveals select the matching sheet; only
+a manual Inspect tab entry performs the tracked-aircraft Contacts transition.
+Settings reuses `SettingsView` and the shared provider and language leases,
+releasing them before desktop chrome resumes. Panel-history restores replace
+the borrowed preferences and reveal their first expanded destination.
+Directions follows the active desktop or phone navigation channel. Its Layers
+link launches the one Tools view, whose layer switch and route actions remain
+owned by LayerPanel and the Directions layer. Playback preview keeps the More
+route to Stories available even while recording hides the rest of the chrome.

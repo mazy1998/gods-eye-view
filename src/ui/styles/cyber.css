@@ -948,7 +948,7 @@
   pointer-events: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #location-bar {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) > #location-bar {
   border: 1px solid rgba(112, 145, 153, 0.34);
   background:
     linear-gradient(135deg, rgba(62, 86, 94, 0.26), transparent 52%),
@@ -958,11 +958,11 @@
     3px 0 0 rgba(196, 84, 84, 0.18) inset;
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #location-bar {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) > #location-bar {
   border-left-color: rgba(196, 84, 84, 0.68);
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #location-bar::after {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) > #location-bar::after {
   position: absolute;
   bottom: 0.22rem;
   color: rgba(165, 190, 196, 0.42);
@@ -971,7 +971,7 @@
   pointer-events: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock > #location-bar::after {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) > #location-bar::after {
   content: 'LOC / GRID';
   left: 0.75rem;
 }
@@ -1263,7 +1263,7 @@
   }
 }
 
-:root[data-ui-theme='cyber'] #command-dock .dock-popover-content {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) .dock-popover-content {
   padding-top: 1.65rem;
   /* The pin straddles the tray edge; keep it outside the decorative mask. */
   isolation: isolate;
@@ -1277,7 +1277,7 @@
 }
 
 :root[data-ui-theme='cyber']
-  #command-dock
+  :is(#command-dock, #mobile-sheet-panels)
   #location-bar
   .dock-popover-content::after {
   content: '';
@@ -1305,7 +1305,7 @@
   clip-path: var(--cyber-panel-frame);
 }
 
-:root[data-ui-theme='cyber'] #command-dock .dock-popover-content::before {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) .dock-popover-content::before {
   position: absolute;
   top: 0.46rem;
   left: 0.7rem;
@@ -1315,11 +1315,11 @@
   pointer-events: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock #location-bar-popover::before {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) #location-bar-popover::before {
   content: 'NAVIGATION DECK  //  01';
 }
 
-:root[data-ui-theme='cyber'] #command-dock :where(.location-pill, .poi-pill) {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) :where(.location-pill, .poi-pill) {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(142, 171, 178, 0.3);
@@ -1338,7 +1338,7 @@
 }
 
 :root[data-ui-theme='cyber']
-  #command-dock
+  :is(#command-dock, #mobile-sheet-panels)
   :where(.location-pill, .poi-pill)::after {
   content: '';
   position: absolute;
@@ -1352,23 +1352,23 @@
   pointer-events: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock #search-toggle {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) #search-toggle {
   color: rgba(235, 241, 241, 0.9);
   font-size: 0;
 }
 
-:root[data-ui-theme='cyber'] #command-dock #search-toggle > span {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) #search-toggle > span {
   display: none;
 }
 
-:root[data-ui-theme='cyber'] #command-dock #search-toggle::before {
+:root[data-ui-theme='cyber'] :is(#command-dock, #mobile-sheet-panels) #search-toggle::before {
   content: '⌕';
   font-family: var(--font-mono);
   font-size: 0.86rem;
 }
 
 :root[data-ui-theme='cyber']
-  #command-dock
+  :is(#command-dock, #mobile-sheet-panels)
   :where(.panel-title, .location-toolbar-label, .gev-voice-kicker) {
   color: var(--cyber-red-bright);
 }

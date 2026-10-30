@@ -2,7 +2,12 @@ import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import ScopeGroup from './displayViews/ScopeGroup.vue';
 import { withDisplayViews } from '../testSupport/displayMarkup.mjs';
-import { getScopeMaskFeather, isScopeMaskEnabled, setScopeMaskEnabled, setScopeMaskFeather } from '../scopeMask.js';
+import {
+  getScopeMaskFeather,
+  isScopeMaskEnabled,
+  setScopeMaskEnabled,
+  setScopeMaskFeather,
+} from '../scopeMask.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -235,8 +240,7 @@ test('Display and voice HUD routes preserve explicit Cyber entry and exit author
   hudLayout.value = 'cyber';
   const actions = {
     setHudLayout: (value) => display.owner.setHudLayout(value),
-    setStyle: (value) =>
-      display.owner.setStyle(value, { userInitiated: true }),
+    setStyle: (value) => display.owner.setStyle(value, { userInitiated: true }),
   };
   const controls = bindDisplayControls({ elements: { hudLayout }, actions });
   hudLayout.dispatchEvent(new Event('change'));
@@ -278,8 +282,14 @@ test('Display and voice HUD routes preserve explicit Cyber entry and exit author
 
 test('scope choice and expanded feather survive every HUD layout and both restore paths', async (t) => {
   const { owner } = styleOwner(t, 'tactical');
-  const previous = { enabled: isScopeMaskEnabled(), feather: getScopeMaskFeather() };
-  t.after(() => { setScopeMaskEnabled(previous.enabled); setScopeMaskFeather(previous.feather); });
+  const previous = {
+    enabled: isScopeMaskEnabled(),
+    feather: getScopeMaskFeather(),
+  };
+  t.after(() => {
+    setScopeMaskEnabled(previous.enabled);
+    setScopeMaskFeather(previous.feather);
+  });
   Object.assign(owner.services, { setScopeMaskEnabled, setScopeMaskFeather });
   // The Scope view shows what the visual state reports: checked =
   // enabled, the feather slider disabled while off, and its value and readout
@@ -291,14 +301,19 @@ test('scope choice and expanded feather survive every HUD layout and both restor
   // The Scope view itself, rendered from that state.
   const view = () =>
     renderToString(
-      createSSRApp({ render: () => h(ScopeGroup, { state: { scope: shown() } }) }),
+      createSSRApp({
+        render: () => h(ScopeGroup, { state: { scope: shown() } }),
+      }),
     );
   await owner.restoreShareState({ scopeEnabled: false, scopeFeatherPct: 200 });
   assert.equal(shown().enabled, false);
   assert.equal(shown().featherPct, 200);
   let markup = await view();
   assert.match(markup, /<input type="checkbox" id="scope-toggle">/);
-  assert.match(markup, /id="scope-feather-slider"[^>]*value="200"[^>]*disabled/);
+  assert.match(
+    markup,
+    /id="scope-feather-slider"[^>]*value="200"[^>]*disabled/,
+  );
   assert.match(markup, /id="scope-feather-value">200%</);
   for (const layout of ['minimal', 'operator', 'cyber', 'tactical']) {
     owner._setHudVariant(layout, { applyVisualDefaults: true });
@@ -424,7 +439,7 @@ test('Cyber Voice clips its decoration without clipping descendant help and erro
 test('Cyber dock pins escape the tray mask and its decoration overrides the legacy arrow geometry', () => {
   const owner = cssRuleBody(
     cyberStyles,
-    /:root\[data-ui-theme='cyber'\] #command-dock \.dock-popover-content/,
+    /:root\[data-ui-theme='cyber'\] :is\(#command-dock, #mobile-sheet-panels\) \.dock-popover-content/,
   );
   assert.match(owner, /clip-path:\s*none;/);
   assert.match(owner, /isolation:\s*isolate;/);
@@ -433,7 +448,7 @@ test('Cyber dock pins escape the tray mask and its decoration overrides the lega
   // Otherwise left:auto can collapse the frame.
   const decoration = cssRuleBody(
     cyberStyles,
-    /:root\[data-ui-theme='cyber'\]\s+#command-dock\s+#location-bar\s+\.dock-popover-content::after/,
+    /:root\[data-ui-theme='cyber'\]\s+:is\(#command-dock, #mobile-sheet-panels\)\s+#location-bar\s+\.dock-popover-content::after/,
   );
   assert.match(decoration, /inset:\s*0;/);
   assert.match(decoration, /width:\s*auto;/);
@@ -657,7 +672,9 @@ test('Cyber visual defaults update the style, thermal palette and render state',
 });
 
 test('the Display selector, voice schema and final stylesheet expose Cyber', async () => {
-  const display = await withDisplayViews(read('./templates/display-controls.html'));
+  const display = await withDisplayViews(
+    read('./templates/display-controls.html'),
+  );
   const stylesheet = read('../../style.css');
   const rightRail = read('./rightPanelRail.js');
   const hud = read('../hud.js');
@@ -685,10 +702,7 @@ test('the Display selector, voice schema and final stylesheet expose Cyber', asy
   assert.match(cyberStyles, /--cyber-panel-frame: polygon/);
   assert.match(cyberStyles, /\.data-panel-inner,/);
   assert.match(cyberStyles, /#pp-toggles\.collapsed > \.pp-header-row/);
-  assert.match(
-    cyberStyles,
-    /\.panel-collapsible:not\(#location-bar\)::after/,
-  );
+  assert.match(cyberStyles, /\.panel-collapsible:not\(#location-bar\)::after/);
   assert.match(cyberStyles, /clip-path: var\(--cyber-panel-frame\);/);
   assert.match(hud, /class="hud-sonar" aria-hidden="true"/);
   assert.match(cyberStyles, /\.hud-sonar::before/);

@@ -330,9 +330,9 @@ try {
   await page.keyboard.press('Escape');
   await page.screenshot({ path: path.join(shots, 'desktop.png') });
   await page.setViewport({ width: 390, height: 844 });
-  // Phones present Scenes in the Layers tab's sheet. Stories only borrowed
-  // the panel on desktop, so open it there through its phone disclosure.
-  await page.click('#mobile-tab-bar [data-mobile-sheet="layers"]');
+  // The phone More sheet hosts the same Stories controls.
+  await page.click('#mobile-tab-bar [data-mobile-sheet="more"]');
+  await page.click('[data-mobile-destination="stories"]');
   await new Promise((resolve) => setTimeout(resolve, 400));
   if (
     await page.$eval('#scene-panel', (panel) =>

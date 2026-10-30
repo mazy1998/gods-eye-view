@@ -110,6 +110,49 @@ function element(tag, document) {
 
 const PANEL_IDS = [...new Set(Object.values(MOBILE_SHEET_PANELS).flat())];
 
+function fakeChrome({ documentRef, state, actions }) {
+  const backdrop = documentRef.createElement('div');
+  backdrop.id = 'mobile-sheet-backdrop';
+  const tabBar = documentRef.createElement('nav');
+  tabBar.id = 'mobile-tab-bar';
+  for (const tab of MOBILE_TABS) {
+    const button = documentRef.createElement('button');
+    button.type = 'button';
+    button.dataset.mobileSheet = tab.sheet;
+    button.className = 'mobile-tab';
+    const icon = documentRef.createElement('span');
+    icon.textContent = tab.icon;
+    button.append(icon);
+    tabBar.append(button);
+  }
+  tabBar.addEventListener('click', (event) => {
+    const button = event.target?.closest?.('[data-mobile-sheet]');
+    if (button) actions.tab(button.dataset.mobileSheet);
+  });
+  backdrop.addEventListener('click', actions.close);
+  documentRef.body.append(backdrop, tabBar);
+  const update = (state) => {
+    backdrop.hidden = !state.sheet;
+    tabBar.setAttribute('aria-hidden', String(!state.active));
+    for (const button of tabBar.children)
+      button.setAttribute(
+        'aria-expanded',
+        String(button.dataset.mobileSheet === state.sheet),
+      );
+  };
+  update(state);
+  return {
+    backdrop,
+    tabBar,
+    host: null,
+    update,
+    destroy() {
+      backdrop.remove();
+      tabBar.remove();
+    },
+  };
+}
+
 function fixture({
   mobile = true,
   expanded = [],
@@ -174,6 +217,7 @@ function fixture({
     }
   }
   const shell = initMobileShell({
+    mountChrome: fakeChrome,
     documentRef: document,
     onTabOpened,
     matchMedia: () => media,
@@ -268,7 +312,7 @@ test('sheets borrow panels and put them back exactly as they were', () => {
   // The user left Data Layers and Map & Look open on desktop.
   const kept = ['data-panel', 'pp-toggles'];
   const { calls, press, collapsed } = fixture({ expanded: kept });
-  press('cameras');
+  press('inspect');
   assert.equal(collapsed('cctv-panel'), false);
   assert.equal(collapsed('street-level-panel'), false);
   press('search');
@@ -290,10 +334,10 @@ test('sheets borrow panels and put them back exactly as they were', () => {
 
 test('a panel the user changes inside a sheet stays as they left it', () => {
   const { press, collapsed, document } = fixture();
-  press('cameras');
+  press('inspect');
   // The user collapses CCTV inside the sheet (their own, persisted choice).
   document.getElementById('cctv-panel').classList.add('collapsed');
-  press('cameras');
+  press('inspect');
   assert.equal(collapsed('cctv-panel'), true, 'their collapse is kept');
   assert.equal(
     collapsed('street-level-panel'),
@@ -382,9 +426,9 @@ test('share state and restores follow the preference, not layout collapse', () =
   // Layout collapsed Street Level only for space; the user left it open.
   const street = document.getElementById('street-level-panel');
   street.classList.add('layout-auto-collapsed');
-  press('cameras');
+  press('inspect');
   assert.equal(shell.sharedCollapsed('street-level-panel'), false);
-  press('cameras');
+  press('inspect');
   assert.equal(
     collapsed('street-level-panel'),
     false,
@@ -396,17 +440,17 @@ test('layout settling after a sheet opens is part of opening', () => {
   const { press, runFrames, collapsed, document } = fixture({
     expanded: ['street-level-panel'],
   });
-  press('cameras');
+  press('inspect');
   // A rail layout pass on the next frame collapses Street Level.
   document.getElementById('street-level-panel').classList.add('collapsed');
   runFrames();
-  press('cameras');
+  press('inspect');
   assert.equal(collapsed('street-level-panel'), false, 'put back as it was');
 });
 
 test('the backdrop closes the open sheet', () => {
   const { document, shell, press } = fixture();
-  press('context');
+  press('inspect');
   document
     .getElementById('mobile-sheet-backdrop')
     .dispatchEvent(new Event('click'));
@@ -423,11 +467,12 @@ test('surfaces that own the screen close sheets; scene playback does not', () =>
     press('layers');
     assert.equal(shell.getSheet(), null, `${mode} keeps sheets closed`);
   }
-  // Scene STOP lives in the Scenes panel of the Layers sheet.
+  // Stop remains reachable in More while preview also hides recording chrome.
   const playback = fixture();
   playback.setBodyClass('scene-playback-mode');
-  playback.press('layers');
-  assert.equal(playback.shell.getSheet(), 'layers');
+  playback.setBodyClass('recording-mode');
+  playback.press('more');
+  assert.equal(playback.shell.getSheet(), 'more');
 });
 
 test('desktop widths never see the shell; crossing to desktop restores it', () => {
@@ -442,7 +487,7 @@ test('desktop widths never see the shell; crossing to desktop restores it', () =
 
   const phone = fixture({ expanded: ['street-level-panel'] });
   assert.match(phone.viewport.getAttribute('content'), /viewport-fit=cover$/);
-  phone.press('cameras');
+  phone.press('inspect');
   phone.resize(false);
   assert.equal(phone.shell.getSheet(), null);
   assert.equal(phone.document.body.classList.contains('mobile-shell'), false);
@@ -654,7 +699,7 @@ test('multitouch, cancellation, sheet changes and desktop transitions abandon th
     if (cancel === 'multitouch')
       touchEvent(document, 'touchstart', document.body, { count: 2 });
     if (cancel === 'cancel') touchEvent(document, 'touchcancel', panel);
-    if (cancel === 'sheet') press('context');
+    if (cancel === 'sheet') press('inspect');
     if (cancel === 'desktop') {
       resize(false);
       resize(true);
@@ -667,7 +712,7 @@ test('multitouch, cancellation, sheet changes and desktop transitions abandon th
       false,
     );
     touchEvent(document, 'touchend', panel, { y: 120 });
-    assert.equal(shell.getSheet(), cancel === 'sheet' ? 'context' : 'layers');
+    assert.equal(shell.getSheet(), cancel === 'sheet' ? 'inspect' : 'layers');
     shell.destroy();
   }
 });
@@ -697,23 +742,23 @@ test('touches outside the active sheet and destroyed listeners cannot dismiss or
 test('the tab-open callback reports only a successful manual opening', () => {
   const opened = [];
   const phone = fixture({ onTabOpened: (sheet) => opened.push(sheet) });
-  phone.shell.setSheet('context');
+  phone.shell.setSheet('inspect');
   assert.deepEqual(opened, []);
-  phone.press('context');
+  phone.press('inspect');
   assert.deepEqual(opened, [], 'closing is not a new context request');
-  phone.press('context');
-  assert.deepEqual(opened, ['context']);
+  phone.press('inspect');
+  assert.deepEqual(opened, ['inspect']);
   phone.setBodyClass('cockpit-mode');
-  phone.press('context');
+  phone.press('inspect');
   assert.deepEqual(
     opened,
-    ['context'],
+    ['inspect'],
     'blocked sheets cannot activate a mode',
   );
   phone.shell.destroy();
 });
 
-test('manual Context opens the existing transaction without disabling the tracked aircraft', async () => {
+test('manual Inspect opens the existing transaction without disabling the tracked aircraft', async () => {
   const calls = [];
   const tracked = { layerId: 'flights', icao24: 'abc123', callsign: 'EJA225' };
   const viewer = { trackedEntity: { gevTrackedId: 'flights:abc123' } };
@@ -762,7 +807,7 @@ test('manual Context opens the existing transaction without disabling the tracke
   };
   try {
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'inspect'),
       true,
     );
     assert.equal(controls.getContextModeState().mode, 'flights');
@@ -780,7 +825,7 @@ test('manual Context opens the existing transaction without disabling the tracke
     assert.ok(!calls.some((call) => call.id === 'flights'));
     const count = calls.length;
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'inspect'),
       false,
     );
     assert.equal(
@@ -794,7 +839,7 @@ test('manual Context opens the existing transaction without disabling the tracke
   }
 });
 
-test('manual Context respects Space Missions, busy transitions, missing tracks and disposal', async () => {
+test('manual Inspect respects Space Missions, busy transitions, missing tracks and disposal', async () => {
   for (const state of [
     { mode: 'space-missions' },
     { mode: 'flights' },
@@ -815,7 +860,7 @@ test('manual Context respects Space Missions, busy transitions, missing tracks a
     assert.equal(
       await StyleManager.prototype._onMobileTabOpened.call(
         shell,
-        state.sheet || 'context',
+        state.sheet || 'inspect',
       ),
       false,
     );
@@ -836,7 +881,7 @@ test('failed mobile Contacts entry uses the existing notice and cancelled/dispos
       _showToast: (message) => notices.push(message),
     };
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'inspect'),
       false,
     );
     assert.equal(

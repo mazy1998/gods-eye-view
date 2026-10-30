@@ -16,7 +16,7 @@ const ORDER = SHARE_PANEL_STATE_SPECS.map((spec) => spec.id);
  * Today's stacks and panels, with a PanelChrome-shaped channel over them, or
  * with PanelChrome itself owning them (`chrome`).
  */
-function fixture({ phone = false, chrome = false } = {}) {
+function fixture({ phone = false, chrome = false, isPhonePresenting } = {}) {
   document.body.insertAdjacentHTML(
     'beforeend',
     `<div id="left-panel-stack">
@@ -86,6 +86,7 @@ function fixture({ phone = false, chrome = false } = {}) {
       : setPanelCollapsed,
     restoreOrder: ORDER,
     phone: media,
+    isPhonePresenting,
   });
   document.body.append(drawer.host);
   // As PanelChrome restores a share or history state: the listed panels only.
@@ -799,4 +800,20 @@ test("a default link's closed tray leaves the restore to the panels it opens", (
   });
   assert.equal(destination(drawer), 'layers');
   assert.deepEqual(tabs, []);
+});
+
+test('temporary phone panel borrowing preserves the previous desktop destination', (t) => {
+  let presenting = false;
+  const { drawer, media, setPanelCollapsed } = fixture({
+    isPhonePresenting: () => presenting,
+  });
+  t.after(() => drawer.destroy());
+  drawer.open('stories');
+  media.set(true);
+  presenting = true;
+  setPanelCollapsed('data-panel', false, { persist: false, syncShare: false });
+  setPanelCollapsed('data-panel', true, { persist: false, syncShare: false });
+  presenting = false;
+  media.set(false);
+  assert.equal(destination(drawer), 'stories');
 });

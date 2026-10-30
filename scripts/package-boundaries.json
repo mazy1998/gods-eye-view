@@ -690,6 +690,11 @@
     "modules": [
       "src/i18n/marker.js",
       "src/ui/mobileShell.js",
+      "src/ui/PhoneShellView.vue",
+      "src/ui/phoneChrome.js",
+      "src/ui/phoneDestinations.js",
+      "src/ui/styles/phone-shell-view.css",
+
       "src/exclusiveSurfaces.js",
       "src/ui/placeNames.js",
       "src/hudLayouts.js",
@@ -2379,6 +2384,11 @@
       "src/styles/thermal.js",
       "src/ui/applicationShell.js",
       "src/ui/mobileShell.js",
+      "src/ui/PhoneShellView.vue",
+      "src/ui/phoneChrome.js",
+      "src/ui/phoneDestinations.js",
+      "src/ui/styles/phone-shell-view.css",
+
       "src/exclusiveSurfaces.js",
       "src/ui/localePicker.js",
       "src/ui/localePickerGlyphs.js",

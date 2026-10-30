@@ -155,6 +155,7 @@ export class LayerPanel {
     clearChannel,
     clearSelectedLayers = () => {},
     drawerChannel,
+    phoneChannel,
     openDetails = () => {},
   }) {
     this.weatherClock = weatherClock;
@@ -162,6 +163,7 @@ export class LayerPanel {
     this.clearChannel = clearChannel;
     this.clearSelectedLayers = clearSelectedLayers;
     this.drawerChannel = drawerChannel;
+    this.phoneChannel = phoneChannel;
     this.openDetails = openDetails;
     this._pending = new Set();
     this._imports = null;
@@ -186,14 +188,19 @@ export class LayerPanel {
     this._releaseBindings();
     this._toggleContainer = container;
     this._drawerState = null;
-    if (this.drawerChannel)
-      this._removers.push(
-        this.drawerChannel.subscribe(({ state }) => {
-          const changed = this._drawerState?.active !== state?.active;
-          this._drawerState = state;
-          if (changed) this._pushView();
-        }),
-      );
+    this._phoneState = null;
+    for (const [key, channel] of [
+      ['_drawerState', this.drawerChannel],
+      ['_phoneState', this.phoneChannel],
+    ])
+      if (channel)
+        this._removers.push(
+          channel.subscribe(({ state }) => {
+            const changed = this[key]?.active !== state?.active;
+            this[key] = state;
+            if (changed) this._pushView();
+          }),
+        );
     this._weatherPanel?.destroy();
     this._weatherPanel = createWeatherPanel({
       clock: this.weatherClock,
@@ -353,7 +360,8 @@ export class LayerPanel {
           toggle: this._toggleState(layer),
           readout: Boolean(descriptor?.readout),
           detailsPanel:
-            layer.id === 'directions' && this._drawerState?.active
+            layer.id === 'directions' &&
+            (this._drawerState?.active || this._phoneState?.active)
               ? 'directions-controls-body'
               : DETAIL_PANELS[layer.id],
           controls:

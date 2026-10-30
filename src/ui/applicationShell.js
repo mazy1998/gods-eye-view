@@ -135,13 +135,18 @@ export class StyleManager extends ShellFacade {
     // Vue views the shell mounted; dispose() releases them first.
     this._views = new Set();
     this._settingsSurface = createSettingsSurface({
-      open: () => this._drawer?.open('settings'),
-      close: () => this._drawer?.close({ focus: true }),
+      open: () =>
+        this._mobileShell?.channel.getSnapshot().active
+          ? this._mobileShell.setDestination('settings')
+          : this._drawer?.open('settings'),
+      close: () =>
+        this._mobileShell?.channel.getSnapshot().active
+          ? this._mobileShell.setSheet(null)
+          : this._drawer?.close({ focus: true }),
       closeLanguage: () => this._localePicker?.close(),
       canOpenVoice: () =>
         Boolean(document.getElementById('gev-voice-settings-button')),
-      openVoice: () =>
-        document.getElementById('gev-voice-settings-button')?.click(),
+      openVoice: () => this._openVoiceSettings(),
     });
     this._recording = new RecordingControls({
       syncShareState: () => this._syncShareState(),
@@ -594,7 +599,10 @@ export class StyleManager extends ShellFacade {
         _syncShareState: (...args) => this._syncShareState(...args),
         _toggleOrbit: (...args) => this._toggleOrbit(...args),
         toggleCleanView: (...args) => this.toggleCleanView(...args),
-        toggleLayersDestination: () => this._drawer?.toggle('layers') ?? false,
+        toggleLayersDestination: () =>
+          this._mobileShell?.channel.getSnapshot()?.active
+            ? this._mobileShell.toggle('layers')
+            : (this._drawer?.toggle('layers') ?? false),
         _toggleCctvEnabled: (...args) => this._toggleCctvEnabled(...args),
         _setBloomEnabled: (...args) => this._setBloomEnabled(...args),
         _setBloomIntensity: (...args) => this._setBloomIntensity(...args),
@@ -920,6 +928,10 @@ export class StyleManager extends ShellFacade {
    */
   _initMobileShell() {
     this._mobileShell = initMobileShell({
+      appearance: this._appearance,
+      settingsSurface: this._settingsSurface,
+      panelChannel: this._panelChrome.channel,
+      restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       setPanelCollapsed: (panelId, collapsed, options) =>
         this._panelChrome.setPanelCollapsed(panelId, collapsed, options),
       onSheetsClosed: () => this._syncShareState(),
@@ -929,11 +941,17 @@ export class StyleManager extends ShellFacade {
     });
   }
 
+  /** The voice popup lives in the dock, which an open phone sheet hides. */
+  _openVoiceSettings() {
+    this._mobileShell?.setSheet(null);
+    document.getElementById('gev-voice-settings-button')?.click();
+  }
+
   /** Reveal a tracked aircraft through Contacts when its phone tab is opened. */
   async _onMobileTabOpened(sheet) {
     const context = this.getContextModeState();
     if (
-      sheet !== 'context' ||
+      sheet !== 'inspect' ||
       this._disposed ||
       !context ||
       context.mode ||
@@ -1296,6 +1314,7 @@ export class StyleManager extends ShellFacade {
         this._panelChrome.setPanelCollapsed(panelId, collapsed, options),
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
+      isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
     });
     const destinationViews = {
       settings: {
@@ -1997,7 +2016,10 @@ export class StyleManager extends ShellFacade {
     this._feedback._globalStatusNotice = null;
     if (this._globalLoadingStatus) this._globalLoadingStatus.hidden = true;
     this._disposed = true;
-    // Phase 1 starts with the views, so no owner publication reaches them.
+    // Return borrowed phone nodes before unmounting their views, then stop
+    // view subscriptions before owner shutdown.
+    this._mobileShell?.destroy();
+    this._mobileShell = null;
     this._unsubscribeDisplayViews?.();
     this._contactsPanel?.dispose();
     this._missionPanels?.dispose();

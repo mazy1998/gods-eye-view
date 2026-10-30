@@ -153,6 +153,17 @@
   #scene-runtime.stories-playback:has(.stories-runtime > span:empty) {
   display: none;
 }
+/* A touch preview keeps the existing Stop control after landscape rotation. */
+@media (any-pointer: coarse) {
+  body.recording-mode.scene-playback-mode #scene-runtime.stories-playback {
+    display: flex;
+  }
+  body.recording-mode.scene-playback-mode .stories-runtime-stop {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
 :where(:root:not([data-ui-theme='cyber'])) #scene-runtime.stories-playback {
   color: var(--gev-text);
   background: var(--gev-surface-overlay);

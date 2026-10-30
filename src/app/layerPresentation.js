@@ -14,6 +14,7 @@ export class LayerPresentation {
       clearChannel,
       clearSelectedLayers,
       drawerChannel,
+      phoneChannel,
       openDetails,
     } = {},
   ) {
@@ -23,6 +24,7 @@ export class LayerPresentation {
     this.clearChannel = clearChannel;
     this.clearSelectedLayers = clearSelectedLayers;
     this.drawerChannel = drawerChannel;
+    this.phoneChannel = phoneChannel;
     this.openDetails = openDetails;
     this._panel = null;
     this.pendingVisible = false;
@@ -52,6 +54,7 @@ export class LayerPresentation {
         clearChannel: this.clearChannel,
         clearSelectedLayers: this.clearSelectedLayers,
         drawerChannel: this.drawerChannel,
+        phoneChannel: this.phoneChannel,
         openDetails: this.openDetails,
         getLayers: () => this.manager.getAll(),
         isEnabled: (id) => this.manager.isEnabled(id),

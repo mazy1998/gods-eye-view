@@ -85,11 +85,13 @@
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
-/* In the drawer, Map & Look sits on the drawer's own surface, under its
-   heading and close button: the panel's own frame and DISPLAY header stay for
-   Cyber, the right rail and phones. */
+/* Hosted Map & Look uses its destination's frame and heading. Cyber and the
+   legacy rail retain the panel's own frame and DISPLAY header. */
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
+  > #pp-toggles:not(.collapsed),
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
   > #pp-toggles:not(.collapsed) {
   padding: 0;
   border: 0;
@@ -101,6 +103,10 @@
 }
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
+  > #pp-toggles:not(.collapsed)
+  > .pp-header-row,
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
   > #pp-toggles:not(.collapsed)
   > .pp-header-row {
   display: none;

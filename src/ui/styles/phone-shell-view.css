@@ -1,0 +1,339 @@
+/* Phone chrome hosts the existing destination nodes while desktop chrome rests. */
+.gev-phone-shell[hidden],
+.gev-phone-shell [hidden] {
+  display: none !important;
+}
+body.mobile-shell .gev-phone-shell #mobile-tab-bar {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.gev-phone-shell #mobile-tab-bar .mobile-tab {
+  font-size: 12px;
+  letter-spacing: 0;
+  min-height: 48px;
+}
+.phone-sheet {
+  position: fixed;
+  inset: auto 0 var(--mobile-tab-space);
+  z-index: 160;
+  display: flex;
+  flex-direction: column;
+  max-height: var(--mobile-sheet-max-height);
+  box-sizing: border-box;
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  pointer-events: auto;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) 12px
+    max(12px, env(safe-area-inset-left, 0px));
+}
+.phone-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  gap: 12px;
+  padding: 12px 0;
+}
+.phone-sheet-header h2 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font: 600 20px / 1.25 var(--gev-font-sans);
+}
+.phone-sheet-scroll {
+  min-height: 0;
+  overflow: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.phone-more-destinations {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+.phone-more-destinations button {
+  flex: 1 1 auto;
+  min-height: 36px;
+  padding: 6px 10px;
+  font: 12px / 1.35 var(--gev-font-sans);
+  border-radius: var(--gev-radius-pill);
+}
+#mobile-sheet-panels {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+}
+#mobile-sheet-panels > * {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  flex: none;
+  box-sizing: border-box;
+}
+#mobile-sheet-panels
+  > :not(.collapsed)
+  > :is(
+    .data-panel-inner,
+    .scene-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .cctv-panel-inner,
+    .street-level-panel-inner,
+    .global-context-panel-inner
+  ) {
+  max-height: none;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+#mobile-sheet-panels #data-toggles {
+  max-height: min(44dvh, 420px);
+}
+#mobile-sheet-panels > :is(#geo-import-group, #draw-group) .pp-toggle-btn {
+  width: 100%;
+  min-height: 38px;
+}
+#mobile-sheet-panels > #location-bar {
+  display: flex;
+}
+body.mobile-shell
+  #mobile-sheet-panels
+  > #location-bar
+  :is(.panel-inner, .location-inner, .dock-popover-content) {
+  position: static;
+  inset: auto;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+#mobile-sheet-panels > #location-bar .panel-collapse-btn {
+  display: none;
+}
+#mobile-sheet-panels > #pp-toggles {
+  display: block;
+  max-height: none;
+}
+#mobile-sheet-panels > #pp-toggles .pp-panel-body {
+  overflow: visible;
+  max-height: none;
+}
+#mobile-sheet-panels > #location-bar .location-inner {
+  width: 100%;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+#mobile-sheet-panels
+  > #location-bar
+  :is(.location-search-wrap, .location-toolbar, .location-city-row) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+#mobile-sheet-panels #location-search {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: var(--gev-radius-sm);
+  font-size: 16px;
+  box-sizing: border-box;
+}
+#mobile-sheet-panels > #location-bar :is(.location-pills, .poi-row-container) {
+  justify-content: flex-start;
+  overflow-x: auto;
+}
+#mobile-sheet-panels
+  > #location-bar
+  :is(#location-bar-toggle, .location-mini-status, .dock-pin-btn) {
+  display: none;
+}
+#mobile-sheet-panels > #corner-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* The phone has one sheet; the old rails and dock must not paint another one. */
+body.mobile-shell :is(#left-panel-stack, #right-context-rail) {
+  display: none !important;
+}
+body.mobile-shell[data-mobile-sheet] #command-dock {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.mobile-shell
+  .gev-phone-shell
+  #mobile-tab-bar {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-phone-shell
+  #mobile-tab-bar
+  .mobile-tab {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-phone-shell
+  #mobile-tab-bar
+  .mobile-tab[aria-expanded='true'] {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-phone-shell
+  .phone-more-destinations
+  button {
+  border: 1px solid var(--gev-border-subtle);
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-phone-shell
+  .phone-more-destinations
+  button:is(:hover, :focus-visible, [aria-pressed='true']) {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-phone-shell
+  :is(.mobile-tab, .phone-more-destinations button):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -3px;
+}
+
+#mobile-sheet-panels .location-search-wrap {
+  order: -1;
+  gap: 8px;
+  flex-basis: 100%;
+}
+#mobile-sheet-panels .location-city-row {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  #location-search {
+  border: 1px solid var(--gev-border);
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  > *
+  > :is(
+    .data-panel-inner,
+    .scene-panel-inner,
+    .global-context-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .cctv-panel-inner,
+    .street-level-panel-inner
+  ) {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+  box-shadow: none;
+}
+
+#mobile-sheet-panels > #corner-actions > button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  > #corner-actions
+  > button {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+
+/* Preview keeps its native Stop route while recording hides other controls. */
+body.mobile-shell.recording-mode.scene-playback-mode
+  .gev-phone-shell
+  #mobile-tab-bar {
+  display: grid;
+}
+body.mobile-shell.recording-mode.scene-playback-mode
+  #mobile-sheet-panels
+  > #scene-panel {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+/* The row launches Tools; its one portable view stays hidden at home. */
+#mobile-sheet-panels > #data-panel #directions-controls-body {
+  display: none;
+}
+/* The language list participates in the sheet scroll rather than being clipped. */
+#mobile-sheet-panels > #corner-actions .locale-picker {
+  flex: 1 1 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+#mobile-sheet-panels > #corner-actions .locale-picker-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+#mobile-sheet-panels > #corner-actions .locale-picker-popup {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(40dvh, 22rem);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  > #corner-actions
+  :is(.locale-picker-button, .locale-picker-popup) {
+  color: var(--gev-text);
+  background: var(--gev-surface-overlay);
+  border-color: var(--gev-border);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  :is(.locale-picker-heading, .locale-picker-globe, .locale-picker-native) {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panels
+  .locale-picker-option:is(:hover, .is-active, [aria-selected='true']) {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+
+/* Tools borrows these cards directly; Map & Look keeps only its own controls. */
+#mobile-sheet-panels > #pp-toggles :is(#geo-import-group, #draw-group) {
+  display: none;
+}
+
+#mobile-sheet-panels > #location-bar :is(.location-pill, .poi-pill) {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
