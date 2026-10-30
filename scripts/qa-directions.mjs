@@ -244,7 +244,7 @@ try {
     const panel = document.getElementById('data-panel');
     if (!panel) return false;
     if (panel.classList.contains('collapsed')) {
-      panel
+      document
         .querySelector('.panel-collapse-btn[data-collapse-target="data-panel"]')
         ?.click();
     }

@@ -103,7 +103,7 @@ async function enableAndSettle(page) {
   await page.evaluate((id) => {
     const panel = document.getElementById('data-panel');
     if (panel?.classList.contains('collapsed'))
-      panel.querySelector('[data-collapse-target="data-panel"]')?.click();
+      document.querySelector('[data-collapse-target="data-panel"]')?.click();
     return window.__godsEyeView.dataManager.setEnabled(id, true);
   }, LAYER_ID);
   await page.waitForFunction(

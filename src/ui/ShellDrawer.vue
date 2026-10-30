@@ -16,6 +16,7 @@ const props = defineProps({
   views: { type: Object, default: () => ({}) },
 });
 const body = ref(null);
+const panelActions = ref(null);
 const destination = computed(() =>
   DRAWER_DESTINATIONS.find((item) => item.id === props.state?.destination),
 );
@@ -23,7 +24,11 @@ const view = computed(() =>
   props.state?.active ? props.views[props.state?.destination] : null,
 );
 
-onMounted(() => body.value.append(props.drawer.host));
+onMounted(() => {
+  body.value.append(props.drawer.host);
+  if (props.drawer.headerActions)
+    panelActions.value.append(props.drawer.headerActions);
+});
 
 function onKeydown(event) {
   if (event.key !== 'Escape' || event.defaultPrevented) return;
@@ -50,6 +55,9 @@ function onKeydown(event) {
         :subtitle="destination?.subtitle ? t(destination.subtitle) : undefined"
       >
         <template #actions>
+          <!-- Holds the drawer's place for a hosted panel's collapse control
+               (drawerNavigation.js); this view renders nothing inside it. -->
+          <span ref="panelActions" class="gev-drawer-panel-actions-home"></span>
           <IconButton
             :label="t('Close')"
             size="sm"

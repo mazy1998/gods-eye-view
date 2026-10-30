@@ -1727,7 +1727,7 @@ async function main() {
       const setPanelThroughInstalledControl = (id, collapsed) => {
         const panel = document.getElementById(id);
         if (panel.classList.contains('collapsed') === collapsed) return;
-        panel.querySelector(`[data-collapse-target="${id}"]`)?.click();
+        document.querySelector(`[data-collapse-target="${id}"]`)?.click();
       };
       let result;
       try {
@@ -1787,7 +1787,7 @@ async function main() {
           dataCollapsed: dataPanel.classList.contains('layout-auto-collapsed'),
           dataHiddenWhileScenesOwnsLane: dataPanel.getBoundingClientRect().height === 0
             && dataPanel.getAttribute('aria-hidden') === 'true',
-          dataAriaExpanded: dataPanel.querySelector('[data-collapse-target="data-panel"]')?.getAttribute('aria-expanded'),
+          dataAriaExpanded: document.querySelector('[data-collapse-target="data-panel"]')?.getAttribute('aria-expanded'),
           displayExpanded: !document.getElementById('pp-toggles').classList.contains('collapsed'),
           contextCollapsed: contextPanel.classList.contains('layout-auto-collapsed'),
           contextHiddenWhileDisplayOwnsLane: contextPanel.getBoundingClientRect().height === 0
@@ -1803,7 +1803,7 @@ async function main() {
         result.tacticalAutoRestore = {
           dataExpanded: !dataPanel.classList.contains('collapsed'),
           dataAutoMarkerCleared: !dataPanel.classList.contains('layout-auto-collapsed'),
-          dataAriaExpanded: dataPanel.querySelector('[data-collapse-target="data-panel"]')?.getAttribute('aria-expanded'),
+          dataAriaExpanded: document.querySelector('[data-collapse-target="data-panel"]')?.getAttribute('aria-expanded'),
           contextExpanded: !contextPanel.classList.contains('collapsed'),
           contextAutoMarkerCleared: !contextPanel.classList.contains('layout-auto-collapsed'),
           contextAriaExpanded: contextPanel.querySelector('[data-collapse-target="global-context-panel"]')?.getAttribute('aria-expanded'),
@@ -1984,7 +1984,7 @@ async function main() {
       const data = document.getElementById('data-panel');
       result.latest = {
         destination: drawer.channel.getSnapshot().destination,
-        scenesShown: fully(document.querySelector('#scene-panel .panel-header')) && !document.getElementById('scene-panel').classList.contains('collapsed'),
+        scenesShown: fully(document.querySelector('[data-collapse-target="scene-panel"]')?.closest('.panel-header, .gev-drawer-header')) && !document.getElementById('scene-panel').classList.contains('collapsed'),
         dataHidden: hidden('data-panel'),
         dataOwnState: data.className === prior.panels['data-panel'].className,
         dataDisclosureTruthful: truthful('data-panel'),

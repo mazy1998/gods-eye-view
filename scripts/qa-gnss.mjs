@@ -153,7 +153,7 @@ async function showLayerRow(page) {
   await page.evaluate((id) => {
     const panel = document.getElementById('data-panel');
     if (panel.classList.contains('collapsed'))
-      panel.querySelector('[data-collapse-target="data-panel"]').click();
+      document.querySelector('[data-collapse-target="data-panel"]').click();
     document
       .querySelector(`[data-layer-id="${id}"]`)
       ?.scrollIntoView({ block: 'center' });

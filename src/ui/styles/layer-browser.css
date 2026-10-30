@@ -323,7 +323,7 @@
 }
 
 /* The drawer supplies the surface. Keep its borrowed panel and list scroller
-   intact, with the existing collapse action beside the search field. */
+   intact; its collapse control sits in the drawer header. */
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
   > #data-panel:not(.collapsed) {
@@ -410,23 +410,6 @@
   font: inherit;
   letter-spacing: 0;
 }
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #data-panel:not(.collapsed)
-  .layer-search
-  > .panel-collapse-btn {
-  border-color: var(--gev-border);
-  background: transparent;
-  color: var(--gev-text-muted);
-}
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #data-panel:not(.collapsed)
-  .layer-search
-  > .panel-collapse-btn:hover {
-  background: var(--gev-control-bg-hover);
-  color: var(--gev-text);
-}
 
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
@@ -443,16 +426,6 @@
   > .layer-filter {
   flex: 1;
   min-width: 0;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #data-panel
-  .layer-search
-  > .panel-collapse-btn {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  margin: 0;
 }
 
 /* Category navigation keeps the original rows mounted for borrowed controls. */

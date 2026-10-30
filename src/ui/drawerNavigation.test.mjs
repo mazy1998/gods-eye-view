@@ -817,3 +817,138 @@ test('temporary phone panel borrowing preserves the previous desktop destination
   media.set(false);
   assert.equal(destination(drawer), 'stories');
 });
+
+/**
+ * Layers and Stories with their legacy headers, behind the real disclosure
+ * binding, and a drawer over them.
+ */
+async function collapseFixture(t) {
+  const { bindPanelDisclosure } = await import('./panelDisclosure.js');
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    `<div id="left-panel-stack">${['data-panel', 'scene-panel']
+      .map(
+        (id) =>
+          `<div id="${id}" data-panel-id="${id}" class="panel-collapsible collapsed"><div class="panel-inner"><div class="panel-header"><span class="panel-title">${id}</span><button class="panel-collapse-btn" data-collapse-target="${id}">+</button></div></div></div>`,
+      )
+      .join('')}</div>`,
+  );
+  const panelChannel = createStateChannel(() => ({ panels: {} }));
+  const setPanelCollapsed = (id, collapsed) => {
+    const panel = document.getElementById(id);
+    panel.classList.toggle('collapsed', collapsed);
+    const button = document.querySelector(`[data-collapse-target="${id}"]`);
+    button.textContent = collapsed ? '+' : '−';
+    button.setAttribute('aria-expanded', String(!collapsed));
+  };
+  const disclosures = ['data-panel', 'scene-panel'].map((id) =>
+    bindPanelDisclosure({
+      panel: document.getElementById(id),
+      buttons: [document.querySelector(`[data-collapse-target="${id}"]`)],
+      onEscape() {},
+      onChange: (collapsed) => setPanelCollapsed(id, collapsed),
+    }),
+  );
+  const drawer = createDrawerNavigation({
+    document,
+    panelChannel,
+    setPanelCollapsed,
+    restoreOrder: ORDER,
+  });
+  document.body.append(drawer.host, drawer.headerActions);
+  t.after(() => {
+    drawer.destroy();
+    for (const disclosure of disclosures) disclosure.destroy();
+    drawer.headerActions.remove();
+    document.getElementById('left-panel-stack')?.remove();
+    delete document.documentElement.dataset.uiTheme;
+  });
+  return { drawer };
+}
+
+const flushObservers = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+test("a hosted panel's own collapse control sits in the drawer header, open or collapsed", async (t) => {
+  const { drawer } = await collapseFixture(t);
+  const button = document.querySelector('[data-collapse-target="data-panel"]');
+  const header = button.parentElement;
+  let clicks = 0;
+  button.addEventListener('click', () => clicks++);
+
+  drawer.open('layers');
+  assert.equal(button.parentElement, drawer.headerActions);
+  assert.equal(button.getAttribute('aria-expanded'), 'true');
+  // Collapsed in the drawer, it stays in the header, and expands again there.
+  button.focus();
+  button.click();
+  assert.equal(
+    document.getElementById('data-panel').classList.contains('collapsed'),
+    true,
+  );
+  assert.equal(button.parentElement, drawer.headerActions);
+  assert.equal(document.activeElement, button);
+  button.click();
+  assert.equal(
+    document.getElementById('data-panel').classList.contains('collapsed'),
+    false,
+  );
+  assert.equal(clicks, 2, 'the same button and listener');
+
+  // Another destination takes its own control; this one goes home.
+  drawer.open('stories');
+  assert.equal(button.parentElement, header);
+  assert.deepEqual(
+    [...drawer.headerActions.children].map(
+      (node) => node.dataset.collapseTarget,
+    ),
+    ['scene-panel'],
+  );
+  drawer.close();
+  assert.equal(drawer.headerActions.children.length, 0);
+});
+
+test('Cyber keeps the collapse control in its panel header, and focus follows every move', async (t) => {
+  const { drawer } = await collapseFixture(t);
+  const button = document.querySelector('[data-collapse-target="data-panel"]');
+  const header = button.parentElement;
+  drawer.open('layers');
+  button.focus();
+  document.documentElement.dataset.uiTheme = 'cyber';
+  await flushObservers();
+  assert.equal(button.parentElement, header);
+  assert.equal(document.activeElement, button);
+  delete document.documentElement.dataset.uiTheme;
+  await flushObservers();
+  assert.equal(button.parentElement, drawer.headerActions);
+  assert.equal(document.activeElement, button);
+  drawer.destroy();
+  assert.equal(button.parentElement, header);
+});
+
+test("PanelChrome keeps a hosted panel's moved collapse control truthful", async (t) => {
+  const { drawer } = await collapseFixture(t);
+  const chrome = new PanelChrome({
+    elements: {},
+    operations: {},
+    readHud: () => ({ visible: true, getVariant: () => 'tactical' }),
+    readCockpit: () => null,
+    readShareLinks: () => null,
+    readInitialShare: () => null,
+    readScrollRestoreOwner: () => null,
+    readDisplayScrollTop: () => 0,
+  });
+  t.after(() => chrome.destroy());
+  drawer.open('layers');
+  const panel = document.getElementById('data-panel');
+  const button = document.querySelector('[data-collapse-target="data-panel"]');
+  assert.equal(button.parentElement, drawer.headerActions);
+  panel.classList.add('collapsed');
+  chrome._syncPanelCollapseButton(panel);
+  assert.equal(button.textContent, '+');
+  assert.equal(button.getAttribute('aria-expanded'), 'false');
+  assert.equal(button.getAttribute('aria-label'), 'Expand data-panel');
+  panel.classList.remove('collapsed');
+  chrome._syncPanelCollapseButton(panel);
+  assert.equal(button.textContent, '−');
+  assert.equal(button.getAttribute('aria-expanded'), 'true');
+});

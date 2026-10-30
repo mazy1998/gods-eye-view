@@ -318,7 +318,7 @@ try {
 
   // The Data Layers panel starts collapsed; a user opens it before toggling.
   const expanded = await page.$eval(
-    '#data-panel .panel-collapse-btn',
+    '.panel-collapse-btn[data-collapse-target="data-panel"]',
     (button) => {
       if (button.getAttribute('aria-expanded') === 'true') return true;
       button.click();
@@ -329,7 +329,7 @@ try {
   check(
     'the Data Layers panel opens from its own header button',
     await page.$eval(
-      '#data-panel .panel-collapse-btn',
+      '.panel-collapse-btn[data-collapse-target="data-panel"]',
       (b) => b.getAttribute('aria-expanded') === 'true',
     ),
   );

@@ -124,6 +124,7 @@
 }
 :where(:root:not([data-ui-theme='cyber'])) .gev-rail-item {
   gap: 8px;
+  color: var(--gev-text);
   font-size: 14px;
 }
 :where(:root:not([data-ui-theme='cyber'])) .gev-rail-label {
@@ -239,6 +240,42 @@
   .gev-drawer-header
   .gev-icon-button:hover:not(:disabled) {
   background: var(--gev-control-bg-hover);
+}
+/* A hosted panel's own collapse control, moved beside Close outside Cyber
+   (drawerNavigation.js): a quiet icon button like Close. */
+.gev-drawer-panel-actions-home,
+.gev-drawer-panel-actions {
+  display: contents;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-panel-actions
+  > .panel-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+  box-shadow: none;
+  color: var(--gev-text-muted);
+  font: 18px / 1 var(--gev-font-sans);
+  cursor: pointer;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-panel-actions
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-drawer-panel-actions
+  > .panel-collapse-btn:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
 }
 .gev-drawer-body {
   display: flex;
@@ -569,6 +606,13 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 :where(:root:not([data-ui-theme='cyber'])) #gev-header-brand > #title-bar h1 {
   font-size: 14px;
   letter-spacing: 1.8px;
+}
+/* One weight for the whole wordmark, as in the design. */
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-brand
+  > #title-bar
+  .title-accent {
+  font-weight: inherit;
 }
 
 /* Search: the field with its search button, and its results below it. */

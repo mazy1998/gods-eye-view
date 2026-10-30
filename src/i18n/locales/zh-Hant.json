@@ -1345,6 +1345,9 @@
   "{count} scenes": {
     "other": "{count} 個場景"
   },
+  "Plays all {count} stories": {
+    "other": "播放全部 {count} 個故事"
+  },
   "{count} shots": {
     "other": "{count} 個鏡頭"
   },

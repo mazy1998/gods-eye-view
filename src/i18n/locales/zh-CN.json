@@ -1350,6 +1350,9 @@
   "{count} scenes": {
     "other": "{count} 个场景"
   },
+  "Plays all {count} stories": {
+    "other": "播放全部 {count} 个故事"
+  },
   "{count} shots": {
     "other": "{count} 个镜头"
   },

@@ -73,7 +73,7 @@
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
   .stories-controls
-  :is(.scene-shot-label, #scene-status) {
+  :is(.scene-shot-label, #scene-status, .stories-browse-status) {
   color: var(--gev-text);
   text-shadow: none;
   font: inherit;
@@ -369,6 +369,42 @@
   color: var(--gev-on-accent);
   border-color: var(--gev-accent-text);
 }
+/* Browse ends with Play and the way to Create; Create holds the authoring
+   form and the playback transport. */
+:is(#stories-browse, #stories-create):not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stories-create-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.stories-create-link:focus-visible {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-create-link {
+  color: var(--gev-accent-text);
+  font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-create-link:hover {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-create-link:focus-visible {
+  outline-color: var(--gev-focus-ring);
+}
 .stories-authoring {
   display: flex;
   flex-direction: column;
@@ -427,29 +463,12 @@
   > .scene-panel-inner::before {
   display: none;
 }
+/* Its collapse control sits in the drawer header, which names the panel. */
 :where(:root:not([data-ui-theme='cyber']))
   .gev-legacy-host
   > #scene-panel:not(.collapsed)
   > .scene-panel-inner
   > .panel-header {
-  flex: none;
-  height: 24px;
-  margin: 0;
-  padding: 0;
-  justify-content: flex-end;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #scene-panel:not(.collapsed)
-  > .scene-panel-inner
-  > .panel-header
-  > .panel-title,
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #scene-panel:not(.collapsed)
-  > .scene-panel-inner
-  > .panel-header
-  > .panel-divider {
   display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
@@ -467,25 +486,6 @@
   .stories-controls {
   background: transparent;
   box-shadow: none;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #scene-panel:not(.collapsed)
-  > .scene-panel-inner
-  > .panel-header
-  > .panel-collapse-btn {
-  border-color: var(--gev-border);
-  background: transparent;
-  color: var(--gev-text-muted);
-}
-:where(:root:not([data-ui-theme='cyber']))
-  .gev-legacy-host
-  > #scene-panel:not(.collapsed)
-  > .scene-panel-inner
-  > .panel-header
-  > .panel-collapse-btn:hover {
-  background: var(--gev-control-bg-hover);
-  color: var(--gev-text);
 }
 
 /* Taller story content must not compress the retained Cyber panel header. */

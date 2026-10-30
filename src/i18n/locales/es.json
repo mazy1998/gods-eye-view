@@ -1335,6 +1335,11 @@
     "many": "{count} de escenas",
     "other": "{count} escenas"
   },
+  "Plays all {count} stories": {
+    "one": "Reproduce {count} historia",
+    "many": "Reproduce las {count} historias",
+    "other": "Reproduce las {count} historias"
+  },
   "{count} shots": {
     "one": "{count} plano",
     "many": "{count} de planos",

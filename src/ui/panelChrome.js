@@ -285,41 +285,51 @@ export class PanelChrome {
       'global-context-panel',
     ].includes(panelEl?.id);
     const collapsed = panelEl.classList.contains('collapsed');
-    panelEl
-      .querySelectorAll('.panel-collapse-btn[data-collapse-target]')
-      .forEach((btn) => {
-        const owner = btn.closest('[data-panel-id], #param-slider-panel');
-        if (owner !== panelEl) return;
-        if (isRightRail) {
-          btn.textContent = collapsed ? '◀' : '▶';
-        } else {
-          btn.textContent = collapsed ? '+' : '−';
-        }
-        btn.setAttribute('aria-expanded', String(!collapsed));
-        const panelName =
-          panelEl
-            .querySelector('.panel-title, .pp-header-label')
-            ?.textContent?.trim() || t('panel');
-        const titleKey = collapsed
-          ? msg('Expand {name}')
-          : msg('Collapse {name}');
-        btn.title = t(titleKey, { name: panelName });
-        btn.setAttribute('aria-label', t(titleKey, { name: panelName }));
-        if (panelEl.id === 'radio-panel') {
-          // Radio keeps the wording of its static button (context.html).
-          btn.title = t(
-            collapsed ? msg('Expand Radio') : msg('Collapse Radio'),
-          );
-          btn.setAttribute(
-            'aria-label',
-            t(
-              collapsed
-                ? msg('Expand Radio section')
-                : msg('Collapse Radio section'),
-            ),
-          );
-        }
-      });
+    // Its own buttons, and any that target it from elsewhere: the drawer
+    // header can carry a hosted panel's button outside it.
+    const buttons = new Set(
+      [
+        ...panelEl.querySelectorAll(
+          '.panel-collapse-btn[data-collapse-target]',
+        ),
+      ].filter(
+        (btn) =>
+          btn.closest('[data-panel-id], #param-slider-panel') === panelEl,
+      ),
+    );
+    for (const btn of document.querySelectorAll?.(
+      `.panel-collapse-btn[data-collapse-target="${panelEl.id}"]`,
+    ) ?? [])
+      buttons.add(btn);
+    buttons.forEach((btn) => {
+      if (isRightRail) {
+        btn.textContent = collapsed ? '◀' : '▶';
+      } else {
+        btn.textContent = collapsed ? '+' : '−';
+      }
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      const panelName =
+        panelEl
+          .querySelector('.panel-title, .pp-header-label')
+          ?.textContent?.trim() || t('panel');
+      const titleKey = collapsed
+        ? msg('Expand {name}')
+        : msg('Collapse {name}');
+      btn.title = t(titleKey, { name: panelName });
+      btn.setAttribute('aria-label', t(titleKey, { name: panelName }));
+      if (panelEl.id === 'radio-panel') {
+        // Radio keeps the wording of its static button (context.html).
+        btn.title = t(collapsed ? msg('Expand Radio') : msg('Collapse Radio'));
+        btn.setAttribute(
+          'aria-label',
+          t(
+            collapsed
+              ? msg('Expand Radio section')
+              : msg('Collapse Radio section'),
+          ),
+        );
+      }
+    });
     const dockToggle = panelEl.querySelector(
       `[data-dock-toggle-target="${panelEl.id}"]`,
     );

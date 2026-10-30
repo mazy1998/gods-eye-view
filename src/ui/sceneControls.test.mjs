@@ -396,6 +396,90 @@ test('Browse selects a recipe without starting playback and New opens Create', (
   }
 });
 
+test('Browse holds the stories and Play; Create holds the authoring form and transport', () => {
+  const f = fixture();
+  try {
+    const within = (id, selectors) =>
+      selectors.filter(
+        (selector) =>
+          document.querySelector(selector)?.closest('[role="tabpanel"]')?.id !==
+          id,
+      );
+    assert.deepEqual(
+      within('stories-browse', [
+        '[data-scene-recipe-id]',
+        '.stories-selected',
+        '#scene-start-btn',
+        '.stories-create-link',
+      ]),
+      [],
+    );
+    assert.deepEqual(
+      within('stories-create', [
+        '#scene-capture-btn',
+        '#scene-stop-btn',
+        '#scene-next-btn',
+        '#scene-progress-fill',
+        '#scene-status',
+        '#scene-select',
+        '#scene-new-btn',
+        '#scene-delete-btn',
+        '[data-director-authoring]',
+        '#scene-export-btn',
+        '#scene-import-btn',
+        '#scene-download-btn',
+        '#scene-import-file',
+      ]),
+      [],
+    );
+    document.querySelector('.stories-create-link').click();
+    assert.equal(document.getElementById('stories-create').hidden, false);
+    assert.equal(document.getElementById('stories-browse').hidden, true);
+    assert.equal(
+      f.calls.some(([name]) => name === 'start'),
+      false,
+    );
+  } finally {
+    f.restore();
+  }
+});
+
+test('the Create link hands focus to the Create tab it selects', async () => {
+  const { nextTick } = await import('vue');
+  const f = fixture();
+  try {
+    const link = document.querySelector('.stories-create-link');
+    link.focus();
+    link.click();
+    await nextTick();
+    assert.equal(document.getElementById('stories-create').hidden, false);
+    assert.equal(
+      document.activeElement,
+      document.getElementById('stories-create-tab'),
+    );
+  } finally {
+    f.restore();
+  }
+});
+
+test("Play's feedback shows in Browse, where Play is pressed", () => {
+  const f = fixture();
+  try {
+    f.publish('status-changed', { status: 'No shots to run' });
+    const status = document.querySelector(
+      '#stories-browse .stories-browse-status',
+    );
+    assert.equal(status.closest('[role="tabpanel"]').hidden, false);
+    assert.equal(status.textContent.trim(), 'No shots to run');
+    assert.equal(
+      document.getElementById('scene-status').textContent.trim(),
+      'No shots to run',
+    );
+  } finally {
+    f.restore();
+  }
+});
+
 test('a detached rename input cannot finish the following draft', () => {
   const f = fixture(),
     warnings = [],
@@ -522,7 +606,8 @@ test('collapsed Scenes shows only its header and keeps the independent playback 
   }
 });
 
-test('Play summary counts the playlist while starting from the selected scene', () => {
+test('Play summary names the selected scene and counts the playlist it runs from there', async () => {
+  const { buildPlaybackQueue } = await import('../director/playback.js');
   const f = fixture();
   try {
     f.state.scenes.push({
@@ -539,14 +624,21 @@ test('Play summary counts the playlist while starting from the selected scene', 
     f.publish('shots-changed');
     assert.equal(
       document.querySelector('.stories-selected strong').textContent,
-      'Playlist',
+      'B',
     );
     assert.equal(
       document.querySelector('.stories-selected small').textContent.trim(),
-      '3 shots',
+      'Plays all 2 stories · 3 shots',
     );
     f.elements.start.click();
     assert.deepEqual(f.calls, [['start', 'scene-b']]);
+    // The run starts at the selected scene and wraps round the playlist.
+    assert.deepEqual(
+      buildPlaybackQueue(f.state.scenes, 'scene-b').map(
+        ({ scene, shot }) => `${scene.id}/${shot.id}`,
+      ),
+      ['scene-b/b-1', 'scene-b/b-2', 'scene-a/shot-a'],
+    );
   } finally {
     f.restore();
   }

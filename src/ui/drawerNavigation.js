@@ -72,6 +72,8 @@ export const DRAWER_DESTINATIONS = Object.freeze(
 
 /** Expanded for the drawer only: not persisted and not shared. */
 const BORROW = Object.freeze({ persist: false, syncShare: false });
+// Hosted panels whose collapse control the drawer header carries.
+const HEADER_COLLAPSE_PANELS = Object.freeze(['data-panel', 'scene-panel']);
 
 /**
  * Own which drawer destination is open, and host its legacy panels while it
@@ -100,6 +102,9 @@ export function createDrawerNavigation({
   const host = doc.createElement('div');
   host.id = 'gev-legacy-host';
   host.className = 'gev-legacy-host';
+  // The drawer header's place for a hosted panel's own collapse control.
+  const headerActions = doc.createElement('span');
+  headerActions.className = 'gev-drawer-panel-actions';
   const byId = new Map(DRAWER_DESTINATIONS.map((item) => [item.id, item]));
   const hostOf = new Map(
     DRAWER_DESTINATIONS.flatMap((item) =>
@@ -152,6 +157,39 @@ export function createDrawerNavigation({
     return Boolean(panel && !panel.hidden && !isCollapsed(id));
   };
 
+  // Outside Cyber, a hosted panel's own collapse control sits in the drawer
+  // header beside Close, whether the panel is open or collapsed, so it can
+  // always be expanded again there. It is the same button, with its binding
+  // and state; it goes back to its panel header when the panel leaves the
+  // drawer or Cyber takes over, whose panels keep their own header row.
+  const collapseHomes = new Map();
+  function placeCollapseControls() {
+    const cyber = doc.documentElement?.dataset.uiTheme === 'cyber';
+    for (const id of HEADER_COLLAPSE_PANELS) {
+      const panel = doc.getElementById(id);
+      let entry = collapseHomes.get(id);
+      if (!entry) {
+        const button = panel?.querySelector(
+          `.panel-header > .panel-collapse-btn[data-collapse-target="${id}"]`,
+        );
+        if (!button) continue;
+        const home = doc.createComment(`gev-collapse-home:${id}`);
+        button.before(home);
+        entry = { button, home };
+        collapseHomes.set(id, entry);
+      }
+      const { button, home } = entry;
+      const inHeader = !destroyed && !cyber && host.contains(panel);
+      const focused = doc.activeElement === button;
+      if (inHeader && button.parentNode !== headerActions)
+        headerActions.append(button);
+      else if (!inHeader && button.parentNode === headerActions)
+        home.after(button);
+      else continue;
+      if (focused) button.focus({ preventScroll: true });
+    }
+  }
+
   function borrow(destination) {
     borrowed = { before: new Map(), applied: new Map(), moved: [] };
     for (const id of [...destination.panels, ...(destination.elements ?? [])]) {
@@ -170,6 +208,7 @@ export function createDrawerNavigation({
     }
     for (const id of borrowed.before.keys())
       borrowed.applied.set(id, isCollapsed(id));
+    placeCollapseControls();
   }
 
   function giveBack() {
@@ -182,6 +221,7 @@ export function createDrawerNavigation({
         if (node.parentNode) placeholder.replaceWith(node);
         else placeholder.remove();
       }
+    placeCollapseControls();
     for (const [id, before] of previous.before)
       if (
         isCollapsed(id) === previous.applied.get(id) &&
@@ -435,8 +475,20 @@ export function createDrawerNavigation({
     removers.push(() => bodyObserver.disconnect());
   }
 
+  if (doc.documentElement && doc.defaultView?.MutationObserver) {
+    const themeObserver = new doc.defaultView.MutationObserver(
+      placeCollapseControls,
+    );
+    themeObserver.observe(doc.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-ui-theme'],
+    });
+    removers.push(() => themeObserver.disconnect());
+  }
+
   return {
     host,
+    headerActions,
     channel,
     open,
     close,
@@ -465,6 +517,7 @@ export function createDrawerNavigation({
       if (destroyed) return;
       close();
       destroyed = true;
+      placeCollapseControls();
       for (const remove of removers.splice(0)) remove();
       host.remove();
       channel.destroy();

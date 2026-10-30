@@ -1355,6 +1355,12 @@
     "many": "{count} сцен",
     "other": "{count} сцены"
   },
+  "Plays all {count} stories": {
+    "one": "Воспроизводит {count} историю",
+    "few": "Воспроизводит все {count} истории",
+    "many": "Воспроизводит все {count} историй",
+    "other": "Воспроизводит все {count} истории"
+  },
   "{count} shots": {
     "one": "{count} кадр",
     "few": "{count} кадра",

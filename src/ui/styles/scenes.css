@@ -304,7 +304,9 @@ html:not([lang='en']) #scene-panel .scene-controls .scene-btn {
   text-shadow: 0 0 6px rgba(0, 212, 255, 0.6);
 }
 
-#scene-status {
+/* Browse repeats the status under Play. */
+#scene-status,
+.stories-browse-status {
   margin-top: 8px;
   font-family: var(--font-mono);
   font-size: 10px;

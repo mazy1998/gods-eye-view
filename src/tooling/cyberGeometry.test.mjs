@@ -111,7 +111,7 @@ test('host fixtures retain real panel roots, bodies and measured ancestor chains
     ],
     stories: [
       '#scene-panel.panel-collapsible > .scene-panel-inner > .panel-header',
-      '#scene-controls-body > .stories-controls > .scene-controls > #scene-start-btn',
+      '#scene-controls-body > .stories-controls > #stories-browse > .scene-controls > #scene-start-btn',
     ],
     tools: [
       '#gev-legacy-host > #draw-group.pp-toggle-group > #draw-toggle',

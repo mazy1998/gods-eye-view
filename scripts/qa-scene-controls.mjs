@@ -47,6 +47,8 @@ try {
   });
   // Scenes opens from its Stories destination.
   await page.click('.gev-rail-item[data-destination="stories"]');
+  // The authoring form is in the Create tab, Play in Browse.
+  await page.click('#stories-create-tab');
   await page.click('#scene-new-btn');
   await page.waitForFunction(
     () =>
@@ -200,6 +202,7 @@ try {
           .textContent.includes('<b>QA shot</b>'),
     ),
   );
+  await page.click('#stories-browse-tab');
   await page.click('#scene-start-btn');
   await page.waitForFunction(
     () =>
@@ -247,6 +250,7 @@ try {
     )
   )
     await page.click('.gev-rail-item[data-destination="stories"]');
+  await page.click('#stories-create-tab');
   await page.waitForSelector('#scene-download-btn', { visible: true });
   await page.click('#scene-download-btn');
   const metadata = await page.evaluate(async () =>
@@ -260,6 +264,7 @@ try {
       Array.isArray(metadata.events),
     ),
   );
+  await page.click('#stories-browse-tab');
   await page.click('#scene-start-btn');
   await page.waitForFunction(() => window.__godsEyeView.sceneDirector.running);
   await page.$eval('#scene-stop-btn', (button) => button.click());
@@ -340,6 +345,7 @@ try {
     )
   )
     await page.click('[data-collapse-target="scene-panel"]');
+  await page.click('#stories-create-tab');
   await page.screenshot({ path: path.join(shots, 'narrow.png') });
   check(
     'Scene controls stay inside the narrow viewport',

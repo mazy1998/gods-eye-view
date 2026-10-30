@@ -373,11 +373,11 @@
 :where(:root:not([data-ui-theme='cyber']))
   :is(#command-dock, body)
   #gev-voice-control.gev-surface:not([hidden]) {
-  grid-template-columns: minmax(0, 1fr) 92px;
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto;
   gap: 6px 10px;
   align-items: center;
-  width: min(280px, 80vw);
+  width: min(300px, 80vw);
   flex-basis: auto;
   height: auto;
   min-height: 56px;
@@ -435,6 +435,8 @@
   color: var(--gev-text-muted);
   font: 12px / 1.35 var(--gev-font-sans);
   letter-spacing: 0;
+  /* The design reads the shortcut on one line. */
+  white-space: nowrap;
 }
 
 :where(:root:not([data-ui-theme='cyber']))
