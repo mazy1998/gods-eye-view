@@ -11,6 +11,7 @@ import {
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { JSDOM } from 'jsdom';
 import {
   applyHudUiTheme,
   CYBER_VISUAL_DEFAULTS,
@@ -26,17 +27,15 @@ import { VisualSettings } from './visualSettings.js';
 import { STYLES } from './visualPresets.js';
 
 test('CCTV and Context keep their headers outside Cyber-only scroll bodies', () => {
-  for (const file of ['layer-panels.html', 'context.html']) {
-    const markup = readFileSync(
-      new URL(`./templates/${file}`, import.meta.url),
-      'utf8',
-    );
-    assert.match(markup, /class="cyber-panel-body" data-rail-scroller/);
-    assert.ok(
-      markup.indexOf('class="panel-header"') <
-        markup.indexOf('class="cyber-panel-body"'),
-    );
+  const dom = new JSDOM(readFileSync(new URL('./templates/context.html', import.meta.url), 'utf8'));
+  for (const [id, innerClass] of [['cctv-panel', 'cctv-panel-inner'], ['global-context-panel', 'global-context-panel-inner']]) {
+    const inner = dom.window.document.querySelector(`#${id} > .${innerClass}`);
+    const header = inner.querySelector(':scope > .panel-header');
+    const body = inner.querySelector(':scope > .cyber-panel-body[data-rail-scroller]');
+    assert.ok(header && body, `${id} keeps its own header and scroll body`);
+    assert.ok(header.compareDocumentPosition(body) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
   }
+  dom.window.close();
   const shared = readFileSync(
     new URL('./styles/controls.css', import.meta.url),
     'utf8',

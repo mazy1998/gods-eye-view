@@ -949,6 +949,11 @@ export class StyleManager extends ShellFacade {
 
   /** Reveal a tracked aircraft through Contacts when its phone tab is opened. */
   async _onMobileTabOpened(sheet) {
+    if (
+      sheet === 'inspect' &&
+      this._contextControls?._shownContextTab === 'cameras'
+    )
+      return false;
     const context = this.getContextModeState();
     if (
       sheet !== 'inspect' ||
@@ -1102,9 +1107,11 @@ export class StyleManager extends ShellFacade {
         _globalContextPanel: document.getElementById('global-context-panel'),
         _globalContextFlightsBtn: this._globalContextFlightsBtn,
         _globalContextMissionsBtn: this._globalContextMissionsBtn,
+        _globalContextCamerasBtn: this._globalContextCamerasBtn,
         _contextModeStandby: this._contextModeStandby,
         _contextFlightsView: this._contextFlightsView,
         _contextMissionsView: this._contextMissionsView,
+        _contextCamerasView: this._contextCamerasView,
         _installationsSearchBtn: this._installationsSearchBtn,
       },
       installations: militaryInstallationsLayer,
@@ -1302,6 +1309,14 @@ export class StyleManager extends ShellFacade {
     if (!this._disposed) this._settingsSurface.connect(control);
   }
 
+  _revealInspectCameraPanel(id) {
+    if (this._disposed || !['cctv-panel', 'street-level-panel'].includes(id))
+      return false;
+    if (!this._contextControls?.showInspectTab('cameras')) return false;
+    this._mobileShell?.setSheet('inspect', { revealPanelId: id });
+    return true;
+  }
+
   /**
    * The rail and the one drawer. Each destination hosts its legacy panels
    * until a later step ports them; the drawer rests on phones and in Cockpit.
@@ -1315,6 +1330,7 @@ export class StyleManager extends ShellFacade {
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
       isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
+      onRevealPanel: (id) => this._revealInspectCameraPanel(id),
     });
     const destinationViews = {
       settings: {
@@ -1976,7 +1992,10 @@ export class StyleManager extends ShellFacade {
     if (!this._cctvPanel) return;
     const inner = this._cctvPanel.querySelector('.cctv-panel-inner');
     this._lifetime.frame(() => {
-      if (this._cctvPanel.parentElement?.id === 'right-context-rail') {
+      if (
+        this._cctvPanel.parentElement?.id === 'right-context-rail' ||
+        this._cctvPanel.closest('#context-cameras-view')
+      ) {
         this._cctvPanel.style.maxHeight = '';
         if (inner) inner.style.maxHeight = '';
         this._scheduleRightPanelLayout();

@@ -33,6 +33,8 @@ export class ContextControls {
     this.destroyed = false;
     this._dataManager = null;
     this._contextMode = null;
+    // Cameras only changes what Inspect shows; it never owns a Context session.
+    this._shownContextTab = null;
     this._contextModeChanging = false;
     this._contextModeGeneration = 0;
     this._contextModeEntering = null;
@@ -70,6 +72,12 @@ export class ContextControls {
   }
   get cockpitView() {
     return this.actions.getCockpit();
+  }
+  showInspectTab(tab) {
+    if (this.destroyed) return false;
+    this._shownContextTab = tab === 'cameras' ? 'cameras' : null;
+    this._syncContextModeButtons({ presentationOnly: true });
+    return true;
   }
   listen(target, type, callback, options = {}) {
     target?.addEventListener(type, callback, {

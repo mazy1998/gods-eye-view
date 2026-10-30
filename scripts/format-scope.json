@@ -1234,5 +1234,7 @@
   "src/ui/phoneDestinations.js",
   "src/ui/styles/phone-shell-view.css",
   "src/ui/phoneShell.dom.test.mjs",
-  "scripts/qa-phone-shell.mjs"
+  "scripts/qa-phone-shell.mjs",
+  "src/ui/inspectCameras.test.mjs",
+  "src/app/dataDetails.test.mjs"
 ]

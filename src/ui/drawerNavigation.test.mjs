@@ -994,3 +994,25 @@ test('the real Context header carries the collapse control the drawer looks for'
     ),
   );
 });
+
+test('nested Cameras hosting keeps the complete shared panel state byte-identical', (t) => {
+  const { drawer, chrome } = fixture({ chrome: true });
+  t.after(() => {
+    drawer.destroy();
+    chrome.destroy();
+  });
+  const cameras = document.createElement('section');
+  cameras.id = 'context-cameras-view';
+  document.getElementById('global-context-panel').append(cameras);
+  const panel = document.getElementById('cctv-panel');
+  cameras.append(panel);
+  const shared = () => JSON.stringify(chrome._buildSharePanelState());
+  const before = shared();
+  drawer.open('inspect');
+  assert.equal(panel.parentElement, cameras);
+  assert.ok(drawer.host.contains(panel));
+  assert.equal(shared(), before);
+  drawer.close();
+  assert.equal(panel.parentElement, cameras);
+  assert.equal(shared(), before);
+});

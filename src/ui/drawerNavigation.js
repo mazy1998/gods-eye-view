@@ -32,6 +32,14 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Inspect'),
       subtitle: msg('Contacts, missions and cameras'),
       panels: ['global-context-panel', 'cctv-panel', 'street-level-panel'],
+      homes: {
+        'cctv-panel': '#context-cameras-view',
+        'street-level-panel': '#context-cameras-view',
+      },
+      revealAnchors: {
+        'cctv-panel': '#global-context-cameras-btn',
+        'street-level-panel': '#sl-status',
+      },
     },
     {
       id: 'map',
@@ -96,6 +104,7 @@ const HEADER_COLLAPSE_PANELS = Object.freeze([
  * @param {(id: string, collapsed: boolean, options: object) => void} options.setPanelCollapsed
  * @param {string[]} options.restoreOrder Panel ids in share-restore order.
  * @param {MediaQueryList|null} [options.phone] The phone-shell media query.
+ * @param {(panelId: string) => void} [options.onRevealPanel] Select a hosted view before scrolling to its panel.
  */
 export function createDrawerNavigation({
   document: doc,
@@ -104,6 +113,7 @@ export function createDrawerNavigation({
   restoreOrder,
   phone = null,
   isPhonePresenting = () => false,
+  onRevealPanel = () => {},
 }) {
   const host = doc.createElement('div');
   host.id = 'gev-legacy-host';
@@ -282,9 +292,29 @@ export function createDrawerNavigation({
   // tab may hide its row's group: the list's own reveal shows the group first,
   // and the scroll waits for that paint.
   async function revealNested(id) {
-    const node = hostOf.has(id) ? null : doc.getElementById(id);
+    const destination = byId.get(destinationOf.get(id));
+    const home = destination?.homes?.[id];
+    const node = hostOf.has(id) && !home ? null : doc.getElementById(id);
     if (!node || !host.contains(node)) return;
-    const row = byId.get(destinationOf.get(id))?.rows?.[id];
+    // A restored child can be expanded while its borrowed host is collapsed.
+    // Re-borrow the ancestors without changing their restored/share preference.
+    for (
+      let parent = node.parentElement?.closest('[data-panel-id]');
+      parent && host.contains(parent);
+      parent = parent.parentElement?.closest('[data-panel-id]')
+    ) {
+      if (!borrowed?.before.has(parent.id) || !isCollapsed(parent.id)) continue;
+      if (isCollapsed(parent.id) !== borrowed.applied.get(parent.id))
+        borrowed.before.set(parent.id, isCollapsed(parent.id));
+      moving = true;
+      try {
+        setPanelCollapsed(parent.id, false, BORROW);
+        borrowed.applied.set(parent.id, isCollapsed(parent.id));
+      } finally {
+        moving = false;
+      }
+    }
+    const row = destination?.rows?.[id];
     if (row) {
       node.dispatchEvent(
         new doc.defaultView.CustomEvent('gev:focus-layer-row', {
@@ -295,7 +325,12 @@ export function createDrawerNavigation({
       await flushViews();
       if (!host.contains(node)) return;
     }
-    node.scrollIntoView?.({ block: 'nearest' });
+    const anchor = destination?.revealAnchors?.[id];
+    if (anchor) {
+      await flushViews();
+      const target = host.querySelector(anchor);
+      target?.scrollIntoView?.({ block: 'start' });
+    } else node.scrollIntoView?.({ block: 'nearest' });
   }
 
   /**
@@ -311,6 +346,7 @@ export function createDrawerNavigation({
         : restoreOrder.find((id) => followed.has(id) && shown(id));
     if (!first) return close();
     open(followed.get(first));
+    onRevealPanel(first);
     void revealNested(first);
   }
 
@@ -327,6 +363,13 @@ export function createDrawerNavigation({
       if (!isActive()) {
         // Borrowing a sheet is presentation, not a new panel preference.
         if (isPhonePresenting()) return;
+        if (change?.type === 'panel-revealed') onRevealPanel(change.panelId);
+        else if (change?.type === 'panels-restored') {
+          const first = restoreOrder.find(
+            (id) => followed.has(id) && shown(id),
+          );
+          if (first) onRevealPanel(first);
+        }
         // A panel the user expands on the phone, or a share or history
         // restore there, picks the destination back at desktop width, over
         // the one open when the phone layout began. A restore keeps its lead
@@ -363,6 +406,7 @@ export function createDrawerNavigation({
         const destination = destinationOf.get(change.panelId);
         if (!destination) return;
         open(destination);
+        onRevealPanel(change.panelId);
         return void revealNested(change.panelId);
       }
       for (const [id, next] of Object.entries(panels)) {
@@ -377,9 +421,11 @@ export function createDrawerNavigation({
           continue;
         if (destination !== current) {
           open(destination);
+          onRevealPanel(id);
           void revealNested(id);
           return;
         }
+        onRevealPanel(id);
         void revealNested(id);
       }
     }),

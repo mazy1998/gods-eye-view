@@ -124,6 +124,7 @@ export async function setContextMode(
     // Claimed only after the mode enum validates above, so a rejected request
     // takes no authority and leaves the shared visual state eligible. Internal
     // Cockpit choreography opts out: it is not an operator Context request.
+    this.showInspectTab('context');
     if (claimVisualAuthority) this._claimContextVisualAuthority();
     const transitioned = await this._selectContextMode(canonical, {
       notificationToken,

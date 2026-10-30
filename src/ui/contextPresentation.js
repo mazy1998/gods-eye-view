@@ -1,19 +1,31 @@
-export function _syncContextModeButtons() {
+export function _syncContextModeButtons({ presentationOnly = false } = {}) {
   if (this.destroyed) return;
   const flightsActive = this._contextMode === 'flights';
   const missionsActive = this._contextMode === 'space-missions';
+  const camerasShown = this._shownContextTab === 'cameras';
   const panel = this._globalContextPanel;
   panel?.classList.toggle('context-enabled', flightsActive || missionsActive);
   panel?.setAttribute('data-context-mode', this._contextMode || 'none');
-  this._globalContextFlightsBtn?.classList.toggle('active', flightsActive);
+  this._globalContextFlightsBtn?.classList.toggle(
+    'active',
+    flightsActive && !camerasShown,
+  );
   this._globalContextFlightsBtn?.setAttribute(
     'aria-selected',
-    String(flightsActive),
+    String(flightsActive && !camerasShown),
   );
-  this._globalContextMissionsBtn?.classList.toggle('active', missionsActive);
+  this._globalContextMissionsBtn?.classList.toggle(
+    'active',
+    missionsActive && !camerasShown,
+  );
   this._globalContextMissionsBtn?.setAttribute(
     'aria-selected',
-    String(missionsActive),
+    String(missionsActive && !camerasShown),
+  );
+  this._globalContextCamerasBtn?.classList.toggle('active', camerasShown);
+  this._globalContextCamerasBtn?.setAttribute(
+    'aria-selected',
+    String(camerasShown),
   );
   const transitionBusy = Boolean(this._contextModeChanging);
   // Both Context choices stay in the ordinary Tab sequence. Arrow keys still
@@ -31,14 +43,16 @@ export function _syncContextModeButtons() {
     button.setAttribute('aria-busy', String(transitionBusy));
   }
   if (this._contextModeStandby)
-    this._contextModeStandby.hidden = flightsActive || missionsActive;
+    this._contextModeStandby.hidden =
+      camerasShown || flightsActive || missionsActive;
   if (this._contextFlightsView)
-    this._contextFlightsView.hidden = !flightsActive;
+    this._contextFlightsView.hidden = camerasShown || !flightsActive;
   if (this._contextMissionsView)
-    this._contextMissionsView.hidden = !missionsActive;
-  this.cockpitView?.syncEntry();
+    this._contextMissionsView.hidden = camerasShown || !missionsActive;
+  if (this._contextCamerasView) this._contextCamerasView.hidden = !camerasShown;
+  if (!presentationOnly) this.cockpitView?.syncEntry();
   // Every _contextMode mutation funnels through here; the sync no-ops until
   // the transaction settles, so this is the activation/deactivation edge.
-  this.actions.syncDetection();
+  if (!presentationOnly) this.actions.syncDetection();
   this.actions.scheduleLayout();
 }

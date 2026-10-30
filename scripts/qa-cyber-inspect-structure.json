@@ -24,7 +24,10 @@
   {
     "id": "selected-contact",
     "reason": "A new heading names the selected contact with its cohort and feed, from data the panel already has. Cyber shows it in the panel's own type, set off like a cohort row.",
-    "expected": { "heading": "subject label", "detail": "cohort · source" }
+    "expected": {
+      "heading": "subject label",
+      "detail": "cohort · source"
+    }
   },
   {
     "id": "caption",
@@ -46,11 +49,26 @@
   {
     "id": "tr3b-label",
     "reason": "TR-3B reclassification shows a visible Reclassify as TR-3B label in the drawer outside Cyber. Cyber, Cockpit's rail and the phone sheets keep the compact glyph button; its accessible name, title and pressed state are unchanged.",
-    "expected": { "label": "Reclassify as TR-3B", "visibleInCyber": false }
+    "expected": {
+      "label": "Reclassify as TR-3B",
+      "visibleInCyber": false
+    }
   },
   {
     "id": "sentence-case",
     "reason": "Standby, navigation, roster and mission labels are written in sentence case, and mission names keep their source case. Cyber keeps all of them uppercase in its own type, and mission facts keep their LABEL · value reading.",
-    "expected": { "cyberTextTransform": "uppercase", "factSeparator": " · " }
+    "expected": {
+      "cyberTextTransform": "uppercase",
+      "factSeparator": " · "
+    }
+  },
+  {
+    "id": "camera-tab",
+    "reason": "Cameras is a third, view-only Inspect tab in every appearance. Its CCTV and Street level panels retain their own collapse/share state and controls inside the tab. Showing it does not enter or leave a Context mode; Cyber keeps its panel frames, palette and typography.",
+    "expected": {
+      "tabs": ["Contacts", "Missions", "Cameras"],
+      "panels": ["cctv-panel", "street-level-panel"],
+      "toggleBeforePreview": true
+    }
   }
 ]

@@ -11,7 +11,12 @@ const { PanelChrome, SHARE_PANEL_STATE_SPECS } =
 
 function fixture(
   t,
-  { desktop = false, realPanels = false, settingsSurface = null } = {},
+  {
+    desktop = false,
+    realPanels = false,
+    settingsSurface = null,
+    frames = null,
+  } = {},
 ) {
   container.innerHTML = `<div id="left-panel-stack"><section id="data-panel" class="collapsed"><button>Layers control</button><section id="directions-controls-body"><button>Set A</button></section></section><section id="scene-panel" class="collapsed"><button id="scene-stop">Stop</button></section></div>
     <div id="right-context-rail">${['weather-panel', 'recent-imagery-panel', 'global-context-panel', 'cctv-panel', 'street-level-panel', 'pp-toggles'].map((id) => `<section id="${id}" class="collapsed"><button>${id}</button></section>`).join('')}</div>
@@ -58,7 +63,8 @@ function fixture(
     matchMedia: () => media,
     ResizeObserverImpl: null,
     requestFrame: (callback) => {
-      callback();
+      if (frames) frames.push(callback);
+      else callback();
       return 1;
     },
     panelChannel: panel,
@@ -101,6 +107,43 @@ function fixture(
     host,
   };
 }
+
+test('a details sheet switch measures credit clearance after its position settles', async (t) => {
+  const frames = [];
+  const priorHeight = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'innerHeight',
+  );
+  Object.defineProperty(globalThis, 'innerHeight', {
+    configurable: true,
+    value: 844,
+  });
+  let sheetTop = 461;
+  t.mock.method(HTMLElement.prototype, 'getBoundingClientRect', function () {
+    return this.id === 'mobile-sheet'
+      ? { top: sheetTop, height: 844 - sheetTop }
+      : { top: 844, height: 0 };
+  });
+  const f = fixture(t, { frames });
+  t.after(() => {
+    if (priorHeight)
+      Object.defineProperty(globalThis, 'innerHeight', priorHeight);
+    else delete globalThis.innerHeight;
+  });
+  f.owner.setSheet('layers');
+  f.resize(true);
+  f.owner.setSheet('inspect', { revealPanelId: 'street-level-panel' });
+  assert.equal(
+    document.body.style.getPropertyValue('--mobile-sheet-cover'),
+    '383px',
+  );
+  sheetTop = 263;
+  for (const frame of frames.splice(0)) frame();
+  assert.equal(
+    document.body.style.getPropertyValue('--mobile-sheet-cover'),
+    '581px',
+  );
+});
 
 test('four tabs move the original destination nodes and restore them through desktop crossings', (t) => {
   const f = fixture(t);

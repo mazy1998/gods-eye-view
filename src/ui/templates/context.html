@@ -63,7 +63,7 @@
           <button class="panel-collapse-btn" data-collapse-target="global-context-panel" title="Expand panel" data-i18n-title>▶</button>
         </div>
         <div class="cyber-panel-body" data-rail-scroller>
-        <div class="global-context-modes" role="tablist" aria-label="Context mode" data-i18n-aria-label>
+        <div class="global-context-modes" role="tablist" aria-label="Inspect" data-i18n-aria-label>
           <button id="global-context-flights-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-flights-view" aria-label="Contacts" title="Cycles the nearest contacts of whatever type you select — planes, vessels, installations. Satellites track independently." data-i18n-aria-label data-i18n-title>
             <span class="material-symbols-outlined" aria-hidden="true">radar</span>
             <span data-i18n>Contacts</span>
@@ -71,6 +71,10 @@
           <button id="global-context-missions-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-missions-view">
             <span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>
             <span data-i18n>Missions</span>
+          </button>
+          <button id="global-context-cameras-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-cameras-view">
+            <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
+            <span data-i18n>Cameras</span>
           </button>
         </div>
         <div id="context-mode-standby" class="context-mode-standby">
@@ -93,10 +97,41 @@
             <div id="space-mission-roster" class="space-mission-roster" aria-label="Available Space Missions" data-i18n-aria-label></div>
           </div>
         </section>
+        <section id="context-cameras-view" class="context-mode-view" role="tabpanel" aria-labelledby="global-context-cameras-btn" hidden>
+          <!-- CCTV Coverage Panel -->
+          <div id="cctv-panel" class="panel-collapsible collapsed" data-panel-id="cctv-panel">
+            <div class="panel-glow"></div>
+            <div class="cctv-panel-inner" data-rail-scroller>
+              <div class="panel-header">
+                <span class="material-symbols-outlined inspect-camera-icon" aria-hidden="true">camera_alt</span>
+                <span class="panel-title" data-i18n>CCTV</span>
+                <span class="panel-divider"></span>
+                <button class="panel-collapse-btn" data-collapse-target="cctv-panel" title="Collapse panel" data-i18n-title>+</button>
+              </div>
+              <div id="cctv-controls-body" class="cyber-panel-body" data-rail-scroller></div>
+            </div>
+          </div>
+
+          <!-- Street Level Panel -->
+          <div id="street-level-panel" class="panel-collapsible collapsed" data-panel-id="street-level-panel">
+            <div class="panel-glow"></div>
+            <div class="street-level-panel-inner" data-rail-scroller>
+              <div class="panel-header">
+                <span class="material-symbols-outlined inspect-camera-icon" aria-hidden="true">streetview</span>
+                <span class="panel-title" data-i18n>STREET LEVEL</span>
+                <span class="panel-divider"></span>
+                <button id="sl-status" class="sl-status" type="button" aria-pressed="false" title="Turn Street Level on or off" data-i18n-title data-i18n>OFF</button>
+                <button class="panel-collapse-btn" data-collapse-target="street-level-panel" title="Expand panel" data-i18n-title>◀</button>
+              </div>
+              <div id="sl-body" class="sl-body"></div>
+            </div>
+          </div>
+
+        </section>
         <section id="radio-panel" class="panel-collapsible collapsed" data-panel-id="radio-panel" aria-label="Internet radio and local SDR" data-i18n-aria-label>
           <div class="radio-panel-inner gev-surface">
             <div class="panel-header">
-              <span class="panel-title" data-i18n>RADIO</span>
+              <span class="panel-title" data-i18n>Radio</span>
               <span id="radio-layer-state" class="radio-layer-state" data-i18n>OFF</span>
               <span class="panel-divider"></span>
               <button class="panel-collapse-btn" data-collapse-target="radio-panel" title="Expand Radio" aria-label="Expand Radio section" data-i18n-title data-i18n-aria-label>+</button>

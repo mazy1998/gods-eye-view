@@ -5,6 +5,7 @@ export function _initGlobalContextPanel() {
   const contextTabs = [
     this._globalContextFlightsBtn,
     this._globalContextMissionsBtn,
+    this._globalContextCamerasBtn,
   ].filter(Boolean);
   contextTabs.forEach((tab, index) =>
     this.listen(tab, 'keydown', (event) => {
@@ -28,7 +29,15 @@ export function _initGlobalContextPanel() {
       this._clearSelectedLayersPromise
     )
       return;
+    if (
+      this._shownContextTab === 'cameras' &&
+      this._contextMode === 'flights'
+    ) {
+      this.showInspectTab('context');
+      return;
+    }
     const nextMode = this._contextMode === 'flights' ? null : 'flights';
+    this.showInspectTab('context');
     this._claimContextVisualAuthority();
     void this._runUserFacingContextAction(
       (notificationToken) =>
@@ -56,8 +65,16 @@ export function _initGlobalContextPanel() {
       this._clearSelectedLayersPromise
     )
       return;
+    if (
+      this._shownContextTab === 'cameras' &&
+      this._contextMode === 'space-missions'
+    ) {
+      this.showInspectTab('context');
+      return;
+    }
     const nextMode =
       this._contextMode === 'space-missions' ? null : 'space-missions';
+    this.showInspectTab('context');
     this._claimContextVisualAuthority();
     void this._runUserFacingContextAction(
       (notificationToken) =>
@@ -79,6 +96,9 @@ export function _initGlobalContextPanel() {
           explicit: true,
         });
     });
+  });
+  this.listen(this._globalContextCamerasBtn, 'click', () => {
+    this.showInspectTab('cameras');
   });
   this.listen(this._installationsSearchBtn, 'click', () => {
     if (

@@ -189,7 +189,7 @@ export function initMobileShell({
     ];
     for (const id of ids) {
       const node = element(id);
-      if (!node?.parentNode) continue;
+      if (!node?.parentNode || chrome.host.contains(node)) continue;
       const home = documentRef.createComment('phone panel home');
       node.before(home);
       placed.push({ node, home });
@@ -311,7 +311,23 @@ export function initMobileShell({
     );
   };
 
-  const setSheet = (requested, { force = false } = {}) => {
+  const revealHost = (panelId) => {
+    if (!borrowed) return;
+    for (
+      let parent = element(panelId)?.parentElement?.closest('[data-panel-id]');
+      parent;
+      parent = parent.parentElement?.closest('[data-panel-id]')
+    ) {
+      if (!borrowed.before.has(parent.id) || !isCollapsed(parent.id)) continue;
+      const preference = prefersCollapsed(parent.id);
+      if (preference !== borrowed.applied.get(parent.id))
+        borrowed.before.set(parent.id, preference);
+      presentPanel(parent.id, false, BORROW_OPTIONS);
+      borrowed.applied.set(parent.id, prefersCollapsed(parent.id));
+    }
+  };
+
+  const setSheet = (requested, { force = false, revealPanelId } = {}) => {
     swipe = null;
     if (destroyed || !active) return false;
     if (
@@ -327,7 +343,10 @@ export function initMobileShell({
         ? null
         : requested;
     const previous = currentSheet;
-    if (previous === sheet && !force) return sheet !== null;
+    if (previous === sheet && !force) {
+      if (sheet && revealPanelId) revealHost(revealPanelId);
+      return sheet !== null;
+    }
     if (!previous) {
       borrowed = { before: panelStates(), applied: panelStates() };
       returnFocus = documentRef.activeElement ?? null;
@@ -350,13 +369,16 @@ export function initMobileShell({
     for (const panelId of panelsFor(sheet))
       if (isCollapsed(panelId)) presentPanel(panelId, false, BORROW_OPTIONS);
     borrowed.applied = panelStates();
+    if (revealPanelId) revealHost(revealPanelId);
     // Rail layout settles on a later frame; what it does is part of opening.
     const opening = (borrowed.opening ?? 0) + 1;
     borrowed.opening = opening;
     const opened = borrowed;
     requestFrame?.(() => {
-      if (borrowed === opened && opened.opening === opening)
+      if (borrowed === opened && opened.opening === opening) {
         opened.applied = panelStates();
+        measureSheet();
+      }
     });
     measureSheet();
     sheetFocusTarget(sheet)?.focus?.();
@@ -384,12 +406,16 @@ export function initMobileShell({
       );
       return item ? setDestination(item.id) : false;
     }
-    const shown = setSheet(sheet);
+    const shown = setSheet(sheet, { revealPanelId: panelId });
     if (shown)
       requestFrame?.(() => {
-        const node = element(panelId);
+        const anchor = {
+          'cctv-panel': 'global-context-cameras-btn',
+          'street-level-panel': 'sl-status',
+        }[panelId];
+        const node = element(anchor ?? panelId);
         if (currentSheet === sheet && chrome.host?.contains(node))
-          node.scrollIntoView?.({ block: 'nearest' });
+          node.scrollIntoView?.({ block: anchor ? 'start' : 'nearest' });
       });
     return shown;
   };
@@ -613,9 +639,14 @@ export function initMobileShell({
           // returns, even when it restores an already expanded panel.
           for (const id of change.panelIds ?? [])
             if (borrowed?.before.has(id)) {
-              const collapsed = prefersCollapsed(id);
-              borrowed.before.set(id, collapsed);
-              borrowed.applied.set(id, collapsed);
+              const restored = state.panels?.[id];
+              borrowed.before.set(
+                id,
+                restored
+                  ? restored.collapsed && !restored.autoCollapsed
+                  : prefersCollapsed(id),
+              );
+              borrowed.applied.set(id, prefersCollapsed(id));
             }
           if (!active) return;
           const visible = (id) =>

@@ -6,6 +6,7 @@ class Button extends EventTarget {
   constructor() {
     super();
     this.attributes = new Map();
+    this.classList = { toggle() {} };
   }
   getAttribute(name) {
     return this.attributes.get(name);

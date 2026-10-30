@@ -49,22 +49,6 @@ const canCalibrate = computed(
 </script>
 <template>
   <div class="camera-controls gev-surface">
-    <!-- The frame loader and shared video decoder own these stable media nodes. -->
-    <div id="cctv-frame-wrap" class="cctv-frame-wrap">
-      <span class="cctv-frame-caption" aria-hidden="true">{{
-        t('ACQUIRING FRAME')
-      }}</span>
-      <img id="cctv-frame" :alt="t('CCTV camera')" />
-      <canvas id="cctv-video" class="cctv-frame" hidden></canvas>
-    </div>
-    <StatusBadge
-      id="cctv-source-badge"
-      role="status"
-      aria-live="polite"
-      :label="source.label"
-      :data-frame-state="source.frameState"
-    />
-    <div id="cctv-meta">{{ view.meta }}</div>
     <div class="cctv-controls">
       <button
         id="cctv-enable-btn"
@@ -84,6 +68,22 @@ const canCalibrate = computed(
         {{ t('NEAREST') }}
       </button>
     </div>
+    <!-- The frame loader and shared video decoder own these stable media nodes. -->
+    <div id="cctv-frame-wrap" class="cctv-frame-wrap">
+      <span class="cctv-frame-caption" aria-hidden="true">{{
+        t('ACQUIRING FRAME')
+      }}</span>
+      <img id="cctv-frame" :alt="t('CCTV camera')" />
+      <canvas id="cctv-video" class="cctv-frame" hidden></canvas>
+    </div>
+    <StatusBadge
+      id="cctv-source-badge"
+      role="status"
+      aria-live="polite"
+      :label="source.label"
+      :data-frame-state="source.frameState"
+    />
+    <div id="cctv-meta">{{ view.meta }}</div>
     <input
       id="cctv-camera-filter"
       class="gev-field"

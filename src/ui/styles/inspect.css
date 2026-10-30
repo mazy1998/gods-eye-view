@@ -114,6 +114,73 @@
   outline-offset: 1px;
 }
 
+/* Radio keeps its shortcut and compact strip within the shared Inspect
+   material; the full controls retain their own home in Layers. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel
+  .radio-panel-inner {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel
+  .panel-header {
+  min-height: 40px;
+  gap: 8px;
+  margin: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel
+  .panel-title {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel
+  .radio-layer-state {
+  font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #radio-panel
+  .panel-divider {
+  background: var(--gev-border-subtle);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-radio-toggle
+  .material-symbols-outlined {
+  font-size: 20px;
+}
+
 /* Contacts and Missions read as tabs. They keep their own keyboard model:
    both stay in the Tab sequence, as before. */
 :where(:root:not([data-ui-theme='cyber']))

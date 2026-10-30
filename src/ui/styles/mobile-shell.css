@@ -169,7 +169,7 @@ body.mobile-shell[data-mobile-sheet='layers'] #left-panel-stack > #data-panel,
 body.mobile-shell[data-mobile-sheet='layers'] #left-panel-stack > #scene-panel,
 body.mobile-shell[data-mobile-sheet='cameras']
   #right-context-rail
-  > #cctv-panel,
+  > #global-context-panel,
 body.mobile-shell[data-mobile-sheet='cameras']
   #right-context-rail
   > #street-level-panel,

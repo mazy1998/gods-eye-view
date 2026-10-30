@@ -136,6 +136,14 @@ imagery layer, thumbnail loader, map lease or download service.
 
 ## Cameras and Street Level content
 
+Inspect's shown tab belongs to `ContextControls`, separately from its Context
+mode and restore snapshot. Cameras hides the mode views without staging layers,
+changing detection or releasing the Context session. A mode tab keeps its existing
+enter/exit operation. The drawer's reveal callback selects the matching tab before
+scrolling; panel share restore follows the same path. CCTV and Street Level keep
+their panel ids and collapse preferences inside `context-cameras-view`; desktop
+and phone hosts borrow the same nodes and restore their borrowed state.
+
 `CctvControls` mounts `CctvPanelView` in the existing `cctv-controls-body`; `StreetLevelControls` mounts `StreetLevelPanelView` in `sl-body`. Their single layer subscriptions and operations remain the owners. The shell keeps panel chrome, collapse/layout and the grid-loading chip. Controls collect their own child nodes after synchronous mount; the shell does not cache those children.
 
 Camera calibration text, captured base pose/camera identity, search filter, advanced disclosure and typed summary belong to CctvControls. Native number inputs report intent; a detached editor cannot finish another draft. The two provenance badges render owner-supplied labels and machine states. The existing frame preloader and shared video surface retain stable media nodes, request tokens, retained-frame behavior and decoder ownership; Vue never writes their media state or recreates a decoder.
