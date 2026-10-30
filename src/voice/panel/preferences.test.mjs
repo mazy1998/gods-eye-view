@@ -277,3 +277,25 @@ test('model snapshots cannot mutate state; unsubscribe and binder disposal relea
   for (const element of Object.values(ui))
     if (element instanceof Element) assert.equal(element.listeners.size, 0);
 });
+
+test('a refused minutes edit puts the applied value back in the field itself', () => {
+  const disk = storage({ [T]: '17' });
+  const prefs = createVoicePreferences({ storage: disk });
+  const ui = controls('17');
+  bind(ui, prefs);
+  // The field changes natively without an input event, so the dock's text
+  // never left 17 and repainting it alone would not reach the field.
+  for (const value of ['61', '1.5', '', '0']) {
+    ui.voiceTimeoutInput.change(value);
+    assert.equal(ui.voiceTimeoutInput.value, '17', value);
+    assert.equal(prefs.snapshot().minutes, 17);
+  }
+  ui.voiceTimeoutInput.value = 'bad';
+  ui.voiceTimeoutSelect.change('custom');
+  assert.equal(ui.voiceTimeoutInput.value, '17');
+  assert.equal(disk.writes.length, 0);
+  // An accepted edit is left as typed.
+  ui.voiceTimeoutInput.change('23');
+  assert.equal(ui.voiceTimeoutInput.value, '23');
+  assert.equal(prefs.snapshot().minutes, 23);
+});

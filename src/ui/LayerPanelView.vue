@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, onBeforeUpdate, onUpdated } from 'vue';
 import TabList from './primitives/TabList.vue';
 import ToggleSwitch from './primitives/ToggleSwitch.vue';
 import ActionButton from './primitives/ActionButton.vue';
@@ -96,9 +96,50 @@ watch(
   },
   { flush: 'sync' },
 );
+// A row that leaves the list while it holds focus (a layer switched off under
+// Active) hands focus to the next shown switch, the previous one, or the tab.
+const panel = ref(null);
+let focusedRow = null;
+const shown = (element) => {
+  for (
+    let node = element;
+    node && node !== panel.value;
+    node = node.parentElement
+  )
+    if (node.style?.display === 'none') return false;
+  return true;
+};
+onBeforeUpdate(() => {
+  const active = panel.value?.ownerDocument.activeElement;
+  const row = panel.value?.contains(active)
+    ? active.closest('.layer-groups [data-layer-id]')
+    : null;
+  // Only a row this update hides: one already hidden is not ours to move.
+  focusedRow = row && shown(row) ? row : null;
+});
+onUpdated(() => {
+  const row = focusedRow;
+  focusedRow = null;
+  if (!row || shown(row)) return;
+  const rows = [
+    ...panel.value.querySelectorAll('.layer-groups [data-layer-id]'),
+  ];
+  const index = rows.indexOf(row);
+  const next =
+    rows.slice(index + 1).find(shown) ||
+    rows.slice(0, Math.max(index, 0)).reverse().find(shown);
+  const target =
+    next?.querySelector('.data-toggle-btn') ||
+    panel.value.querySelector('[role="tab"][aria-selected="true"]');
+  target?.focus();
+});
 </script>
 <template>
-  <section class="gev-surface layer-browser" :aria-label="t('Layers')">
+  <section
+    ref="panel"
+    class="gev-surface layer-browser"
+    :aria-label="t('Layers')"
+  >
     <div class="layer-search">
       <span class="material-symbols-outlined" aria-hidden="true">search</span>
       <input

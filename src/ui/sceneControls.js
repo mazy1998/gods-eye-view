@@ -130,10 +130,23 @@ export class SceneControls {
       library: this.library,
       presentation: { ...this.presentation },
       tab: this.tab,
-      draft: this.renameDraft ? { ...this.renameDraft } : null,
+      draft: this._shownDraft(),
       actions: this.viewActions,
       listRevision: this.listRevision,
     };
+  }
+  /**
+   * The rename draft as the view sees it: a new copy only when the draft or
+   * its value changes, so progress and status repaints leave the row, and
+   * whatever its field natively holds, alone.
+   */
+  _shownDraft() {
+    const draft = this.renameDraft;
+    const shown = this._renameShown;
+    if (!draft) this._renameShown = null;
+    else if (shown?.draft !== draft || shown.view.value !== draft.value)
+      this._renameShown = { draft, view: { ...draft } };
+    return this._renameShown?.view ?? null;
   }
   _paint() {
     if (this.destroyed) return;

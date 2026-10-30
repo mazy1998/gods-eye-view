@@ -384,8 +384,10 @@ body.mobile-shell.recording-mode.scene-playback-mode
   > :is(#data-panel, #scene-panel, #global-context-panel).collapsed {
   display: none;
 }
-/* Provider choice shows with settings; the bare-map phone dock is one pill. */
-body.mobile-shell
+/* Provider choice shows with settings; the bare-map phone dock is one pill.
+   Cyber keeps its gear and chooser in view. */
+:where(:root:not([data-ui-theme='cyber']))
+  body.mobile-shell
   #gev-voice-control:not(
     :has(> .gev-voice-panel[data-view='settings']:not([hidden]))
   )

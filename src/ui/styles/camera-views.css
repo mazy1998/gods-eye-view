@@ -100,6 +100,19 @@
   background: var(--gev-accent-tint);
   border-color: var(--gev-accent-tint-border);
 }
+/* A provider that needs a key keeps its warning while selected, hovered or
+   focused; the guidance in its title explains it. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(#cctv-controls-body, #sl-body)
+  .street-level-controls
+  :is(
+    .data-toggle-chip.chip-error,
+    .data-toggle-chip.chip-error:is(:hover, :focus-visible):not(:disabled)
+  ) {
+  color: var(--gev-warning-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-warning);
+}
 :where(:root:not([data-ui-theme='cyber']))
   :is(#cctv-controls-body, #sl-body)
   :is(.camera-controls, .street-level-controls)

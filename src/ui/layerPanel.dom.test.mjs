@@ -714,3 +714,34 @@ test('a row switch tells the drawer before the layer changes, with its direction
     ['settle', 'flights', true],
   ]);
 });
+
+test('switching off the focused layer under Active hands focus to the next shown switch, then to the tab', async (t) => {
+  const { panel, layers } = fixture(t, {
+    setEnabled(id, enabled) {
+      layers.find((layer) => layer.id === id).enabled = enabled;
+    },
+  });
+  layers[0].enabled = true;
+  layers.push(
+    { ...layers[0], id: 'ships', name: 'Ships', enabled: true },
+    { ...layers[0], id: 'rail', name: 'Rail', enabled: false },
+  );
+  panel.mount(container);
+  const settle = () => new Promise((resolve) => setImmediate(resolve));
+  const switchOf = (id) =>
+    container.querySelector(`[data-layer-id="${id}"] .data-toggle-btn`);
+  const activeTab = () =>
+    [...container.querySelectorAll('[role="tab"]')].find(
+      (tab) => tab.textContent.trim() === 'Active',
+    );
+  activeTab().click();
+  await settle();
+  switchOf('flights').focus();
+  switchOf('flights').click();
+  await settle();
+  assert.equal(document.activeElement, switchOf('ships'));
+  // The last shown row leaves an empty list; focus goes to the Active tab.
+  switchOf('ships').click();
+  await settle();
+  assert.equal(document.activeElement, activeTab());
+});

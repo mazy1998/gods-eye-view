@@ -295,6 +295,13 @@ export function initDrawTool({ viewer, annotations }) {
       return null;
     }
   };
+  // A finish the person makes (Enter, double-click) takes what the label field
+  // holds now, even when it changed without an input event. The API's own
+  // finish() keeps the label the owner was given.
+  const finishFromPerson = () => {
+    if (labelInput) setLabel(labelInput.value);
+    return finish();
+  };
   const cancel = () => {
     if (!session) return;
     generation += 1;
@@ -348,7 +355,7 @@ export function initDrawTool({ viewer, annotations }) {
       if (event.target === labelInput) setLabel(labelInput.value);
       if (session?.vertices?.length && enterBelongsToDrawing(event)) {
         event.preventDefault();
-        void finish();
+        void finishFromPerson();
       }
       return;
     }
@@ -408,7 +415,7 @@ export function initDrawTool({ viewer, annotations }) {
     handler.setInputAction(onClick, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handler.setInputAction(onMove, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     handler.setInputAction(() => {
-      void finish();
+      void finishFromPerson();
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     // Cesium's Viewer binds BOTH stock click actions on its own handler: the
     // single click picks an entity into `viewer.selectedEntity`, the double
@@ -488,7 +495,7 @@ export function initDrawTool({ viewer, annotations }) {
   listen(labelInput, 'keydown', (event) => {
     if (event.key === 'Enter' && session?.vertices?.length) {
       event.preventDefault();
-      void finish();
+      void finishFromPerson();
     }
   });
   const unsubscribeView = channel.subscribe(({ state }) =>

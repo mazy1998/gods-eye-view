@@ -321,3 +321,20 @@ test('summary typing follows the mounted view and stops before disposal can yiel
     unmounted.destroy();
   }
 });
+
+test('a same-camera repaint leaves a natively edited calibration value for Enter', (t) => {
+  const { controls, chip, inputs, patches, key } = calibrationFixture(t);
+  controls._beginCctvCalValueEdit(chip);
+  const input = inputs[0];
+  // Set without an input event, then the same camera publishes again.
+  input.value = '100';
+  controls._renderCctvState({ ...controls.getState() });
+  controls._renderCctvState({ ...controls.getState(), autoHop: true });
+  assert.equal(chip.querySelector('input'), input);
+  assert.equal(input.value, '100');
+  input.dispatchEvent(key('Enter'));
+  assert.deepEqual(patches.at(-1), {
+    selectedCameraId: 'a',
+    calibration: { cameraId: 'a', patch: { headingDeg: 80 } },
+  });
+});

@@ -34,7 +34,7 @@ const dated = (tick) =>
         :disabled="state.disabled"
         @update:model-value="actions.preview($event)"
         @change="actions.change($event.target.valueAsNumber)"
-        @blur="actions.blur()"
+        @blur="actions.blur($event.target.valueAsNumber)"
         @pointercancel="actions.reset()"
       />
       <button

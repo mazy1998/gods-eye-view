@@ -98,8 +98,10 @@ export function createRailTimelineState({
     preview,
     change,
     reset,
-    blur: () => {
-      if (dragging) change();
+    // The slider may have moved since the last input event; commit where it
+    // is now, read through the ticks the drag started with.
+    blur: (value) => {
+      if (dragging) change(Number.isFinite(value) ? value : index);
     },
     step: (direction) => act(() => onStep(direction)),
     latest: () => act(onLatest),

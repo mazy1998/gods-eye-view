@@ -148,6 +148,12 @@
   max-width: calc(100vw - 24px);
   box-sizing: border-box;
 }
+/* Playback that leaves the shell's header up shows below it, so the header
+   never covers Stop. Clean view and recording hide the header. */
+body:not(.ui-clean-view, .recording-mode):has(.gev-header:not([hidden]))
+  #scene-runtime {
+  top: calc(var(--gev-header-height) + var(--gev-space-2));
+}
 .stories-runtime > span {
   min-width: 0;
   overflow-wrap: anywhere;

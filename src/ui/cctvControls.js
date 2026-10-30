@@ -108,7 +108,30 @@ export class CctvControls {
     });
   }
   _viewProps() {
+    return {
+      view: this._presentation,
+      source: this._sourceBadge,
+      fields: this._calibrationFields,
+      ...this._calibrationEditProps(),
+      summary: this._summaryText,
+      filter: this._pickerFilter,
+      calibrationOpen: this._calibrationOpen,
+      toggleCalibration: (open) => {
+        this._calibrationOpen = open;
+        this._pushCctvView();
+      },
+    };
+  }
+  /**
+   * The open calibration editor's props: new only when the draft or its value
+   * changes, so a repaint of the same camera or its summary leaves the field,
+   * and a value it natively holds, alone until Enter or blur commits it.
+   */
+  _calibrationEditProps() {
     const edit = this._calibrationDraft;
+    const shown = this._calibrationShown;
+    if (shown && shown.edit === edit && shown.value === edit?.value)
+      return shown.props;
     const finish = (commit, event) => {
       if (edit && edit === this._calibrationDraft) {
         if (commit && typeof event?.target?.value === 'string')
@@ -116,14 +139,8 @@ export class CctvControls {
         this._calibrationEdit?.(commit);
       }
     };
-    return {
-      view: this._presentation,
-      source: this._sourceBadge,
-      fields: this._calibrationFields,
-      edit: this._calibrationDraft ? { ...this._calibrationDraft } : null,
-      summary: this._summaryText,
-      filter: this._pickerFilter,
-      calibrationOpen: this._calibrationOpen,
+    const props = {
+      edit: edit ? { ...edit } : null,
       inputEdit: (value) => {
         if (edit && edit === this._calibrationDraft) edit.value = value;
       },
@@ -136,11 +153,9 @@ export class CctvControls {
         }
         event.stopPropagation();
       },
-      toggleCalibration: (open) => {
-        this._calibrationOpen = open;
-        this._pushCctvView();
-      },
     };
+    this._calibrationShown = { edit, value: edit?.value, props };
+    return props;
   }
   _pushCctvView() {
     if (!this.destroyed) this._panelView?.update(this._viewProps());

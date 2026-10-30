@@ -26,8 +26,20 @@ const setData = (node, name, value) => {
  * Apply the dock owner's changed fields to the template. Only fields that
  * changed since the last paint are written, as each painter used to write.
  */
+/** Snapshots copy the provider list, so compare it by its entries. */
+function sameProviders(a = [], b = []) {
+  return (
+    a.length === b.length &&
+    a.every(
+      (item, index) =>
+        item.value === b[index]?.value && item.label === b[index]?.label,
+    )
+  );
+}
+
 function paintVoiceDock(ui, state, previous) {
   const changed = (...keys) => keys.some((key) => state[key] !== previous[key]);
+  const providersChanged = !sameProviders(state.providers, previous.providers);
   const { root } = ui;
   if (changed('status')) setData(root, 'status', state.status);
   if (changed('speaker')) setData(root, 'speaker', state.speaker);
@@ -52,7 +64,7 @@ function paintVoiceDock(ui, state, previous) {
   if (changed('hint')) setText(ui.helpDetail, state.hint);
   if (ui.providerSelect) {
     const doc = ui.providerSelect.ownerDocument;
-    if (changed('providers') && ui.providerSelect.replaceChildren && doc) {
+    if (providersChanged && ui.providerSelect.replaceChildren && doc) {
       ui.providerSelect.replaceChildren(
         ...state.providers.map(({ value, label }) => {
           const option = doc.createElement('option');
@@ -62,7 +74,7 @@ function paintVoiceDock(ui, state, previous) {
         }),
       );
     }
-    if (changed('providers', 'providerValue'))
+    if (providersChanged || changed('providerValue'))
       ui.providerSelect.value = state.providerValue;
     if (changed('providerTitle')) ui.providerSelect.title = state.providerTitle;
   }

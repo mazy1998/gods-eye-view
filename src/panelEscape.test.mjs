@@ -220,3 +220,33 @@ test('panel bindings have a single owner and are inert after destruction', () =>
   assert.equal(collapsed, true);
   second.destroy();
 });
+
+test('holding Enter on a panel disclosure activates it once, not once per key repeat', () => {
+  let collapsed = false;
+  const changes = [];
+  const panel = Object.assign(new EventTarget(), {
+    classList: { contains: (name) => name === 'collapsed' && collapsed },
+  });
+  const button = new EventTarget();
+  const control = bindPanelDisclosure({
+    panel,
+    buttons: [button],
+    onChange: (value) => { changes.push(value); collapsed = value; },
+    onEscape() {},
+  });
+  const key = (name, repeat) => {
+    const event = new Event('keydown', { cancelable: true });
+    Object.assign(event, { key: name, repeat });
+    button.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+  // The first press keeps the native button activation; repeats do not click.
+  assert.equal(key('Enter', false), false);
+  assert.equal(key('Enter', true), true);
+  assert.equal(key('Enter', true), true);
+  assert.equal(key(' ', true), false, 'Space activates on release natively');
+  assert.equal(key('Escape', true), false);
+  control.destroy();
+  assert.equal(key('Enter', true), false, 'destroy removes the guard');
+  assert.deepEqual(changes, []);
+});

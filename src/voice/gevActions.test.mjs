@@ -3931,3 +3931,24 @@ test('analyst-only lookup distinguishes duplicate names and uses canonical aircr
   assert.equal(plane.ok, true);
   assert.equal(plane.latitude, 36, 'canonical ID resolves the current position, not old coordinates');
 });
+
+test('opening the canonical Display panel by voice shows the Display tab', async () => {
+  const tabs = [];
+  const opened = [];
+  const runner = createGevActionRunner({
+    viewer: {
+      clock: { onTick: { addEventListener: () => () => {} } },
+      scene: { canvas: { addEventListener() {}, removeEventListener() {} } },
+      camera: { moveEnd: { addEventListener() {} } },
+    },
+    styleManager: {
+      setMapLookTab: (tab) => tabs.push(tab),
+      setPanelCollapsed: (id, collapsed) => opened.push([id, collapsed]),
+    },
+    dataManager: { layers: new Map(), getAll: () => [] },
+  });
+  await runner('set_panel_open', { panelId: 'pp-toggles', open: true });
+  await runner('set_panel_open', { panelId: 'control-panel', open: true });
+  assert.deepEqual(tabs, ['display', 'look']);
+  assert.deepEqual(opened.at(-1), ['pp-toggles', false]);
+});

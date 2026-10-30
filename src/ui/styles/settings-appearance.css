@@ -514,3 +514,64 @@
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
+
+/* Settings remaps the text tokens, so the language list takes its surface
+   from the same appearance rather than the corner popup's dark glass. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-popup {
+  color: var(--gev-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  :is(
+    .locale-picker-heading,
+    .locale-picker-meta,
+    .locale-picker-empty,
+    .locale-picker-search::placeholder
+  ) {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-search {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-search:focus {
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-native {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-option.is-active {
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-search:focus
+  ~ .locale-picker-list
+  .locale-picker-option.is-active {
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  :is(
+    .locale-picker-option[aria-selected='true'] .locale-picker-native,
+    .locale-picker-check
+  ) {
+  color: var(--gev-accent-text);
+}

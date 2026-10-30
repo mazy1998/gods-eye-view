@@ -130,6 +130,8 @@ const MAP_LOOK_TABS = new Map([
   ['sources', 'map'],
   ['post processing', 'display'],
   ['hud controls', 'display'],
+  // The schema's own id for Display (HUD, detection, scope).
+  ['pp-toggles', 'display'],
 ]);
 
 const PANEL_IDS = new Set([

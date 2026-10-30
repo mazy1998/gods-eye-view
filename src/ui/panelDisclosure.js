@@ -34,6 +34,10 @@ export function bindPanelDisclosure({
     scope.listen(button, 'click', () => {
       onChange(!panel.classList.contains('collapsed'), { explicit: true });
     });
+    // A held Enter repeats native activation; the first press is enough.
+    scope.listen(button, 'keydown', (event) => {
+      if (event.key === 'Enter' && event.repeat) event.preventDefault();
+    });
   }
   scope.listen(panel, 'keydown', onEscape);
   return { destroy: () => scope.destroy() };

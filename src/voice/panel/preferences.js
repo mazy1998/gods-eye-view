@@ -150,6 +150,12 @@ export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
     if (!preferences.setPreviewEnabled(preview.checked).ok)
       render(preferences.snapshot());
   };
+  // A refused minutes edit leaves the dock's text as it was, so the field,
+  // which only follows that text when it changes, is reset here.
+  const refuseMinutes = () => {
+    render(preferences.snapshot());
+    if (input && input.value !== String(custom)) input.value = String(custom);
+  };
   const selectChange = () => {
     if (disposed) return;
     const value = select.value;
@@ -159,7 +165,7 @@ export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
     if (value === 'custom') {
       const parsed = parseMinutes(typed);
       if (parsed === undefined || parsed === 0) {
-        render(preferences.snapshot());
+        refuseMinutes();
         return;
       }
       custom = parsed;
@@ -176,7 +182,7 @@ export function bindPreferenceControls({ ui, preferences, copy, onChange }) {
     if (disposed) return;
     const parsed = parseMinutes(input.value);
     if (parsed === undefined || parsed === 0) {
-      render(preferences.snapshot());
+      refuseMinutes();
       return;
     }
     custom = parsed;

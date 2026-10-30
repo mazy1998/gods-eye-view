@@ -174,3 +174,24 @@ test('a late observer receives the owned drag even after a commit timer and a cl
   t.mock.timers.tick(150);
   assert.equal(commits.length, 2, 'destroy cancels a pending draft');
 });
+
+test('leaving the slider commits where it natively is, through the drag tick mapping', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const commits = [];
+  const f = fixture({ onCommit: (tick) => commits.push(tick) });
+  try {
+    const slider = container.querySelector('input');
+    slider.value = '1';
+    slider.dispatchEvent(new Event('input'));
+    // The ticks refresh mid-drag; the drag keeps the ones it started with.
+    f.owner.update({ ...props, ticks: ticks.slice(1), index: 1 });
+    // Moved to tick 0 without another input or change event, then left.
+    slider.value = '0';
+    slider.dispatchEvent(new Event('blur'));
+    assert.deepEqual(commits, [ticks[0]]);
+    t.mock.timers.tick(150);
+    assert.deepEqual(commits, [ticks[0]], 'the preview timer adds nothing');
+  } finally {
+    f.destroy();
+  }
+});

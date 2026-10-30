@@ -705,3 +705,28 @@ test("the director marks the app's own recipes as built-in for the panel", async
     f.restore();
   }
 });
+
+test('progress and status repaints leave a natively edited shot name in place', () => {
+  const f = fixture();
+  const key = (name) => Object.assign(new Event('keydown'), { key: name });
+  try {
+    const label = f.elements.shots.children[0].children[0].children[0];
+    label.dispatchEvent(new Event('dblclick'));
+    const input = label.children[0];
+    // Set without an input event, as autofill or a long LOAD hold can.
+    input.value = 'Native name';
+    f.publish('progress-changed', { progress: 1 });
+    f.publish('status-changed', { status: 'Loading shot' });
+    assert.equal(label.children[0], input);
+    assert.equal(input.value, 'Native name');
+    input.dispatchEvent(key('Enter'));
+    assert.deepEqual(f.calls.at(-1), [
+      'renameShot',
+      'scene-a',
+      'shot-a',
+      'Native name',
+    ]);
+  } finally {
+    f.restore();
+  }
+});

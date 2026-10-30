@@ -180,6 +180,28 @@
   color: var(--gev-accent-text);
   border-color: var(--gev-accent-tint-border);
 }
+/* A chip's data state outranks its selection: a selected product that is
+   still loading or has failed must not read as ordinary success. */
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(
+    .data-toggle-chip.chip-loading,
+    .data-toggle-chip.chip-loading:hover:not(:disabled)
+  ) {
+  background: var(--gev-control-bg);
+  color: var(--gev-text-muted);
+  border-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(
+    .data-toggle-chip.chip-error,
+    .data-toggle-chip.chip-error:hover:not(:disabled)
+  ) {
+  background: var(--gev-danger-tint);
+  color: var(--gev-danger-text);
+  border-color: var(--gev-danger);
+}
 .layer-browser .data-toggle-chip:disabled {
   opacity: var(--gev-disabled-opacity);
   cursor: default;

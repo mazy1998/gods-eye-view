@@ -464,3 +464,23 @@ test('the draw owner retains its label independently of the input and clears it 
     assert.equal(h.element('draw-label-input').value, '');
   } finally { h.restore(); }
 });
+
+test('a finish from the map takes the label the field natively holds', async () => {
+  const h = harness();
+  try {
+    h.element('draw-toggle').emit('click');
+    h.tool.setShape('area');
+    h.tool.addVertex(-97.75, 30.26);
+    h.tool.addVertex(-97.74, 30.26);
+    h.tool.addVertex(-97.74, 30.27);
+    // Set without an input or change event, then Enter on the map.
+    h.element('draw-label-input').value = 'Native label';
+    h.documentDouble.emit('keydown', { key: 'Enter', target: h.documentDouble.body });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(h.annotations.calls.annotate.length, 1);
+    assert.equal(h.annotations.calls.annotate[0].specs[0].label, 'Native label');
+  } finally {
+    h.restore();
+  }
+});
