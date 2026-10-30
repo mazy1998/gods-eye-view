@@ -1193,5 +1193,15 @@
   "scripts/qa-cyber-geometry-fixtures.mjs",
   "src/tooling/cyberGeometry.test.mjs",
   "scripts/qa-cyber-layers-structure.json",
-  "scripts/qa-cyber-stories-structure.json"
+  "scripts/qa-cyber-stories-structure.json",
+  "src/ui/contactsPanel.js",
+  "src/ui/contextViews/ContactsPanelView.vue",
+  "src/ui/contextViews/contactsPanelView.test.mjs",
+  "src/ui/missionPanels.js",
+  "src/ui/contextViews/MissionRosterView.vue",
+  "src/ui/contextViews/MissionDetailView.vue",
+  "src/ui/contextViews/missionPanelViews.test.mjs",
+  "src/ui/styles/inspect.css",
+  "src/ui/styles/inspectMissionReplay.test.mjs",
+  "scripts/qa-cyber-inspect-structure.json"
 ]

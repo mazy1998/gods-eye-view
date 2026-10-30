@@ -7,7 +7,6 @@ import rocketLaunchesLayer, {
   _setRocketMissionOverlayHostForTest,
   _setSelectedRocketMissionForTest,
   approximateOrbitPath,
-  bindMissionRosterItemKeyboardPreview,
   captureMissionRosterFocus,
   buildMissionPaths,
   cameraHeadingForPath,
@@ -511,42 +510,6 @@ test('keyboard focus previews roster missions and clears without selecting them'
     ['preview', 2],
     ['preview', 3],
     ['clear'],
-  ]);
-});
-
-test('rendered mission row focus and blur drive the preview ownership controller', () => {
-  const listeners = new Map();
-  const calls = [];
-  const button = {
-    addEventListener(type, listener) {
-      listeners.set(type, listener);
-    },
-  };
-  const nextButton = {
-    dataset: { missionRosterIndex: '4' },
-    closest: () => nextButton,
-  };
-  const roster = { contains: (candidate) => candidate === nextButton };
-  const ownership = {
-    pointerEnter: (index) => calls.push(['pointer-enter', index]),
-    pointerLeave: () => calls.push(['pointer-leave']),
-    focus: (index) => calls.push(['focus', index]),
-    blur: (index) => calls.push(['blur', index]),
-  };
-
-  bindMissionRosterItemKeyboardPreview(button, 2, ownership, roster);
-  listeners.get('mouseenter')();
-  listeners.get('mouseleave')();
-  listeners.get('focus')();
-  listeners.get('blur')({ relatedTarget: nextButton });
-  listeners.get('blur')({ relatedTarget: null });
-
-  assert.deepEqual(calls, [
-    ['pointer-enter', 2],
-    ['pointer-leave'],
-    ['focus', 2],
-    ['blur', 4],
-    ['blur', null],
   ]);
 });
 

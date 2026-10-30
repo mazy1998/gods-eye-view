@@ -68,6 +68,13 @@ are easy to diagnose. A frame's natural height can differ when newly added
 controls consume space; such content-height exceptions are exact, while padding,
 header visibility and control placement remain separately checked.
 
+Inspect has no geometry fixture because its restyle leaves Cyber's frame,
+header, divider and control geometry alone: every drawer layout rule in
+`inspect.css` excludes Cyber. The structural changes Cyber shares with the
+other appearances (content order, labels, the selected contact) are listed with
+their reasons in `qa-cyber-inspect-structure.json`, which the palette audit's
+Inspect fixture carries.
+
 Tools fixtures follow the destination element list: the shell hosts Import and
 Draw as direct children of the legacy host, outside the hidden Map panel.
 Historical revisions without that placement retain a separate home-layout

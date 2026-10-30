@@ -486,6 +486,24 @@ html:not([lang='en']) .radio-transport button {
   cursor: pointer;
 }
 
+/* The selected contact closes the list, set off like a cohort row. Labels
+   are written in sentence case; this look keeps them uppercase. */
+.military-awareness-selected {
+  margin: 8px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.military-awareness-selected h3 {
+  color: #fff;
+}
+.military-awareness-selected p {
+  color: #a9b7c7;
+}
+.military-awareness-standby,
+.military-awareness-controls button {
+  text-transform: uppercase;
+}
+
 #military-awareness-direction-overlay {
   position: absolute;
   inset: 0;

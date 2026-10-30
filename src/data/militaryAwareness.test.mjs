@@ -256,6 +256,13 @@ function installAwarenessRuntime({
         ) || null
       );
     },
+    /** The count a cohort row shows, as published to the panel's view. */
+    cohortCount(label) {
+      const view = militaryAwarenessLayer.getPanelView();
+      return (
+        view.cohorts?.find((cohort) => cohort.label === label)?.count ?? null
+      );
+    },
     restore() {
       militaryAwarenessLayer.destroy();
       globalThis.window = originalWindow;
@@ -391,17 +398,6 @@ test('Contacts live repaint restores only stable identity and never retargets an
     1,
     'later live repaints keep focus on the continuation point until the user tabs onward',
   );
-});
-
-test('Contacts continuation target is the visible explanatory note', () => {
-  const source = readLayerSource(
-    new URL('./militaryAwareness.js', import.meta.url),
-  );
-  assert.match(
-    source,
-    /<p class="military-awareness-note" tabindex="-1" data-awareness-focus-continuation>\$\{t\('Open-source mapped\/observed context\.[^']*'\)\}<\/p>/,
-  );
-  assert.doesNotMatch(source, /<span[^>]*data-awareness-focus-continuation/);
 });
 
 test('awareness disable settles every owned dependency release before resolving', async () => {
@@ -599,9 +595,9 @@ test('pending mapped installations render as unknown instead of a false zero', a
       'loading is not an observed empty cohort',
     );
     assert.match(installations?.reason || '', /unavailable/i);
-    assert.match(
-      runtime.panel()?.innerHTML || '',
-      /Mapped installations<\/strong><b aria-live="polite">\?<\/b>/,
+    assert.equal(
+      runtime.cohortCount('Mapped installations'),
+      '?',
       'the operator sees ? rather than an all-clear 0 while installations load',
     );
   } finally {
@@ -741,14 +737,14 @@ test('a vessel feed still connecting after the lifecycle settles reads as unknow
       'a source that has never answered has told us nothing — 0 would be a fabricated all-clear',
     );
     assert.match(vessels?.reason || '', /unavailable/i);
-    assert.match(
-      runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">\?<\/b>/,
+    assert.equal(
+      runtime.cohortCount('AIS vessels'),
+      '?',
       'the panel prints ? for the whole settled-but-connecting window',
     );
-    assert.doesNotMatch(
-      runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">0<\/b>/,
+    assert.notEqual(
+      runtime.cohortCount('AIS vessels'),
+      '0',
       'the panel must never print an all-clear 0 before the feed has answered once',
     );
   } finally {
@@ -789,9 +785,9 @@ test('a settled vessel feed reporting a real empty viewport recovers to 0', asyn
       0,
       'an answered empty viewport is a real observation',
     );
-    assert.match(
-      runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">0<\/b>/,
+    assert.equal(
+      runtime.cohortCount('AIS vessels'),
+      '0',
       'the operator sees the real count once the feed answers',
     );
   } finally {
@@ -1255,7 +1251,11 @@ test('a cached Context subject re-reads its label when enrichment lands after se
     );
     const panel = runtime.panel();
     assert.ok(panel, 'the Context panel must exist');
-    assert.match(panel.innerHTML, /ae1fa4/, 'panel starts on the hex');
+    assert.equal(
+      militaryAwarenessLayer.getPanelView().subject,
+      id,
+      'panel starts on the hex',
+    );
 
     // A refresh that changes NOTHING must not repaint (no per-refresh storm).
     const settledWrites = panel.hiddenWrites;
@@ -1287,13 +1287,13 @@ test('a cached Context subject re-reads its label when enrichment lands after se
       panel.hiddenWrites > settledWrites,
       'a changed label must repaint the standalone Context panel',
     );
-    assert.match(
-      panel.innerHTML,
-      /N123AB/,
-      'the rendered Context panel must show the registration without a position change',
+    assert.equal(
+      militaryAwarenessLayer.getPanelView().subject,
+      'N123AB',
+      'the Context panel must show the registration without a position change',
     );
     assert.doesNotMatch(
-      panel.innerHTML,
+      JSON.stringify(militaryAwarenessLayer.getPanelView()),
       /ae1fa4/,
       'the hex must be gone from the panel',
     );
@@ -2232,17 +2232,6 @@ test('compact Context snapshots retain installation coverage', () => {
 
   assert.equal(snapshot.cohorts[0].coverage, 'CURRENT VIEWPORT ONLY');
   assert.deepEqual(snapshot.navigation, { canNext: true });
-});
-
-test('expanded Context results omit the redundant status heading', () => {
-  assert.doesNotMatch(militaryAwarenessSource, /military-awareness-heading/);
-  assert.doesNotMatch(
-    militaryAwarenessSource,
-    /GLOBAL CONTEXT <span>CONTEXT ONLY<\/span>/,
-  );
-  assert.match(militaryAwarenessSource, /military-awareness-subject/);
-  assert.match(militaryAwarenessSource, /FLIGHT \/ VESSEL WINDOW/);
-  assert.match(militaryAwarenessSource, /military-awareness-controls/);
 });
 
 test('Context entry tracks a nearer civilian aircraft over a farther military aircraft', async () => {
@@ -4229,7 +4218,7 @@ test('a moving camera refreshes Contacts more than once inside one parked interv
   }
 });
 
-test('a selected installation card keeps every member name and escapes source text', () => {
+test('a selected installation card keeps every member name', () => {
   const runtime = installAwarenessRuntime();
   const restores = [];
   try {
@@ -4252,16 +4241,13 @@ test('a selected installation card keeps every member name and escapes source te
       },
     });
     militaryAwarenessLayer.update();
-    const html = runtime.panel().innerHTML;
-    assert.match(html, /Named areas \(4\)/);
-    for (const name of [
+    // Source text stays data here; the view renders it as text.
+    assert.deepEqual(militaryAwarenessLayer.getPanelView().names, [
       'Area one',
       'Area two',
       'Area three',
-      '&lt;Area four&gt;',
-    ])
-      assert.ok(html.includes(name));
-    assert.ok(!html.includes('<Area four>'));
+      '<Area four>',
+    ]);
   } finally {
     restores.reverse().forEach((restore) => restore());
     runtime.restore();

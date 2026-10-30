@@ -31,6 +31,8 @@ import { createStatusReadout } from './statusReadout.js';
 import AppearancePicker from './settings/AppearancePicker.vue';
 import { createDrawerNavigation } from './drawerNavigation.js';
 import { StreetLevelControls } from './streetLevelControls.js';
+import { mountContactsPanel } from './contactsPanel.js';
+import { mountMissionPanels } from './missionPanels.js';
 import { mountRadioView } from './radioView.js';
 import { RadioControls } from './radio.js';
 import { LocalSdrControls } from './localSdrControls.js';
@@ -867,12 +869,10 @@ export class StyleManager extends ShellFacade {
     if (standbyDescription) {
       standbyDescription.replaceChildren(
         document.createTextNode(
-          t('CONTACTS — nearest planes · vessels · sites'),
+          t('Contacts — nearest planes, vessels and sites'),
         ),
         document.createElement('br'),
-        document.createTextNode(
-          t('SPACE MISSIONS — launches & orbital assets'),
-        ),
+        document.createTextNode(t('Missions — launches and orbital assets')),
       );
     }
     // Leading space after the live dot, as showBriefPage writes it.
@@ -1021,7 +1021,23 @@ export class StyleManager extends ShellFacade {
   }
 
   _initGlobalContextPanel() {
-    const { radioLayer, militaryInstallationsLayer } = this.services;
+    const { radioLayer, militaryInstallationsLayer, militaryAwarenessLayer } =
+      this.services;
+    this._contactsPanel = mountContactsPanel(
+      (...args) => this._mountView(...args),
+      {
+        panel: document.getElementById('military-awareness-panel'),
+        awareness: militaryAwarenessLayer,
+      },
+    );
+    this._missionPanels = mountMissionPanels(
+      (...args) => this._mountView(...args),
+      {
+        roster: document.getElementById('space-mission-roster'),
+        host: document.getElementById('space-mission-panel-host'),
+        launches: this.services.rocketLaunchesLayer,
+      },
+    );
     this._contextControls = new ContextControls({
       elements: {
         _globalContextPanel: document.getElementById('global-context-panel'),
@@ -1939,6 +1955,8 @@ export class StyleManager extends ShellFacade {
     this._disposed = true;
     // Phase 1 starts with the views, so no owner publication reaches them.
     this._unsubscribeDisplayViews?.();
+    this._contactsPanel?.dispose();
+    this._missionPanels?.dispose();
     for (const view of this._views) view.dispose();
     this._views.clear();
     this._navigation.stop();

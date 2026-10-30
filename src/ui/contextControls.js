@@ -48,6 +48,9 @@ export class ContextControls {
     this._clearSelectedLayersManagerPromise = null;
     this.clearBusy = false;
     this.clearChannel = createStateChannel(() => ({ busy: this.clearBusy }));
+    // Search Nearby Sites stays focusable while it runs (busy, not disabled);
+    // this flag, not the button, rejects a second search.
+    this.nearbySitesBusy = false;
     this._initGlobalContextPanel();
   }
   showToast(...args) {
@@ -58,6 +61,12 @@ export class ContextControls {
     this.clearBusy = Boolean(busy);
     this.clearChannel?.publish({ type: 'clear-busy-changed' });
     this.actions.setClearBusy(busy);
+  }
+  _setNearbySitesBusy(busy) {
+    if (this.destroyed) return;
+    this.nearbySitesBusy = busy;
+    this._installationsSearchBtn?.setAttribute('aria-disabled', String(busy));
+    this._installationsSearchBtn?.setAttribute('aria-busy', String(busy));
   }
   get cockpitView() {
     return this.actions.getCockpit();

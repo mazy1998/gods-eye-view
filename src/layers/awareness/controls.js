@@ -171,6 +171,15 @@ export function createControls({ state: layerState, services, parts, source }) {
     focusTarget(layerId, id, options = {}) {
       return parts.focus.requestFocus(layerId, id, false, options);
     },
+
+    /** What the Contacts panel shows, as plain data for its view. */
+    getPanelView() {
+      return layerState.panelChannel.getSnapshot();
+    },
+
+    subscribePanelView(listener, options) {
+      return layerState.panelChannel.subscribe(listener, options);
+    },
   };
 
   return { methods };

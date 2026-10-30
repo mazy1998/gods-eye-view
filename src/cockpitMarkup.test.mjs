@@ -120,6 +120,16 @@ test('Cockpit has one reset action beside its bottom exit path', () => {
       actions[0].indexOf('id="installations-search-btn"'),
     'Cockpit must precede Search Nearby Sites',
   );
+  assert.ok(
+    html.indexOf('<aside id="military-awareness-panel">') <
+      html.indexOf('<div class="global-context-actions"'),
+    'The selected contact actions follow the contact list they act on',
+  );
+  assert.ok(
+    actions[0].indexOf('id="installations-search-btn"') <
+      actions[0].indexOf('id="tr3b-toggle"'),
+    'The optional TR-3B reclassification comes last',
+  );
   assert.match(
     css,
     /body\.cockpit-mode #view-switcher \{[\s\S]*?bottom: max\(clamp\(128px, 15vh, 150px\), env\(safe-area-inset-bottom\)\);[\s\S]*?margin-bottom: -95px;/,
@@ -1229,8 +1239,8 @@ test('Global Context names its mixed contact cycle without changing the stable m
     /<button id="global-context-flights-btn"[\s\S]*?<\/button>/,
   );
   assert.ok(match, 'Global Context contacts button is missing');
-  assert.match(match[0], />CONTACTS</);
-  assert.match(match[0], /aria-label="CONTACTS"/);
+  assert.match(match[0], />Contacts</);
+  assert.match(match[0], /aria-label="Contacts"/);
   assert.match(
     match[0],
     /title="Cycles the nearest contacts of whatever type you select — planes, vessels, installations\. Satellites track independently\."/,
@@ -1263,8 +1273,8 @@ test('Global Context uses its dedicated right rail without a duplicate Data Laye
 test('Global Context standby describes both chooser modes', () => {
   const match = html.match(/<div id="context-mode-standby"[\s\S]*?<\/div>/);
   assert.ok(match, 'Global Context standby is missing');
-  assert.match(match[0], /CONTACTS — nearest planes · vessels · sites/);
-  assert.match(match[0], /SPACE MISSIONS — launches &amp; orbital assets/);
+  assert.match(match[0], /Contacts — nearest planes, vessels and sites/);
+  assert.match(match[0], /Missions — launches and orbital assets/);
 });
 
 test('cockpit briefing cycle control keeps its state as the accessible name', () => {

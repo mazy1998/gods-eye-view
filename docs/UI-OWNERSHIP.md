@@ -33,6 +33,8 @@ through a copy of their state:
 | session import `channel` (`geoFileImport.js`) | `{files: list()}` | every change to the import list |
 | appearance `channel` (`appearance.js`) | `{appearance, cyber}` | `set()` with a new value, and Cyber turning on or off; the entry module applies the stored value to the root before the shell renders, outside share links, scenes and visual settings |
 | status readout `channel` (`statusReadout.js`) | `{coordinates, utc}` | its sampler, only when the camera's formatted position or the UTC minute changes |
+| Contacts panel channel (`layers/awareness`, `subscribePanelView`) | `{kind, revision, …}`: standby, or the subject, its caption window, navigation and cohort rows | the panel funnels (`renderResults`, `hidePanel`, `clearPanel`), only when the content signature changes |
+| Missions channel (`layers/launches`, `subscribeMissionPanelView`) | `{roster, detail, replay}` | roster refreshes, mission panel renders, replay control changes, and telemetry only when its readout changes |
 
 A view calls `useOwnerState(channel)` (`ownerState.js`) for a read-only ref of
 the frozen snapshot and calls the owner's operations to change anything.
@@ -139,6 +141,12 @@ imagery layer, thumbnail loader, map lease or download service.
 Camera calibration text, captured base pose/camera identity, search filter, advanced disclosure and typed summary belong to CctvControls. Native number inputs report intent; a detached editor cannot finish another draft. The two provenance badges render owner-supplied labels and machine states. The existing frame preloader and shared video surface retain stable media nodes, request tokens, retained-frame behavior and decoder ownership; Vue never writes their media state or recreates a decoder.
 
 Street Level's Since index/focus/preview belong to StreetLevelControls; filter/provider selection and imagery state stay with the layer. The viewer owner retains the stable `sl-viewer` child host across prop updates. Closing an image first returns focus to the header status control and exits expansion, then synchronous view paint hides the wrap. Fullscreen/popover, persisted fit/fill, observer-driven resizing and panel-hiding modes retain their existing lifetime. Destruction releases listeners/subscriptions, detaches the media host and disposes each view before late work can paint.
+
+## Contacts and Space missions content
+
+The Contacts layer publishes what `#military-awareness-panel` shows; `mountContactsPanel` mounts `ContactsPanelView` into it and reports navigation and target choices back as user operations. A new revision means new content and closes any open Named areas list, as replacing the markup did. The layer captures keyboard focus by control identity before it publishes and restores it after the synchronous paint, continuing to the note when that control left. The selected contact's name and source close the panel; Cockpit entry, the nearby-site search and TR-3B reclassification follow in the template, in that order, with their existing owners.
+
+The Space Missions layer publishes the roster, the selected mission and its replay controls. `mountMissionPanels` mounts `MissionRosterView` into `#space-mission-roster` and `MissionDetailView` as `#space-mission-panel` after it. The layer keeps selection, replay, telemetry cadence and pointer/keyboard preview ownership; the views report row pointer, focus and blur, and the speed input reports its native value. Each roster refresh renders new rows, so focus returns to the same mission by launch id, or past the list when it left. Both views render names and mission text as text.
 
 ### First run and feedback (S22)
 

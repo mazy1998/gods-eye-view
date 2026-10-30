@@ -229,13 +229,8 @@ export function createLifecycle({
     destroy() {
       this.disable();
       detachRuntimeListeners();
-      layerState.panel?.removeEventListener(
-        'click',
-        layerState.panelClickListener,
-      );
-      layerState.panelClickListener = null;
+      parts.panel.clearPanel();
       if (layerState.panelOwned) layerState.panel?.remove();
-      else if (layerState.panel) layerState.panel.replaceChildren();
       layerState.panel = null;
       layerState.panelOwned = false;
       layerState.directionRoot?.remove();
@@ -244,7 +239,6 @@ export function createLifecycle({
       layerState.compassLabels = [];
       layerState.compassHeading = null;
       layerState.directionMarkers = [];
-      layerState.panelMarkup = '';
       layerState.subjectListener = null;
       layerState.contextListener = null;
       layerState.clearListener = null;

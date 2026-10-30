@@ -64,6 +64,20 @@ export function createControls({ state: layerState, services, parts, source }) {
     attachDataManager(dataManager) {
       layerState._dataManager = dataManager;
     },
+
+    /** What the Missions roster and the selected mission's panel show. */
+    getMissionPanelView() {
+      return layerState._missionChannel.getSnapshot();
+    },
+
+    subscribeMissionPanelView(listener, options) {
+      return layerState._missionChannel.subscribe(listener, options);
+    },
+
+    /** The operations the Missions roster and panel controls report to. */
+    getMissionPanelActions() {
+      return parts.panel.missionPanelActions;
+    },
   };
 
   return { methods };

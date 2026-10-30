@@ -30,6 +30,7 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       id: 'inspect',
       icon: 'my_location',
       label: msg('Inspect'),
+      subtitle: msg('Contacts, missions and cameras'),
       panels: ['global-context-panel', 'cctv-panel', 'street-level-panel'],
     },
     {

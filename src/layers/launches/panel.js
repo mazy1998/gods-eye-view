@@ -88,36 +88,6 @@ export function createPanel({ state: layerState, services, parts, source }) {
     };
   }
 
-  /**
-   * Bind native keyboard focus events for one rendered roster row.
-   * @param {Element} button Mission roster button.
-   * @param {number} index Source-array mission index.
-   * @param {{pointerEnter: (index: number) => void, pointerLeave: () => void,
-   *   focus: (index: number) => void, blur: (nextIndex?: number|null) => void}} ownership
-   * @param {Element} roster Roster root used to reject focus targets outside the list.
-   */
-
-  function bindMissionRosterItemKeyboardPreview(
-    button,
-    index,
-    ownership,
-    roster,
-  ) {
-    button.addEventListener('mouseenter', () => ownership.pointerEnter(index));
-    button.addEventListener('mouseleave', () => ownership.pointerLeave());
-    button.addEventListener('focus', () => ownership.focus(index));
-    button.addEventListener('blur', (event) => {
-      const nextButton = event.relatedTarget?.closest?.(
-        '[data-mission-roster-index]',
-      );
-      const nextIndex =
-        nextButton && roster.contains(nextButton)
-          ? Number(nextButton.dataset.missionRosterIndex)
-          : null;
-      ownership.blur(nextIndex);
-    });
-  }
-
   /** Capture the exact mission identity owned by keyboard focus before a refresh. */
 
   function captureMissionRosterFocus(
@@ -158,220 +128,32 @@ export function createPanel({ state: layerState, services, parts, source }) {
     );
   }
 
-  function missionTableRows(items, columns, emptyText) {
-    if (!items.length)
-      return `<tr><td colspan="${columns}" class="mission-table-empty">${emptyText}</td></tr>`;
-    return items.map((item) => item).join('');
+  /** Publish the Missions view with `patch` applied. */
+  function publishMissionView(patch) {
+    layerState._missionView = { ...layerState._missionView, ...patch };
+    layerState._missionChannel.publish();
   }
 
-  function setMissionPanelField(selector, value, title = '') {
-    const output = layerState._missionPanel?.querySelector(selector);
-    if (!output) return;
-    const row = output.closest('[data-mission-field]');
-    const available =
-      value !== null && value !== undefined && String(value).trim() !== '';
-    if (row) row.hidden = !available;
-    if (!available) {
-      output.textContent = '';
-      output.removeAttribute('title');
+  /** Publish the replay controls when anything they show has changed. */
+  function publishMissionReplay(replay) {
+    const current = layerState._missionView.replay;
+    if (Object.keys(replay).every((key) => replay[key] === current[key]))
       return;
-    }
-    output.textContent = value;
-    if (title) output.title = title;
-    else output.removeAttribute('title');
+    publishMissionView({ replay });
   }
 
-  function renderMissionPanel() {
-    if (!layerState._missionPanel) return;
-    const launch = layerState._launches.find(
-      (item) => item.id === layerState._selectedLaunchId,
-    );
-    const index = launch ? layerState._launches.indexOf(launch) : -1;
-    layerState._missionPanel.hidden = !launch;
-    if (!launch) return;
-    layerState._missionPanel.querySelector('[data-mission-title]').textContent =
-      parts.overlays.shortMissionLabel(launch.name, 32).toUpperCase();
-    setMissionPanelField('[data-mission-provider]', launch.provider);
-    // Launch Library status names are provider data, shown as sent; only the
-    // fallback for a launch without one is ours to translate.
-    setMissionPanelField(
-      '[data-mission-status]',
-      launch.status === UNKNOWN_LAUNCH_STATUS
-        ? t(UNKNOWN_LAUNCH_STATUS)
-        : launch.status,
-    );
-    setMissionPanelField(
-      '[data-mission-site]',
-      launch.launchSite && launch.launchSite !== 'Unknown launch site'
-        ? launch.launchSite
-        : null,
-    );
-    setMissionPanelField('[data-mission-time]', launch.launchTime);
-    const pathPresentation = parts.policyHelpers.missionPathPresentation(
-      launch,
-      layerState._replayTracks.has(launch.id),
-    );
-    setMissionPanelField('[data-mission-orbit]', pathPresentation.orbit);
-    layerState._missionPanel.querySelector(
-      '[data-mission-ascent-source]',
-    ).textContent = pathPresentation.ascent;
-    const payloadRows = launch.payloads.length
-      ? launch.payloads.slice(0, 5).map((payload) => {
-          const detail = [
-            payload.manufacturer,
-            payload.operator && payload.operator !== payload.manufacturer
-              ? payload.operator
-              : null,
-            Number.isFinite(payload.massKg)
-              ? `${payload.massKg.toLocaleString()} KG`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(' · ');
-          return `<tr><td>${escapeMissionText(payload.name)}${payload.amount > 1 ? ` ×${payload.amount}` : ''}${detail ? `<small>${escapeMissionText(detail)}</small>` : ''}</td><td>${escapeMissionText(payload.type || t('UNSPECIFIED'))}</td><td>${escapeMissionText(payload.destination || launch.orbit?.name || t('UNAVAILABLE'))}</td></tr>`;
-        })
-      : [];
-    if (launch.payloads.length > 5) {
-      payloadRows.push(
-        `<tr><td colspan="3" class="mission-table-empty">${t('+{count} additional payload records', { count: launch.payloads.length - 5 })}</td></tr>`,
-      );
-    }
-    layerState._missionPanel.querySelector(
-      '[data-mission-payloads]',
-    ).innerHTML = missionTableRows(
-      payloadRows,
-      3,
-      t('PAYLOAD DATA UNAVAILABLE'),
-    );
-    const stageRows = launch.recoveryStages.map((stage) => {
-      const endpoint = stage.endpoint;
-      const destination =
-        stage.destination ||
-        (endpoint?.accuracy === 'PAD / RTLS'
-          ? launch.launchSite
-          : t('UNAVAILABLE'));
-      const position = endpoint
-        ? `${endpoint.lat.toFixed(2)}, ${endpoint.lon.toFixed(2)} · ${endpoint.accuracy}`
-        : stage.downrangeKm > 0
-          ? t('{value} KM DOWNRANGE', {
-              value: stage.downrangeKm.toLocaleString(),
-            })
-          : t('POSITION UNAVAILABLE');
-      const stageDetail = [
-        Number.isFinite(stage.flightNumber)
-          ? t('FLIGHT {count}', {
-              count: stage.flightNumber,
-            })
-          : null,
-        stage.reused ? t('REUSED') : null,
-        stage.recoveryType,
-      ]
-        .filter(Boolean)
-        .join(' · ');
-      return `<tr><td>${escapeMissionText(stage.name)}${stageDetail ? `<small>${escapeMissionText(stageDetail)}</small>` : ''}</td><td>${escapeMissionText(stage.status)}</td><td>${escapeMissionText(destination)}<small>${escapeMissionText(position)}</small></td></tr>`;
-    });
-    layerState._missionPanel.querySelector('[data-mission-stages]').innerHTML =
-      missionTableRows(stageRows, 3, t('NO STAGE RE-ENTRY / RECOVERY DATA'));
-    const stageSection = layerState._missionPanel.querySelector(
-      '[data-mission-stages-section]',
-    );
-    if (stageSection) stageSection.hidden = stageRows.length === 0;
-    updateMissionTelemetry(true);
-    layerState._missionPanel.querySelector('[data-mission-index]').textContent =
-      `${index + 1} / ${layerState._launches.length}`;
-    layerState._missionPanel.querySelector('[data-mission-prev]').disabled =
-      index <= 0;
-    layerState._missionPanel.querySelector('[data-mission-next]').disabled =
-      index < 0 || index >= layerState._launches.length - 1;
-    parts.replay.syncReplayButton();
-    const panelScroller = layerState._missionPanel.closest(
-      ":root[data-ui-theme='cyber'] .cyber-panel-body, .global-context-panel-inner",
-    );
-    if (panelScroller) panelScroller.scrollTop = 0;
+  /** A field's text, or '' when the source has nothing to show for it. */
+  function fieldText(value) {
+    return value !== null && value !== undefined && String(value).trim() !== ''
+      ? String(value)
+      : '';
   }
 
-  function renderMissionRoster() {
-    if (!layerState._missionRoster) return;
-    const list = layerState._missionRoster.querySelector(
-      '[data-mission-roster-list]',
-    );
-    const count = layerState._missionRoster.querySelector(
-      '[data-mission-roster-count]',
-    );
-    if (count)
-      count.textContent = t('{count} / 30D', {
-        count: layerState._launches.length,
-      });
-    if (!list) return;
-    const focusSnapshot = captureMissionRosterFocus(list);
-    layerState._missionRosterPreviewOwnership?.reset();
-    const entries = parts.policyHelpers.missionRosterEntries(
-      layerState._launches,
-    );
-    if (!entries.length) {
-      list.innerHTML = `<div class="space-mission-roster-empty">${t('NO MISSIONS AVAILABLE IN THE CURRENT 30-DAY WINDOW')}</div>`;
-      restoreMissionRosterFocus(
-        list,
-        focusSnapshot,
-        layerState._missionRoster.querySelector(
-          '[data-mission-roster-focus-continuation]',
-        ),
-      );
-      return;
-    }
-    list.innerHTML = entries
-      .map(({ launch, index }) => {
-        const color = parts.model.missionMarkerColor(launch).toCssColorString();
-        const date = launch.launchTime?.slice(0, 10) || t('DATE UNAVAILABLE');
-        const provider = launch.provider || t('UNSPECIFIED OPERATOR');
-        const label = parts.overlays
-          .shortMissionLabel(launch.name, 27)
-          .toUpperCase();
-        return `<button type="button" class="space-mission-roster-item" data-mission-roster-index="${index}" data-mission-roster-id="${escapeMissionText(launch.id)}" aria-label="${escapeMissionText(t('Select {mission}', { mission: label }))}"><span class="space-mission-roster-marker" style="--mission-roster-color:${color}" aria-hidden="true"></span><span class="space-mission-roster-copy"><strong>${escapeMissionText(label)}</strong><small>${escapeMissionText(provider)} · ${escapeMissionText(date)}</small></span><span class="space-mission-roster-chevron" aria-hidden="true">›</span></button>`;
-      })
-      .join('');
-    list.querySelectorAll('[data-mission-roster-index]').forEach((button) => {
-      const index = Number(button.dataset.missionRosterIndex);
-      bindMissionRosterItemKeyboardPreview(
-        button,
-        index,
-        layerState._missionRosterPreviewOwnership,
-        layerState._missionRoster,
-      );
-    });
-    restoreMissionRosterFocus(
-      list,
-      focusSnapshot,
-      layerState._missionRoster.querySelector(
-        '[data-mission-roster-focus-continuation]',
-      ),
-    );
-  }
-
-  function escapeMissionText(value) {
-    return String(value ?? '').replace(
-      /[&<>"']/g,
-      (character) =>
-        ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-        })[character],
-    );
-  }
-
-  function updateMissionTelemetry(force = false) {
-    if (
-      !layerState._missionPanel ||
-      !layerState._selectedLaunchId ||
-      !layerState._dataSource
-    )
-      return;
-    const now = performance.now();
-    if (!force && now - layerState._lastPanelTelemetryMs < 250) return;
-    layerState._lastPanelTelemetryMs = now;
+  /** Current distance and speed of the selected mission's satellite. */
+  function missionTelemetry() {
+    if (!layerState._selectedLaunchId || !layerState._dataSource)
+      return { distance: '', speed: '', speedTitle: '' };
+    layerState._lastPanelTelemetryMs = performance.now();
     const satellite = layerState._dataSource.entities.getById(
       `rocket-satellite:${layerState._selectedLaunchId}`,
     );
@@ -381,33 +163,193 @@ export function createPanel({ state: layerState, services, parts, source }) {
     const altitudeM = position
       ? Cesium.Cartographic.fromCartesian(position)?.height
       : null;
-    setMissionPanelField(
-      '[data-mission-distance]',
-      Number.isFinite(altitudeM)
+    const speedMps = layerState._satelliteTelemetry.get(
+      layerState._selectedLaunchId,
+    )?.speedMps;
+    return {
+      distance: Number.isFinite(altitudeM)
         ? t('{value} KM', {
             value: Math.max(0, altitudeM / 1000).toLocaleString(undefined, {
               maximumFractionDigits: 0,
             }),
           })
-        : null,
-    );
-    const speedMps = layerState._satelliteTelemetry.get(
-      layerState._selectedLaunchId,
-    )?.speedMps;
-    setMissionPanelField(
-      '[data-mission-speed]',
-      Number.isFinite(speedMps)
+        : '',
+      speed: Number.isFinite(speedMps)
         ? t('{value} KM/S', {
             value: (speedMps / 1000).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }),
           })
-        : null,
-      Number.isFinite(speedMps)
+        : '',
+      speedTitle: Number.isFinite(speedMps)
         ? `${(speedMps * 3.6).toLocaleString(undefined, { maximumFractionDigits: 0 })} km/h`
         : '',
+    };
+  }
+
+  function missionPayloadRows(launch) {
+    return launch.payloads.slice(0, 5).map((payload, index) => ({
+      key: String(index),
+      name: `${payload.name ?? ''}${payload.amount > 1 ? ` ×${payload.amount}` : ''}`,
+      detail: [
+        payload.manufacturer,
+        payload.operator && payload.operator !== payload.manufacturer
+          ? payload.operator
+          : null,
+        Number.isFinite(payload.massKg)
+          ? `${payload.massKg.toLocaleString()} KG`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      type: String(payload.type || t('UNSPECIFIED')),
+      destination: String(
+        payload.destination || launch.orbit?.name || t('UNAVAILABLE'),
+      ),
+    }));
+  }
+
+  function missionStageRows(launch) {
+    return launch.recoveryStages.map((stage, index) => {
+      const endpoint = stage.endpoint;
+      const destination =
+        stage.destination ||
+        (endpoint?.accuracy === 'PAD / RTLS'
+          ? launch.launchSite
+          : t('UNAVAILABLE'));
+      return {
+        key: String(index),
+        name: String(stage.name ?? ''),
+        detail: [
+          Number.isFinite(stage.flightNumber)
+            ? t('FLIGHT {count}', {
+                count: stage.flightNumber,
+              })
+            : null,
+          stage.reused ? t('REUSED') : null,
+          stage.recoveryType,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        status: String(stage.status ?? ''),
+        destination: String(destination ?? ''),
+        position: endpoint
+          ? `${endpoint.lat.toFixed(2)}, ${endpoint.lon.toFixed(2)} · ${endpoint.accuracy}`
+          : stage.downrangeKm > 0
+            ? t('{value} KM DOWNRANGE', {
+                value: stage.downrangeKm.toLocaleString(),
+              })
+            : t('POSITION UNAVAILABLE'),
+      };
+    });
+  }
+
+  function renderMissionPanel() {
+    const launch = layerState._launches.find(
+      (item) => item.id === layerState._selectedLaunchId,
     );
+    if (!launch) {
+      publishMissionView({
+        detail: null,
+        replay: parts.replay.replayControls(),
+      });
+      return;
+    }
+    const index = layerState._launches.indexOf(launch);
+    const pathPresentation = parts.policyHelpers.missionPathPresentation(
+      launch,
+      layerState._replayTracks.has(launch.id),
+    );
+    publishMissionView({
+      detail: {
+        id: launch.id,
+        title: parts.overlays.shortMissionLabel(launch.name, 32),
+        provider: fieldText(launch.provider),
+        // Launch Library status names are provider data, shown as sent; only
+        // the fallback for a launch without one is ours to translate.
+        status: fieldText(
+          launch.status === UNKNOWN_LAUNCH_STATUS
+            ? t(UNKNOWN_LAUNCH_STATUS)
+            : launch.status,
+        ),
+        site: fieldText(
+          launch.launchSite && launch.launchSite !== 'Unknown launch site'
+            ? launch.launchSite
+            : null,
+        ),
+        time: fieldText(launch.launchTime),
+        orbit: fieldText(pathPresentation.orbit),
+        ascent: String(pathPresentation.ascent ?? ''),
+        ...missionTelemetry(),
+        payloads: missionPayloadRows(launch),
+        morePayloads:
+          launch.payloads.length > 5
+            ? t('+{count} additional payload records', {
+                count: launch.payloads.length - 5,
+              })
+            : '',
+        stages: missionStageRows(launch),
+        position: `${index + 1} / ${layerState._launches.length}`,
+        canPrevious: index > 0,
+        canNext: index < layerState._launches.length - 1,
+      },
+      replay: parts.replay.replayControls(),
+    });
+    // The roster and the selected mission share the Context scroller.
+    const panelScroller = layerState._missionRoster?.closest(
+      ":root[data-ui-theme='cyber'] .cyber-panel-body, .global-context-panel-inner",
+    );
+    if (panelScroller) panelScroller.scrollTop = 0;
+  }
+
+  function renderMissionRoster() {
+    const list = layerState._missionRoster?.querySelector(
+      '[data-mission-roster-list]',
+    );
+    const focusSnapshot = captureMissionRosterFocus(list);
+    layerState._missionRosterPreviewOwnership?.reset();
+    const items = parts.policyHelpers
+      .missionRosterEntries(layerState._launches)
+      .map(({ launch, index }) => ({
+        index,
+        id: String(launch.id),
+        label: parts.overlays.shortMissionLabel(launch.name, 27),
+        provider: String(launch.provider || t('UNSPECIFIED OPERATOR')),
+        date: launch.launchTime?.slice(0, 10) || t('DATE UNAVAILABLE'),
+        color: parts.model.missionMarkerColor(launch).toCssColorString(),
+      }));
+    publishMissionView({
+      roster: {
+        revision: layerState._missionView.roster.revision + 1,
+        loaded: true,
+        count: layerState._launches.length,
+        items,
+      },
+    });
+    restoreMissionRosterFocus(
+      list,
+      focusSnapshot,
+      layerState._missionRoster?.querySelector(
+        '[data-mission-roster-focus-continuation]',
+      ),
+    );
+  }
+
+  function updateMissionTelemetry(force = false) {
+    const detail = layerState._missionView.detail;
+    if (
+      !detail ||
+      detail.id !== layerState._selectedLaunchId ||
+      !layerState._dataSource
+    )
+      return;
+    if (!force && performance.now() - layerState._lastPanelTelemetryMs < 250)
+      return;
+    const telemetry = missionTelemetry();
+    if (Object.keys(telemetry).every((key) => telemetry[key] === detail[key]))
+      return;
+    publishMissionView({ detail: { ...detail, ...telemetry } });
   }
 
   function selectMissionAt(index) {
@@ -451,121 +393,74 @@ export function createPanel({ state: layerState, services, parts, source }) {
     }, 140);
   }
 
+  function selectedMissionIndex() {
+    return layerState._launches.findIndex(
+      (item) => item.id === layerState._selectedLaunchId,
+    );
+  }
+
+  const ownership = () => layerState._missionRosterPreviewOwnership;
+
+  /** What the Missions roster and the selected mission's panel can ask for. */
+  const missionPanelActions = Object.freeze({
+    select: (index) => selectMissionAt(index),
+    previous: () => selectMissionAt(selectedMissionIndex() - 1),
+    next: () => selectMissionAt(selectedMissionIndex() + 1),
+    deselect: () => parts.selection.setSelectedMission(null),
+    focusSite() {
+      const launch = layerState._launches[selectedMissionIndex()];
+      if (launch) parts.selection.focusLaunchSite(launch);
+    },
+    replay() {
+      if (layerState._selectedLaunchId)
+        parts.replay.startMissionReplay(layerState._selectedLaunchId);
+    },
+    togglePause() {
+      if (layerState._replayPaused) parts.replay.resumeMissionReplay();
+      else parts.replay.pauseMissionReplay();
+    },
+    cancelReplay: () => parts.replay.stopMissionReplay(),
+    setReplaySpeed: (value) => parts.replay.setReplaySpeed(value),
+    pointerEnter: (index) => ownership()?.pointerEnter(index),
+    pointerLeave: () => ownership()?.pointerLeave(),
+    focus: (index) => ownership()?.focus(index),
+    blur: (nextIndex) => ownership()?.blur(nextIndex),
+  });
+
   function createMissionPanel() {
-    if (layerState._missionPanel || typeof document === 'undefined') return;
-    const host =
-      document.getElementById('space-mission-panel-host') ||
-      document.getElementById('right-context-rail');
-    if (!host) return;
+    if (layerState._missionRoster || typeof document === 'undefined') return;
     layerState._missionRoster = document.getElementById('space-mission-roster');
-    if (layerState._missionRoster) {
+    if (layerState._missionRoster)
       layerState._missionRosterPreviewOwnership =
         createMissionRosterPreviewOwnership({
           preview: scheduleMissionRosterPreview,
           clear: clearMissionRosterPreviewState,
         });
-      layerState._missionRoster.onclick = (event) => {
-        const button =
-          event.target instanceof Element
-            ? event.target.closest('[data-mission-roster-index]')
-            : null;
-        if (!button) return;
-        selectMissionAt(Number(button.dataset.missionRosterIndex));
-      };
-    }
-    layerState._missionPanel = document.createElement('aside');
-    layerState._missionPanel.id = 'space-mission-panel';
-    layerState._missionPanel.className = 'context-space-mission-detail';
-    layerState._missionPanel.setAttribute(
-      'aria-label',
-      t('Selected Space Mission'),
-    );
-    layerState._missionPanel.innerHTML = `<div class="space-mission-view-header"><span>${t('SELECTED SPACE MISSION')}</span><button type="button" data-mission-close title="${t('Show all missions')}" aria-label="${t('Deselect mission')}">×</button></div><div class="space-mission-detail"><strong data-mission-title>${t('MISSION')}</strong><span data-mission-field data-mission-provider></span><span data-mission-field>${t('STATUS · ')}<b data-mission-status></b></span><span data-mission-field>${t('LAUNCH SITE · ')}<b data-mission-site></b></span><span data-mission-field>${t('LAUNCH TIME · ')}<b data-mission-time></b></span><span data-mission-field>${t('ORBIT · ')}<b data-mission-orbit></b></span><span>${t('ASCENT PATH · ')}<b data-mission-ascent-source></b></span><span data-mission-field>${t('CURRENT DISTANCE FROM EARTH · ')}<b data-mission-distance></b></span><span data-mission-field>${t('SATELLITE SPEED · ')}<b data-mission-speed></b></span></div><section class="mission-data-section"><h4>${t('PAYLOAD')}</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>${t('NAME')}</th><th>${t('TYPE')}</th><th>${t('DESTINATION')}</th></tr></thead><tbody data-mission-payloads></tbody></table></div></section><section class="mission-data-section" data-mission-stages-section><h4>${t('STAGE / RE-ENTRY / RECOVERY')}</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>${t('STAGE')}</th><th>${t('STATUS')}</th><th>${t('FINAL POSITION')}</th></tr></thead><tbody data-mission-stages></tbody></table></div></section><div class="mission-replay-speed-control"><div class="mission-replay-speed-header"><label for="space-mission-replay-speed">${t('REPLAY SPEED')}</label><output class="gev-slider-value" for="space-mission-replay-speed" data-mission-replay-speed-output>1×</output></div><input id="space-mission-replay-speed" class="gev-quantitative-slider" type="range" min="0.25" max="4" step="0.25" value="1" data-mission-replay-speed aria-label="${t('Replay speed multiplier')}"><div class="mission-replay-speed-scale" aria-hidden="true"><span>0.25×</span><span>1×</span><span>4×</span></div></div><div class="mission-action-row"><button type="button" class="mission-focus-button" data-mission-focus>${t('FOCUS')}</button><button type="button" class="mission-replay-button" data-mission-replay aria-pressed="false">${t('REPLAY ASCENT')}</button></div><div class="space-mission-nav"><button type="button" class="mission-nav-button" data-mission-prev title="${t('Previous mission')}"><span aria-hidden="true">‹</span> ${t('PREV')}</button><span class="mission-nav-index" data-mission-index>—</span><button type="button" class="mission-nav-button" data-mission-next title="${t('Next mission')}">${t('NEXT')} <span aria-hidden="true">›</span></button></div><button type="button" class="panel-layer-toggle" data-mission-show-all>${t('SHOW ALL / DESELECT')}</button>`;
-    layerState._missionPanel
-      .querySelector('.mission-action-row')
-      .insertAdjacentHTML(
-        'beforeend',
-        `<div class="mission-replay-transport" data-mission-replay-transport hidden>
-      <button type="button" data-mission-replay-toggle title="${t('Pause replay')}" aria-label="${t('Pause replay')}">Ⅱ</button>
-      <button type="button" class="cancel" data-mission-replay-cancel title="${t('Cancel replay')}" aria-label="${t('Cancel replay')}"><span aria-hidden="true">×</span></button>
-    </div>`,
-      );
-    host.appendChild(layerState._missionPanel);
-    layerState._missionPanel
-      .querySelector('[data-mission-prev]')
-      .addEventListener('click', () =>
-        selectMissionAt(
-          layerState._launches.findIndex(
-            (item) => item.id === layerState._selectedLaunchId,
-          ) - 1,
-        ),
-      );
-    layerState._missionPanel
-      .querySelector('[data-mission-next]')
-      .addEventListener('click', () =>
-        selectMissionAt(
-          layerState._launches.findIndex(
-            (item) => item.id === layerState._selectedLaunchId,
-          ) + 1,
-        ),
-      );
-    layerState._missionPanel
-      .querySelector('[data-mission-close]')
-      .addEventListener('click', () =>
-        parts.selection.setSelectedMission(null),
-      );
-    layerState._missionPanel
-      .querySelector('[data-mission-show-all]')
-      .addEventListener('click', () =>
-        parts.selection.setSelectedMission(null),
-      );
-    layerState._missionPanel
-      .querySelector('[data-mission-focus]')
-      .addEventListener('click', () => {
-        const launch = layerState._launches.find(
-          (item) => item.id === layerState._selectedLaunchId,
-        );
-        if (launch) parts.selection.focusLaunchSite(launch);
-      });
-    layerState._missionPanel
-      .querySelector('[data-mission-replay]')
-      .addEventListener('click', () => {
-        if (layerState._selectedLaunchId)
-          parts.replay.startMissionReplay(layerState._selectedLaunchId);
-      });
-    layerState._missionPanel
-      .querySelector('[data-mission-replay-toggle]')
-      .addEventListener('click', () => {
-        if (layerState._replayPaused) parts.replay.resumeMissionReplay();
-        else parts.replay.pauseMissionReplay();
-      });
-    layerState._missionPanel
-      .querySelector('[data-mission-replay-cancel]')
-      .addEventListener('click', parts.replay.stopMissionReplay);
-    layerState._missionPanel
-      .querySelector('[data-mission-replay-speed]')
-      .addEventListener('input', (event) => {
-        parts.replay.setReplaySpeed(event.currentTarget.value);
-      });
-    parts.replay.syncReplaySpeedControl();
   }
+
+  /** Close the selected mission's panel when the layer is torn down. */
+  function clearMissionPanel() {
+    publishMissionView({ detail: null });
+    layerState._missionRosterPreviewOwnership = null;
+    layerState._missionRoster = null;
+  }
+
   return {
     missionHoverPreviewRange,
     createMissionRosterPreviewOwnership,
-    bindMissionRosterItemKeyboardPreview,
     captureMissionRosterFocus,
     restoreMissionRosterFocus,
     resolveMissionRosterPreviewLaunch,
-    missionTableRows,
-    setMissionPanelField,
+    publishMissionReplay,
     renderMissionPanel,
     renderMissionRoster,
-    escapeMissionText,
     updateMissionTelemetry,
     selectMissionAt,
     clearMissionRosterPreviewState,
     clearMissionRosterHover,
     scheduleMissionRosterPreview,
+    missionPanelActions,
     createMissionPanel,
+    clearMissionPanel,
   };
 }

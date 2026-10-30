@@ -1283,6 +1283,35 @@
   opacity: 0.55;
   cursor: wait;
 }
+/* Context labels are written in sentence case; this look keeps them
+   uppercase, and mission facts keep their "LABEL · value" reading. */
+.context-mode-button,
+.context-mode-standby strong,
+#global-context-panel #cockpit-entry,
+#installations-search-btn,
+.space-mission-roster-header,
+.space-mission-roster-empty,
+.space-mission-roster-focus-continuation,
+.space-mission-roster-copy strong,
+#space-mission-panel
+  :is(
+    .space-mission-view-header,
+    .space-mission-detail > strong,
+    .space-mission-detail small,
+    .mission-data-section h4,
+    .mission-data-table th,
+    .mission-table-empty,
+    .mission-replay-speed-header label,
+    .mission-focus-button,
+    .mission-replay-button,
+    .mission-nav-button,
+    [data-mission-show-all]
+  ) {
+  text-transform: uppercase;
+}
+#space-mission-panel .space-mission-detail small::after {
+  content: ' · ';
+}
 .context-mode-view[hidden],
 .context-mode-standby[hidden] {
   display: none !important;

@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createStateChannel } from '../../app/stateChannel.js';
 
 export function createState({ services }) {
   const { setOverlayEntries, setOverlaySourceVisible, clearOverlaySource } =
@@ -53,8 +54,25 @@ export function createState({ services }) {
 
   state._launches = [];
 
-  state._missionPanel = null;
+  // What the Missions roster and the selected mission's panel show, as plain
+  // data for their views. The roster revision rises with each roster refresh.
+  state._missionView = {
+    roster: { revision: 0, loaded: false, count: 0, items: [] },
+    detail: null,
+    replay: {
+      available: false,
+      active: false,
+      paused: false,
+      phase: '',
+      speed: 1,
+      speedText: '1×',
+      progress: '20%',
+    },
+  };
 
+  state._missionChannel = createStateChannel(() => state._missionView);
+
+  // The roster element, kept for focus continuity across roster refreshes.
   state._missionRoster = null;
 
   state._missionRosterHoverTimer = null;

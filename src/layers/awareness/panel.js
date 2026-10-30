@@ -51,94 +51,109 @@ export function createPanel({ state: layerState, services, parts, source }) {
     layerState.panelOwned = !existing;
     if (!existing) {
       panel.id = 'military-awareness-panel';
+      document.body.appendChild(panel);
     }
-    layerState.panelClickListener = (event) => {
-      const action = event.target.closest('button[data-awareness-action]');
-      if (action) {
-        event.preventDefault();
-        if (action.dataset.awarenessAction === 'previous')
-          parts.history.navigateHistory(-1, { origin: 'user' });
-        if (action.dataset.awarenessAction === 'next')
-          parts.history.navigateHistory(1, { origin: 'user' });
-        if (action.dataset.awarenessAction === 'focus')
-          parts.focus.focusCurrentSubject({ origin: 'user' });
-        return;
-      }
-      const target = event.target.closest(
-        'button[data-awareness-layer][data-awareness-id]',
-      );
-      if (!target) return;
-      event.preventDefault();
-      parts.focus.requestFocus(
-        target.dataset.awarenessLayer,
-        target.dataset.awarenessId,
-        false,
-        { origin: 'user' },
-      );
-    };
-    panel.addEventListener('click', layerState.panelClickListener);
-    if (!existing) document.body.appendChild(panel);
     layerState.panel = panel;
     return panel;
   }
 
+  /**
+   * Publish what the panel shows. An unchanged view publishes nothing, so a
+   * live refresh that changes no text leaves the panel and its open Named
+   * areas alone; a changed one takes a new revision. Views paint
+   * synchronously, so focus is captured before and restored after.
+   */
+  function publishPanelView(view) {
+    const signature = JSON.stringify(view);
+    if (layerState.panelSignature === signature) return;
+    layerState.panelSignature = signature;
+    const focusSnapshot = captureAwarenessPanelFocus(layerState.panel);
+    layerState.panelView = {
+      ...view,
+      revision: layerState.panelView.revision + 1,
+    };
+    layerState.panelChannel.publish();
+    restoreAwarenessPanelFocus(layerState.panel, focusSnapshot);
+  }
+
   function hidePanel() {
     if (layerState.panel) {
-      const markup = `<div class="military-awareness-standby">
-      <strong>${layerState.enabled ? t('CONTEXT READY') : t('GLOBAL CONTEXT OFF')}</strong>
-      <span>${layerState.enabled ? t('SELECT A FLIGHT, VESSEL, OR MAPPED INSTALLATION') : t('ENABLE TO LOAD OBSERVED / MAPPED PROXIMITY')}</span>
-    </div>`;
       layerState.panel.hidden = false;
-      if (layerState.panelMarkup !== markup) {
-        layerState.panel.innerHTML = markup;
-        layerState.panelMarkup = markup;
-      }
+      publishPanelView({ kind: 'standby', ready: layerState.enabled });
     }
     if (layerState.directionRoot) layerState.directionRoot.hidden = true;
   }
 
-  function rowHtml(cohort) {
+  /** Empty the panel when the layer is destroyed. */
+  function clearPanel() {
+    publishPanelView({ kind: 'empty' });
+  }
+
+  function cohortView(cohort) {
     const summary = cohort.summary;
-    const count = presentAwarenessCount(summary);
     const page = layerState.cohortPages.get(cohort.id) || 0;
-    const nearest = summary.nearest
-      .slice(page, page + AWARENESS_PAGE_SIZE)
-      .map((item) => {
-        const label = formatAwarenessLabel(item);
-        const targetId = item.icao24 || item.mmsi || item.id;
-        if (!targetId) {
-          return `<li><span class="military-awareness-target unavailable" aria-label="${t('Unavailable')}">${escapeHtml(label)} <span>${presentAwarenessDistance(item.distanceM)}</span></span></li>`;
-        }
-        const accessibleLabel = label === '—' ? t('Unavailable') : label;
-        return `<li><button type="button" class="military-awareness-target" data-awareness-layer="${escapeHtml(cohort.id)}" data-awareness-id="${escapeHtml(targetId)}" aria-label="${escapeHtml(t('Focus {label}', { label: accessibleLabel }))}">${escapeHtml(label)} <span>${presentAwarenessDistance(item.distanceM)}</span></button>${namedAreasHtml(item.memberNames)}</li>`;
-      })
-      .join('');
     const pageCount = Math.max(
       1,
       Math.ceil(summary.nearest.length / AWARENESS_PAGE_SIZE),
     );
-    const pageLabel =
-      pageCount > 1
-        ? ` · ${Math.floor(page / AWARENESS_PAGE_SIZE) + 1}/${pageCount}`
-        : '';
-    const coverage = cohort.coverage ? ` · ${escapeHtml(cohort.coverage)}` : '';
-    return `<section class="military-awareness-row ${summary.relationship.toLowerCase()}">
-    <div><strong>${escapeHtml(cohort.label)}</strong><b aria-live="polite">${count}${pageLabel}</b></div>
-    <small>${escapeHtml(cohort.source)}${coverage} · ${escapeHtml(presentAwarenessReason(summary))}</small>
-    ${nearest ? `<ul>${nearest}</ul>` : ''}
-  </section>`;
+    return {
+      id: cohort.id,
+      label: cohort.label,
+      relationship: summary.relationship.toLowerCase(),
+      count: presentAwarenessCount(summary),
+      page:
+        pageCount > 1
+          ? `${Math.floor(page / AWARENESS_PAGE_SIZE) + 1}/${pageCount}`
+          : '',
+      source: cohort.source,
+      coverage: cohort.coverage || '',
+      reason: presentAwarenessReason(summary),
+      targets: summary.nearest
+        .slice(page, page + AWARENESS_PAGE_SIZE)
+        .map((item, index) => {
+          const label = formatAwarenessLabel(item);
+          const id = item.icao24 || item.mmsi || item.id;
+          const distance = presentAwarenessDistance(item.distanceM);
+          if (!id) return { key: `unavailable:${index}`, label, distance };
+          return {
+            key: `${cohort.id}:${id}`,
+            layer: cohort.id,
+            id: String(id),
+            label,
+            distance,
+            focusLabel: t('Focus {label}', {
+              label: label === '—' ? t('Unavailable') : label,
+            }),
+            names: item.memberNames || [],
+          };
+        }),
+    };
   }
 
-  function navigationControlsHtml() {
-    const canPrevious = layerState.navigationIndex > 0;
-    return `<div class="military-awareness-controls" role="group" aria-label="${t('Global Context navigation')}">
-    <button type="button" data-awareness-action="previous" title="${t('Previous — prior visited contact in the 250 km window')}"${canPrevious ? '' : ' disabled'}>${t('PREVIOUS')}</button>
-    <button type="button" data-awareness-action="focus">${t('FOCUS')}</button>
-    <button type="button" data-awareness-action="next" title="${t('Next — nearest unvisited contact in the 250 km window')}"${parts.navigation.canNavigateNext() ? '' : ' disabled'}>${t('NEXT')}</button>
-  </div>`;
+  function renderResults() {
+    if (!layerState.enabled || !layerState.results) return hidePanel();
+    const panel = ensurePanel();
+    const { subject, cohorts } = layerState.results;
+    const subjectCohort = cohorts.find(
+      (cohort) => cohort.id === subject.layerId,
+    );
+    panel.hidden = false;
+    publishPanelView({
+      kind: 'results',
+      subject: subject.label,
+      // Where the selected contact comes from: its cohort and that feed.
+      subjectSource: subjectCohort
+        ? `${subjectCohort.label} · ${subjectCohort.source}`
+        : '',
+      window: presentAwarenessDistance(AWARENESS_RADIUS_M),
+      names: subject.memberNames || [],
+      canPrevious: layerState.navigationIndex > 0,
+      canNext: parts.navigation.canNavigateNext(),
+      cohorts: cohorts.map(cohortView),
+    });
   }
 
-  /** Stable identity for a delegated Contacts-panel button across live repaints. */
+  /** Stable identity for a Contacts-panel button across live repaints. */
 
   function awarenessPanelControlKey(element) {
     const control = element?.closest?.(
@@ -186,44 +201,6 @@ export function createPanel({ state: layerState, services, parts, source }) {
     const target = retained || continuation;
     target?.focus?.({ preventScroll: true });
     return target || null;
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(
-      /[&<>'"]/g,
-      (char) =>
-        ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          "'": '&#39;',
-          '"': '&quot;',
-        })[char],
-    );
-  }
-
-  function namedAreasHtml(names) {
-    return names?.length
-      ? `<details class="military-awareness-names"><summary>${escapeHtml(t('Named areas ({n})', { n: formatNumber(names.length) }))}</summary><div>${names.map((name) => escapeHtml(name)).join('<br>')}</div></details>`
-      : '';
-  }
-
-  function renderResults() {
-    if (!layerState.enabled || !layerState.results) return hidePanel();
-    const panel = ensurePanel();
-    const { subject, cohorts } = layerState.results;
-    const markup = `<div class="military-awareness-subject">${escapeHtml(subject.label)} · ${escapeHtml(t('{distance} FLIGHT / VESSEL WINDOW', { distance: presentAwarenessDistance(AWARENESS_RADIUS_M) }))}</div>
-    ${namedAreasHtml(subject.memberNames)}
-    ${navigationControlsHtml()}
-    ${cohorts.map(rowHtml).join('')}
-    <p class="military-awareness-note" tabindex="-1" data-awareness-focus-continuation>${t('Open-source mapped/observed context. Missing broadcasts, unloaded map areas, or unmapped sites are not evidence of absence.')}</p>`;
-    panel.hidden = false;
-    if (layerState.panelMarkup !== markup) {
-      const focusSnapshot = captureAwarenessPanelFocus(panel);
-      panel.innerHTML = markup;
-      layerState.panelMarkup = markup;
-      restoreAwarenessPanelFocus(panel, focusSnapshot);
-    }
   }
 
   function rotateAwarenessPages() {
@@ -279,12 +256,10 @@ export function createPanel({ state: layerState, services, parts, source }) {
   return {
     ensurePanel,
     hidePanel,
-    rowHtml,
-    navigationControlsHtml,
+    clearPanel,
     awarenessPanelControlKey,
     captureAwarenessPanelFocus,
     restoreAwarenessPanelFocus,
-    escapeHtml,
     renderResults,
     rotateAwarenessPages,
     startAwarenessPageRotation,

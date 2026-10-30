@@ -3,7 +3,6 @@ import { readRealtimeSource } from './testSupport/readRealtimeSource.mjs';
 import { GEV_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
 import { realtimeInstructions } from '../server/providers/openai/instructions.js';
 import { readShellSource } from './testSupport/readShellSource.mjs';
-import { readLayerSource } from './testSupport/readLayerSource.mjs';
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
 import { readFileSync as readRadioSource } from 'node:fs';
 const radioBindings = readRadioSource(new URL('./ui/radioBindings.js', import.meta.url), 'utf8');
@@ -22,7 +21,7 @@ const ui = readShellSource();
 const radio = ['playback', 'interaction'].map(name =>
   readFileSync(new URL(`./layers/radio/${name}.js`, import.meta.url), 'utf8')
 ).join('\n').replace(/layerState\.|parts\.\w+\./g, '');
-const rocketLaunches = readLayerSource(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
+const missionDetail = readFileSync(new URL('./ui/contextViews/MissionDetailView.vue', import.meta.url), 'utf8');
 const realtime = readRealtimeSource();
 const voice = ['./voice/actionSchemas.js', '../server/providers/openai/toolDescriptions.js', '../server/providers/openai/instructions.js'].map(file => readFileSync(new URL(file, import.meta.url), 'utf8')).join('\n');
 const css = readStylesheet(new URL('../style.css', import.meta.url));
@@ -259,10 +258,10 @@ test('Radio volume and mission speed share the Sharpen slider visual language', 
     );
   }
   assert.match(
-    rocketLaunches,
-    /id="space-mission-replay-speed" class="gev-quantitative-slider" type="range" min="0\.25" max="4" step="0\.25" value="1"/,
+    missionDetail,
+    /id="space-mission-replay-speed"\s+class="gev-quantitative-slider"\s+type="range"\s+min="0\.25"\s+max="4"\s+step="0\.25"\s+:value="replay\.speed"/,
   );
-  assert.match(rocketLaunches, /class="gev-slider-value"[^>]*data-mission-replay-speed-output/);
+  assert.match(missionDetail, /class="gev-slider-value"[^>]*data-mission-replay-speed-output/);
   assert.match(css, /\.gev-quantitative-slider\s*\{[\s\S]*?min-width: 0;[\s\S]*?height: 18px;/);
   assert.match(css, /\.gev-quantitative-slider::-webkit-slider-runnable-track\s*\{[\s\S]*?height: 3px;[\s\S]*?background: rgba\(255, 255, 255, 0\.08\);/);
   assert.match(css, /\.gev-quantitative-slider::-webkit-slider-thumb\s*\{[\s\S]*?width: 10px;[\s\S]*?height: 10px;[\s\S]*?border-radius: 50%;[\s\S]*?background: var\(--accent\);/);

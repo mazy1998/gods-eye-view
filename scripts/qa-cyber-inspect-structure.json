@@ -1,0 +1,56 @@
+[
+  {
+    "id": "mode-labels",
+    "reason": "The Context modes are labelled Contacts and Missions in every appearance. Cyber keeps them uppercase in its own type; ids, roles and the keyboard model are unchanged.",
+    "expected": {
+      "previousLabels": ["CONTACTS", "SPACE MISSIONS"],
+      "labels": ["Contacts", "Missions"]
+    }
+  },
+  {
+    "id": "contact-order",
+    "reason": "The selected contact follows the list: caption, navigation, cohorts, the explanatory note, the selected contact, then its actions. Reading and Tab order follow that visual order in every appearance.",
+    "expected": {
+      "order": [
+        "military-awareness-subject",
+        "military-awareness-controls",
+        "military-awareness-row",
+        "military-awareness-note",
+        "military-awareness-selected",
+        "global-context-actions"
+      ]
+    }
+  },
+  {
+    "id": "selected-contact",
+    "reason": "A new heading names the selected contact with its cohort and feed, from data the panel already has. Cyber shows it in the panel's own type, set off like a cohort row.",
+    "expected": { "heading": "subject label", "detail": "cohort · source" }
+  },
+  {
+    "id": "caption",
+    "reason": "The caption names the real centre and scope. The centre, radii and Next behaviour are unchanged.",
+    "expected": {
+      "previousLabel": "{subject} · {distance} FLIGHT / VESSEL WINDOW",
+      "label": "Near {subject} · {distance}"
+    }
+  },
+  {
+    "id": "action-labels",
+    "reason": "Cockpit entry reads Enter cockpit and the site search reads Search nearby sites in every appearance. Cyber keeps them uppercase in its compact action row, in the same order.",
+    "expected": {
+      "previousLabels": ["COCKPIT", "SEARCH NEARBY SITES"],
+      "labels": ["Enter cockpit", "Search nearby sites"],
+      "order": ["cockpit-entry", "installations-search-btn", "tr3b-toggle"]
+    }
+  },
+  {
+    "id": "tr3b-label",
+    "reason": "TR-3B reclassification shows a visible Reclassify as TR-3B label in the drawer outside Cyber. Cyber, Cockpit's rail and the phone sheets keep the compact glyph button; its accessible name, title and pressed state are unchanged.",
+    "expected": { "label": "Reclassify as TR-3B", "visibleInCyber": false }
+  },
+  {
+    "id": "sentence-case",
+    "reason": "Standby, navigation, roster and mission labels are written in sentence case, and mission names keep their source case. Cyber keeps all of them uppercase in its own type, and mission facts keep their LABEL · value reading.",
+    "expected": { "cyberTextTransform": "uppercase", "factSeparator": " · " }
+  }
+]

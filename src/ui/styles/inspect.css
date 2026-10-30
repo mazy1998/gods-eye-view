@@ -1,0 +1,1210 @@
+/* Inspect: Contacts and Space missions in the drawer.
+
+   The few rules shared by every theme only lay out elements that have no
+   legacy styling: the selected contact's heading, the row glyphs, the TR-3B
+   label and the Search nearby sites glyph. Outside the drawer the glyphs and
+   label stay out of view, so Cyber, Cockpit's rail and the phone sheets keep
+   their compact controls.
+   Everything else applies inside the drawer, outside Cyber, where the drawer
+   supplies the surface. */
+.military-awareness-selected h3 {
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.military-awareness-selected p {
+  margin: 2px 0 0;
+}
+#military-awareness-panel .military-awareness-glyph {
+  display: none;
+}
+.tr3b-toggle-label,
+#installations-search-btn > .material-symbols-outlined {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The drawer's own surface replaces the panel frame. The compact Radio
+   control and the collapse control keep a slim row of their own above the
+   tabs, so reading and Tab order still follow the page. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel:not(.collapsed)
+  > .global-context-panel-inner {
+  padding: 0 4px 8px;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: transparent;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  > .panel-glow {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel:not(.collapsed)
+  > .global-context-panel-inner
+  > .panel-header {
+  justify-content: flex-end;
+  height: 32px;
+  margin: 0 0 4px;
+  padding: 0;
+  gap: 8px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel:not(.collapsed)
+  > .global-context-panel-inner
+  > .panel-header
+  > :is(.panel-title, .panel-divider) {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .panel-header
+  :is(.panel-collapse-btn, .context-radio-toggle) {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text-muted);
+  box-shadow: none;
+  font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .panel-header
+  :is(.panel-collapse-btn, .context-radio-toggle):hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .panel-header
+  .context-radio-toggle.active {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .panel-header
+  :is(.panel-collapse-btn, .context-radio-toggle):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 1px;
+}
+
+/* Contacts and Missions read as tabs. They keep their own keyboard model:
+   both stay in the Tab sequence, as before. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .global-context-modes {
+  display: flex;
+  gap: 4px;
+  min-height: 44px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--gev-text-muted);
+  box-shadow: none;
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-button
+  .material-symbols-outlined {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-button:hover {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-button:is(.active, [aria-selected='true']) {
+  background: transparent;
+  color: var(--gev-accent-text);
+  box-shadow: inset 0 -2px 0 var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-standby {
+  min-height: 0;
+  place-content: start;
+  gap: 4px;
+  padding: 8px 8px 12px;
+  border: 0;
+  border-radius: 0;
+  color: var(--gev-text-muted);
+  text-align: start;
+  font: var(--gev-font-size-md) / 1.5 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .context-mode-standby
+  strong {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+
+/* Contacts: the caption names the real centre and scope, cohorts read as
+   groups of rows, and the selected contact closes the list. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #military-awareness-panel {
+  padding: 0;
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.45 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-standby {
+  gap: 4px;
+  padding: 8px;
+  border-top: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-standby
+  strong {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-standby
+  span {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.5 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-subject {
+  margin: 0 0 10px;
+  padding: 0 8px;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-names {
+  margin: 4px 8px 8px;
+  color: var(--gev-text-muted);
+  font-size: var(--gev-font-size-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-controls {
+  gap: 8px;
+  margin: 0 8px 12px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-controls
+  button {
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text);
+  font: 500 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-controls
+  button:hover:not(:disabled) {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-controls
+  button:disabled {
+  border-color: var(--gev-border-subtle);
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(
+    .military-awareness-controls button,
+    .military-awareness-target
+  ):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row {
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  > div {
+  align-items: baseline;
+  padding: 0 8px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  strong {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  b {
+  color: var(--gev-text-muted);
+  font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(.military-awareness-row small, .military-awareness-note) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.45 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  small {
+  display: block;
+  padding: 2px 8px 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  ul {
+  margin: 6px 0 0;
+}
+/* A row is one contact: glyph, name, distance and a chevron. The glyph is
+   drawn beside the button, over its leading inset. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-row
+  li {
+  position: relative;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-glyph {
+  display: block;
+  position: absolute;
+  /* The middle of the button's first line, above any Named areas list. */
+  top: 22px;
+  inset-inline-start: 8px;
+  transform: translateY(-50%);
+  color: var(--gev-text-muted);
+  font-size: 20px;
+  pointer-events: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-target {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 8px 6px 38px;
+  border-radius: var(--gev-radius-sm);
+  color: var(--gev-text);
+  text-shadow: none;
+  box-shadow: none;
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(
+    .military-awareness-target:not(.unavailable),
+    #installations-search-btn
+  )::after {
+  content: '›';
+  color: var(--gev-text-muted);
+  font: 20px / 1 var(--gev-font-sans);
+  text-align: center;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-target
+  span {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  text-align: end;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-target.unavailable {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-target:not(.unavailable):hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+  text-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-note {
+  margin: 10px 8px 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-selected {
+  margin: 14px 0 0;
+  padding: 14px 8px 0;
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-selected
+  h3 {
+  color: var(--gev-text);
+  font: 600 22px / 1.25 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .military-awareness-selected
+  p {
+  margin-top: 4px;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+}
+
+/* The selected contact's actions: Cockpit first and primary, then the site
+   search as a row, then the optional TR-3B reclassification. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .global-context-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 8px 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #cockpit-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--gev-accent);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-accent);
+  color: var(--gev-on-accent);
+  box-shadow: none;
+  font: 600 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(#cockpit-entry, .tr3b-toggle)[hidden] {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #cockpit-entry:hover {
+  border-color: var(--gev-accent-text);
+  background: var(--gev-accent-text);
+  color: var(--gev-on-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #cockpit-entry
+  .material-symbols-outlined {
+  color: inherit;
+  font-size: 20px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(#cockpit-entry, #installations-search-btn, .tr3b-toggle):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #installations-search-btn {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text);
+  text-align: start;
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(
+    #installations-search-btn > .material-symbols-outlined,
+    .tr3b-toggle-label
+  ) {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #installations-search-btn
+  > .material-symbols-outlined {
+  color: var(--gev-text-muted);
+  font-size: 20px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #installations-search-btn:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #installations-search-btn[aria-busy='true'] {
+  color: var(--gev-text-muted);
+  cursor: progress;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .tr3b-toggle {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text);
+  filter: none;
+  text-align: start;
+  font: 500 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .tr3b-toggle:hover {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg-hover);
+  filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .tr3b-toggle[aria-pressed='true'] {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .tr3b-toggle-glyph {
+  justify-self: center;
+  font-size: 16px;
+  filter: grayscale(0.6) opacity(0.7);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .tr3b-toggle[aria-pressed='true']
+  .tr3b-toggle-glyph {
+  filter: none;
+}
+
+/* Space missions: the roster as rows, the selected mission as a card with
+   its facts in tiles, then its tables and controls. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster {
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-header {
+  align-items: start;
+  padding: 0 8px 8px;
+  border: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-header
+  strong {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(
+    .space-mission-roster-header span,
+    .space-mission-roster-header output,
+    .space-mission-roster-empty,
+    .space-mission-roster-focus-continuation
+  ) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.45 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(.space-mission-roster-empty, .space-mission-roster-focus-continuation) {
+  padding: 8px;
+  border: 0;
+  text-align: start;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-list {
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-item {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px;
+  border: 0;
+  border-bottom: 1px solid var(--gev-border-subtle);
+  border-radius: 0;
+  background: transparent;
+  color: var(--gev-text);
+  box-shadow: none;
+  text-align: start;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-item::before {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-item:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-item:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-marker {
+  justify-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-copy
+  strong {
+  color: var(--gev-text);
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-copy
+  small {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  .space-mission-roster-chevron {
+  color: var(--gev-text-muted);
+  font: 20px / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel {
+  margin: 0;
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.45 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-view-header {
+  align-items: center;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-view-header
+  button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text-muted);
+  font: 20px / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-view-header
+  button:hover {
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px 8px 0;
+  border: 0;
+  background: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  > :is(strong, [data-mission-provider]) {
+  grid-column: 1 / -1;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  > strong {
+  color: var(--gev-text);
+  font: 600 22px / 1.25 var(--gev-font-sans);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  > [data-mission-provider] {
+  margin-top: -4px;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-lg) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  > span:not([data-mission-provider]) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.35 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  > span[hidden] {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  b {
+  color: var(--gev-text);
+  font: 500 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  overflow-wrap: anywhere;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-section {
+  margin: 16px 8px 0;
+  padding: 0;
+  border: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-section
+  h4 {
+  margin: 0 0 6px;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-table {
+  color: var(--gev-text);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-table
+  :is(th, td) {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--gev-border-subtle);
+  background: transparent;
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-table
+  th {
+  color: var(--gev-text-muted);
+  font: 500 var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-data-table
+  td {
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  :is(.mission-data-table small, .mission-table-empty) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-speed-control {
+  margin: 16px 8px 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-speed-header
+  label {
+  color: var(--gev-text);
+  font: 500 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-speed-header
+  output {
+  color: var(--gev-accent-text);
+  font: 600 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-speed-scale {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 8px 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  :is(
+    .mission-focus-button,
+    .mission-replay-button,
+    .mission-nav-button,
+    [data-mission-show-all]
+  ) {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text);
+  box-shadow: none;
+  text-shadow: none;
+  font: 600 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-button {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent);
+  color: var(--gev-on-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  :is(
+    .mission-focus-button,
+    .mission-nav-button,
+    [data-mission-show-all]
+  ):hover:not(:disabled) {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-button:hover:not(:disabled) {
+  border-color: var(--gev-accent-text);
+  background: var(--gev-accent-text);
+  color: var(--gev-on-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  :is(.mission-replay-button, .mission-nav-button):disabled {
+  border-color: var(--gev-border-subtle);
+  background: transparent;
+  color: var(--gev-text-muted);
+}
+/* Pause/resume and cancel take Replay ascent's place in the row, on the
+   drawer's surface rather than the old dark panel. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-transport {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-transport
+  button {
+  min-height: 40px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  background: transparent;
+  color: var(--gev-text);
+  box-shadow: none;
+  font: 600 var(--gev-font-size-md) / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-transport
+  button:hover:not(:disabled) {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-replay-transport
+  button:disabled {
+  border-color: var(--gev-border-subtle);
+  color: var(--gev-text-muted);
+  opacity: 1;
+}
+/* The shared slider tokenises its track only inside a .gev-surface, which the
+   drawer's legacy host is not. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-replay-speed]::-webkit-slider-runnable-track {
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-replay-speed]::-moz-range-track,
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-replay-speed]::-moz-range-progress {
+  background: var(--gev-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-replay-speed]::-webkit-slider-thumb {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-replay-speed]::-moz-range-thumb {
+  background: var(--gev-accent);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  :is(button, input):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 12px 8px 0;
+  padding: 0;
+  border: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .mission-nav-index {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  [data-mission-show-all] {
+  width: calc(100% - 16px);
+  margin: 8px 8px 0;
+  border-color: transparent;
+  color: var(--gev-accent-text);
+}
+
+/* Sentence case, as written. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  :is(
+    .context-mode-button,
+    .context-mode-standby strong,
+    .military-awareness-standby,
+    .military-awareness-controls button,
+    #cockpit-entry,
+    #installations-search-btn,
+    .space-mission-roster-header,
+    .space-mission-roster-empty,
+    .space-mission-roster-focus-continuation,
+    .space-mission-roster-copy strong,
+    #space-mission-panel .space-mission-view-header,
+    #space-mission-panel .space-mission-detail > strong,
+    #space-mission-panel .space-mission-detail small,
+    #space-mission-panel .mission-data-section h4,
+    #space-mission-panel .mission-data-table th,
+    #space-mission-panel .mission-table-empty,
+    #space-mission-panel .mission-replay-speed-header label,
+    #space-mission-panel .mission-focus-button,
+    #space-mission-panel .mission-replay-button,
+    #space-mission-panel .mission-nav-button,
+    #space-mission-panel [data-mission-show-all]
+  ) {
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-legacy-host
+  > #global-context-panel
+  #space-mission-panel
+  .space-mission-detail
+  small::after {
+  content: none;
+}

@@ -94,6 +94,41 @@ test('stopping during installations enable prevents the delayed search', async (
   );
 });
 
+test('the controls, not the button, reject a second nearby-sites search', async (t) => {
+  const button = new Button();
+  const { controls } = fixture(t, { _installationsSearchBtn: button });
+  let enables = 0;
+  let release;
+  controls._dataManager = {
+    layers: new Map([['military-installations', {}]]),
+    setEnabled: () => {
+      enables++;
+      return new Promise((resolve) => {
+        release = resolve;
+      });
+    },
+    isEnabled: () => true,
+  };
+  controls.installations.searchNearby = async () => true;
+  controls.installations.getStats = () => ({});
+  button.dispatchEvent(new Event('click'));
+  assert.equal(controls.nearbySitesBusy, true);
+  assert.equal(button.getAttribute('aria-busy'), 'true');
+  assert.equal(button.getAttribute('aria-disabled'), 'true');
+  // Whatever happens to the painted attribute, the search in flight wins.
+  button.setAttribute('aria-busy', 'false');
+  button.dispatchEvent(new Event('click'));
+  assert.equal(enables, 1);
+  release(true);
+  await turn();
+  await turn();
+  assert.equal(controls.nearbySitesBusy, false);
+  assert.equal(button.getAttribute('aria-busy'), 'false');
+  assert.equal(button.getAttribute('aria-disabled'), 'false');
+  button.dispatchEvent(new Event('click'));
+  assert.equal(enables, 2, 'a settled search allows the next one');
+});
+
 test('a late installations search cannot publish a notice after disposal', async (t) => {
   const button = new Button();
   const { controls, calls } = fixture(t, { _installationsSearchBtn: button });

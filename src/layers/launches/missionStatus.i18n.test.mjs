@@ -13,20 +13,9 @@ import { createPanel } from './panel.js';
 const NOW = new Date('2026-07-27T00:00:00Z');
 
 function shownStatus(status) {
-  const outputs = new Map();
   const state = {
-    _missionPanel: {
-      querySelector(selector) {
-        if (!outputs.has(selector))
-          outputs.set(selector, {
-            textContent: '',
-            closest: () => null,
-            removeAttribute() {},
-          });
-        return outputs.get(selector);
-      },
-      closest: () => null,
-    },
+    _missionView: {},
+    _missionChannel: { publish() {} },
     _selectedLaunchId: 'mission-1',
     _launches: [
       {
@@ -44,10 +33,10 @@ function shownStatus(status) {
     parts: {
       overlays: { shortMissionLabel: (name) => name },
       policyHelpers: { missionPathPresentation: () => ({}) },
-      replay: { syncReplayButton() {} },
+      replay: { replayControls: () => ({}) },
     },
   }).renderMissionPanel();
-  return outputs.get('[data-mission-status]').textContent;
+  return state._missionView.detail.status;
 }
 
 test('a launch without a status keeps the English fallback in its record', () => {

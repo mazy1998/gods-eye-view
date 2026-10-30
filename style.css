@@ -47,6 +47,7 @@
 @import './src/ui/styles/camera-views.css';
 @import './src/ui/styles/feedback-views.css';
 @import './src/ui/styles/stories.css';
+@import './src/ui/styles/inspect.css';
 
 @import './src/ui/styles/directions.css';
 @import './src/ui/styles/cyber.css';

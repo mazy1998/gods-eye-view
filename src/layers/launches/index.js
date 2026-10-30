@@ -69,8 +69,6 @@ export function createRocketLaunchesLayer({ services, source }) {
       missionHoverPreviewRange: parts.panel.missionHoverPreviewRange,
       createMissionRosterPreviewOwnership:
         parts.panel.createMissionRosterPreviewOwnership,
-      bindMissionRosterItemKeyboardPreview:
-        parts.panel.bindMissionRosterItemKeyboardPreview,
       captureMissionRosterFocus: parts.panel.captureMissionRosterFocus,
       restoreMissionRosterFocus: parts.panel.restoreMissionRosterFocus,
       resolveMissionRosterPreviewLaunch:

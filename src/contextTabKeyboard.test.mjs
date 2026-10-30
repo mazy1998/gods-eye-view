@@ -4,6 +4,7 @@ import { _selectContextMode } from './ui/contextTransactions.js';
 import { _syncContextModeButtons } from './ui/contextPresentation.js';
 import { _initGlobalContextPanel } from './ui/contextBindings.js';
 import { clearSelectedLayers } from './ui/contextActions.js';
+import { ContextControls } from './ui/contextControls.js';
 import { readFileSync as readRadioSource } from 'node:fs';
 const radioBindings = readRadioSource(new URL('./ui/radioBindings.js', import.meta.url), 'utf8');
 const radioPresentation = readRadioSource(new URL('./ui/radioPresentation.js', import.meta.url), 'utf8');
@@ -133,8 +134,11 @@ test('Context async action buttons remain focused while busy', () => {
   const radioSync = radioPresentation;
   const clear = clearSelectedLayers.toString();
 
-  assert.match(init, /button\.getAttribute\('aria-busy'\) === 'true'/);
-  assert.doesNotMatch(init, /button\.disabled\s*=\s*true/);
+  assert.match(init, /if \(this\.nearbySitesBusy\) return;/);
+  assert.doesNotMatch(init, /\.disabled\s*=\s*true/);
+  const nearbySitesBusy = ContextControls.prototype._setNearbySitesBusy.toString();
+  assert.match(nearbySitesBusy, /setAttribute\('aria-busy', String\(busy\)\)/);
+  assert.doesNotMatch(nearbySitesBusy, /\.disabled\s*=/);
   assert.match(radio, /trigger\.getAttribute\('aria-busy'\) === 'true'/);
   assert.doesNotMatch(radio, /trigger\.disabled\s*=\s*true/);
   // Detailed Vue button coverage lives in radioPresentationTransition.test.mjs.

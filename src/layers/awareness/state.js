@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createStateChannel } from '../../app/stateChannel.js';
 
 export function createState({ services }) {
   const state = {};
@@ -37,7 +38,6 @@ export function createState({ services }) {
     subjectClearListener: null,
     runtimeListenersAttached: false,
     preRenderRemover: null,
-    panelClickListener: null,
     directionRoot: null,
     compassRing: null,
     compassLabels: [],
@@ -57,7 +57,10 @@ export function createState({ services }) {
     cameraMoving: false,
     lastEvaluatedPosition: null,
     sourceRevision: '',
-    panelMarkup: '',
+    // What the Contacts panel shows, as plain data for its view. A new
+    // revision means the content changed; open Named areas close with it.
+    panelView: { kind: 'initial', revision: 0 },
+    panelSignature: '',
     directionFrame: null,
     lastDirectionUpdateMs: 0,
     activationId: 0,
@@ -66,5 +69,6 @@ export function createState({ services }) {
     pageTimer: null,
     cohortPages: new Map(),
   });
+  state.panelChannel = createStateChannel(() => state.panelView);
   return state;
 }

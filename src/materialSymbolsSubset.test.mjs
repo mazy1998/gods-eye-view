@@ -15,13 +15,16 @@ const SPAN_TEXT =
 /** A whole `textContent =` statement, across lines, so a multi-line ternary is read once. */
 const TEXT_ASSIGNMENT = /(?:textContent|innerText)\s*=\s*([^;]{0,400})/gs;
 const STRING_LITERAL = /['"`]([a-z0-9_]{2,})['"`]/g;
+/** A glyph drawn by a stylesheet: `content: 'chevron_right'` on an icon-font pseudo-element. */
+const CSS_CONTENT = /content:\s*['"]([a-z0-9_]{2,})['"]/g;
 
 /**
  * Files that SHIP markup. Tests assert on markup, they do not render it.
  *
  * The panel markup lives in `src/ui/templates/*.html`, so HTML under `src` is
  * read as well: a glyph named only in a template is still a glyph the font has
- * to carry.
+ * to carry. So are views' templates and stylesheets that draw a glyph with
+ * `content`.
  */
 function sourceFiles(directory = SRC_ROOT) {
   const files = [];
@@ -30,7 +33,7 @@ function sourceFiles(directory = SRC_ROOT) {
     if (entry.isDirectory()) files.push(...sourceFiles(absolute));
     else if (
       entry.isFile() &&
-      /\.(js|mjs|html|vue)$/.test(entry.name) &&
+      /\.(js|mjs|html|vue|css)$/.test(entry.name) &&
       !entry.name.endsWith('.test.mjs')
     ) {
       files.push(absolute);
@@ -150,6 +153,8 @@ function referencedGlyphs() {
     if (file.endsWith('.vue'))
       for (const glyph of vueGlyphs(source)) add(glyph);
     for (const match of source.matchAll(SPAN_TEXT)) add(match[1]);
+    if (file.endsWith('.css'))
+      for (const match of source.matchAll(CSS_CONTENT)) add(match[1]);
     for (const match of source.matchAll(TEXT_ASSIGNMENT)) {
       const statement = match[1].replaceAll('?.', '.');
       const assigned = statement.includes('?')
