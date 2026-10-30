@@ -44,6 +44,154 @@ function presentAwarenessReason(summary = {}) {
 }
 
 export function createPanel({ state: layerState, services, parts, source }) {
+  let externalViews = 0;
+  let nativePanel = null;
+  let nativeListener = null;
+  const clearNativePanel = () => {
+    if (!nativePanel) return;
+    nativePanel.removeEventListener('click', nativeListener);
+    nativePanel.replaceChildren();
+    nativePanel = nativeListener = null;
+  };
+  const paintNativePanel = () => {
+    if (externalViews || !layerState.panel) return;
+    const panel = layerState.panel;
+    const view = layerState.panelView;
+    if (view.kind === 'empty') {
+      clearNativePanel();
+      return;
+    }
+    if (!nativePanel) {
+      nativePanel = panel;
+      nativeListener = (event) => {
+        const button = event.target.closest('button');
+        if (!button || button.disabled || !panel.contains(button)) return;
+        const action = button.dataset.awarenessAction;
+        event.preventDefault();
+        if (action === 'previous')
+          parts.history.navigateHistory(-1, { origin: 'user' });
+        if (action === 'next')
+          parts.history.navigateHistory(1, { origin: 'user' });
+        if (action === 'focus')
+          parts.focus.focusCurrentSubject({ origin: 'user' });
+        if (button.dataset.awarenessLayer)
+          parts.focus.requestFocus(
+            button.dataset.awarenessLayer,
+            button.dataset.awarenessId,
+            false,
+            { origin: 'user' },
+          );
+      };
+      panel.addEventListener('click', nativeListener);
+    }
+    const doc = panel.ownerDocument;
+    const make = (tag, text, parent = panel, className = '') => {
+      const element = doc.createElement(tag);
+      element.textContent = text;
+      element.className = className;
+      parent.append(element);
+      return element;
+    };
+    panel.replaceChildren();
+    if (view.kind !== 'results') {
+      const standby = make('div', '', panel, 'military-awareness-standby');
+      make('strong', view.ready ? t('Ready') : t('Contacts are off'), standby);
+      make(
+        'span',
+        view.ready
+          ? t('Select a flight, vessel or mapped installation')
+          : t('Turn on to load observed and mapped contacts nearby'),
+        standby,
+      );
+      return;
+    }
+    make(
+      'div',
+      t('Near {subject} · {distance}', {
+        subject: view.subject,
+        distance: view.window,
+      }),
+      panel,
+      'military-awareness-subject',
+    );
+    const controls = make('div', '', panel, 'military-awareness-controls');
+    controls.setAttribute('role', 'group');
+    controls.setAttribute('aria-label', t('Global Context navigation'));
+    for (const [action, label, disabled] of [
+      ['previous', t('Previous'), !view.canPrevious],
+      ['focus', t('Focus'), false],
+      ['next', t('Next'), !view.canNext],
+    ]) {
+      const button = make('button', label, controls);
+      button.type = 'button';
+      button.dataset.awarenessAction = action;
+      button.disabled = disabled;
+    }
+    for (const cohort of view.cohorts) {
+      const row = make(
+        'section',
+        '',
+        panel,
+        `military-awareness-row ${cohort.relationship}`,
+      );
+      const heading = make('div', '', row);
+      make('strong', cohort.label, heading);
+      make(
+        'b',
+        `${cohort.count}${cohort.page ? ' · ' + cohort.page : ''}`,
+        heading,
+      );
+      make(
+        'small',
+        [cohort.source, cohort.coverage, cohort.reason]
+          .filter(Boolean)
+          .join(' · '),
+        row,
+      );
+      const list = make('ul', '', row);
+      for (const target of cohort.targets) {
+        const item = make('li', '', list);
+        const button = make(
+          target.id ? 'button' : 'span',
+          target.label,
+          item,
+          'military-awareness-target',
+        );
+        if (target.id) {
+          button.type = 'button';
+          button.dataset.awarenessLayer = target.layer;
+          button.dataset.awarenessId = target.id;
+          button.setAttribute('aria-label', target.focusLabel);
+        }
+        make('span', target.distance, button);
+        if (target.names?.length) {
+          const names = make('details', '', item, 'military-awareness-names');
+          make(
+            'summary',
+            t('Named areas ({n})', { n: formatNumber(target.names.length) }),
+            names,
+          );
+          for (const name of target.names) make('div', name, names);
+        }
+      }
+    }
+    const continuation = make('span', '', panel);
+    continuation.dataset.awarenessFocusContinuation = '';
+    continuation.tabIndex = -1;
+  };
+  /** Transfer only rendering; the layer remains the sole panel-state owner. */
+  function claimPanelView() {
+    externalViews++;
+    clearNativePanel();
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      externalViews--;
+      if (!externalViews) paintNativePanel();
+    };
+  }
+
   function ensurePanel() {
     if (layerState.panel) return layerState.panel;
     const existing = document.getElementById('military-awareness-panel');
@@ -72,6 +220,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
       ...view,
       revision: layerState.panelView.revision + 1,
     };
+    paintNativePanel();
     layerState.panelChannel.publish();
     restoreAwarenessPanelFocus(layerState.panel, focusSnapshot);
   }
@@ -87,6 +236,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
   /** Empty the panel when the layer is destroyed. */
   function clearPanel() {
     publishPanelView({ kind: 'empty' });
+    clearNativePanel();
   }
 
   function cohortView(cohort) {
@@ -254,6 +404,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
     return cohorts.some((cohort) => Number(cohort?.summary?.count) > 0);
   }
   return {
+    claimPanelView,
     ensurePanel,
     hidePanel,
     clearPanel,

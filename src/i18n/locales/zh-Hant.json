@@ -2945,5 +2945,6 @@
   "Travel mode": "出行方式",
   "{count} files": {
     "other": "{count} 個檔案"
-  }
+  },
+  "DEL": "刪除"
 }

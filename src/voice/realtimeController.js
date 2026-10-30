@@ -1,3 +1,4 @@
+import { attachCompatibleDock } from './dockCompat.js';
 import { RealtimeConnection } from './realtimeConnection.js';
 import { RealtimeTurns } from './realtimeTurns.js';
 import { RealtimeViewport } from './realtimeViewport.js';
@@ -92,7 +93,7 @@ export class GevRealtimeController extends RealtimeFacade {
     this.lifetimeAbort = () => this.stop({ removeUi: true });
     signal?.addEventListener('abort', this.lifetimeAbort, { once: true });
     this.runner = runner;
-    this.ui = ui;
+    this.ui = attachCompatibleDock(ui);
     this.radioLayer = radioLayer;
     this.dataManager = dataManager;
     this._viewport = new RealtimeViewport({
@@ -395,9 +396,9 @@ export class GevRealtimeController extends RealtimeFacade {
       this.annotationEventUnsubscribe = null;
     }
     if (removeUi) this._radio.detachObservers();
-    if (removeUi && this.ui?.root) {
-      this.ui.dispose?.();
-      this.ui.root.remove();
+    if (removeUi) {
+      this.ui?.dispose?.();
+      this.ui?.root?.remove?.();
     }
     if (!preserveStatus && !removeUi) {
       this.setStatus('idle', t('Voice off'));

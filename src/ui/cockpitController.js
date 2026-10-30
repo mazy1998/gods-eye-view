@@ -1,3 +1,4 @@
+import { bindNativeCockpitViews } from './nativeCockpitViews.js';
 /** Coordinate Cockpit lifecycle through supplied aircraft, terrain, rendering and briefing operations. */
 import { createStateChannel } from '../app/stateChannel.js';
 import {
@@ -61,6 +62,7 @@ export class CockpitViewController {
       onEntered = null,
       onExited = null,
       restoreTrackingFrame = null,
+      externalViews = false,
     } = {},
   ) {
     this.viewer = viewer;
@@ -240,6 +242,7 @@ export class CockpitViewController {
     });
     this._listen(window, 'resize', () => this.scheduleContextLayout());
     this._listen(document, 'keydown', (event) => this.onKeyDown(event), true);
+    if (!externalViews) bindNativeCockpitViews(this);
   }
 
   _listen(target, type, handler, options) {

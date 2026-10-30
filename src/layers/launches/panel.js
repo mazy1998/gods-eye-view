@@ -1,3 +1,4 @@
+import { createNativeMissionPanels } from './nativePanel.js';
 import * as Cesium from 'cesium';
 import { t } from '../../i18n/index.js';
 import {
@@ -7,6 +8,34 @@ import {
 import { UNKNOWN_LAUNCH_STATUS } from './model.js';
 
 export function createPanel({ state: layerState, services, parts, source }) {
+  let externalViews = 0;
+  let nativeView = null;
+  let disposed = false;
+  function paintNativePanels() {
+    if (externalViews || disposed || typeof document === 'undefined') return;
+    const roster = layerState._missionRoster;
+    const host = document.getElementById('space-mission-panel-host');
+    if (!nativeView && (roster || host))
+      nativeView = createNativeMissionPanels({
+        roster,
+        host,
+        actions: missionPanelActions,
+      });
+    nativeView?.update(layerState._missionView);
+  }
+  function claimMissionPanelView() {
+    externalViews++;
+    nativeView?.dispose({ clearHost: true });
+    nativeView = null;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      externalViews--;
+      if (!externalViews) paintNativePanels();
+    };
+  }
+
   /**
    * Preserve the user's globe scale for roster previews while avoiding an
    * accidental surface-level fly-to when the list is opened from a close view.
@@ -131,6 +160,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
   /** Publish the Missions view with `patch` applied. */
   function publishMissionView(patch) {
     layerState._missionView = { ...layerState._missionView, ...patch };
+    paintNativePanels();
     layerState._missionChannel.publish();
   }
 
@@ -427,6 +457,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
   });
 
   function createMissionPanel() {
+    disposed = false;
     if (layerState._missionRoster || typeof document === 'undefined') return;
     layerState._missionRoster = document.getElementById('space-mission-roster');
     if (layerState._missionRoster)
@@ -435,16 +466,21 @@ export function createPanel({ state: layerState, services, parts, source }) {
           preview: scheduleMissionRosterPreview,
           clear: clearMissionRosterPreviewState,
         });
+    paintNativePanels();
   }
 
   /** Close the selected mission's panel when the layer is torn down. */
   function clearMissionPanel() {
+    disposed = true;
+    nativeView?.dispose();
+    nativeView = null;
     publishMissionView({ detail: null });
     layerState._missionRosterPreviewOwnership = null;
     layerState._missionRoster = null;
   }
 
   return {
+    claimMissionPanelView,
     missionHoverPreviewRange,
     createMissionRosterPreviewOwnership,
     captureMissionRosterFocus,

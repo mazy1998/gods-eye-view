@@ -203,7 +203,7 @@ const RECOGNIZED = new Set([
   '#command-dock:has(#location-bar:not(.collapsed))',
   '#command-dock:has(#control-panel:not(.collapsed))',
   // dock lifted above the shell's status bar (see the shell test below)
-  'body:not(.mobile-shell):not(.cockpit-mode) #command-dock',
+  'body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #command-dock',
   // rail
   '#right-context-rail',
   '#right-context-rail.layout-focus',
@@ -643,7 +643,7 @@ test('in the shell, the credit rides in the status bar below the lifted dock', (
   assert.equal(value(bar, 'bottom'), '0');
   assert.equal(value(bar, 'min-height'), 'var(--gev-status-height)');
   assert.equal(value(own('#gev-status-bar #gev-status-credits > #cesium-credits'), 'position'), 'static');
-  const lifted = 'body:not(.mobile-shell):not(.cockpit-mode) #command-dock';
+  const lifted = 'body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #command-dock';
   assert.equal(value(own(lifted), 'bottom'), 'calc(var(--gev-status-height) + var(--gev-space-2))');
   assert.ok(Number(space[1]) >= MIN_CLEARANCE_PX, 'the dock clears the status bar by the credit clearance');
   // The lifted dock outranks every desktop dock anchor the model resolves.

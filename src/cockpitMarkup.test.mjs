@@ -161,7 +161,7 @@ test('Cockpit vision cycle exposes every map preset exactly once', () => {
     /const modes = COCKPIT_VISION_MODES;/,
   );
   const visionView = fs.readFileSync(
-    path.join(ROOT, 'src', 'ui', 'cockpitViews', 'CockpitVisionView.vue'),
+    path.join(ROOT, 'src', 'ui', 'cockpitVisionLabels.js'),
     'utf8',
   );
   assert.match(

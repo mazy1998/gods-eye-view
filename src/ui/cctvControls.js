@@ -15,6 +15,7 @@ import {
   _syncCctvCalReadout,
 } from './cctvCalibration.js';
 import {
+  paintNativeCctvView,
   _renderCctvState,
   _typeCctvSummary,
   _updateCctvSyncChip,
@@ -67,8 +68,16 @@ export class CctvControls {
     }
   }
   _mountCctvView() {
+    if (!this._cctvPanel) return;
     const body = this._cctvPanel?.querySelector('#cctv-controls-body');
-    if (!body) return;
+    if (!body) {
+      this._panelView = {
+        update: (props) => paintNativeCctvView.call(this, props),
+        dispose() {},
+      };
+      this._pushCctvView();
+      return;
+    }
     this._panelView = mountView(CctvPanelView, {
       parent: body,
       props: this._viewProps(),

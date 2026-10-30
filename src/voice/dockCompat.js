@@ -39,7 +39,7 @@ function paintVoiceDock(ui, state, previous) {
   if (changed('rowGrace'))
     setData(root, 'rowGrace', state.rowGrace ? 'true' : null);
   if (changed('errorDismissed'))
-    root?.classList?.toggle('error-dismissed', state.errorDismissed);
+    root?.classList?.toggle?.('error-dismissed', state.errorDismissed);
   if (changed('statusLabel')) setText(ui.status, state.statusLabel);
   if (changed('detail')) setText(ui.detail, state.detail);
   if (changed('detailTitle') && ui.detail) ui.detail.title = state.detailTitle;

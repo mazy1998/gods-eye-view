@@ -14,6 +14,7 @@ import MissionDetailView from './contextViews/MissionDetailView.vue';
  */
 export function mountMissionPanels(mount, { roster, host, launches }) {
   if (!launches?.subscribeMissionPanelView) return { dispose() {} };
+  const release = launches.claimMissionPanelView?.();
   const actions = launches.getMissionPanelActions();
   let shown = launches.getMissionPanelView();
   const rosterView = roster
@@ -62,6 +63,7 @@ export function mountMissionPanels(mount, { roster, host, launches }) {
       unsubscribe();
       rosterView?.dispose();
       detailView?.dispose();
+      release?.();
     },
   };
 }

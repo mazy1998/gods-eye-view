@@ -1,3 +1,4 @@
+import { radioCardView } from './radioCardView.js';
 /** Render Radio state without making playback or Context decisions. */
 import { t } from '../i18n/index.js';
 
@@ -188,4 +189,118 @@ export function renderRadioState(state) {
     this.actions.setPanelCollapsed('radio-panel', true);
   }
   this.actions.scheduleLayout();
+}
+
+/** Paint supplied native handles from the same projection as the mounted card. */
+export function paintNativeRadioView({ state, tuner, slot, volume, pending }) {
+  const view = radioCardView(state);
+  const text = (node, value) => {
+    if (node) node.textContent = value;
+  };
+  const disable = (node, value) => {
+    if (node) node.disabled = value;
+  };
+  if (this._radioEnableBtn) {
+    text(this._radioEnableBtn, view.enableLabel);
+    this._radioEnableBtn.classList.toggle('active', view.enabled);
+    this._radioEnableBtn.setAttribute('aria-pressed', String(view.enabled));
+    this._radioEnableBtn.setAttribute('aria-label', view.enableAria);
+    this._radioEnableBtn.setAttribute(
+      'aria-busy',
+      String(view.transitioning || pending),
+    );
+    this._radioEnableBtn.setAttribute(
+      'aria-disabled',
+      String(view.transitioning || pending),
+    );
+  }
+  if (this._radioFilter) {
+    const signature = JSON.stringify(view.categories);
+    if (signature !== this._radioCategorySignature) {
+      this._radioFilter.replaceChildren(
+        ...view.categories.map((category) => {
+          const option =
+            this._radioFilter.ownerDocument.createElement('option');
+          option.value = category.id;
+          const label = t('{category} ({count})', {
+            category: category.label,
+            count: category.count,
+          });
+          option.textContent = `● ${label}`;
+          option.setAttribute('aria-label', label);
+          option.dataset.radioColor = category.color;
+          option.style.color = category.color;
+          return option;
+        }),
+      );
+      this._radioCategorySignature = signature;
+    }
+    this._radioFilter.value = view.filter;
+    this._radioFilter.style.color = view.filterColor;
+    this._radioFilter.disabled = view.filterDisabled;
+  }
+  text(this._radioStationName, view.name);
+  text(this._radioStationMeta, view.meta);
+  text(this._radioStationTags, view.tags);
+  if (this._radioStationHomepage) {
+    this._radioStationHomepage.hidden = !view.homepage;
+    if (view.homepage) this._radioStationHomepage.href = view.homepage;
+    else this._radioStationHomepage.removeAttribute('href');
+  }
+  for (const node of [
+    this._radioPrevBtn,
+    this._radioNextBtn,
+    this._radioPlayBtn,
+  ])
+    disable(node, view.transportDisabled);
+  if (this._radioPlayBtn) {
+    text(this._radioPlayBtn, view.playLabel);
+    this._radioPlayBtn.classList.toggle('active', view.activePlayback);
+    this._radioPlayBtn.setAttribute('aria-label', view.playAria);
+  }
+  disable(this._radioStopBtn, view.stopDisabled);
+  disable(this._radioVolume, !view.interactive);
+  if (this._radioVolume && document.activeElement !== this._radioVolume)
+    this._radioVolume.value = volume;
+  text(this._radioVolumeValue, `${volume}%`);
+  text(this._radioPlaybackState, view.statusText);
+  this._radioPlaybackState?.classList.toggle('error', view.statusError);
+  if (this._radioTuner) {
+    this._radioTuner.hidden = !view.tunerAvailable;
+    this._radioTuner.classList.toggle('is-static', Boolean(tuner.static));
+    this._radioTuner.classList.toggle('is-dragging', Boolean(tuner.dragging));
+    this._radioTuner.style.setProperty(
+      '--radio-tuner-ratio',
+      tuner.ratio || '0',
+    );
+    const scale = this._radioTuner.querySelector('.radio-tuner-scale');
+    if (scale) {
+      scale.style.setProperty(
+        '--radio-tuner-tick-pitch',
+        `${tuner.pitchPx || 0}px`,
+      );
+      scale.replaceChildren(
+        ...(tuner.ticks || []).map((tick) => {
+          const node = scale.ownerDocument.createElement('span');
+          node.className = `radio-tuner-tick${tick.current ? ' is-current' : ''}`;
+          node.style.left = `${tick.xPx}px`;
+          node.dataset.stationIndex = tick.stationIndex;
+          node.textContent = tick.label;
+          return node;
+        }),
+      );
+    }
+  }
+  if (this._radioTunerSlider) {
+    this._radioTunerSlider.disabled = !view.tunerAvailable;
+    this._radioTunerSlider.max = String(tuner.max || 0);
+    this._radioTunerSlider.value = slot;
+    this._radioTunerSlider.setAttribute(
+      'aria-valuetext',
+      tuner.aria || t('No station available'),
+    );
+  }
+  text(this._radioTunerBandLabel, view.band);
+  text(this._radioTunerValue, tuner.value || t('DRAG TO TUNE'));
+  text(this._radioTunerStation, tuner.station || t('ALL · DRAG THE NEEDLE'));
 }

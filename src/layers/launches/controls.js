@@ -70,6 +70,10 @@ export function createControls({ state: layerState, services, parts, source }) {
       return layerState._missionChannel.getSnapshot();
     },
 
+    claimMissionPanelView() {
+      return parts.panel.claimMissionPanelView();
+    },
+
     subscribeMissionPanelView(listener, options) {
       return layerState._missionChannel.subscribe(listener, options);
     },

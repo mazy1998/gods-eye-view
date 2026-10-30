@@ -1,3 +1,4 @@
+import { LocationField } from './locationField.js';
 import { mountView } from './mountView.js';
 import PlacePills from './locationViews/PlacePills.vue';
 import { locationMiniStatus } from '../locationStatus.js';
@@ -35,6 +36,41 @@ export class LocationControls {
     requestFrame = (callback) => requestAnimationFrame(callback),
     cancelFrame = (id) => cancelAnimationFrame(id),
   }) {
+    if (!field) this.ownedField = field = new LocationField(elements.search);
+    if (!views) {
+      views = {
+        search: {
+          update: (props) => {
+            if (props.onToggle)
+              this.bind(elements.searchToggle, 'click', props.onToggle);
+            if (props.onSubmit)
+              this.bind(elements.search, 'keydown', (event) => {
+                if (event.key === 'Enter' && !event.isComposing)
+                  props.onSubmit(elements.search.value);
+              });
+            if (props.onEdit)
+              this.bind(elements.search, 'input', () =>
+                props.onEdit(elements.search.value),
+              );
+            if (props.onBlur) this.bind(elements.search, 'blur', props.onBlur);
+            if (elements.search) {
+              if ('query' in props) elements.search.value = props.query;
+              if ('expanded' in props)
+                elements.search.classList.toggle('expanded', props.expanded);
+              if ('busy' in props)
+                elements.search.classList.toggle('searching', props.busy);
+            }
+          },
+        },
+        results: { update() {} },
+        status: {
+          update: ({ city, poi }) => {
+            if (elements.statusCity) elements.statusCity.textContent = city;
+            if (elements.statusPoi) elements.statusPoi.textContent = poi;
+          },
+        },
+      };
+    }
     Object.assign(this, {
       elements,
       views,
@@ -223,5 +259,6 @@ export class LocationControls {
     for (const remove of this.removers.splice(0)) remove();
     for (const view of this.pillViews.splice(0)) view.dispose();
     this.orbitIndicator?.remove();
+    this.ownedField?.destroy();
   }
 }

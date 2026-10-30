@@ -3,7 +3,15 @@ import { t, msg } from '../i18n/index.js';
 import { mountView } from './mountView.js';
 import StoriesPanelView from './StoriesPanelView.vue';
 import ScenePlaybackView from './ScenePlaybackView.vue';
-import { sceneElements } from './scenePresentation.js';
+import {
+  sceneElements,
+  renderSceneOptions,
+  renderSceneShots,
+  presentSceneSelection,
+  presentSceneButtons,
+  presentSceneProgress,
+  presentSceneRuntime,
+} from './scenePresentation.js';
 
 const LIBRARY_CHANGES = new Set([
   'scene-options-changed',
@@ -36,6 +44,8 @@ export class SceneControls {
     this.destroyed = false;
     this.actionGeneration = 0;
     this.playbackKeyRemover = null;
+    this.nativeRemovers = [];
+    this.nativeRows = [];
     this.renameDraft = null;
     this.tab = 'browse';
     this.listRevision = 0;
@@ -79,7 +89,21 @@ export class SceneControls {
         if (!this.destroyed) node.value = '';
       },
     };
-    if (!elements.body) return;
+    if (!elements.body) {
+      this.native = true;
+      if (!elements.select) return;
+      this._bindNativeControls();
+      if (subscribe)
+        this.unsubscribe = subscribe((notification) =>
+          this.present(notification),
+        );
+      else {
+        this.renderSceneSelect();
+        this.renderShotList();
+        this._paint();
+      }
+      return;
+    }
     this.view = mountView(StoriesPanelView, {
       parent: elements.body,
       props: this._viewProps(),
@@ -113,16 +137,29 @@ export class SceneControls {
   }
   _paint() {
     if (this.destroyed) return;
+    if (this.native) {
+      presentSceneSelection(this.elements.shots, this.library.selectedShotId);
+      presentSceneButtons(
+        this.elements,
+        this.presentation.running,
+        this.presentation.hasRun,
+      );
+      presentSceneProgress(this.elements.progress, this.presentation.progress);
+      if (this.elements.status)
+        this.elements.status.textContent = this.presentation.status;
+      presentSceneRuntime(this.elements.runtime, this.presentation.runtime);
+    }
     this.view?.update(this._viewProps());
     this.runtimeView?.update({
       runtime: this.presentation.runtime,
       running: this.presentation.running,
     });
     this.elements.panel?.classList.toggle('running', this.presentation.running);
-    this.elements.runtime?.classList.toggle(
-      'active',
-      !!this.presentation.runtime || this.presentation.running,
-    );
+    if (!this.native)
+      this.elements.runtime?.classList.toggle(
+        'active',
+        !!this.presentation.runtime || this.presentation.running,
+      );
   }
   present({ state, change, initial }) {
     if (this.destroyed) return;
@@ -152,6 +189,19 @@ export class SceneControls {
       this.setPlaybackActive(state.playbackActive);
     if (initial || type === 'playback-keyboard')
       this.setPlaybackKeyboardEnabled(state.keyboardEnabled);
+    if (this.native) {
+      if (
+        initial ||
+        [
+          'scene-options-changed',
+          'scene-created',
+          'scene-deleted',
+          'project-imported',
+        ].includes(type)
+      )
+        this.renderSceneSelect();
+      if (initial || SHOT_CHANGES.has(type)) this.renderShotList();
+    }
     this._paint();
   }
   run(action, ...args) {
@@ -166,6 +216,74 @@ export class SceneControls {
       return result?.then ? Promise.resolve(result).catch(failed) : result;
     } catch {
       failed();
+    }
+  }
+  listen(target, type, callback, removers = this.nativeRemovers) {
+    if (!target) return;
+    const listener = (event) => {
+      if (!this.destroyed) callback(event);
+    };
+    target.addEventListener(type, listener);
+    removers.push(() => target.removeEventListener(type, listener));
+  }
+  _bindNativeControls() {
+    const elements = this.elements;
+    this.listen(elements.select, 'change', () =>
+      this.run('selectScene', elements.select.value),
+    );
+    for (const name of ['capture', 'update', 'next', 'export', 'download'])
+      this.listen(elements[name], 'click', () => this.run(name));
+    this.listen(elements.new, 'click', () => this.createScene());
+    this.listen(elements.delete, 'click', () => this.deleteSelectedScene());
+    this.listen(elements.start, 'click', () =>
+      this.run('start', this.read().selectedSceneId),
+    );
+    this.listen(elements.stop, 'click', () => this.run('stop', msg('Stopped')));
+    this.listen(elements.import, 'click', () => elements.file?.click());
+    this.listen(elements.file, 'change', () =>
+      this.viewActions.importFile(elements.file),
+    );
+  }
+  renderSceneSelect() {
+    if (this.destroyed) return;
+    this.library = this.read();
+    if (this.native) renderSceneOptions(this.elements.select, this.library);
+    else this._paint();
+  }
+  renderShotList() {
+    if (this.destroyed) return;
+    this.library = this.read();
+    if (!this.native) {
+      this.listRevision++;
+      this._paint();
+      return;
+    }
+    for (const remove of this.nativeRows.splice(0)) remove();
+    renderSceneShots(this.elements.shots, this.library, {
+      listen: (node, type, fn) => this.listen(node, type, fn, this.nativeRows),
+      select: (id) => {
+        this.run('selectShot', id);
+        if (!this.destroyed)
+          presentSceneSelection(
+            this.elements.shots,
+            this.read().selectedShotId,
+          );
+      },
+      rename: (...args) => this.run('renameShot', ...args),
+      load: (...args) => this.run('load', ...args),
+      remove: (...args) => this.deleteShot(...args),
+    });
+  }
+  setProgress(progress) {
+    if (!this.destroyed) {
+      this.presentation.progress = progress;
+      this._paint();
+    }
+  }
+  updateRuntime(runtime) {
+    if (!this.destroyed) {
+      this.presentation.runtime = runtime;
+      this._paint();
     }
   }
   setTab(tab) {
@@ -277,6 +395,15 @@ export class SceneControls {
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.setPlaybackKeyboardEnabled(false);
+    for (const remove of [
+      ...this.nativeRemovers.splice(0),
+      ...this.nativeRows.splice(0),
+    ])
+      remove();
+    if (this.native) {
+      this.elements.shots?.replaceChildren();
+      presentSceneRuntime(this.elements.runtime, '');
+    }
     this.view?.dispose();
     this.runtimeView?.dispose();
     this.elements.runtime?.classList.remove('active', 'stories-playback');

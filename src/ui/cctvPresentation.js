@@ -237,3 +237,128 @@ export function _updateCctvSyncChip(loading, enabled) {
     this._cctvSyncChip.classList.remove('visible');
   }
 }
+
+/** Native host adapter; camera/media/calibration state stays in CctvControls. */
+export function paintNativeCctvView(props) {
+  const { view, source, fields, edit, summary } = props;
+  const node = (key, id) =>
+    this[key] || this._cctvPanel?.querySelector(`#${id}`);
+  const text = (el, value) => {
+    if (el) el.textContent = value;
+  };
+  const noCamera = !view.enabled || !view.cameras.length;
+  if (this._cctvSelect) {
+    const labels = view.cameras.map(
+      (camera) => `${camera.city} · ${camera.name}`,
+    );
+    if (
+      this._cctvSelect.options.length !== view.cameras.length ||
+      view.cameras.some(
+        (camera, index) =>
+          this._cctvSelect.options[index]?.value !== camera.id ||
+          this._cctvSelect.options[index]?.textContent !== labels[index],
+      )
+    ) {
+      this._cctvSelect.replaceChildren(
+        ...view.cameras.map((camera, index) => {
+          const option = this._cctvSelect.ownerDocument.createElement('option');
+          option.value = camera.id;
+          option.textContent = labels[index];
+          return option;
+        }),
+      );
+    }
+    this._cctvSelect.value = view.activeId;
+    this._cctvSelect.disabled = noCamera;
+  }
+  for (const el of [this._cctvNearestBtn, this._cctvPrevBtn, this._cctvNextBtn])
+    if (el) el.disabled = noCamera;
+  if (this._cctvFocusBtn)
+    this._cctvFocusBtn.disabled = noCamera || !view.activeId;
+  const toggle = (el, active, label, disabled) => {
+    if (!el) return;
+    el.classList.toggle('active', active);
+    el.textContent = label;
+    el.disabled = disabled;
+    el.setAttribute('aria-pressed', String(active));
+  };
+  toggle(
+    this._cctvEnableBtn,
+    view.enabled,
+    view.enabled ? t('CCTV ON') : t('CCTV OFF'),
+    false,
+  );
+  toggle(
+    this._cctvCoverageBtn,
+    view.coverage !== 'off',
+    view.coverage === 'viewshed'
+      ? t('VIEWSHED ON')
+      : view.coverage === 'on'
+        ? t('COVERAGE ON')
+        : t('COVERAGE OFF'),
+    !view.enabled,
+  );
+  toggle(
+    this._cctvAutoHopBtn,
+    view.autoHop,
+    view.autoHop ? t('AUTO HOP ON') : t('AUTO HOP OFF'),
+    !view.enabled,
+  );
+  toggle(
+    this._cctvProjectionBtn,
+    view.projection,
+    view.projection ? t('PROJECTION ON') : t('PROJECTION OFF'),
+    !view.enabled,
+  );
+  const canCalibrate = view.enabled && !!view.activeCamera;
+  toggle(
+    this._cctvAdjustBtn,
+    view.calibrationMode && canCalibrate,
+    view.calibrationMode ? t('ADJUST ON') : t('ADJUST'),
+    !canCalibrate,
+  );
+  if (this._cctvCalibSaveBtn)
+    this._cctvCalibSaveBtn.disabled =
+      !canCalibrate || !view.activeCamera?.calDirty;
+  if (this._cctvCalibResetBtn) this._cctvCalibResetBtn.disabled = !canCalibrate;
+  text(node('_cctvMeta', 'cctv-meta'), view.meta);
+  text(node('_cctvSummaryText', 'cctv-summary'), summary);
+  const badge = node('_cctvSourceBadge', 'cctv-source-badge');
+  text(badge, source.label);
+  if (badge) badge.dataset.frameState = source.frameState;
+  const quality = node('_cctvQualityChip', 'cctv-quality-chip');
+  text(quality, view.qualityLabel);
+  if (quality) quality.dataset.calBadge = view.quality;
+  if (!this._cctvCalReadout) return;
+  for (const field of fields) {
+    let chip = this._cctvCalReadout.querySelector(
+      `[data-cal-field="${field.id}"]`,
+    );
+    if (!chip) {
+      chip = this._cctvCalReadout.ownerDocument.createElement('button');
+      chip.type = 'button';
+      chip.className = 'cctv-cal-value';
+      chip.dataset.calField = field.id;
+      this._cctvCalReadout.append(chip);
+    }
+    chip.disabled = !canCalibrate;
+    chip.title = field.title;
+    if (edit?.fieldId !== field.id) {
+      text(chip, field.text);
+      continue;
+    }
+    if (chip.querySelector('input')) continue;
+    const input = chip.ownerDocument.createElement('input');
+    input.type = 'number';
+    input.className = 'cctv-cal-input';
+    input.step = field.step;
+    input.value = edit.value;
+    input.setAttribute('aria-label', field.label);
+    text(chip, field.label);
+    chip.append(input);
+    this.listen(input, 'click', (event) => event.stopPropagation());
+    this.listen(input, 'input', () => props.inputEdit(input.value));
+    this.listen(input, 'keydown', props.keyEdit);
+    this.listen(input, 'blur', props.blurEdit);
+  }
+}

@@ -1236,5 +1236,21 @@
   "src/ui/phoneShell.dom.test.mjs",
   "scripts/qa-phone-shell.mjs",
   "src/ui/inspectCameras.test.mjs",
-  "src/app/dataDetails.test.mjs"
+  "src/app/dataDetails.test.mjs",
+  "src/ui/mapSource.compat.test.mjs",
+  "src/ui/styleParameters.js",
+  "src/ui/displayInput.compat.test.mjs",
+  "src/ui/panelDisclosure.compat.test.mjs",
+  "src/ui/styles.compat.test.mjs",
+  "src/voice/controller.compat.test.mjs",
+  "src/ui/radio.compat.test.mjs",
+  "src/ui/location.compat.test.mjs",
+  "src/ui/cctv.compat.test.mjs",
+  "src/ui/scenes.compat.test.mjs",
+  "src/layers/awareness/compat.test.mjs",
+  "src/layers/launches/nativePanel.js",
+  "src/layers/launches/compat.test.mjs",
+  "src/ui/nativeCockpitViews.js",
+  "src/ui/cockpitVisionLabels.js",
+  "src/ui/cockpit.compat.test.mjs"
 ]

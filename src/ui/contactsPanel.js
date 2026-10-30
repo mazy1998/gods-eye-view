@@ -10,6 +10,7 @@ import ContactsPanelView from './contextViews/ContactsPanelView.vue';
  */
 export function mountContactsPanel(mount, { panel, awareness }) {
   if (!panel || !awareness?.subscribePanelView) return { dispose() {} };
+  const release = awareness.claimPanelView?.();
   const view = mount(ContactsPanelView, {
     parent: panel,
     props: {
@@ -29,6 +30,7 @@ export function mountContactsPanel(mount, { panel, awareness }) {
     dispose() {
       unsubscribe();
       view.dispose();
+      release?.();
     },
   };
 }

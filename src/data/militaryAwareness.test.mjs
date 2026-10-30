@@ -103,6 +103,7 @@ function installAwarenessRuntime({
   class FakeElement {
     constructor() {
       this.classList = { contains: () => false };
+      this.dataset = {};
       this.style = { setProperty() {} };
       this._hidden = false;
       // renderResults() writes `hidden = false` on EVERY call, ahead of its
@@ -110,6 +111,10 @@ function installAwarenessRuntime({
       // repaint path entered?" independently of whether the markup changed.
       this.hiddenWrites = 0;
       this.innerHTML = '';
+    }
+
+    get ownerDocument() {
+      return globalThis.document;
     }
 
     get hidden() {
@@ -3758,9 +3763,14 @@ test('runtime listeners exist only while the awareness layer is enabled', () => 
   class FakeElement {
     constructor() {
       this.classList = { contains: () => false };
+      this.dataset = {};
       this.style = { setProperty() {} };
       this.hidden = false;
       this.innerHTML = '';
+    }
+
+    get ownerDocument() {
+      return globalThis.document;
     }
 
     setAttribute() {}

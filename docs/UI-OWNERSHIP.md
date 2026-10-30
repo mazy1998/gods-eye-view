@@ -299,3 +299,9 @@ Directions follows the active desktop or phone navigation channel. Its Layers
 link launches the one Tools view, whose layer switch and route actions remain
 owned by LayerPanel and the Directions layer. Playback preview keeps the More
 route to Stories available even while recording hides the rest of the chrome.
+
+## Published embedding hosts
+
+The published UI entries also accept native host elements without the application shell. Their compatibility painters read the same controller or layer projection and send intent through its existing operations; they do not own a second copy of playback, selection, calibration, query or project state. Generated parameter rows keep the caller's uniform read/write callbacks. Native listeners, subscriptions and timers are released by the public controller's existing disposal method.
+
+Contacts and Missions use a rendering lease when the shell mounts their Vue views. Claiming it removes the native fallback; releasing it restores native presentation without publishing a state change. The Cockpit coordinator supplies `externalViews: true` while it hosts the controller's projected views; direct `CockpitViewController` construction binds and paints existing native markup by default. The published stylesheet conceals the old panel rails only in a document containing the application rail.

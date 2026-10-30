@@ -1,33 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { t } from '../../i18n/index.js';
+import { cockpitVisionLabels } from '../cockpitVisionLabels.js';
 const props = defineProps({
   mode: { type: String, required: true },
   onPrevious: { type: Function, required: true },
   onCurrent: { type: Function, required: true },
   onNext: { type: Function, required: true },
 });
-/** Each vision style's short label and its spoken name. */
-const LABELS = {
-  optical: () => t('NORMAL'),
-  crt: () => t('CRT'),
-  nvg: () => t('NVG'),
-  thermal: () => t('FLIR'),
-  anime: () => t('ANIME'),
-  noir: () => t('NOIR'),
-  snow: () => t('SNOW'),
-};
-const NAMES = {
-  optical: () => t('Normal'),
-  crt: () => t('CRT'),
-  nvg: () => t('Night vision'),
-  thermal: () => t('Thermal'),
-  anime: () => t('Anime'),
-  noir: () => t('Noir'),
-  snow: () => t('Snow'),
-};
-const label = computed(() => (LABELS[props.mode] ?? LABELS.optical)());
-const name = computed(() => (NAMES[props.mode] ?? NAMES.optical)());
+const shown = computed(() => cockpitVisionLabels(props.mode));
 </script>
 <template>
   <button
@@ -50,15 +31,15 @@ const name = computed(() => (NAMES[props.mode] ?? NAMES.optical)());
     :data-cockpit-vision="mode"
     :aria-label="
       t('Current cockpit vision style: {style}. Activate for next style.', {
-        style: name,
+        style: shown.name,
       })
     "
-    :title="t('Current style: {style} — click for next', { style: name })"
+    :title="t('Current style: {style} — click for next', { style: shown.name })"
     @click="onCurrent"
   >
     <small>{{ t('CURRENT') }}</small>
     <strong id="cockpit-vision-current-label" aria-live="polite">{{
-      label
+      shown.label
     }}</strong>
   </button>
   <button

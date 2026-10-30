@@ -177,6 +177,10 @@ export function createControls({ state: layerState, services, parts, source }) {
       return layerState.panelChannel.getSnapshot();
     },
 
+    claimPanelView() {
+      return parts.panel.claimPanelView();
+    },
+
     subscribePanelView(listener, options) {
       return layerState.panelChannel.subscribe(listener, options);
     },

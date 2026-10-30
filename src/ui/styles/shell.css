@@ -512,14 +512,14 @@
 /* While the rail is in use, the legacy stacks it replaced stay out of view;
    their panels appear in the drawer. Cockpit and phones keep them. The
    chrome along the left edge moves clear of the rail. */
-body:not(.mobile-shell):not(.cockpit-mode)
+body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
   :is(#left-panel-stack, #right-context-rail) {
   display: none;
 }
-body:not(.mobile-shell):not(.cockpit-mode) #title-bar {
+body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #title-bar {
   left: calc(var(--gev-rail-width) + 24px);
 }
-body:not(.mobile-shell):not(.cockpit-mode) #intel-hud {
+body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #intel-hud {
   left: var(--gev-rail-width);
   width: auto;
   right: 0;
@@ -1018,10 +1018,10 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 
 /* The command dock sits above the status bar while the shell is in use, and
    toasts keep their gap above the dock. */
-body:not(.mobile-shell):not(.cockpit-mode) #command-dock {
+body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #command-dock {
   bottom: calc(var(--gev-status-height) + var(--gev-space-2));
 }
-body:not(.mobile-shell):not(.cockpit-mode) #toast {
+body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #toast {
   bottom: calc(100px + var(--gev-status-height));
 }
 
@@ -1070,10 +1070,10 @@ body.scene-playback-mode .gev-map-controls {
    and status bar. The width query, the phone layout's own negated, drops
    them in the same frame as a resize to a phone, before its class arrives. */
 @media not all and (max-width: 720px) {
-  body:not(.mobile-shell):not(.cockpit-mode) #style-indicator {
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #style-indicator {
     top: calc(var(--gev-header-height) + 24px);
   }
-  body:not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
       .recording-mode
     )
     #intel-hud {
@@ -1083,12 +1083,12 @@ body.scene-playback-mode .gev-map-controls {
   }
   /* Cyber's HUD corners are fixed to the viewport: they clear the rail and
      the map controls themselves. */
-  body:not(.mobile-shell):not(.cockpit-mode)
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
     #intel-hud[data-variant='cyber']
     :is(.hud-top-left, .hud-bottom-left) {
     left: calc(var(--gev-rail-width) + 24px);
   }
-  body:not(.mobile-shell):not(.cockpit-mode)
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
     #intel-hud[data-variant='cyber']
     :is(.hud-top-right, .hud-bottom-right) {
     right: calc(var(--gev-map-control-size) + 3 * var(--gev-drawer-inset));

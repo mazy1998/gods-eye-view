@@ -51,6 +51,7 @@ export class CockpitCoordinator {
     } = services;
     this._cockpitDisplayPortal = null;
     this.cockpitView = new CockpitViewController(viewer, {
+      externalViews: true,
       services: {
         flightsLayer,
         militaryFlightsLayer,

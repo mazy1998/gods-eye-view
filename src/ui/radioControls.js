@@ -1,6 +1,6 @@
 import { t, msg } from '../i18n/index.js';
 import { bindRadioControls } from './radioBindings.js';
-import { renderRadioState } from './radioPresentation.js';
+import { renderRadioState, paintNativeRadioView } from './radioPresentation.js';
 
 /** Own Radio DOM, tuner interaction and subscription; receive playback and application actions. */
 export class RadioControls {
@@ -47,13 +47,15 @@ export class RadioControls {
 
   _paintRadioView() {
     if (this.destroyed) return;
-    this._view?.update({
+    const props = {
       state: this._radioState || {},
       tuner: { ...this._radioTunerView },
       slot: this._radioTunerSlot,
       volume: this._radioVolumeDraft,
       pending: this._radioEnablePending,
-    });
+    };
+    if (this._view) this._view.update(props);
+    else paintNativeRadioView.call(this, props);
   }
 
   listen(target, type, handler, options = {}) {

@@ -403,6 +403,7 @@ test('a roster refresh returns focus to the same mission, or past the list', () 
     roster,
     host,
     launches: {
+      claimMissionPanelView: () => panel.claimMissionPanelView(),
       getMissionPanelView: () => state._missionChannel.getSnapshot(),
       subscribeMissionPanelView: (listener, options) =>
         state._missionChannel.subscribe(listener, options),

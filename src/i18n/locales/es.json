@@ -3091,5 +3091,6 @@
     "one": "{count} archivo",
     "many": "{count} archivos",
     "other": "{count} archivos"
-  }
+  },
+  "DEL": "BORRAR"
 }
