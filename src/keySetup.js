@@ -257,6 +257,8 @@ export async function initKeySetup({
   root.dataset.initialized = 'true';
   const lifetime = new AbortController();
   let disposed = false;
+  let hosting = null;
+  let releaseHosting = () => {};
   let disposeControls = () => {};
   let disposePlacement = () => {};
   // A pasted key lives only in its field until Save: switching language (a
@@ -270,6 +272,7 @@ export async function initKeySetup({
   );
   const destroy = () => {
     if (disposed) return;
+    releaseHosting();
     disposed = true;
     delete root.dataset.ready;
     unregisterUnsavedWork();
@@ -318,6 +321,7 @@ export async function initKeySetup({
   const state = {
     status: initialStatus,
     open: false,
+    presentation: 'dialog',
     busy: false,
     oauthBusy: false,
     message: defaultStatusText,
@@ -342,8 +346,19 @@ export async function initKeySetup({
     chip.setAttribute('aria-label', chip.title);
     // Fully powered is the owner's clean screen: the chip retires. The dialog
     // stays reachable this session (and via ?setup=1) to swap or verify keys.
-    chip.hidden = view.status.setCount >= view.status.total;
-    if (statusLine) statusLine.textContent = view.message;
+    chip.hidden =
+      view.presentation === 'embedded' ||
+      view.status.setCount >= view.status.total;
+    if (applyButton)
+      applyButton.textContent =
+        view.presentation === 'embedded'
+          ? t('Save keys & restart')
+          : t('SAVE KEYS');
+    if (statusLine)
+      statusLine.textContent =
+        view.presentation === 'embedded' && view.message === defaultStatusText
+          ? t('Keys are saved on this machine.')
+          : view.message;
     // Marked once a save has started, as before; unmarked markup means enabled.
     if (view.busy || applyButton?.hasAttribute('aria-disabled'))
       applyButton.setAttribute('aria-disabled', String(view.busy));
@@ -363,23 +378,32 @@ export async function initKeySetup({
   const keyboard = createSurfaceKeyboard({
     root,
     documentRef,
-    isActive: () => state.open && visible(),
+    isActive: () => !hosting && state.open && visible(),
     onEscape: () => close(),
   });
 
   const openDialog = () => {
-    if (disposed || state.open) return;
+    if (disposed) return;
+    if (hosting) {
+      hosting.onOpen?.();
+      return;
+    }
+    if (state.open) return;
     set({ open: true });
     keyboard.activate();
     root.hidden = false;
     globalThis.requestAnimationFrame?.(() => {
-      if (!state.open) return;
+      if (!state.open || hosting) return;
       root.classList.add('visible');
       root.querySelector('input')?.focus?.({ preventScroll: true });
     });
   };
 
   const close = () => {
+    if (hosting) {
+      hosting.onClose?.();
+      return;
+    }
     if (!state.open) return;
     set({ open: false });
     root.classList.remove('visible');
@@ -390,6 +414,49 @@ export async function initKeySetup({
     globalThis.setTimeout?.(hide, 400);
     set({ message: defaultStatusText });
     keyboard.deactivate({ restoreFocus: true });
+  };
+
+  // Borrow the existing native fields; no credential is copied into a view.
+  const host = (parent, callbacks = {}) => {
+    if (disposed || !parent) return () => {};
+    releaseHosting();
+    const home = documentRef.createComment('provider form home');
+    root.before(home);
+    const role = root.getAttribute('role');
+    const lease = { ...callbacks };
+    const description = root.querySelector('#key-setup-description');
+    const descriptionHome = documentRef.createComment(
+      'provider description home',
+    );
+    if (description && callbacks.descriptionHost) {
+      description.before(descriptionHome);
+      callbacks.descriptionHost.append(description);
+    }
+    hosting = lease;
+    keyboard.deactivate();
+    parent.append(root);
+    root.setAttribute('role', 'region');
+    root.classList.add('key-setup-embedded', 'visible');
+    root.hidden = false;
+    set({ open: true, presentation: 'embedded' });
+    const release = () => {
+      if (hosting !== lease) return;
+      hosting = null;
+      if (descriptionHome.isConnected && description)
+        descriptionHome.after(description);
+      descriptionHome.remove();
+      root.classList.remove('key-setup-embedded', 'visible');
+      root.hidden = true;
+      if (role === null) root.removeAttribute('role');
+      else root.setAttribute('role', role);
+      if (home.isConnected) home.after(root);
+      home.remove();
+      set({ presentation: 'dialog' });
+      close();
+      releaseHosting = () => {};
+    };
+    releaseHosting = release;
+    return release;
   };
 
   const say = (text) => set({ message: text });
@@ -631,5 +698,5 @@ export async function initKeySetup({
     closeButton?.removeEventListener('click', close);
     applyButton?.removeEventListener('click', onApply);
   };
-  return { open: openDialog, close, render, destroy, channel };
+  return { open: openDialog, close, render, destroy, channel, host };
 }

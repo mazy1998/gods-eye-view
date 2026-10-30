@@ -50,6 +50,14 @@ export function compare(reference, actual, tolerance) {
     ? Math.abs(reference - actual) <= tolerance
     : reference === actual;
 }
+export function checkExpectedGeometry(expectations = [], snapshot) {
+  return expectations.flatMap(({ node, property, value, reason }) => {
+    const actual = snapshot[node]?.[property];
+    return compare(value, actual, 0.05)
+      ? []
+      : [{ node, property, reference: value, actual, reason }];
+  });
+}
 function hidesContent(e) {
   return (
     ['visible', 'visibility', 'opacity'].includes(e.property) ||
@@ -78,9 +86,14 @@ export function validateExceptions(entries) {
   for (const e of entries) {
     if (
       hidesContent(e) ||
-      !['layers', 'stories', 'tools', 'voice', 'shell-visibility'].includes(
-        e.fixture,
-      ) ||
+      ![
+        'layers',
+        'stories',
+        'tools',
+        'voice',
+        'shell-visibility',
+        'settings',
+      ].includes(e.fixture) ||
       !e.node ||
       !e.property ||
       !Object.hasOwn(e, 'reference') ||
@@ -139,40 +152,52 @@ export async function audit(options) {
           `<html data-ui-theme="cyber"><head><style>${sheet}</style><style>*{animation:none!important;transition:none!important}body{margin:0}.stories-controls .material-symbols-outlined{font-size:0!important}button,input,select{font-family:monospace!important}</style></head><body>${fixture.html}</body></html>`,
         );
         snapshots.push(
-          await page.evaluate(() =>
-            Object.fromEntries(
-              [...document.querySelectorAll('[data-geometry]')].map((el) => {
-                const s = getComputedStyle(el),
-                  r = el.getBoundingClientRect(),
-                  parent = el.parentElement.getBoundingClientRect();
-                const values = {
-                  visible: el.checkVisibility({
-                    visibilityProperty: true,
-                    opacityProperty: true,
-                  }),
-                  display: s.display,
-                  position: s.position,
-                  width: r.width,
-                  height: r.height,
-                  x: r.x - parent.x,
-                  y: r.y - parent.y,
-                  backdrop: s.backdropFilter,
-                };
-                for (const name of [
-                  'paddingTop',
-                  'paddingRight',
-                  'paddingBottom',
-                  'paddingLeft',
-                  'borderTopWidth',
-                  'borderRightWidth',
-                  'borderBottomWidth',
-                  'borderLeftWidth',
-                  'borderTopLeftRadius',
-                ])
-                  values[name] = parseFloat(s[name]) || 0;
-                return [el.dataset.geometry, values];
-              }),
-            ),
+          await page.evaluate(
+            (typography) =>
+              Object.fromEntries(
+                [...document.querySelectorAll('[data-geometry]')].map((el) => {
+                  const s = getComputedStyle(el),
+                    r = el.getBoundingClientRect(),
+                    parent = el.parentElement.getBoundingClientRect();
+                  const values = {
+                    visible: el.checkVisibility({
+                      visibilityProperty: true,
+                      opacityProperty: true,
+                    }),
+                    display: s.display,
+                    position: s.position,
+                    width: r.width,
+                    height: r.height,
+                    x: r.x - parent.x,
+                    y: r.y - parent.y,
+                    backdrop: s.backdropFilter,
+                  };
+                  if (typography) {
+                    values.fontSize = parseFloat(s.fontSize);
+                    const range = document.createRange();
+                    range.selectNodeContents(el);
+                    values.textLines = new Set(
+                      [...range.getClientRects()]
+                        .filter((r) => r.width > 0)
+                        .map((r) => r.top),
+                    ).size;
+                  }
+                  for (const name of [
+                    'paddingTop',
+                    'paddingRight',
+                    'paddingBottom',
+                    'paddingLeft',
+                    'borderTopWidth',
+                    'borderRightWidth',
+                    'borderBottomWidth',
+                    'borderLeftWidth',
+                    'borderTopLeftRadius',
+                  ])
+                    values[name] = parseFloat(s[name]) || 0;
+                  return [el.dataset.geometry, values];
+                }),
+              ),
+            Boolean(fixture.expectedGeometry),
           ),
         );
         await page.close();
@@ -181,6 +206,7 @@ export async function audit(options) {
         fixture: fixture.id,
         profile: fixture.profile,
         structuralExceptions: fixture.structuralExceptions ?? [],
+        expectedGeometry: fixture.expectedGeometry ?? [],
         reference: snapshots[0],
         actual: snapshots[1],
         mismatches: [],
@@ -204,6 +230,9 @@ export async function audit(options) {
             result.allowed.push({ ...difference, reason: exception.reason });
           else result.mismatches.push(difference);
         }
+      result.mismatches.push(
+        ...checkExpectedGeometry(fixture.expectedGeometry, snapshots[1]),
+      );
       report.failures += result.mismatches.length;
       report.results.push(result);
       console.log(

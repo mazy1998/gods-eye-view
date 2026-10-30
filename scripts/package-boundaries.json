@@ -919,7 +919,9 @@
       "src/ui/ShellStatusBar.vue",
       "src/ui/shellChrome.js",
       "src/ui/statusReadout.js",
-      "src/search/coordinateParser.js"
+      "src/search/coordinateParser.js",
+      "src/ui/settings/SettingsView.vue",
+      "src/ui/settings/settingsSurface.js"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2846,7 +2848,9 @@
       "src/ui/ShellMapControls.vue",
       "src/ui/ShellStatusBar.vue",
       "src/ui/shellChrome.js",
-      "src/ui/statusReadout.js"
+      "src/ui/statusReadout.js",
+      "src/ui/settings/SettingsView.vue",
+      "src/ui/settings/settingsSurface.js"
     ],
     "external": [
       "hls.js",

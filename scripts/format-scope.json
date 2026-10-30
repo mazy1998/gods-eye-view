@@ -1215,5 +1215,8 @@
   "src/ui/cockpitViews/cockpitBriefingPages.test.mjs",
   "src/ui/cockpitVision.js",
   "src/ui/cockpitViews/CockpitVisionView.vue",
-  "src/ui/cockpitViews/cockpitVisionView.test.mjs"
+  "src/ui/cockpitViews/cockpitVisionView.test.mjs",
+  "src/ui/settings/SettingsView.vue",
+  "src/ui/settings/settingsSurface.js",
+  "src/ui/settings/settingsView.dom.test.mjs"
 ]

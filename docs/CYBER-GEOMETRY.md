@@ -91,3 +91,13 @@ Draw as direct children of the legacy host, outside the hidden Map panel.
 Historical revisions without that placement retain a separate home-layout
 profile. Their numeric expectations cannot exempt changes in the drawer profile.
 The ancestry test checks both the direct-child chain and destination order.
+
+Settings derives its hosted form and provider headers from the application
+templates, at the drawer's 356px form width. This profile compares frame insets,
+borders and visibility, then explicitly checks 8px status pills, the existing
+11.2px provider names and single-line header text. Added metadata changes natural
+content height, so this profile does not compare that height to the old dialog.
+The fixture's `expectedGeometry` checks supplement the baseline comparison:
+new controls must not silently fall back to the same unstyled body font in both
+snapshots. These checks have no exception path and leave the other profiles'
+geometry comparisons unchanged.

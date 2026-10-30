@@ -31,7 +31,8 @@ import ShellMapControls from './ShellMapControls.vue';
 import ShellStatusBar from './ShellStatusBar.vue';
 import { createShellChrome } from './shellChrome.js';
 import { createStatusReadout } from './statusReadout.js';
-import AppearancePicker from './settings/AppearancePicker.vue';
+import SettingsView from './settings/SettingsView.vue';
+import { createSettingsSurface } from './settings/settingsSurface.js';
 import { createDrawerNavigation } from './drawerNavigation.js';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountContactsPanel } from './contactsPanel.js';
@@ -133,6 +134,15 @@ export class StyleManager extends ShellFacade {
     this._lifetime = new UiLifetime();
     // Vue views the shell mounted; dispose() releases them first.
     this._views = new Set();
+    this._settingsSurface = createSettingsSurface({
+      open: () => this._drawer?.open('settings'),
+      close: () => this._drawer?.close({ focus: true }),
+      closeLanguage: () => this._localePicker?.close(),
+      canOpenVoice: () =>
+        Boolean(document.getElementById('gev-voice-settings-button')),
+      openVoice: () =>
+        document.getElementById('gev-voice-settings-button')?.click(),
+    });
     this._recording = new RecordingControls({
       syncShareState: () => this._syncShareState(),
     });
@@ -1263,6 +1273,11 @@ export class StyleManager extends ShellFacade {
     };
   }
 
+  /** Connect the asynchronous local provider form without publishing its fields. */
+  connectProviderSettings(control) {
+    if (!this._disposed) this._settingsSurface.connect(control);
+  }
+
   /**
    * The rail and the one drawer. Each destination hosts its legacy panels
    * until a later step ports them; the drawer rests on phones and in Cockpit.
@@ -1276,15 +1291,12 @@ export class StyleManager extends ShellFacade {
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
     });
-    // Settings renders the appearance picker above its hosted controls.
-    const destinationViews = this._appearance
-      ? {
-          settings: {
-            component: AppearancePicker,
-            props: { appearance: this._appearance },
-          },
-        }
-      : {};
+    const destinationViews = {
+      settings: {
+        component: SettingsView,
+        props: { appearance: this._appearance, surface: this._settingsSurface },
+      },
+    };
     const props = { drawer: this._drawer, views: destinationViews };
     const before = document.body.firstChild;
     const views = [ShellRail, ShellDrawer].map((component) =>
@@ -1988,6 +2000,7 @@ export class StyleManager extends ShellFacade {
     this._cockpitVision?.dispose();
     for (const view of this._views) view.dispose();
     this._views.clear();
+    this._settingsSurface.destroy();
     this._navigation.stop();
     this._shareState.destroy();
     this._locationNavigation.destroy();

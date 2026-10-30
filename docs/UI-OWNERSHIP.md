@@ -247,3 +247,23 @@ for search only where the field is in it, the tray's Escape leaves the header
 field alone, and the voice dock reorders `#location-bar` only while it is in
 the dock. Tools hosts `#geo-import-group` and `#draw-group` through the
 drawer's `elements`.
+
+
+## Settings sections
+
+`SettingsView.vue` presents Providers, Voice and Language & help through the
+navigation-only `settingsSurface` adapter. The provider initializer connects
+asynchronously; unsupported hosts show the local-configuration guidance.
+`keySetup.host()` leases the existing form and description into the destination,
+then restores their homes and dialog semantics when it leaves. The original
+password inputs stay native and uncontrolled across tabs, folding, borrowing and
+return. Keys never enter the navigation channel. Provider status, managed-key
+rules, OAuth, saving, cancellation and clearing after a successful save remain
+with keySetup. Its embedded lease disables its dialog keyboard trap; the drawer
+owns Escape and focus return. It never clones fields or adds a save operation.
+
+The first three provider cards are Cesium ion, Google Maps and OpenAI. Additional
+cards stay mounted behind a disclosure. The provider links follow their fields
+in keyboard order. Voice invokes the existing settings action without starting
+a session. Language & help borrows the existing picker, closing its menu through
+its owner before returning it, and uses the existing appearance owner.

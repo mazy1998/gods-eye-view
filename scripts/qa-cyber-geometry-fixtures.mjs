@@ -183,6 +183,118 @@ export function createFixtures(read) {
           : structuralExceptions,
     };
   });
+  if (read('src/ui/applicationShell.js').includes('component: SettingsView')) {
+    const vueTemplate = (file) => {
+      const source = read(file),
+        template = doc.createElement('template');
+      template.innerHTML = source.slice(
+        source.indexOf('<template>') + 10,
+        source.lastIndexOf('</template>'),
+      );
+      return template.content;
+    };
+    const view = vueTemplate('src/ui/settings/SettingsView.vue').querySelector(
+      '.gev-settings',
+    );
+    const section = view.querySelector('.gev-settings-section');
+    const providers = section.querySelector('.gev-settings-providers');
+    const form = load('src/ui/templates/provider-settings.html', '#key-setup');
+    form.removeAttribute('hidden');
+    form.classList.add('key-setup-embedded', 'visible');
+    form.style.width = '356px';
+    form.dataset.geometry = 'provider-frame';
+    form.querySelector('h2').dataset.geometry = 'provider-title';
+    form.querySelector('#key-setup-description').remove();
+    const prototype = vueTemplate(
+      'src/ui/settings/ProviderKeyRows.vue',
+    ).querySelector('.key-setup-row');
+    if (!prototype?.querySelector('.key-setup-state'))
+      throw Error('Missing provider state label');
+    const rows = form.querySelector('[data-key-setup-rows]');
+    const expectedGeometry = [];
+    for (const [id, name, exposed] of [
+      ['cesium', 'Cesium ion', true],
+      ['google', 'Google Maps', true],
+      ['openai', 'OpenAI', false],
+    ]) {
+      const row = prototype.cloneNode(false),
+        header = prototype.querySelector('.key-setup-row-head').cloneNode(true);
+      header.querySelector('.key-setup-external').remove();
+      header.querySelector('.key-setup-get').remove();
+      if (!exposed) header.querySelector('.key-setup-exposed').remove();
+      const title = header.querySelector('strong'),
+        state = header.querySelector('.key-setup-state');
+      title.textContent = name;
+      state.textContent = 'Not configured';
+      header.querySelector('.key-setup-tier').textContent = '●';
+      if (exposed)
+        header.querySelector('.key-setup-exposed').textContent = 'browser-side';
+      row.append(header);
+      row.dataset.set = 'false';
+      row.dataset.geometry = id + '-row';
+      title.dataset.geometry = id + '-name';
+      state.dataset.geometry = id + '-state';
+      rows.append(row);
+      for (const el of [title, state])
+        expectedGeometry.push({
+          node: el.dataset.geometry,
+          property: 'textLines',
+          value: 1,
+          reason:
+            'Provider names and their state pills each stay on one line; metadata may wrap independently.',
+        });
+      expectedGeometry.push({
+        node: state.dataset.geometry,
+        property: 'fontSize',
+        value: 8,
+        reason:
+          'New provider states use the existing Cyber browser-side pill typography, rather than the body font.',
+      });
+      expectedGeometry.push({
+        node: title.dataset.geometry,
+        property: 'fontSize',
+        value: 11.2,
+        reason: 'Cyber retains its existing provider-name typography.',
+      });
+    }
+    providers.replaceChildren(form);
+    section.replaceChildren(providers);
+    view.replaceChildren(section);
+    for (const el of [view, ...view.querySelectorAll('*')])
+      for (const attribute of [...el.attributes])
+        if (/^(v-|:|@)/.test(attribute.name))
+          el.removeAttribute(attribute.name);
+    result.push({
+      id: 'settings',
+      profile: 'provider-headers',
+      // The added metadata changes content height; frame insets and visibility
+      // stay comparable, while explicit expectations pin the new header type.
+      properties: [
+        'visible',
+        'display',
+        'position',
+        'backdrop',
+        'paddingTop',
+        'paddingRight',
+        'paddingBottom',
+        'paddingLeft',
+        'borderTopWidth',
+        'borderRightWidth',
+        'borderBottomWidth',
+        'borderLeftWidth',
+        'borderTopLeftRadius',
+      ],
+      html: `<div class="gev-drawer-body" style="width:390px;padding:0 12px">${view.outerHTML}</div>`,
+      expectedGeometry,
+      structuralExceptions: [
+        {
+          id: 'provider-status-pills',
+          reason:
+            'The hosted form gains compact status pills beside the existing product names. Fixed header content isolates wrapping from credentials and provider payloads; the existing frame and title remain visible.',
+        },
+      ],
+    });
+  }
   dom.window.close();
   const chrome = doc.createElement('template');
   chrome.innerHTML =

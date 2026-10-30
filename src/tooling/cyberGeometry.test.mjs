@@ -5,7 +5,40 @@ import {
   compare,
   matchingException,
   validateExceptions,
+  checkExpectedGeometry,
 } from '../../scripts/qa-cyber-geometry.mjs';
+
+test('new-control typography is pinned even when a regression matches the old body font', () => {
+  const expectations = [
+    {
+      node: 'state',
+      property: 'fontSize',
+      value: 8,
+      reason: 'Match the existing small pill.',
+    },
+    {
+      node: 'name',
+      property: 'textLines',
+      value: 1,
+      reason: 'Keep product names intact.',
+    },
+  ];
+  assert.deepEqual(
+    checkExpectedGeometry(expectations, {
+      state: { fontSize: 8 },
+      name: { textLines: 1 },
+    }),
+    [],
+  );
+  assert.equal(
+    checkExpectedGeometry(expectations, {
+      state: { fontSize: 16 },
+      name: { textLines: 2 },
+    }).length,
+    2,
+  );
+  assert.equal(checkExpectedGeometry(expectations, {}).length, 2);
+});
 
 test('geometry CLI requires an artifact and caps pixel tolerances', () => {
   assert.throws(() => parseArgs([]), /--out/);
@@ -84,6 +117,11 @@ test('host fixtures retain real panel roots, bodies and measured ancestor chains
       '#gev-legacy-host > #draw-group.pp-toggle-group > #draw-toggle',
       '#gev-legacy-host > #geo-import-group.pp-toggle-group > #geo-import-button',
     ],
+    settings: [
+      '.gev-drawer-body > .gev-settings.gev-surface > .gev-settings-section > .gev-settings-providers > #key-setup.key-setup-embedded',
+      '#key-setup > .key-setup-rows > .key-setup-row > .key-setup-row-head > strong',
+      '.key-setup-row-head > .key-setup-state',
+    ],
   };
   for (const fixture of fixtures) {
     const dom = new JSDOM(fixture.html);
@@ -96,6 +134,17 @@ test('host fixtures retain real panel roots, bodies and measured ancestor chains
           (el) => el.id,
         ),
         ['geo-import-group', 'draw-group'],
+      );
+    }
+    if (fixture.id === 'settings') {
+      assert.equal(
+        dom.window.document.querySelectorAll('.key-setup-row').length,
+        3,
+      );
+      assert.equal(fixture.expectedGeometry.length, 12);
+      assert.equal(
+        dom.window.document.querySelector('#key-setup').style.width,
+        '356px',
       );
     }
     dom.window.close();

@@ -37,7 +37,11 @@ export function startApplicationChrome({
     });
   const keySetup = Promise.resolve(
     signal.aborted ? null : initializeSettings?.({ signal }),
-  );
+  ).then((surface) => {
+    if (!disposed && !signal.aborted)
+      styleManager.connectProviderSettings?.(surface);
+    return surface;
+  });
   // Own the pending initializer too; it must not reveal a dialog after abort.
   void keySetup.catch(() =>
     console.error('Provider settings initialization failed'),
@@ -49,6 +53,7 @@ export function startApplicationChrome({
     resolveDelay();
     loadingScreen.removeEventListener('transitionend', revealFirstRun);
     firstRun?.destroy();
+    styleManager.connectProviderSettings?.(null);
     (await keySetup.catch(() => null))?.destroy();
   };
 }

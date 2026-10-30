@@ -222,3 +222,210 @@
   outline-color: var(--gev-focus-ring) !important;
   outline-offset: 2px;
 }
+
+/* The destination leases the same form and language controls as their popovers. */
+.gev-settings {
+  min-width: 0;
+}
+.gev-settings-section {
+  padding: 12px 4px;
+}
+.gev-settings-section > p {
+  margin: 6px 0 18px;
+}
+.gev-settings-providers #key-setup.key-setup-embedded {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  overflow: visible;
+}
+.gev-settings-language #locale-picker {
+  position: relative;
+}
+.gev-settings-storage {
+  margin: 16px 0;
+}
+.gev-settings-storage summary {
+  cursor: pointer;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings.gev-surface {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 400 14px / 1.5 var(--gev-font-sans);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings-section > p,
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings-storage {
+  color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings-section > h3 {
+  margin: 20px 0 12px;
+  font: 600 16px / 1.4 var(--gev-font-sans);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings-section > a {
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-providers
+  #key-setup.key-setup-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  > :is(.key-setup-header, h2) {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-rows {
+  margin: 0;
+  max-height: none;
+  overflow: visible;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row {
+  padding: 16px;
+  gap: var(--gev-space-2);
+  border-radius: var(--gev-radius-md);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row-head {
+  flex-wrap: wrap;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row-head
+  strong {
+  flex: 1;
+  font-size: 16px;
+}
+:where(:root:not([data-ui-theme='cyber'])) .key-setup-state {
+  padding: 5px 8px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  color: var(--gev-text-muted);
+  background: var(--gev-control-bg);
+  font-size: 12px;
+}
+:where(:root[data-ui-theme='cyber']) #key-setup .key-setup-state {
+  font-size: 0.5rem;
+  letter-spacing: 0.06rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+:where(:root[data-ui-theme='cyber'])
+  #key-setup.key-setup-embedded
+  .key-setup-row-head {
+  flex-wrap: wrap;
+}
+:where(:root[data-ui-theme='cyber'])
+  #key-setup.key-setup-embedded
+  .key-setup-row-head
+  strong {
+  white-space: nowrap;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-fields {
+  margin-top: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-fields
+  input {
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-footer {
+  margin-top: 16px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-apply {
+  width: 100%;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-hint {
+  display: none;
+}
+
+.gev-settings-language .locale-picker-popup {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 8px;
+}
+.gev-settings-language .locale-picker {
+  flex-wrap: wrap;
+}
+
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row
+  > .key-setup-get {
+  justify-self: start;
+  margin: 0;
+}
+
+:where(:root:not([data-ui-theme='cyber'])) .gev-settings .gev-tab {
+  padding: 12px 6px;
+  white-space: nowrap;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--gev-space-1);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-led {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-row-head
+  strong {
+  grid-area: 1 / 1;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-state {
+  grid-area: 1 / 2;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-tier {
+  grid-area: 2 / 1;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-exposed {
+  grid-area: 2 / 2;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup.key-setup-embedded
+  .key-setup-external {
+  grid-column: 1 / -1;
+}
