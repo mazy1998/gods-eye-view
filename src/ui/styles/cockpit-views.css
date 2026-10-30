@@ -1,8 +1,7 @@
 /* Cockpit's panels take the appearance's colours; cockpit.css keeps their
    geometry. The instruments drawn over the scene keep the HUD accent (flights
    cyan, military amber), whose legibility depends on the imagery rather than
-   the appearance, and Cyber keeps its own look. The expanded Display control
-   keeps the material its borrowed Display groups are styled for.
+   the appearance, and Cyber keeps its own look.
    Selector lists keep ids and classes apart, because :is() takes its most
    specific argument and would otherwise outrank the state rules below. */
 
@@ -14,7 +13,7 @@
     .cockpit-signal-window,
     .cockpit-vision-controls,
     .cockpit-utility-control:not(.is-expanded) > .cockpit-utility-launcher,
-    .cockpit-utility-control.is-expanded:has([data-cockpit-launcher='radio'])
+    .cockpit-utility-control.is-expanded
   ) {
   border-color: var(--gev-border-subtle);
   background: var(--gev-surface-base);
@@ -362,59 +361,158 @@
   color: var(--gev-text);
 }
 
-/* Utility launchers and the Radio popover. */
+/* Utility launchers and their popovers. */
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  .cockpit-utility-control:not(
-    .is-expanded:has([data-cockpit-launcher='display'])
-  )
   .cockpit-utility-launcher {
   color: var(--gev-text-muted);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  .cockpit-utility-control:not(
-    .is-expanded:has([data-cockpit-launcher='display'])
-  )
   .cockpit-utility-divider {
   background: var(--gev-border-subtle);
   box-shadow: none;
 }
-:where(:root:not([data-ui-theme='cyber']))
-  #cockpit-hud
-  .cockpit-utility-control:not(
-    .is-expanded:has([data-cockpit-launcher='display'])
-  )
-  .cockpit-utility-glyph {
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-utility-glyph {
   border-color: var(--gev-border);
   background: var(--gev-control-bg);
   color: var(--gev-text);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  .cockpit-utility-control:not(
-    .is-expanded:has([data-cockpit-launcher='display'])
-  )
   .cockpit-utility-glyph:hover {
   background: var(--gev-control-bg-hover);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  .cockpit-utility-control:not(
-    .is-expanded:has([data-cockpit-launcher='display'])
-  )
   .cockpit-utility-glyph:focus-visible {
   outline: 2px solid var(--gev-focus-ring);
 }
-:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-radio-compact {
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-popover {
   border-top-color: var(--gev-border-subtle);
 }
+/* The Display groups Cockpit borrows from Map & Look keep their Cockpit
+   layout; like Map & Look, the popover gives their legacy colours the
+   appearance's values. */
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud #cockpit-display-panel {
+  --text-primary: var(--gev-text);
+  --text-secondary: var(--gev-text-muted);
+  --text-dim: var(--gev-text-muted);
+  --accent: var(--gev-accent);
+  --accent-dim: var(--gev-accent-tint);
+  --accent-glow: var(--gev-accent-tint);
+  --glass-bg: transparent;
+  --glass-border: var(--gev-border-subtle);
+  --glass-border-hover: var(--gev-border);
+  --menu-bg: var(--gev-surface-overlay);
+  color: var(--gev-text);
+  color-scheme: var(--gev-color-scheme);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .pp-toggle-btn:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .pp-toggle-btn.active {
+  box-shadow: none;
+}
+/* Mode buttons and segments: the chosen one is filled with the accent and
+   carries its paired text colour. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .pp-mode-btn:not(.gev-segment) {
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  :is(.pp-mode-btn, .gev-segment):hover:not(
+    :disabled,
+    .active,
+    [aria-checked='true']
+  ) {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  :is(
+    .pp-mode-btn:not(.gev-segment).active,
+    .gev-segment[aria-checked='true']
+  ) {
+  background: var(--gev-accent);
+  color: var(--gev-on-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  :is(.pp-mode-btn, .gev-segment):focus-visible {
+  box-shadow: inset 0 0 0 4px var(--gev-focus-ring-inner);
+}
+/* Detection's green modes take the shared accent tint, as Map & Look's
+   switches do; every active label reads in the accent's text colour. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  #detection-toggle:is(.active, .panoptic, .god) {
+  border-color: var(--gev-accent);
+  background: var(--gev-accent-tint);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .pp-toggle-btn.active
+  :is(.pp-label, .pp-icon) {
+  color: var(--gev-accent-text);
+  text-shadow: none;
+}
+/* The HUD layout menu: its field and option list follow the appearance. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  select {
+  color-scheme: var(--gev-color-scheme);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .pp-select {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  #param-slider-panel {
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  #param-slider-panel:not(.collapsed)
+  .param-panel-divider {
+  background: var(--gev-border-subtle);
+  box-shadow: none;
+}
 
-/* The Radio volume sits outside a .gev-surface, where the shared slider
+/* The popovers' sliders sit outside a .gev-surface, where the shared slider
    would tokenise its track. */
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  #cockpit-radio-volume::-webkit-slider-runnable-track {
+  #cockpit-radio-volume::-webkit-slider-runnable-track,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .gev-quantitative-slider::-webkit-slider-runnable-track {
   background: var(--gev-border);
 }
 :where(:root:not([data-ui-theme='cyber']))
@@ -422,18 +520,34 @@
   #cockpit-radio-volume::-moz-range-track,
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  #cockpit-radio-volume::-moz-range-progress {
+  #cockpit-radio-volume::-moz-range-progress,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .gev-quantitative-slider::-moz-range-track,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .gev-quantitative-slider::-moz-range-progress {
   background: var(--gev-border);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  #cockpit-radio-volume::-webkit-slider-thumb {
+  #cockpit-radio-volume::-webkit-slider-thumb,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .gev-quantitative-slider::-webkit-slider-thumb {
   background: var(--gev-accent);
   box-shadow: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #cockpit-hud
-  #cockpit-radio-volume::-moz-range-thumb {
+  #cockpit-radio-volume::-moz-range-thumb,
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  .gev-quantitative-slider::-moz-range-thumb {
   background: var(--gev-accent);
   box-shadow: none;
 }
