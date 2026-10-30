@@ -38,6 +38,9 @@
   --gev-focus-ring-inner: #061014;
   --gev-control-bg: rgba(255, 255, 255, 0.06);
   --gev-control-bg-hover: rgba(255, 255, 255, 0.09);
+  --gev-switch-track-off: var(--gev-control-bg);
+  --gev-switch-track-off-hover: var(--gev-control-bg-hover);
+  --gev-switch-thumb-ring: none;
   /* A switch knob or slider thumb, light on every appearance's track. */
   --gev-control-thumb: #fff;
   /* How far along its track a slider's fill reaches, in units of the input's
@@ -122,6 +125,9 @@
   --gev-focus-ring-inner: #fff;
   --gev-control-bg: rgba(16, 40, 52, 0.05);
   --gev-control-bg-hover: rgba(16, 40, 52, 0.08);
+  --gev-switch-track-off: #c9cdd1;
+  --gev-switch-track-off-hover: #bcc2c8;
+  --gev-switch-thumb-ring: 0 0 0 1px var(--gev-text-muted);
   --gev-backdrop-blur: blur(18px) saturate(1.4);
   --gev-elevation-1: 0 1px 2px rgba(16, 32, 40, 0.12);
   --gev-elevation-2: 0 12px 32px rgba(16, 32, 40, 0.18);

@@ -89,6 +89,12 @@
 :where(:root:not([data-ui-theme='cyber'])) .layer-browser .data-count {
   color: var(--gev-accent-text);
 }
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .gev-toggle[aria-checked='false']
+  + .data-count-empty {
+  visibility: hidden;
+}
 .layer-browser .data-toggle-btn {
   /* Native focus scrolling must include the 2px outline and its 2px offset. */
   scroll-margin-block: 4px;

@@ -78,7 +78,7 @@
   height: 20px;
   border: 1px solid var(--gev-border);
   border-radius: var(--gev-radius-pill);
-  background: var(--gev-control-bg);
+  background: var(--gev-switch-track-off);
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast);
@@ -95,11 +95,29 @@
     transform var(--transition-fast),
     background-color var(--transition-fast);
 }
+:where(:root:not([data-ui-theme='cyber'])) .gev-toggle-thumb {
+  background: var(--gev-control-thumb);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-toggle[aria-checked='false']
+  .gev-toggle-thumb {
+  box-shadow: var(--gev-switch-thumb-ring);
+}
 .gev-toggle:hover:not(:disabled, [aria-busy='true']) .gev-toggle-track {
   background: var(--gev-control-bg-hover);
 }
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-toggle[aria-checked='false']:hover:not(:disabled, [aria-busy='true'])
+  .gev-toggle-track {
+  background: var(--gev-switch-track-off-hover);
+}
 .gev-toggle[aria-checked='true'] .gev-toggle-track {
   border-color: var(--gev-accent);
+  background: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-toggle[aria-checked='true']:hover:not(:disabled, [aria-busy='true'])
+  .gev-toggle-track {
   background: var(--gev-accent);
 }
 .gev-toggle[aria-checked='true'] .gev-toggle-thumb {
