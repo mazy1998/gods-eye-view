@@ -1992,7 +1992,7 @@ async function main() {
       railButton('map').click();
       result.display = {
         displayOpen: drawer.channel.getSnapshot().destination === 'map',
-        displayShown: fully(document.querySelector('#pp-toggles .pp-header-row')),
+        displayShown: fully([...document.querySelectorAll('#pp-toggles .pp-header-row, #pp-toggles .map-look > [role="tablist"]')].find((row) => row.getClientRects().length)),
         cctvHidden: hidden('cctv-panel'),
         contextHidden: hidden('global-context-panel'),
         contextDisclosureTruthful: truthful('global-context-panel'),
