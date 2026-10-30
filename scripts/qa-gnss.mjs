@@ -313,8 +313,19 @@ function toggleState(id) {
 
 /** Press a key on the focused GNSS toggle and wait for the lifecycle to settle. */
 async function pressToggle(page, key, wantEnabled) {
-  await page.evaluate((id) => {
-    document.querySelector(`[data-layer-id="${id}"] .data-toggle-btn`)?.focus();
+  await page.evaluate(async (id) => {
+    const row = document.querySelector(`[data-layer-id="${id}"]`);
+    // A row in a collapsed Layers category is hidden: open its category
+    // first, as a user would, and let the list paint before focusing.
+    const list = row?.closest('[id^="layer-category-"]');
+    const category =
+      list &&
+      document.querySelector(`.layer-category[aria-controls="${list.id}"]`);
+    if (category?.getAttribute('aria-expanded') === 'false') {
+      category.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    row?.querySelector('.data-toggle-btn')?.focus();
   }, LAYER_ID);
   await page.keyboard.press(key);
   await page

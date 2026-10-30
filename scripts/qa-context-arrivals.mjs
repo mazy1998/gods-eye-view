@@ -473,14 +473,21 @@ async function contacts() {
   await sleep(2000);
 
   // SEARCH NEARBY SITES, as the user presses it.
-  await page.evaluate(() => {
-    document.getElementById('toast').textContent = '';
+  // The toast is a view's node: record what it shows rather than clearing it,
+  // and wait for the search to change it.
+  const toastBefore = await page.evaluate(() => {
+    const before = document.getElementById('toast').textContent.trim();
     document.getElementById('installations-search-btn').click();
+    return before;
   });
   await page
     .waitForFunction(
-      () => document.getElementById('toast').textContent.trim().length > 0,
+      (before) => {
+        const text = document.getElementById('toast').textContent.trim();
+        return text.length > 0 && text !== before;
+      },
       { timeout: 20_000 },
+      toastBefore,
     )
     .catch(() => {});
   const toast = await page.evaluate(() =>

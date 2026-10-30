@@ -424,7 +424,23 @@ try {
   const offPass = result.passes.find((p) => !p.alpr);
   for (const pass of result.passes) {
     for (const [index, stop] of pass.stops.entries()) {
+      // The screencast sends a frame only when the screen changes, so a still
+      // screen leaves gaps: the screen at any moment is the latest frame sent
+      // before it. A hold starts from the frame on screen when it began.
+      const onScreen = recorder.frames.reduce(
+        (last, frame) =>
+          frame.timestamp * 1000 <= stop.holdEpochMs[0] &&
+          (!last || frame.timestamp > last.timestamp)
+            ? frame
+            : last,
+        null,
+      );
       const frames = framesIn(stop.holdEpochMs);
+      if (
+        onScreen &&
+        !frames.some((f) => f.timestamp * 1000 <= stop.holdEpochMs[0])
+      )
+        frames.unshift({ ...onScreen, timestamp: stop.holdEpochMs[0] / 1000 });
       const counts = [];
       for (const frame of frames)
         counts.push({
@@ -437,9 +453,15 @@ try {
         continue;
       }
       const baseline = offPass?.stops[index]?.cyanBaseline ?? 0;
-      const tail = counts.filter(
+      const lastSecond = counts.filter(
         (c) => c.atMs >= stop.holdEpochMs[1] - stop.holdEpochMs[0] - 1000,
       );
+      // With no frame in its last second, a hold ends on the latest one.
+      const latest = counts.reduce(
+        (last, c) => (!last || c.atMs > last.atMs ? c : last),
+        null,
+      );
+      const tail = lastSecond.length || !latest ? lastSecond : [latest];
       const final = median(tail.map((c) => c.cyan)) - baseline;
       stop.renderedMarkerPixels = final;
       let visibleAt = null;

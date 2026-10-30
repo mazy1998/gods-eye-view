@@ -214,6 +214,15 @@ try {
   );
   const heading = (await state()).activeCamera.headingDeg;
   const chip = '.cctv-cal-value[data-cal-field="heading"]';
+  // The calibration readout sits behind a disclosure that starts closed:
+  // open it as a user would, and let the editor paint before the chip.
+  const calibration = await page.$(
+    '[aria-controls="cctv-calibration-editor"][aria-expanded="false"]',
+  );
+  if (calibration) {
+    await calibration.click();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  }
   await page.click(chip);
   await page.focus(`${chip} input`);
   await page.keyboard.down(selectAllModifier);
