@@ -252,6 +252,114 @@ test('identical updates write nothing and status keeps its line through loading 
   assert.equal(f.container.children.length, 0);
   assert.equal(createWeatherPanel(), null);
 });
+test('weather legends accept six/eight-digit hex stops and hide invalid or incomplete scales', (t) => {
+  const f = fixture();
+  const view = createWeatherPanel(f);
+  t.after(() => view.destroy());
+  const show = (colors) =>
+    view.update([
+      {
+        ...wind,
+        legend: colors.map((color, index) => ({ color, label: String(index) })),
+      },
+    ]);
+  show(['#123456', '#AbCdEf88']);
+  const legend = f.container.querySelector('[data-block-id="legend"]');
+  const ramp = legend.querySelector('.rail-card-ramp');
+  const entries = legend.querySelector('.rail-card-legend-entries');
+  assert.equal(legend.hidden, false);
+  assert.equal(ramp.hidden, false);
+  assert.match(ramp.style.background, /^linear-gradient\(to right,/);
+  assert.deepEqual(
+    Array.from(entries.children, (node) => node.dataset.color),
+    ['#123456', '#AbCdEf88'],
+  );
+  for (const colors of [
+    ['#123456'],
+    ['#123456', '#abc'],
+    ['#123456', '#12345g'],
+    ['#123456', 'red'],
+    ['#123456', ''],
+  ]) {
+    show(colors);
+    assert.equal(legend.hidden, true, JSON.stringify(colors));
+    assert.equal(ramp.hidden, true);
+    assert.equal(ramp.style.background, '');
+    assert.equal(entries.children.length, 0);
+  }
+  show(['#123456', '#ffffff']);
+  assert.equal(legend.hidden, false, 'a valid replacement restores the scale');
+  assert.equal(ramp.hidden, false);
+});
+test('temperature legends anchor freezing to the stop index and avoid identical style writes', (t) => {
+  const f = fixture();
+  const view = createWeatherPanel(f);
+  t.after(() => view.destroy());
+  const show = (labels, units = '°C', status = '') =>
+    view.update([
+      {
+        ...wind,
+        summary: { ...wind.summary, units, status },
+        legend: labels.map((label) => ({ label, color: '#abcdef' })),
+      },
+    ]);
+  show(['-10', '0', '10']);
+  const zero = f.container.querySelector('.rail-card-zero');
+  const ramp = f.container.querySelector('.rail-card-ramp');
+  assert.equal(zero.hidden, false);
+  assert.equal(zero.style.left, '50%');
+  const styles = new MutationObserver(() => {});
+  styles.observe(ramp, { attributes: true, subtree: true });
+  t.after(() => styles.disconnect());
+  show(['-10', '0', '10'], '°C', 'Updated forecast');
+  assert.equal(line(f, wind.id, 'status').textContent, 'Updated forecast');
+  assert.deepEqual(
+    styles.takeRecords(),
+    [],
+    'unchanged styles survive a card refresh',
+  );
+  show(Array.from({ length: 10 }, (_, i) => String(i * 10 - 40)));
+  assert.ok(Math.abs(parseFloat(zero.style.left) - (4 / 9) * 100) < 0.001);
+  for (const [labels, position] of [
+    [['0', '10'], '0%'],
+    [['-10', '0'], '100%'],
+  ]) {
+    show(labels);
+    assert.equal(zero.hidden, false);
+    assert.equal(zero.style.left, position);
+  }
+  for (const [labels, units] of [
+    [['1', '2'], '°C'],
+    [['-10', '0', '10'], 'km/h'],
+  ]) {
+    show(labels, units);
+    assert.equal(zero.hidden, true);
+    assert.equal(zero.style.left, '');
+  }
+});
+test('weather coverage badges hide empty text without acquiring feed-health semantics', (t) => {
+  const f = fixture();
+  const view = createWeatherPanel(f);
+  t.after(() => view.destroy());
+  const show = (coverage, status) =>
+    view.update([{ ...wind, summary: { ...wind.summary, coverage, status } }]);
+  show('Global · 1° grid', 'Loading');
+  const badge = card(f, wind.id).querySelector('.weather-coverage');
+  for (const [coverage, status] of [
+    ['', 'Loading'],
+    [undefined, 'Unavailable'],
+    ['CONUS', 'Unavailable'],
+  ]) {
+    show(coverage, status);
+    assert.equal(card(f, wind.id).querySelector('.weather-coverage'), badge);
+    assert.equal(badge.hidden, !coverage);
+    assert.equal(badge.textContent, coverage || '');
+    assert.deepEqual({ ...badge.dataset }, {});
+    assert.equal(badge.getAttribute('role'), null);
+    assert.equal(badge.getAttribute('aria-live'), null);
+    assert.equal(badge.getAttribute('tabindex'), null);
+  }
+});
 test('count, hidden-empty and first-appearance expansion survive remount and owner collapse', () => {
   const f = fixture();
   let view = createWeatherPanel(f);
