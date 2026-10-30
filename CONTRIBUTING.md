@@ -115,7 +115,7 @@ The highest-leverage places to jump in:
 
 ## Architecture in one minute
 
-- **No framework.** Vanilla JS + [CesiumJS](https://cesium.com/platform/cesiumjs/) + [Vite](https://vitejs.dev/).
+- **Vue views over plain owners.** [CesiumJS](https://cesium.com/platform/cesiumjs/) + [Vite](https://vitejs.dev/), with UI views as [Vue 3](https://vuejs.org/) single-file components. Owners (layers, visual settings, panels, voice) stay plain JavaScript and publish their state on a channel; a view renders that state and calls the owner's operations, and keeps only view-local presentation state (typed drafts, a filter tab, a disclosure); anything shared, persisted or restored belongs to an owner. See [docs/UI-OWNERSHIP.md](docs/UI-OWNERSHIP.md) and [docs/COMPONENT-TESTS.md](docs/COMPONENT-TESTS.md).
 - **Assembly lives in `src/app/`; standalone defaults live in `src/standalone/`.** UI controllers live in `src/ui/`, layer factories in `src/layers/`, portable sources in `src/sources/`, and application operations in `src/services/`. Existing `src/data/<layer>.js` entries retain compatibility; new code belongs with its focused owner.
 - Sources acquire records; renderers own Cesium resources. Import `gods-eye-view/layers/<family>/source` when only a source factory is needed. Common voice controls consume the session interface; protocol adapters own connection details.
 - **Secrets stay server-side.** Anything needing a private key goes through a local proxy under `server/providers/`. The browser only ever sees the Google Maps key (which you restrict) and ephemeral tokens.

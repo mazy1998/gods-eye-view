@@ -205,7 +205,7 @@ const toolEdges = [
     })),
   ),
   // Surface background/elevation are intrinsic to a new container, not a legacy
-  // control override. S6a maps their semantic tokens to Cyber's panel palette.
+  // control override. Cyber's block of semantic tokens maps them to its panel palette.
   ...['draw-frame', 'import-frame'].flatMap((variant) =>
     plainStates.map((state) => ({
       variant,
@@ -213,7 +213,7 @@ const toolEdges = [
       comparison: 'surface',
       properties: ['backgroundColor', 'boxShadow'],
       reason:
-        'Removing the new surface removes its background/elevation; S6a owns the Cyber semantic token mapping.',
+        'Removing the new surface removes its background/elevation; the Cyber semantic tokens supply that palette.',
     })),
   ),
 ];

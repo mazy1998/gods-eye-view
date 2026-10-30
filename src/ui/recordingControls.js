@@ -1,7 +1,7 @@
 /**
  * Own recording chrome, safe frames and the pre-recording HUD snapshot. The
  * HUD controls are the Display view's: syncShareState publishes the HUD state
- * it paints (S11b-1), so this owner holds no HUD nodes.
+ * it paints, so this owner holds no HUD nodes.
  */
 export class RecordingControls {
   constructor({ syncShareState }) {

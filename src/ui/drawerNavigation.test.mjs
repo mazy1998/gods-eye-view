@@ -304,7 +304,7 @@ test('a rail restoring an auto-collapsed panel does not open the drawer', (t) =>
   assert.equal(destination(drawer), null);
 });
 
-test('a share restore opens the first expanded hosted panel in share order, once (K9)', (t) => {
+test('a share restore opens the first expanded hosted panel in share order, once', (t) => {
   const { drawer, restore } = fixture();
   t.after(() => drawer.destroy());
   const opened = [];

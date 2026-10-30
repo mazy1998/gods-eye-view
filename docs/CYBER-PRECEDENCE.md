@@ -17,7 +17,7 @@ have no legacy Cyber state rules and need their on/off indication, and the new
 destination rail's hover, current and focus states, which have no legacy
 control or Cyber rule (the browser audit pins their exact Cyber palette).
 
-Together with S6a's Cyber token block, the rule is: legacy Cyber owns the
+Together with the Cyber block of semantic tokens, the rule is: legacy Cyber owns the
 controls and states it styles; semantic tokens fill only the remaining new
 controls and surfaces. New structural borders use the Cyber glass-border token,
 not inherited text ink. Do not use the token block to override a legacy state.

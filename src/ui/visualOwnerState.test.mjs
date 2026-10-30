@@ -64,7 +64,7 @@ test('a written value lands where its range input would put it', () => {
 });
 
 test('the owner keeps Display values, sanitized as their sliders hold them', (t) => {
-  // The Display and Look views render these values (S11b-1, S11b-2); the
+  // The Display and Look views render these values; the
   // owner no longer paints or reads any slider.
   const owner = visualOwner(t);
   for (const [name, { value }] of Object.entries(DISPLAY_CONTROLS))
@@ -233,7 +233,7 @@ test('the map-stack channel follows settled activations and the status feed, and
 });
 
 test('share links encode the same options as before', (t) => {
-  // The new display settings are views only (K11, S11a); none joins share state.
+  // The new display settings are views only; none joins share state.
   assert.deepEqual(Object.keys(visualOwner(t)._readShareState().options), [
     'bloomIntensity',
     'bloomVersion',

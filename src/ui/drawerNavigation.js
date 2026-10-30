@@ -233,7 +233,7 @@ export function createDrawerNavigation({
   // A nested panel (Radio) sits deep in its destination; showing it scrolls
   // to it there, as it showed inside its container before. A Layers filter or
   // tab may hide its row's group: the list's own reveal shows the group first,
-  // and the scroll waits for that paint (K6).
+  // and the scroll waits for that paint.
   async function revealNested(id) {
     const node = hostOf.has(id) ? null : doc.getElementById(id);
     if (!node || !host.contains(node)) return;

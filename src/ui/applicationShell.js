@@ -965,7 +965,7 @@ export class StyleManager extends ShellFacade {
   _initMapStackControl() {
     if (!this.mapStackController) return;
 
-    // Views read the active stack and availability here (K11).
+    // Views read the active stack and availability here, without share sync.
     this._mapStack?.destroy();
     this._mapStack = createMapStackChannel({
       controller: this.mapStackController,
@@ -1935,7 +1935,7 @@ export class StyleManager extends ShellFacade {
 
   _initHUDToggle() {
     this._setHudVariant('tactical');
-    // The first view is clean (K12): the HUD starts off; H or Display turns it on.
+    // The first view is clean: the HUD starts off; H or Display turns it on.
     this.hud.setMode('off');
     this._updateHudButtonState();
 

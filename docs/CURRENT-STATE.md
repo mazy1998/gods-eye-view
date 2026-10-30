@@ -243,13 +243,13 @@ layouts retain their existing presentation.
 Chamfered panel expand/collapse controls use an inset keyboard-focus outline and
 red hover border in both map and cockpit, so clipping does not hide the highlight.
 
-Cyber's map-side right rail opens one panel at a time while keeping collapsed
-launchers available. Display, CCTV and Context scroll their contents inside fixed
+Where the right rail shows (Cockpit and the phone layout), Cyber's right rail
+opens one panel at a time while keeping collapsed launchers available. Display, CCTV and Context scroll their contents inside fixed
 headers and decorative frames. The narrow-screen rail remains scrollable to reach
 each panel. Radio retains the shared nested Context player and compact
 header disclosure, without relocating playback controls on theme changes.
 
-Voice help/error popups and Location/Visual Presets pins extend beyond their
+Voice help/error popups and the Location pin extend beyond their
 Cyber frames without being clipped: the shapes decorate non-interactive
 pseudo-elements. The lower-left telemetry card leaves room for attribution's
 full logo row. New panels can use the [shared surface contract](panel-surfaces.md)
@@ -605,8 +605,9 @@ Newer manual choices, Stop and provider replacement prevent an older operation
 from revealing its UI. Ambiguous requests to open settings ask whether the user
 means Voice Settings or Provider Settings before opening either panel. Named
 Voice Settings applies directly; Provider Settings opens the existing local
-provider dialog when available. Visual Presets targets the visual controls tray,
-while Scenes targets saved scenes. Selecting Preview does not enable a disabled
+provider dialog when available. Visual Presets opens Map & Look on its Look tab
+(map sources open Map; post processing and HUD controls open Display), while
+Scenes targets saved scenes. Selecting Preview does not enable a disabled
 Preview preference. Unverified speech captions use the localized Recent
 speech label; ordinary user captions retain YOU. Caption attribution does not
 control tool dispatch.
@@ -1378,12 +1379,30 @@ during viewer construction, before any tile builds a draw command.
 
 ## Map Source control ownership
 
-Map Source controls own chip listeners, source-state subscriptions and selection
-feedback. Loading remains with the supplied map controller. The active chip
-follows the source actually displayed, including fallback; obsolete completions
-cannot overwrite a newer selection. Refresh and destruction revoke old listeners
-and destruction suppresses late UI updates. Available choices and setup behavior
+Map Source controls own selection: the share claim, the switch, its errors and
+the share sync. Loading remains with the supplied map controller. The Map tab's
+tiles are a view of the map-stack channel, so the active tile follows the source
+actually displayed, including fallback, and a requested switch shows `...` from
+the moment it is asked for. Obsolete completions cannot overwrite a newer
+selection. Refresh re-renders the tiles and destruction stops selection, so
+tiles a caller still holds are inert. Available choices and setup behavior
 remain unchanged.
+
+## Map & Look
+
+The Map destination hosts Map & Look: Map, Look and Display tabs over the one
+Display panel (`#pp-toggles`). It opens on Look; the chosen tab lasts for the
+page and is neither persisted nor shared. Look holds the seven style tiles
+(drawn pictures, no imagery; keys `1`–`7` unchanged), the selected style's
+parameters, Sharpen and Bloom; Map holds the map-source tiles; Display holds
+HUD, detection, 3D models, scope, celestial and clean view. Those groups keep
+their own wrappers, moved once into the tabs, so Cockpit's Display portal still
+takes and returns them. "Configure map providers" opens Provider Settings where
+it can work and is absent elsewhere. Outside Cyber the tabs sit on the drawer's
+surface; Cyber keeps the panel's frame, DISPLAY header, palette and type. The
+dock's former Visual Presets tray is gone: share links still write its entry
+collapsed and unpinned, and an old link that had it open opens Map & Look on
+Look.
 
 ## Visual effects ownership
 
@@ -1521,8 +1540,8 @@ collapse can still be undone.
 At 720px and narrower, `src/ui/mobileShell.js` keeps the globe full screen and
 shows a bottom tab bar: Layers (Data Layers, with Scenes collapsed below),
 Cameras (CCTV and Street Level), Context (Global Context, plus Weather and
-Recent Imagery when shown), Search (Location) and More (Visual Presets and Map
-Source above Display). A tab opens one bottom sheet; the same tab, the backdrop
+Recent Imagery when shown), Search (Location) and More (Map & Look, with its
+Map, Look and Display tabs). A tab opens one bottom sheet; the same tab, the backdrop
 or Escape closes it, and focus moves into the sheet and back to its tab. A
 downward swipe of at least 64px on non-control sheet content also closes it,
 when every scroll container under the finger starts at the top. Ordinary
@@ -5331,8 +5350,8 @@ request viewbox and continues searching without that geographic preference.
 ### Map Stack Switcher (June 2026)
 
 - `src/mapStackController.js` switches between Google Photorealistic 3D (`photoreal`, the default when a Google or ion key is present), keyless Esri World Imagery (the zero-key default landing, with keyless terrain), Bing Aerial / Aerial-with-Labels via Cesium ion world imagery (require `CESIUM_ION_TOKEN`), and OSM tile fallback. Bing Road is **retired**: it is gone from `MAP_STACKS`, from the `set_map_stack` enum, and from the voice aliases (road phrasings now resolve to OSM, the one shipped road basemap). An old `map=bing-road` link is simply an unknown id and takes `setStack()`'s existing photoreal fallback with the Google 3D tile lit — pinned live in `scripts/qa-map-source-tray.mjs`.
-- The bottom Visual Presets tray presents a **five-tile MAP SOURCE row** (`#map-stack-chips`, `src/mapStackChips.js`): Google 3D, Esri Satellite, Bing Aerial, Bing Labels, and OSM. The duplicate left `#stack-panel` is retired. The five tiles share one row on desktop and two rows on narrow screens, carry `aria-pressed` on the active source, and remain keyboard-reachable with a visible focus outline.
-- The lit tile follows controller state, not the click: a rejected switch (no ion token) or a superseded one (rapid A→B) leaves the genuinely active source lit, and the tray heading keeps its short-label status readout (`...` while switching, amber on `lastError`).
+- Map & Look's Map tab presents the **five MAP SOURCE tiles** (`#map-stack-chips`, `src/ui/mapLook/MapStackPicker.vue`, modelled by `src/mapStackChips.js`): Google 3D, Esri Satellite, Bing Aerial, Bing Labels, and OSM. The duplicate left `#stack-panel` is retired. The five tiles form a two-column grid, carry `aria-pressed` on the active source, and remain keyboard-reachable with a visible focus outline.
+- The lit tile follows controller state, not the click: a rejected switch (no ion token) or a superseded one (rapid A→B) leaves the genuinely active source lit, and the tab's heading keeps its short-label status readout (`...` while switching, amber on `lastError`).
 - Ion stacks remain visible and keyboard-focusable when no ion token is configured, but expose `aria-disabled="true"` and do not switch. Their accessible label and tooltip quote `getStacks().unavailableReason` — the same string `setStack()` puts in the toast. OSM works keyless. The `ION` badge is gated on the stack's own `requiresIon`, so a `photoreal` chip unavailable because the Google tileset failed says so instead of falsely demanding an ion token.
 - Stack choice participates in share links (`src/sharelink.js`) and falls back to the best available stack when the requested one is unavailable (keyless boots land on Esri; OSM takes over automatically if Esri is unreachable; while that construction fallback is on screen Esri is retried in the background, 30 s doubling to a 10-minute cap with each attempt abandoned after 60 s, and replaces OSM once it loads. The switch to OSM after repeated Esri tile failures is not retried; selecting Esri again tries it). Share-link restore, the `set_map_stack` voice tool, and the chip row all land on the same `_setMapStack()` path.
 
@@ -5386,7 +5405,7 @@ request viewbox and continues searching without that geographic preference.
 
 ### Manual Whiteboard Drawing (September 2026)
 
-- DISPLAY ▸ **Draw** turns the globe into a whiteboard drawn by hand. Pick a shape (Area, Line, Pin), click the vertices on the real world, type an optional label and pick a colour, and finish. **Keyboard contract, live only while Draw is on and never while you are typing in another field:** Enter finishes the shape (as does a double-click, and the two cannot both submit it — the session is replaced before the annotate call is awaited); Backspace removes the last vertex; Esc cancels the shape in progress, and a second Esc — Esc on an empty session — leaves draw mode. Typing in the label field keeps Backspace; Enter there also finishes. **Clear** wipes the board (the shape in progress and every placed mark), so removing marks does not require the console or the microphone.
+- **Tools** ▸ **Draw** turns the globe into a whiteboard drawn by hand. Pick a shape (Area, Line, Pin), click the vertices on the real world, type an optional label and pick a colour, and finish. **Keyboard contract, live only while Draw is on and never while you are typing in another field:** Enter finishes the shape (as does a double-click, and the two cannot both submit it — the session is replaced before the annotate call is awaited); Backspace removes the last vertex; Esc cancels the shape in progress, and a second Esc — Esc on an empty session — leaves draw mode. Typing in the label field keeps Backspace; Enter there also finishes. **Clear** wipes the board (the shape in progress and every placed mark), so removing marks does not require the console or the microphone.
 - Runtime entry: `createApplicationTools` (`src/app/tools.js`, behind the `src/standalone/tools.js` shim) calls `initDrawTool({ viewer, annotations })` after `initAnnotations` and defers its `destroy()`, so disposing the shell returns every DOM listener, the Cesium handler, the preview data source, the borrowed click actions and the `window.__gevDrawTool` handle. Its markup is a DISPLAY-rail component template (`src/ui/templates/display-controls.html`), assembled into `index.html` at build time. That handle (`setActive`, `setShape`, `addVertex(lon, lat)`, `finish`, `cancel`, `clearAll`, `diagnostics`) is the no-mouse test seam.
 - Contract: a finished shape is submitted through the SAME `annotationEngine.annotate()` the voice agent uses, with geometry supplied and `manual: true` (`type: area` + `ring`, `type: route` + `path`, `type: pin` + coordinates). `resolveSpec` short-circuits manual specs (`resolveManualSpec`) so no geocoder, Places or Overpass call is made. A drawn area is a real (not synthesized) outline and drapes solid; a drawn line is a `route` with `mode: 'manual'`, labelled with its length and never a travel time; a pin is a point. Drawn marks therefore render with the whiteboard look, persist, de-dup, appear in `.list()`, and clear with `clear_annotations` / `.clear()`.
 - **A vertex is a lon/lat, and the mark is DRAPED.** Clicks are picked through `pickWorldFromScreen` — one of two scene helpers the annotation resolver factory (`src/annotations/resolver.js`) exposes alongside `sampleGroundHeight`, so the app has ONE depth-aware pick cascade rather than a second written beside it — which returns the height the pick landed on as well as the coordinate, so the live preview hangs on the roof or hillside under the pointer instead of sinking to sea level. The world renderer draws areas and routes with `clampToGround`, so the height is dropped at finish in one place (`finishSpec`) rather than being carried downstream and discarded silently: what you get is the outline you drew, lying on the surface beneath it.
@@ -5574,10 +5593,11 @@ apply to `public/` assets or built-preview serving.
   unchanged. The application scene owns and removes the relay listener.
 - Z ladder: panels around 100, voice pill 150, toast 200, clean-view exit 300.
 - Panel POSITION keys are versioned `v8` (`godsEyeView.v8.panelPos.<id>`); collapsed-state keys remain `v6`. The one-time position reset clears stale DISPLAY placements that could overlap the Context rail.
-- Map Source lives in the bottom Visual Presets tray. The left accordion contains no MAP STACK panel, and the `k` panel token that addressed it is gone from the share registry, so legacy `ui=k...` state takes the ordinary unknown-token skip.
-- A dock popover (Visual Presets, Location) auto-dismisses on mouse-away unless pinned. Focus inside the tray defers that dismissal only when the browser reports `:focus-visible` — keyboard focus and typed-into fields hold the tray open; a mouse-clicked tile does not, because Chromium focuses a `<button>` on press.
+- Map Source lives in Map & Look's Map tab. The left accordion contains no MAP STACK panel, and the `k` panel token that addressed it is gone from the share registry, so legacy `ui=k...` state takes the ordinary unknown-token skip.
+- The Location dock popover opens and closes by click and Escape and can be pinned open; nothing dismisses on mouse-away.
 - GEV MIC control is a glass capsule (var(--glass-bg), blur(24px) saturate(1.4), 999px radius; panel radius in error state).
-- The desktop right rail (`#right-context-rail`) owns `DISPLAY`, `CCTV`, its active parameter controls, and `GLOBAL CONTEXT` as one fixed responsive stack in that order. Its compact buttons use the same 176 px width as the left accordion and one consistent 50 px height, share the left stack's 52 px edge inset and measured top baseline across HUD variants, then constrain themselves against visible HUD/chrome rectangles and the remaining vertical corridor. `DISPLAY` is no longer draggable and legacy saved coordinates are ignored.
+- On desktop the drawer hosts Map & Look, Inspect and the other panels, and `#right-context-rail` and `#left-panel-stack` are hidden outside Cockpit and the phone layout (`src/ui/styles/shell.css`). The right-rail notes that follow describe the rail where it still shows.
+- The right rail (`#right-context-rail`) owns `DISPLAY`, `CCTV`, its active parameter controls, and `GLOBAL CONTEXT` as one fixed responsive stack in that order. Its compact buttons use the same 176 px width as the left accordion and one consistent 50 px height, share the left stack's 52 px edge inset and measured top baseline across HUD variants, then constrain themselves against visible HUD/chrome rectangles and the remaining vertical corridor. `DISPLAY` is no longer draggable and legacy saved coordinates are ignored.
 - The right rail is labeled **DISPLAY** (formerly "MOVE") and groups, in order, HUD, DETECT, Bloom, Sharpen, 3D, Clean-UI (HUD + DETECT promoted to the top). Its expanded controls retain the same compact 176 px width as the right-side tabs instead of growing to the wider Context detail-card width. It starts expanded on first run and respects the user's later `v6` collapse choice. Collapses/expands with directional chevrons (`◀` collapsed, `▶` expanded).
 - Display and Context use matching 330 px expanded widths and matching compact tab dimensions. The parameter panel is part of Display's expanded content. DISPLAY may remain open beside one contextual panel; CCTV and Context are mutually exclusive. In Tactical HUD, expanding CCTV or Context hides the other contextual launcher while DISPLAY remains independently available. The most recently opened right-rail panel owns the constrained lane even when it appears later in DOM order; passive restoration and automatic disclosure do not replace that explicit owner. Minimal and other HUD layouts retain the collapsed launchers; when their active panel exceeds the measured corridor, the rail reserves sibling heights and gaps and scrolls the active panel internally.
 - At 720px and below both panel stacks (`#left-panel-stack`, `#right-context-rail`) go edge-to-edge and scroll vertically. Every hosted panel's decorative `.panel-glow` is pinned to its panel box there (`inset: 0` in `src/ui/styles/responsive.css`): on desktop the glow overhangs the panel by 18–20 px as harmless paint, but inside a scroll container that overhang is scrollable overflow on both axes and drew a horizontal scrollbar band plus a vertical scrollbar that scrolled nothing but glow whenever CCTV, Context, Data Layers or Scenes was expanded. The glow's blur is ink overflow and never scrolls, so the look is unchanged. Do not fix this by clipping the stacks: `overflow-x: clip` would also clip the Context radio popover and would not remove the vertical scrollbar. Pinned by `src/ui/panelRails.test.mjs` against every `(max-width: 720px)` block in the flattened stylesheet.

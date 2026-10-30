@@ -281,7 +281,7 @@ test('scope choice and expanded feather survive every HUD layout and both restor
   const previous = { enabled: isScopeMaskEnabled(), feather: getScopeMaskFeather() };
   t.after(() => { setScopeMaskEnabled(previous.enabled); setScopeMaskFeather(previous.feather); });
   Object.assign(owner.services, { setScopeMaskEnabled, setScopeMaskFeather });
-  // The Scope view shows what the visual state reports (S11b-1): checked =
+  // The Scope view shows what the visual state reports: checked =
   // enabled, the feather slider disabled while off, and its value and readout
   // = the feather percentage.
   const shown = () => ({

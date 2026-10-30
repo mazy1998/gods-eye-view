@@ -3217,7 +3217,7 @@ function normalizeCockpitAction(value) {
 
 async function focusDataLayerRow(layerId) {
   // A filter/tab reset paints on Vue's scheduler; wait for that paint before
-  // measuring and scrolling the row (K6).
+  // measuring and scrolling the row.
   document
     .getElementById('data-toggles')
     ?.dispatchEvent(

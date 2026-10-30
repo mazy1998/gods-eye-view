@@ -6,7 +6,7 @@ import { createStateChannel } from '../app/stateChannel.js';
  * publishes on every settled activation, silent fallbacks included
  * (`controller.subscribe`), and on the status feed (`gev:map-stack-changed`),
  * switches in flight included. It never syncs share state, so share links are
- * unchanged (K11). Operations stay with the existing map-source controls.
+ * unchanged. Operations stay with the existing map-source controls.
  * @param {{controller: object, eventTarget?: EventTarget}} options
  * @returns {{channel: object, destroy: Function}}
  */

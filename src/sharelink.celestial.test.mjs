@@ -645,7 +645,7 @@ test('every explicit visual control facade claims restore authority before mutat
 
   const style = sourceBlock('  setStyle(styleName, {', '  _startTransition(styleName, fromValue, toValue) {');
   assertClaimsBefore(style, 'this.activeStyle = styleName', 'setStyle');
-  // The parameter sliders write through VisualSettings.setStyleParam (S11b-2).
+  // The parameter sliders write through VisualSettings.setStyleParam.
   const sliders = sourceBlock('  setStyleParam(styleName, name, value) {', '  _revealStyleParameters() {');
   assertClaimsBefore(sliders, 'uniforms[name] = value', 'style parameter slider');
 });

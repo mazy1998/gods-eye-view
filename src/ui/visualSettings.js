@@ -700,7 +700,7 @@ export class VisualSettings {
     this.services.governorRequestRender('cyber-visual-defaults');
   }
 
-  /** Apply the stored sonar settings; the HUD view shows them (S11b). */
+  /** Apply the stored sonar settings; the HUD view shows them. */
   _syncCyberSonarControl() {
     applyCyberSonarSettings(readCyberSonarSettings());
     this.publishState();

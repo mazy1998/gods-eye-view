@@ -148,7 +148,7 @@ The Contacts layer publishes what `#military-awareness-panel` shows; `mountConta
 
 The Space Missions layer publishes the roster, the selected mission and its replay controls. `mountMissionPanels` mounts `MissionRosterView` into `#space-mission-roster` and `MissionDetailView` as `#space-mission-panel` after it. The layer keeps selection, replay, telemetry cadence and pointer/keyboard preview ownership; the views report row pointer, focus and blur, and the speed input reports its native value. Each roster refresh renders new rows, so focus returns to the same mission by launch id, or past the list when it left. Both views render names and mission text as text.
 
-### First run and feedback (S22)
+### First run and feedback
 
 `firstRunExperience` retains show policy, missions, suppression/session writes,
 keyboard arbitration, busy/sticky status and teardown. `FirstRunContent.vue`

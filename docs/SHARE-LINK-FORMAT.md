@@ -225,7 +225,7 @@ reserved: a decoder ignores that entry, as for collapsed 0.
 
 | #   | Panel                  | Long-form token | Default             |
 | --- | ---------------------- | --------------- | ------------------- |
-| 0   | `control-panel`        | `c`             | collapsed, unpinned |
+| 0   | `control-panel`¹       | `c`             | collapsed, unpinned |
 | 1   | `location-bar`         | `l`             | collapsed, unpinned |
 | 2   | `data-panel`           | `d`             | collapsed           |
 | 3   | `cctv-panel`           | `v`             | collapsed           |
@@ -236,6 +236,11 @@ reserved: a decoder ignores that entry, as for collapsed 0.
 | 8   | `global-context-panel` | `g`             | collapsed           |
 | 9   | `pp-toggles`           | `p`             | collapsed           |
 | 10  | `param-slider-panel`   | `m`             | expanded            |
+
+¹ The dock tray this entry named is retired; Map & Look holds its styles and
+map sources. Links still write it collapsed and unpinned, as a default session
+did, and an entry that is expanded or pinned restores Map & Look on its Look
+tab.
 
 ### Style parameters (field 27)
 

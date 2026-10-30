@@ -67,7 +67,7 @@ try {
     for (const id of ['pp-toggles']) {
       shell.setPanelCollapsed(id, false, { persist: false, syncShare: false });
     }
-    // The first view has the HUD off (K12); these checks start from it on.
+    // The first view has the HUD off; these checks start from it on.
     shell.setHudVisible('on');
     await settle();
     const out = [];
@@ -113,7 +113,7 @@ try {
         (s) => s.bloom.enabled,
       ),
     );
-    // Display settings outside share links publish directly (S11a).
+    // Display settings outside share links publish directly.
     out.push(
       await run(
         'celestial ring',

@@ -14,7 +14,7 @@ const props = defineProps({
 const PRESET_MINUTES = [3, 5, 10, 15];
 // The minutes field is uncontrolled: it takes the owner's text when that text
 // changes, never on other repaints (cost ticks, status), so a value the field
-// holds is still there when its change commits (K6 ruling 1).
+// holds is still there when its change commits.
 const minutes = ref(null);
 const showMinutes = () => {
   if (minutes.value) minutes.value.value = props.state.customText;
