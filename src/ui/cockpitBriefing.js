@@ -188,7 +188,6 @@ export function maybeRefreshRegionalBrief(info) {
     this.regionalBriefRequestToken += 1;
     this.regionalBriefSubjectId = subjectId;
     this.regionalBrief = null;
-    this.regionalBriefStatus = null;
     this.regionalBriefAnchor = null;
     this.regionalBriefFetchedAt = 0;
   }
@@ -210,7 +209,7 @@ export function maybeRefreshRegionalBrief(info) {
   const controller = new AbortController();
   const requestToken = ++this.regionalBriefRequestToken;
   this.regionalBriefAbort = controller;
-  if (!this.regionalBrief) this.renderRegionalBriefStatus('loading', info);
+  if (!this.regionalBrief) this.renderRegionalBriefStatus('loading');
   this.services
     .fetchRegionalBrief(point.latitude, point.longitude, {
       signal: controller.signal,
@@ -223,7 +222,7 @@ export function maybeRefreshRegionalBrief(info) {
       )
         return;
       this.regionalBrief = payload;
-      this.renderRegionalBrief(payload, info);
+      this.renderRegionalBrief(payload);
     })
     .catch((error) => {
       if (
@@ -232,7 +231,7 @@ export function maybeRefreshRegionalBrief(info) {
         requestToken === this.regionalBriefRequestToken &&
         subjectId === this.regionalBriefSubjectId
       ) {
-        this.renderRegionalBriefStatus('unavailable', info);
+        this.renderRegionalBriefStatus('unavailable');
       }
     })
     .finally(() => {
@@ -241,8 +240,7 @@ export function maybeRefreshRegionalBrief(info) {
     });
 }
 
-export function renderRegionalBriefStatus(status, info) {
-  this.regionalBriefStatus = status;
+export function renderRegionalBriefStatus(status) {
   this.setBriefView({
     news: {
       statusHidden: false,
@@ -260,11 +258,9 @@ export function renderRegionalBriefStatus(status, info) {
           ? { place: t('REGION UNAVAILABLE') }
           : {},
   });
-  this.updateLocalPosition(info);
 }
 
-export function renderRegionalBrief(payload, info) {
-  this.regionalBriefStatus = 'loaded';
+export function renderRegionalBrief(payload) {
   const articles = Array.isArray(payload?.articles) ? payload.articles : [];
   const weather = payload?.weather;
   const condition = this.services.weatherCodeLabel(weather?.weatherCode);
@@ -312,7 +308,6 @@ export function renderRegionalBrief(payload, info) {
         : '—',
     },
   });
-  this.updateLocalPosition(info);
   if (this.signalStream)
     this.signalStream.dataset.regionalStatus = payload?.status || 'partial';
   if (this.briefPageIndex === 1 && this.briefSource) {

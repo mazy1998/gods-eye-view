@@ -146,9 +146,8 @@ test('a lost contact holds the readout derived while it was live', () => {
   assert.equal(owner.contextReadout.state, 'lost');
 });
 
-test('the regional brief status is held with its payload', () => {
+test('the regional brief status lives in the News projection', () => {
   const owner = {
-    updateLocalPosition() {},
     scheduleContextLayout() {},
     services: { weatherCodeLabel: () => '' },
     briefPageIndex: 0,
@@ -158,12 +157,13 @@ test('the regional brief status is held with its payload', () => {
       return setBriefView.call(this, view);
     },
   };
-  renderRegionalBriefStatus.call(owner, 'loading', {});
-  assert.equal(owner.regionalBriefStatus, 'loading');
-  renderRegionalBriefStatus.call(owner, 'unavailable', {});
-  assert.equal(owner.regionalBriefStatus, 'unavailable');
-  renderRegionalBrief.call(owner, { articles: [] }, {});
-  assert.equal(owner.regionalBriefStatus, 'loaded');
+  renderRegionalBriefStatus.call(owner, 'loading');
+  assert.equal(owner.briefView.news.statusState, 'loading');
+  renderRegionalBriefStatus.call(owner, 'unavailable');
+  assert.equal(owner.briefView.news.statusState, 'unavailable');
+  renderRegionalBrief.call(owner, { articles: [], newsStatus: 'empty' });
+  assert.equal(owner.briefView.news.statusState, 'empty');
+  assert.equal(owner.briefView.news.statusText, 'NO RECENT LOCATION MATCHES');
 });
 
 test('the News and Local pages follow the regional brief', () => {
@@ -181,31 +181,30 @@ test('the News and Local pages follow the regional brief', () => {
       this.setBriefView({ local: { coordinates: `${info.latitude}` } });
     },
   };
-  renderRegionalBriefStatus.call(owner, 'loading', { latitude: 1 });
+  owner.updateLocalPosition({ latitude: 1 });
+  renderRegionalBriefStatus.call(owner, 'loading');
   assert.equal(owner.briefView.news.statusText, 'ACQUIRING REGIONAL NEWS');
   assert.equal(owner.briefView.local.place, 'RESOLVING REGION');
-  renderRegionalBrief.call(
-    owner,
-    {
-      newsStatus: 'ok',
-      articles: Array.from({ length: 6 }, (_, i) => ({
-        url: `https://news.example/${i}`,
-        title: `<b>Story ${i}</b>`,
-        domain: 'news.example',
-      })),
-      place: { label: 'Austin' },
-      weather: { temperatureC: 21.6, windKph: 12.2, cloudCoverPct: 40 },
-    },
-    { latitude: 2 },
-  );
+  renderRegionalBrief.call(owner, {
+    newsStatus: 'ok',
+    articles: Array.from({ length: 6 }, (_, i) => ({
+      url: `https://news.example/${i}`,
+      title: `<b>Story ${i}</b>`,
+      domain: 'news.example',
+    })),
+    place: { label: 'Austin' },
+    weather: { temperatureC: 21.6, windKph: 12.2, cloudCoverPct: 40 },
+  });
   const { news, local } = owner.briefView;
   assert.equal(news.statusHidden, true);
   assert.equal(news.articles.length, 4, 'at most four articles');
   assert.equal(news.articles[0].title, '<b>Story 0</b>');
   assert.equal(local.place, 'AUSTIN');
   assert.equal(local.temperature, '22°C');
-  assert.equal(local.coordinates, '2');
+  // The response keeps the position the context tick last painted, not the
+  // one the request started from.
+  assert.equal(local.coordinates, '1');
   const count = published.length;
-  owner.updateLocalPosition({ latitude: 2 });
+  owner.updateLocalPosition({ latitude: 1 });
   assert.equal(published.length, count, 'an unchanged view is not published');
 });

@@ -173,9 +173,6 @@ export class CockpitViewController {
     this.briefTimer = null;
     this.lastAircraftInfo = null;
     this.regionalBrief = null;
-    // Where the regional brief stands for the current subject: null before a
-    // request, 'loading', 'unavailable', or 'loaded' with regionalBrief set.
-    this.regionalBriefStatus = null;
     this.regionalBriefAnchor = null;
     this.regionalBriefFetchedAt = 0;
     this.regionalBriefAbort = null;
@@ -373,11 +370,11 @@ export class CockpitViewController {
   maybeRefreshRegionalBrief(info) {
     return maybeRefreshRegionalBrief.call(this, info);
   }
-  renderRegionalBriefStatus(status, info) {
-    return renderRegionalBriefStatus.call(this, status, info);
+  renderRegionalBriefStatus(status) {
+    return renderRegionalBriefStatus.call(this, status);
   }
-  renderRegionalBrief(payload, info) {
-    return renderRegionalBrief.call(this, payload, info);
+  renderRegionalBrief(payload) {
+    return renderRegionalBrief.call(this, payload);
   }
   renderCockpitSignals() {
     return renderCockpitSignals.call(this);
