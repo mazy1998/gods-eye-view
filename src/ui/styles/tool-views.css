@@ -354,6 +354,7 @@
   .gev-legacy-host
   .directions-view--hosted
   .data-toggle-meta {
+  padding-inline-start: calc(24px + var(--gev-space-4));
   font: 14px / 1.5 var(--gev-font-sans);
   letter-spacing: normal;
 }
