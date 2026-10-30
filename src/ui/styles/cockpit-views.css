@@ -580,3 +580,46 @@
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
+
+/* The Radio card reads like the drawer's Radio row: the station in the sans
+   face, sentence-case controls and a labelled volume row. The launcher
+   above stays with Display's. */
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud #cockpit-radio-panel {
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-2) var(--gev-space-1) var(--gev-space-1);
+  border-top-color: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-radio-station {
+  font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-radio-enable-btn, .cockpit-radio-transport button) {
+  min-height: 32px;
+  border-radius: var(--gev-radius-sm);
+  font: 500 var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-radio-volume {
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-radio-volume-value {
+  min-width: 4ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* Static strings are upper case; the station name keeps its own case. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-radio-enable-btn, .cockpit-radio-volume > span) {
+  text-transform: lowercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-radio-enable-btn, .cockpit-radio-volume > span)::first-letter {
+  text-transform: uppercase;
+}

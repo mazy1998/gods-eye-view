@@ -150,3 +150,297 @@
 :root:not([data-ui-theme='cyber']) #radio-panel .gev-surface #radio-filter {
   --radio-tag-color-weight: 25%;
 }
+
+/* The drawer's row and card language for the expanded tuner and the local
+   receiver: sans type, sentence-case labels, regular buttons and fields, a
+   segmented mode choice and Map & Look's slider rows. Static labels are
+   shown in sentence case; station names, meta and readouts keep their own
+   text. Cyber keeps its Radio look. */
+:root:not([data-ui-theme='cyber']) #radio-panel .radio-panel-inner.gev-surface {
+  gap: var(--gev-space-3);
+  padding: var(--gev-space-3);
+  border-radius: var(--gev-radius-md);
+  font: var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .radio-panel-inner.gev-surface
+  > .panel-header
+  .panel-title {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .radio-panel-inner.gev-surface
+  > .panel-header
+  .panel-divider {
+  background: var(--gev-border-subtle);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-layer-state,
+    #sdr-connection-state,
+    .radio-filter-label,
+    label[for='radio-volume'] > span,
+    .radio-tuner-readout > span:last-child,
+    .sdr-gain-row label,
+    .radio-links a,
+    .radio-transport button,
+    #radio-enable-btn,
+    .sdr-radio-actions button,
+    #sdr-tune-btn
+  ) {
+  text-transform: lowercase;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-layer-state,
+    #sdr-connection-state,
+    .radio-filter-label,
+    label[for='radio-volume'] > span,
+    .radio-tuner-readout > span:last-child,
+    .sdr-gain-row label,
+    .radio-links a,
+    .radio-transport button,
+    #radio-enable-btn,
+    .sdr-radio-actions button,
+    #sdr-tune-btn
+  )::first-letter {
+  text-transform: uppercase;
+}
+/* Unit words after a number read in lower case: "12 heard". */
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .sdr-adsb-stats
+  > span
+  > span {
+  text-transform: lowercase;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-layer-state,
+    #sdr-connection-state,
+    .radio-filter-label,
+    .radio-station-card span,
+    .radio-tuner-header,
+    .radio-tuner-readout,
+    .radio-playback-state,
+    .radio-privacy,
+    .sdr-radio-card > p,
+    .sdr-gain-row label,
+    .sdr-frequency-row label,
+    .sdr-adsb-stats,
+    .sdr-feed-status
+  ) {
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-station-card strong, .sdr-radio-heading strong) {
+  font: 600 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .sdr-adsb-stats
+  output {
+  font: 600 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-station-card, .radio-tuner, .sdr-radio-card) {
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-3);
+  border-radius: var(--gev-radius-md);
+}
+/* Fields and buttons: the drawer's regular controls. */
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(#radio-filter, #sdr-gain-select, #sdr-frequency-input) {
+  min-height: 36px;
+  border-radius: var(--gev-radius-sm);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(
+    .radio-transport button,
+    .sdr-radio-actions button,
+    .sdr-seek-row button,
+    #sdr-tune-btn,
+    #radio-enable-btn
+  ) {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: var(--gev-radius-sm);
+  font: 500 var(--gev-font-size-md) / 1.2 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.radio-transport, .sdr-radio-actions, .sdr-seek-row) {
+  gap: var(--gev-space-2);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  :is(.sdr-radio-actions button, .sdr-seek-row button) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* FM or ADS-B: one choice, shown as Map & Look's segments. */
+:root:not([data-ui-theme='cyber']) #radio-panel .gev-surface .sdr-mode-row {
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-control-bg);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .sdr-mode-row
+  button {
+  flex: 1 1 0;
+  min-height: 32px;
+  border: 0;
+  border-radius: calc(var(--gev-radius-sm) - 2px);
+  background: none;
+  color: var(--gev-text-muted);
+  font: 500 var(--gev-font-size-md) / 1.2 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .sdr-mode-row
+  button:hover:not(:disabled) {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .sdr-mode-row
+  button.active {
+  color: var(--gev-text);
+  background: var(--gev-accent-tint);
+  box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
+}
+/* Volume: Map & Look's label, track and value row, with the filled track. */
+:root:not([data-ui-theme='cyber']) #radio-panel .gev-surface .radio-volume-row {
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr) 44px;
+  gap: var(--gev-space-3);
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-slider-value {
+  color: var(--gev-text);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider {
+  height: 18px;
+  container-type: inline-size;
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-border);
+  box-shadow: inset var(--gev-slider-fill) 0 0 0 var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  box-sizing: border-box;
+  border: 1px solid var(--gev-border-subtle);
+  background: var(--gev-control-thumb);
+  box-shadow: var(--gev-elevation-1);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #radio-panel
+  .gev-surface
+  .radio-volume-row
+  .gev-quantitative-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--gev-border-subtle);
+  background: var(--gev-control-thumb);
+  box-shadow: var(--gev-elevation-1);
+}
+/* The directory note and the privacy line read as body text. */
+:root:not([data-ui-theme='cyber']) #radio-panel .gev-surface .radio-links a {
+  font: 500 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+/* Cyber keeps the capitals these labels had before their acronyms were
+   written in mixed case. Chinese wrote two of them in mixed case already. */
+:root[data-ui-theme='cyber']
+  #radio-panel
+  :is(
+    .sdr-radio-heading strong,
+    #sdr-seek-back-btn,
+    #sdr-seek-forward-btn,
+    label[for='sdr-volume'] > span
+  ),
+:root[data-ui-theme='cyber']:not(:lang(zh))
+  #radio-panel
+  :is(label[for='sdr-frequency-input'], #sdr-adsb-stats > span > span) {
+  text-transform: uppercase;
+}

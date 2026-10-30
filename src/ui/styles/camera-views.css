@@ -350,7 +350,7 @@
 :where(:root:not([data-ui-theme='cyber']))
   :is(.gev-legacy-host, .mobile-shell)
   #context-cameras-view
-  .cctv-controls
+  :is(.cctv-controls, .cctv-calibration-header)
   :is(.scene-btn, #cctv-camera-select) {
   min-height: 36px;
   min-width: 0;
@@ -411,4 +411,124 @@
   border-radius: var(--gev-radius-sm);
   color: var(--gev-text);
   background: var(--gev-surface-base);
+}
+/* Static labels read in sentence case; camera names, provider names, pose
+   values and summaries keep the case they arrive in. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  :is(
+    #street-level-panel .panel-title,
+    :is(.cctv-controls, .cctv-calibration-header)
+      .scene-btn:not(#cctv-enable-btn),
+    .cctv-summary-label,
+    .gev-disclosure-row-label,
+    .sl-seg-btn,
+    .sl-btn-text,
+    .sl-since-label,
+    #sl-status
+  ) {
+  text-transform: lowercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  :is(
+    #street-level-panel .panel-title,
+    :is(.cctv-controls, .cctv-calibration-header)
+      .scene-btn:not(#cctv-enable-btn),
+    .cctv-summary-label,
+    .gev-disclosure-row-label,
+    .sl-seg-btn,
+    .sl-btn-text,
+    .sl-since-label,
+    #sl-status
+  )::first-letter {
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  :is(label.cctv-summary-label, .sl-btn-text, .sl-since-label) {
+  display: inline-block;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .cctv-summary-label {
+  color: var(--gev-text-muted);
+  font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .cctv-frame-caption {
+  font: 500 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  #sl-nearest-btn {
+  min-height: 36px;
+  font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* The source and calibration badges keep their status capitals, in the
+   drawer's sans face rather than tracked mono. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  :is(#cctv-source-badge, #cctv-quality-chip) {
+  font: 500 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* Provider chips match the Layers chips: one row of compact rounded
+   buttons, the provider's colour kept to the dot. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .sl-providers {
+  display: grid;
+  gap: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .sl-chips {
+  gap: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .sl-chips
+  .data-toggle-chip {
+  min-height: 32px;
+  padding: 0 var(--gev-space-3);
+  gap: var(--gev-space-2);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: var(--gev-radius-sm);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  .sl-chips
+  .data-toggle-chip.chip-error {
+  color: var(--gev-warning-text);
+  border-color: var(--gev-border);
+}
+/* Cyber shows the names, CCTV state and Open button in capitals as before;
+   Chinese already wrote Google's name in mixed case. */
+:root[data-ui-theme='cyber']
+  :is(#cctv-enable-btn, #sl-provider-chips .data-toggle-chip, #sl-nearest-btn) {
+  text-transform: uppercase;
+}
+:root[data-ui-theme='cyber']:lang(zh)
+  :is(
+    #sl-provider-chips .data-toggle-chip[data-chip-id='google'],
+    #sl-nearest-btn
+  ) {
+  text-transform: none;
 }

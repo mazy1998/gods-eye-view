@@ -57,7 +57,7 @@ const canCalibrate = computed(
         :class="{ active: view.enabled }"
         :aria-pressed="String(view.enabled)"
       >
-        {{ view.enabled ? t('CCTV ON') : t('CCTV OFF') }}
+        {{ view.enabled ? t('CCTV on') : t('CCTV off') }}
       </button>
       <button
         id="cctv-nearest-btn"

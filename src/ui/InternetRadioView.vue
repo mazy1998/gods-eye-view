@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { t } from '../i18n/index.js';
 import { radioCardView } from './radioCardView.js';
+import { sliderFill } from './displayViews/sliderFill.js';
 const props = defineProps({
   state: { type: Object, default: () => ({}) },
   tuner: { type: Object, default: () => ({}) },
@@ -170,6 +171,7 @@ const categoryTextColor = (color) =>
       :aria-label="t('Radio volume')"
       :disabled="!view.interactive"
       :value="volume"
+      :style="sliderFill(volume, 0, 100)"
     />
     <output
       id="radio-volume-value"

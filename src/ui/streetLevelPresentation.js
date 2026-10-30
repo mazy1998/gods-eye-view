@@ -147,7 +147,7 @@ function presentProviders(state) {
       title = `${provider.name}: ${translateStreetLevelError(provider.error)}`;
     return {
       id: provider.id,
-      label: translateKnown(provider.label),
+      label: translateKnown(provider.name || provider.label),
       color: provider.color || null,
       title,
       active: on,
@@ -210,12 +210,12 @@ function presentNearest(state) {
     .map((provider) => translateKnown(provider.name))
     .join(t(' or '));
   const labels = targets
-    .map((provider) => translateKnown(provider.label))
+    .map((provider) => translateKnown(provider.name || provider.label))
     .join(' / ');
   const ready = state.groundClickReady === true;
   return {
     visible: true,
-    label: t('OPEN {labels}', { labels }),
+    label: t('Open {labels}', { labels }),
     title: ready
       ? t('Open {names} at the centre of the view', { names })
       : t('Zoom in to a street to open {names} here', { names }),

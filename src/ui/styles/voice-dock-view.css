@@ -592,3 +592,151 @@
     display: none;
   }
 }
+
+/* The voice panel reads like a drawer card: a sentence-case title, the view
+   switch as a segmented track, and sans rows with quiet dividers. Sizes stay
+   with the base rules so coarse pointers keep their 44px targets. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel {
+  border-radius: var(--gev-radius-md);
+  font: var(--gev-font-size-md) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header {
+  gap: var(--gev-space-2);
+  padding-bottom: var(--gev-space-2);
+  border-bottom-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-title {
+  margin-right: auto;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-lg) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: lowercase;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-title::first-letter {
+  text-transform: uppercase;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  [role='tablist'] {
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-control-bg);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  :is(.gev-voice-panel-tab, :where(#gev-voice-settings-close)) {
+  color: var(--gev-text-muted);
+  background: none;
+  border-color: transparent;
+  border-radius: var(--gev-radius-sm);
+  box-shadow: none;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  :is(.gev-voice-panel-tab, :where(#gev-voice-settings-close)):hover {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: transparent;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel-header
+  .gev-voice-panel-tab[aria-selected='true'] {
+  color: var(--gev-text);
+  background: var(--gev-accent-tint);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  :is(
+    .gev-voice-preference,
+    .gev-voice-cost-setting-row,
+    select,
+    input[type='number']
+  ) {
+  font: var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  :is(.gev-voice-preference-toggle, .gev-voice-setting-title) {
+  font-weight: 500;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  .gev-voice-preference-toggle
+  input {
+  accent-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  :is(select, input[type='number']) {
+  border-radius: var(--gev-radius-sm);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  :is(.gev-voice-settings-note, .gev-voice-timeout-unit) {
+  font: var(--gev-font-size-sm) / 1.5 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-panel
+  :is(.gev-voice-timeout-group, .gev-voice-cost-settings) {
+  margin-top: var(--gev-space-3);
+  padding-top: var(--gev-space-3);
+  border-top-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-settings
+  .gev-voice-tier-btn {
+  border-radius: var(--gev-radius-sm);
+  font: 600 var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-cost-settings
+  .gev-voice-cost-value {
+  font: 500 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+  font-variant-numeric: tabular-nums;
+}

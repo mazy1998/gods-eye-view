@@ -381,7 +381,7 @@ for (const phone of [false, true]) {
         assert.equal(document.querySelectorAll(`#${id}`).length, 1);
       }
       if (phone) assert.equal(mobile.getSheet(), 'inspect');
-      assert.equal(byId('cctv-enable-btn').textContent.trim(), 'CCTV ON');
+      assert.equal(byId('cctv-enable-btn').textContent.trim(), 'CCTV on');
       assert.equal(
         chrome
           ._buildSharePanelState()
@@ -448,3 +448,84 @@ for (const [panelId, anchorId] of [
       ),
     );
   });
+
+test('camera labels and provider chips read in the drawer language outside Cyber, and Cyber keeps its capitals', (t) => {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(
+    new URL('./styles/camera-views.css', import.meta.url),
+    'utf8',
+  );
+  document.head.append(style);
+  const host = document.createElement('div');
+  host.className = 'gev-legacy-host';
+  host.innerHTML = `<section id="context-cameras-view">
+    <section id="cctv-panel"><div id="cctv-controls-body"><div class="camera-controls">
+      <div class="cctv-controls">
+        <button id="cctv-enable-btn" class="scene-btn">CCTV on</button>
+        <button id="cctv-nearest-btn" class="gev-action-button scene-btn">NEAREST</button>
+      </div>
+      <span id="cctv-source-badge" class="gev-status-badge">SOURCE · LIVE</span>
+      <div class="cctv-calibration-header">
+        <button id="cctv-adjust-btn" class="scene-btn">ADJUST</button>
+      </div>
+      <div class="cctv-summary-label">SCENE SUMMARY</div>
+    </div></div></section>
+    <section id="street-level-panel">
+      <div class="panel-header"><span class="panel-title">STREET LEVEL</span>
+        <button id="sl-status" class="sl-status">OFF</button></div>
+      <div id="sl-body"><div class="street-level-controls">
+        <div class="sl-providers"><span class="cctv-summary-label">PROVIDERS</span>
+          <div id="sl-provider-chips" class="sl-chips">
+            <button class="gev-chip data-toggle-chip chip-active active" data-chip-id="mapillary">Mapillary</button>
+            <button class="gev-chip data-toggle-chip chip-error" data-chip-id="google">Google Street View</button>
+          </div></div>
+        <button id="sl-nearest-btn" class="scene-btn sl-nearest-btn">Open Google Street View</button>
+      </div></div>
+    </section></section>`;
+  document.body.append(host);
+  const root = document.documentElement;
+  t.after(() => {
+    delete root.dataset.uiTheme;
+    root.removeAttribute('lang');
+    host.remove();
+    style.remove();
+  });
+  const byId = (id) => getComputedStyle(document.getElementById(id));
+  const chip = (id) =>
+    getComputedStyle(document.querySelector(`[data-chip-id="${id}"]`));
+  const title = () =>
+    getComputedStyle(
+      document.querySelector('#street-level-panel .panel-title'),
+    );
+
+  // Static labels lower their capitals; names and the CCTV acronym do not.
+  for (const id of ['cctv-nearest-btn', 'sl-status'])
+    assert.equal(byId(id).textTransform, 'lowercase', id);
+  assert.equal(title().textTransform, 'lowercase');
+  assert.equal(
+    getComputedStyle(document.querySelector('.cctv-summary-label'))
+      .textTransform,
+    'lowercase',
+  );
+  for (const id of ['cctv-enable-btn', 'sl-nearest-btn'])
+    assert.equal(byId(id).textTransform, 'none', id);
+  assert.equal(chip('mapillary').textTransform, 'none');
+  // Adjust and the badges use the drawer's sans face.
+  assert.match(byId('cctv-adjust-btn').font, /--gev-font-sans/);
+  assert.match(byId('cctv-source-badge').font, /--gev-font-sans/);
+  // Chips share the Layers chip shape.
+  assert.equal(chip('mapillary').minHeight, '32px');
+  assert.equal(chip('mapillary').borderRadius, 'var(--gev-radius-sm)');
+
+  root.dataset.uiTheme = 'cyber';
+  assert.notEqual(byId('cctv-nearest-btn').textTransform, 'lowercase');
+  assert.notEqual(chip('mapillary').minHeight, '32px');
+  for (const id of ['cctv-enable-btn', 'sl-nearest-btn'])
+    assert.equal(byId(id).textTransform, 'uppercase', id);
+  assert.equal(chip('mapillary').textTransform, 'uppercase');
+  assert.equal(chip('google').textTransform, 'uppercase');
+  // Chinese wrote Google's name in mixed case before; it stays that way.
+  root.lang = 'zh-CN';
+  assert.equal(chip('google').textTransform, 'none');
+  assert.equal(chip('mapillary').textTransform, 'uppercase');
+});

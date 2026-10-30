@@ -29,7 +29,7 @@
     "Error: {message}",
     "FLIR",
     "FLT",
-    "FM MHZ",
+    "FM MHz",
     "FOV",
     "FOV {value}°",
     "FT",
@@ -54,7 +54,7 @@
     "MINI",
     "MM",
     "MONITOR",
-    "MSG/S",
+    "msg/s",
     "Metal",
     "NAV",
     "NE",
@@ -199,7 +199,9 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FM MHz",
+    "msg/s"
   ],
   "zh-Hant": [
     "1090 MHz",
@@ -256,6 +258,8 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "FM MHz",
+    "msg/s"
   ]
 }

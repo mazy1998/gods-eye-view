@@ -341,7 +341,7 @@ test('the meta line keeps the sequence count and adds the other providers’ hin
   );
 });
 
-test('OPEN STREET VIEW shows while Street View is on, and waits for street zoom', () => {
+test('Open Street View shows while Street View is on, and waits for street zoom', () => {
   const streetView = provider({
     id: 'google',
     name: 'Google Street View',
@@ -360,7 +360,7 @@ test('OPEN STREET VIEW shows while Street View is on, and waits for street zoom'
   const ready = view({ groundClickReady: true });
   assert.deepEqual(ready, {
     visible: true,
-    label: 'OPEN STREET VIEW',
+    label: 'Open Google Street View',
     title: 'Open Google Street View at the centre of the view',
     disabled: false,
     providerIds: ['google'],

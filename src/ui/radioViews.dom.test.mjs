@@ -274,3 +274,107 @@ test('a refused native filter edit restores the view without clearing the pinned
     f.dispose();
   }
 });
+
+test('the expanded Radio reads in the drawer language outside Cyber, and Cyber keeps its own', async () => {
+  const { readFileSync } = await import('node:fs');
+  const style = document.createElement('style');
+  style.textContent = ['radio.css', 'radio-views.css']
+    .map((name) =>
+      readFileSync(new URL(`./styles/${name}`, import.meta.url), 'utf8'),
+    )
+    .join('\n');
+  document.head.append(style);
+  const f = radioDomFixture({ sdr: true });
+  try {
+    const computed = (id) => getComputedStyle(document.getElementById(id));
+    // Static labels: sentence case from their upper-case strings.
+    for (const id of ['radio-prev-btn', 'radio-play-btn', 'sdr-tune-btn'])
+      assert.equal(computed(id).textTransform, 'lowercase', id);
+    assert.equal(computed('radio-prev-btn').minHeight, '36px');
+    // Station text and the receiver's acronym label keep their own case.
+    assert.equal(computed('radio-station-name').textTransform, 'none');
+    assert.equal(
+      getComputedStyle(document.querySelector('label[for="sdr-volume"] > span'))
+        .textTransform,
+      'none',
+    );
+    assert.equal(
+      getComputedStyle(
+        document.querySelector('label[for="radio-volume"] > span'),
+      ).textTransform,
+      'lowercase',
+    );
+    // One mode at a time, as a segmented track.
+    const mode = getComputedStyle(document.querySelector('.sdr-mode-row'));
+    assert.equal(mode.paddingTop, '2px');
+    // Acronyms stay as written.
+    assert.equal(
+      document.querySelector('.sdr-radio-heading strong').textContent.trim(),
+      'Local RTL-SDR',
+    );
+    // The volume tracks fill to their value.
+    assert.equal(
+      document
+        .getElementById('sdr-volume')
+        .style.getPropertyValue('--gev-slider-fill'),
+      '80cqw',
+    );
+
+    document.documentElement.dataset.uiTheme = 'cyber';
+    assert.notEqual(computed('radio-prev-btn').textTransform, 'lowercase');
+    assert.notEqual(computed('radio-prev-btn').minHeight, '36px');
+    // Cyber reads the mixed-case acronym labels in their original capitals.
+    const heading = document.querySelector('.sdr-radio-heading strong');
+    const frequency = document.querySelector(
+      'label[for="sdr-frequency-input"]',
+    );
+    assert.equal(getComputedStyle(heading).textTransform, 'uppercase');
+    assert.equal(computed('sdr-seek-back-btn').textTransform, 'uppercase');
+    assert.equal(getComputedStyle(frequency).textTransform, 'uppercase');
+    document.documentElement.lang = 'zh-CN';
+    assert.notEqual(getComputedStyle(frequency).textTransform, 'uppercase');
+  } finally {
+    document.documentElement.removeAttribute('lang');
+    delete document.documentElement.dataset.uiTheme;
+    style.remove();
+    f.dispose();
+  }
+});
+
+test('the Cockpit Radio card reads like the drawer Radio row outside Cyber, and Cyber keeps its own', async () => {
+  const { readFileSync } = await import('node:fs');
+  const style = document.createElement('style');
+  style.textContent = ['cockpit.css', 'cockpit-views.css']
+    .map((name) =>
+      readFileSync(new URL(`./styles/${name}`, import.meta.url), 'utf8'),
+    )
+    .join('\n');
+  document.head.append(style);
+  const f = radioDomFixture();
+  try {
+    const css = (selector) =>
+      getComputedStyle(document.querySelector(selector));
+    assert.ok(document.querySelector('#cockpit-hud #cockpit-radio-panel'));
+    // Static labels: sentence case from their upper-case strings.
+    for (const selector of [
+      '#cockpit-radio-enable-btn',
+      '.cockpit-radio-volume > span',
+    ])
+      assert.equal(css(selector).textTransform, 'lowercase', selector);
+    // The station keeps its own case, in the sans face.
+    assert.equal(css('#cockpit-radio-station').textTransform, 'none');
+    assert.match(css('#cockpit-radio-station').font, /--gev-font-sans/);
+    assert.match(css('#cockpit-radio-play-btn').font, /--gev-font-sans/);
+
+    document.documentElement.dataset.uiTheme = 'cyber';
+    assert.notEqual(
+      css('#cockpit-radio-enable-btn').textTransform,
+      'lowercase',
+    );
+    assert.doesNotMatch(css('#cockpit-radio-station').font, /--gev-font-sans/);
+  } finally {
+    delete document.documentElement.dataset.uiTheme;
+    style.remove();
+    f.dispose();
+  }
+});

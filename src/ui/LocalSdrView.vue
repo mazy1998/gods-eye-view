@@ -2,6 +2,7 @@
 import { t } from '../i18n/index.js';
 import { R820T_GAIN_STEPS_DB } from '../sdr/gain.js';
 import { localSdrGainOptionLabel } from './localSdrPresentation.js';
+import { sliderFill } from './displayViews/sliderFill.js';
 defineProps({
   view: { type: Object, required: true },
   drafts: { type: Object, required: true },
@@ -10,7 +11,7 @@ defineProps({
 </script>
 <template>
   <div class="sdr-radio-heading">
-    <strong>{{ t('LOCAL RTL-SDR') }}</strong>
+    <strong>{{ t('Local RTL-SDR') }}</strong>
     <span
       id="sdr-connection-state"
       :class="{ active: view.connectionActive }"
@@ -107,7 +108,7 @@ defineProps({
   >
     <span
       ><output id="sdr-stat-rate">{{ view.stats.rate }}</output>
-      <span>{{ t('MSG/S') }}</span></span
+      <span>{{ t('msg/s') }}</span></span
     >
     <span
       ><output id="sdr-stat-heard">{{ view.stats.heard }}</output>
@@ -122,7 +123,7 @@ defineProps({
     >
   </div>
   <div class="sdr-frequency-row">
-    <label for="sdr-frequency-input">{{ t('FM MHZ') }}</label>
+    <label for="sdr-frequency-input">{{ t('FM MHz') }}</label>
     <input
       class="gev-field"
       id="sdr-frequency-input"
@@ -144,18 +145,18 @@ defineProps({
     :aria-label="t('Seek broadcast FM stations')"
   >
     <button id="sdr-seek-back-btn" type="button" :disabled="view.seekDisabled">
-      {{ t('◀ SEEK') }}
+      {{ t('◀ Seek') }}
     </button>
     <button
       id="sdr-seek-forward-btn"
       type="button"
       :disabled="view.seekDisabled"
     >
-      {{ t('SEEK ▶') }}
+      {{ t('Seek ▶') }}
     </button>
   </div>
   <label class="radio-volume-row" for="sdr-volume">
-    <span>{{ t('SDR VOL') }}</span>
+    <span>{{ t('SDR vol') }}</span>
     <input
       id="sdr-volume"
       class="gev-quantitative-slider"
@@ -164,6 +165,7 @@ defineProps({
       max="100"
       :aria-label="t('Local SDR volume')"
       :value="drafts.volume"
+      :style="sliderFill(drafts.volume, 0, 100)"
       :disabled="view.volumeDisabled"
     />
     <output id="sdr-volume-value" class="gev-slider-value" for="sdr-volume">{{
