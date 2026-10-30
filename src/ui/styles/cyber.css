@@ -162,14 +162,12 @@
 
 :root[data-ui-theme='cyber']
   :where(
-    .panel-inner,
     .panel-collapsible,
     #pp-toggles:not(.collapsed),
     #pp-toggles .pp-header-row,
     .pp-toggle-btn,
     .style-btn,
     .dock-tray-toggle,
-    .dock-popover,
     .scene-btn,
     .gev-action-button:not(.gev-action-button--compact),
     .context-mode-button,
@@ -582,7 +580,6 @@
 :root[data-ui-theme='cyber']
   :where(
     .panel-title,
-    .panel-mini-label,
     .pp-header-label,
     .pp-label,
     .pp-slider-mini-label,
@@ -600,7 +597,7 @@
 }
 
 :root[data-ui-theme='cyber']
-  :where(.panel-title, .pp-header-label, .panel-mini-label) {
+  :where(.panel-title, .pp-header-label) {
   color: var(--cyber-red-bright);
 }
 

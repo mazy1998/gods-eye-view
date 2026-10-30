@@ -1360,7 +1360,12 @@ export class StyleManager extends ShellFacade {
    * rests, on phones and in Cockpit, as the drawer does.
    */
   _initShellChrome() {
-    this._statusReadout = createStatusReadout({ camera: this.viewer?.camera });
+    // The status bar shows only while the shell is in use, so its readouts
+    // sample only then (not on phones or in Cockpit).
+    this._statusReadout = createStatusReadout({
+      camera: this.viewer?.camera,
+      active: this._drawer.channel.getSnapshot().active,
+    });
     const after = document.getElementById('gev-drawer')?.nextSibling ?? null;
     const views = [
       this._mountView(ShellHeader, {
@@ -1383,6 +1388,7 @@ export class StyleManager extends ShellFacade {
     ];
     this._drawer.channel.subscribe(({ state }) => {
       for (const view of views) view.update({ state });
+      this._statusReadout?.setActive(state.active);
     });
     const byId = (id) => () => document.getElementById(id);
     const { search, results } = this._locationViews;

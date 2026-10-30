@@ -95,7 +95,6 @@
   display: none;
 }
 
-#command-dock .panel-inner,
 #command-dock .location-inner,
 #command-dock #location-bar.collapsed .location-inner {
   height: 100%;
@@ -123,7 +122,6 @@
 }
 
 #command-dock .panel-collapse-btn,
-#command-dock .panel-mini-status,
 #command-dock .location-mini-status {
   display: none !important;
 }
@@ -253,7 +251,6 @@ body.recording-mode #cesium-credits {
     flex-basis: 150px;
   }
 
-  #command-dock .panel-inner,
   #command-dock .location-inner,
   #command-dock #location-bar.collapsed .location-inner {
     padding: 7px 9px;

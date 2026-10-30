@@ -44,7 +44,6 @@
   border-right: 1px solid rgba(123, 189, 211, 0.18);
 }
 
-#command-dock .panel-inner,
 #command-dock .location-inner,
 #command-dock #location-bar.collapsed .location-inner {
   display: flex;

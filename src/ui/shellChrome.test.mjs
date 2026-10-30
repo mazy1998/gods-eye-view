@@ -224,3 +224,54 @@ test('the header search opens no tray, and the voice dock never takes the tray b
     /if \(locationBar\?\.parentNode === commandDock\)\s*commandDock\.insertBefore\(locationBar, root\);/,
   );
 });
+
+test('the readouts sample only while the status bar shows, fresh on its return', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
+  let now = new Date(Date.UTC(2026, 9, 29, 12, 26, 0));
+  let reads = 0;
+  const camera = {
+    positionCartographic: { latitude: 0.5283, longitude: -1.7059 },
+  };
+  const readout = createStatusReadout({
+    camera,
+    now: () => {
+      reads++;
+      return now;
+    },
+    intervalMs: 500,
+    active: false,
+  });
+  const utc = () => readout.channel.getSnapshot().utc;
+  assert.equal(utc(), 'UTC 2026-10-29 12:26', 'one reading at creation');
+  now = new Date(Date.UTC(2026, 9, 29, 12, 27, 0));
+  t.mock.timers.tick(2000);
+  assert.equal(utc(), 'UTC 2026-10-29 12:26', 'no sampling while hidden');
+  readout.setActive(true);
+  assert.equal(utc(), 'UTC 2026-10-29 12:27', 'fresh at once on return');
+  now = new Date(Date.UTC(2026, 9, 29, 12, 28, 0));
+  t.mock.timers.tick(500);
+  assert.equal(utc(), 'UTC 2026-10-29 12:28', 'samples while shown');
+  readout.setActive(false);
+  now = new Date(Date.UTC(2026, 9, 29, 12, 29, 0));
+  t.mock.timers.tick(2000);
+  assert.equal(utc(), 'UTC 2026-10-29 12:28', 'stops when hidden again');
+  readout.setActive(true);
+  assert.equal(utc(), 'UTC 2026-10-29 12:29');
+  readout.destroy();
+  const before = reads;
+  t.mock.timers.tick(2000);
+  readout.setActive(true);
+  assert.equal(reads, before, 'inert after disposal');
+});
+
+test("the shell starts and stops the readouts with the drawer's active state", () => {
+  const source = readFileSync(
+    new URL('./applicationShell.js', import.meta.url),
+    'utf8',
+  );
+  assert.match(
+    source,
+    /createStatusReadout\(\{[\s\S]*?active: this\._drawer\.channel\.getSnapshot\(\)\.active,[\s\S]*?\}\)/,
+  );
+  assert.match(source, /this\._statusReadout\?\.setActive\(state\.active\)/);
+});

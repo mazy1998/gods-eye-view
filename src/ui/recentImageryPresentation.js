@@ -209,7 +209,7 @@ export function detailLines(snapshot) {
   return lines;
 }
 
-export function slotImage(snapshot, slotId) {
+function slotImage(snapshot, slotId) {
   const pin = snapshot.pins[slotId];
   if (pin.key) return { ...pin, preview: false };
   if (snapshot.preview.slot === slotId && snapshot.preview.key)

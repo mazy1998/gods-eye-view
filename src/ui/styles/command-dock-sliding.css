@@ -13,7 +13,6 @@
 }
 
 #command-dock .location-inner,
-#command-dock .panel-inner,
 #command-dock #location-bar.collapsed .location-inner {
   position: relative;
   overflow: visible;

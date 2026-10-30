@@ -23,7 +23,7 @@ export function rovingStop(items, value) {
 }
 
 /** Paint controlled selection without emitting changes or moving focus. */
-export function syncSegmentedControl(
+function syncSegmentedControl(
   buttons,
   value,
   { valueOf, activeClass = 'active', rovingFocus = false } = {},

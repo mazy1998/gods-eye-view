@@ -106,7 +106,7 @@ body.mobile-shell .gev-phone-shell #mobile-tab-bar {
 body.mobile-shell
   #mobile-sheet-panels
   > #location-bar
-  :is(.panel-inner, .location-inner, .dock-popover-content) {
+  :is(.location-inner, .dock-popover-content) {
   position: static;
   inset: auto;
   display: block;

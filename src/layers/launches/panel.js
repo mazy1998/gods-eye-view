@@ -336,7 +336,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
     );
   }
 
-  function updateMissionTelemetry(force = false) {
+  function updateMissionTelemetry() {
     const detail = layerState._missionView.detail;
     if (
       !detail ||
@@ -344,8 +344,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
       !layerState._dataSource
     )
       return;
-    if (!force && performance.now() - layerState._lastPanelTelemetryMs < 250)
-      return;
+    if (performance.now() - layerState._lastPanelTelemetryMs < 250) return;
     const telemetry = missionTelemetry();
     if (Object.keys(telemetry).every((key) => telemetry[key] === detail[key]))
       return;
