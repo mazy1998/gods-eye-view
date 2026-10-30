@@ -4,7 +4,9 @@
   position, UTC and map credits. Pick Original, Transparent dark or Light in
   Settings; the Cyber HUD layout keeps its own look. Map & Look gathers the
   visual styles (still keys `1`–`7`), the map sources and the Display controls
-  in three tabs, replacing the dock's Visual Presets tray; old share links that
-  had the tray open open Map & Look. The first view starts with the HUD off
-  (`H` or Display turns it on). Most panels are now Vue views of the same owners,
-  so layers, share links, voice actions and scenes behave as before (#0).
+  in three tabs, replacing the dock's Visual Presets tray; old share links
+  with the tray open now open Map & Look. Inspect holds Contacts, Missions and
+  Cameras; Stories splits Browse from Create; phones get four tabs and one
+  sheet. The first view starts with the HUD off (`H` or Display turns it on).
+  Most panels are now Vue views of the same owners, so layers, share links,
+  voice actions and scenes behave as before (#0).
