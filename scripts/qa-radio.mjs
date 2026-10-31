@@ -88,7 +88,12 @@ async function revealRadioControls(page, targetId) {
   const prior = await page.evaluate(async (id) => {
     const manager = window.__godsEyeView.styleManager;
     const collapsed = (panelId) => document.getElementById(panelId).classList.contains('collapsed');
-    const state = { context: collapsed('global-context-panel'), radio: collapsed('radio-panel') };
+    const state = {
+      context: collapsed('global-context-panel'),
+      radio: collapsed('radio-panel'),
+      // The drawer shows one destination at a time; Radio's opens Layers.
+      destination: manager._drawer?.channel.getSnapshot().destination ?? null,
+    };
     manager.setPanelCollapsed('global-context-panel', false, { explicit: true });
     manager.setPanelCollapsed('radio-panel', false, { explicit: true });
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -100,10 +105,13 @@ async function revealRadioControls(page, targetId) {
 }
 
 async function restoreRadioPanels(page, prior) {
-  await page.evaluate(({ context, radio }) => {
+  await page.evaluate(({ context, radio, destination }) => {
     const manager = window.__godsEyeView.styleManager;
     manager.setPanelCollapsed('radio-panel', radio);
     manager.setPanelCollapsed('global-context-panel', context);
+    // Put the drawer back on the destination the step began with.
+    if (destination) manager._drawer?.open(destination);
+    else manager._drawer?.close();
   }, prior);
 }
 
@@ -655,6 +663,8 @@ async function main() {
     await page.evaluate(() => {
       window.__godsEyeView.styleManager.setPanelCollapsed('radio-panel', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('global-context-panel', true);
+      // Collapsed panels leave the rail empty; the drawer closes with them.
+      window.__godsEyeView.styleManager._drawer?.close();
     });
     const singletonViews = [];
     const singletonViewSpecs = [
@@ -4425,6 +4435,9 @@ async function main() {
     );
 
     await page.evaluate(() => {
+      // From a closed drawer, as from the rail: expanding Context opens
+      // Inspect, which hosts Context with Radio nested inside it.
+      window.__godsEyeView.styleManager._drawer?.close();
       window.__godsEyeView.styleManager.setPanelCollapsed('radio-panel', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('global-context-panel', false);
     });
