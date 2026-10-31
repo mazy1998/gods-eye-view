@@ -6,8 +6,12 @@
   visual styles (still keys `1`–`7`), the map sources and the Display controls
   in three tabs, replacing the dock's Visual Presets tray; old share links
   with the tray open now open Map & Look. Inspect holds Contacts, Missions and
-  Cameras; Stories splits Browse from Create; phones get four tabs and one
-  sheet. Cockpit's cards and controls take the same look in each appearance,
-  and its camera panels show only once opened. The first view starts with the HUD off (`H` or Display turns it on).
-  Most panels are now Vue views of the same owners, so layers, share links,
-  voice actions and scenes behave as before (#0).
+  Cameras; Radio moves under Layers → Audio and Directions into Tools; Stories
+  splits Browse from Create; phones get four tabs and one sheet. Draw's
+  settings, Create's shot list and the voice settings drop the old compact
+  monospace controls for the drawer's. Cockpit's cards and controls take the
+  same look in each appearance, and the camera panels in its left stack show
+  only once opened. The first view starts with the HUD off (`H` or Display
+  turns it on). Most panels are now Vue views of the same owners, so layers,
+  share links, voice actions and scenes behave as before, and hosts that build
+  the published UI modules the earlier way keep working (#0).
