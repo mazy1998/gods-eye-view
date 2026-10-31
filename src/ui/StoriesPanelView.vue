@@ -12,7 +12,7 @@ const props = defineProps({
   draft: Object,
   actions: Object,
   listRevision: Number,
-  /** Which actions would do something (sceneActionAvailability). */
+  /** Whether the scene has shots, and which actions would do something. */
   available: Object,
 });
 // Idle, a button is off when it would do nothing.
@@ -112,53 +112,175 @@ const percentage = computed(() =>
       aria-labelledby="stories-create-tab"
       :hidden="tab !== 'create'"
     >
-      <div class="scene-controls">
-        <ActionButton
-          id="scene-capture-btn"
-          class="scene-btn"
-          :label="t('CAPTURE SHOT')"
-          :title="t('Add the current view, style and layers as the next shot')"
-          :disabled="off.scene"
-          @click="actions.capture"
-        />
-        <ActionButton
-          id="scene-update-shot-btn"
-          class="scene-btn"
-          :label="t('UPDATE SHOT')"
-          :title="t('Replace the selected shot with the current view')"
-          :disabled="off.shot"
-          @click="actions.update"
-        />
-      </div>
-      <SceneShotsView
-        :revision="listRevision"
-        :scene="selectedScene"
-        :selected="library.selectedShotId"
-        :draft="draft"
-        :actions="actions"
-      />
-      <div class="scene-controls stories-transport">
-        <ActionButton
-          id="scene-stop-btn"
-          class="scene-btn scene-btn-danger"
-          variant="danger"
-          :label="t('STOP')"
-          :title="t('Stop playback (Esc)')"
-          :disabled="!presentation.running"
-          @click="actions.stop"
-        />
-        <ActionButton
-          id="scene-next-btn"
-          class="scene-btn"
-          :label="t('NEXT')"
-          :title="
-            t(
-              'Play the shot after the selected one, moving on to the next scene when needed',
-            )
-          "
-          :disabled="off.play"
-          @click="actions.next"
-        />
+      <!-- Authoring's four steps, in the order a story is made. -->
+      <div class="stories-authoring">
+        <section class="stories-step" aria-labelledby="stories-step-scene">
+          <h3 id="stories-step-scene" class="scene-step-heading">
+            {{ t('SCENE') }}
+          </h3>
+          <div class="scene-controls">
+            <select
+              id="scene-select"
+              class="gev-field"
+              :aria-label="t('Scene')"
+              :value="library.selectedSceneId"
+              :disabled="presentation.running"
+              @change="actions.selectScene($event.target.value)"
+            >
+              <option
+                v-for="scene in library.scenes"
+                :key="scene.id"
+                :value="scene.id"
+              >
+                {{ scene.title }}
+              </option>
+            </select>
+          </div>
+          <div class="scene-controls">
+            <ActionButton
+              id="scene-new-btn"
+              class="scene-btn"
+              :label="t('NEW SCENE')"
+              :title="t('Start a new, empty scene')"
+              :disabled="presentation.running"
+              @click="actions.createScene"
+            />
+            <ActionButton
+              id="scene-delete-btn"
+              class="scene-btn scene-btn-danger"
+              variant="danger"
+              :label="t('DELETE')"
+              :title="t('Delete this scene and all of its shots')"
+              :disabled="off.scene"
+              @click="actions.deleteScene"
+            />
+          </div>
+        </section>
+        <section class="stories-step" aria-labelledby="stories-step-shots">
+          <h3 id="stories-step-shots" class="scene-step-heading">
+            {{ t('SHOTS') }}
+          </h3>
+          <div class="scene-controls">
+            <ActionButton
+              id="scene-capture-btn"
+              class="scene-btn scene-btn-primary"
+              :label="t('+ CAPTURE SHOT')"
+              :title="
+                t('Add the current view, style and layers as the next shot')
+              "
+              :disabled="off.scene"
+              @click="actions.capture"
+            />
+            <ActionButton
+              id="scene-update-shot-btn"
+              class="scene-btn"
+              :label="t('UPDATE SHOT')"
+              :title="t('Replace the selected shot with the current view')"
+              :disabled="off.shot"
+              @click="actions.update"
+            />
+          </div>
+          <SceneShotsView
+            :revision="listRevision"
+            :scene="selectedScene"
+            :selected="library.selectedShotId"
+            :draft="draft"
+            :actions="actions"
+          />
+          <p v-if="available?.hasShots" class="scene-shot-hint">
+            {{ t('Click a shot to select it, double-click to rename.') }}
+          </p>
+        </section>
+        <section class="stories-step" aria-labelledby="stories-step-preview">
+          <h3 id="stories-step-preview" class="scene-step-heading">
+            {{ t('PREVIEW') }}
+          </h3>
+          <div class="scene-controls stories-transport">
+            <ActionButton
+              id="scene-create-play-btn"
+              class="scene-btn scene-btn-primary"
+              :label="t('PLAY', { context: 'scene' })"
+              :title="t('Play from this scene through the rest of the project')"
+              :disabled="off.play"
+              @click="actions.start"
+            />
+            <ActionButton
+              id="scene-stop-btn"
+              class="scene-btn scene-btn-danger"
+              variant="danger"
+              :label="t('STOP')"
+              :title="t('Stop playback (Esc)')"
+              :disabled="!presentation.running"
+              @click="actions.stop"
+            />
+            <ActionButton
+              id="scene-next-btn"
+              class="scene-btn"
+              :label="t('NEXT')"
+              :title="
+                t(
+                  'Play the shot after the selected one, moving on to the next scene when needed',
+                )
+              "
+              :disabled="off.play"
+              @click="actions.next"
+            />
+          </div>
+        </section>
+        <section class="stories-step" aria-labelledby="stories-step-save">
+          <h3 id="stories-step-save" class="scene-step-heading">
+            {{ t('SAVE & SHARE') }}
+          </h3>
+          <div class="scene-controls scene-file-controls">
+            <ActionButton
+              id="scene-export-btn"
+              class="scene-btn"
+              :label="t('EXPORT')"
+              :title="
+                t('Download every scene as a JSON file you can import later')
+              "
+              :disabled="presentation.running"
+              @click="actions.export"
+            />
+            <ActionButton
+              id="scene-import-btn"
+              class="scene-btn"
+              :label="t('IMPORT')"
+              :title="t('Load scenes from an exported JSON file')"
+              :disabled="presentation.running"
+              @click="actions.import"
+            />
+            <ActionButton
+              id="scene-download-btn"
+              class="scene-btn"
+              :label="t('RUN LOG')"
+              :title="t('Download the timing log of the last play')"
+              :disabled="!presentation.hasRun"
+              @click="actions.download"
+            />
+            <input
+              id="scene-import-file"
+              type="file"
+              accept="application/json,.json"
+              hidden
+              @change="actions.importFile($event.target)"
+            />
+          </div>
+          <div class="scene-controls" data-director-authoring>
+            <ActionButton
+              class="scene-btn"
+              :label="t('EDIT DETAILS')"
+              :title="t('Edit anchors, data packs and shot details')"
+              @click="actions.edit"
+            />
+            <ActionButton
+              class="scene-btn"
+              :label="t('SHARE SCENE')"
+              :title="t('Download this scene as JSON or an asset bundle')"
+              @click="actions.share"
+            />
+          </div>
+        </section>
       </div>
       <div class="scene-progress">
         <div
@@ -167,96 +289,9 @@ const percentage = computed(() =>
           v-text="`${percentage}%`"
         ></div>
       </div>
-      <div id="scene-status">{{ presentation.status }}</div>
-      <section class="stories-authoring" :aria-label="t('Scene recipe')">
-        <h3>{{ t('Scene recipe') }}</h3>
-        <div class="scene-controls">
-          <select
-            id="scene-select"
-            class="gev-field"
-            :aria-label="t('Scene recipe')"
-            :value="library.selectedSceneId"
-            :disabled="presentation.running"
-            @change="actions.selectScene($event.target.value)"
-          >
-            <option
-              v-for="scene in library.scenes"
-              :key="scene.id"
-              :value="scene.id"
-            >
-              {{ scene.title }}
-            </option>
-          </select>
-        </div>
-        <div class="scene-controls">
-          <ActionButton
-            id="scene-new-btn"
-            class="scene-btn"
-            :label="t('New scene')"
-            :title="t('Start a new, empty scene')"
-            :disabled="presentation.running"
-            @click="actions.createScene"
-          />
-          <ActionButton
-            id="scene-delete-btn"
-            class="scene-btn scene-btn-danger"
-            variant="danger"
-            :label="t('Delete scene')"
-            :title="t('Delete this scene and all of its shots')"
-            :disabled="off.scene"
-            @click="actions.deleteScene"
-          />
-        </div>
-        <div class="scene-controls" data-director-authoring>
-          <ActionButton
-            class="scene-btn"
-            :label="t('EDIT DETAILS')"
-            :title="t('Edit anchors, data packs and shot details')"
-            @click="actions.edit"
-          />
-          <ActionButton
-            class="scene-btn"
-            :label="t('SHARE SCENE')"
-            :title="t('Download this scene as JSON or an asset bundle')"
-            @click="actions.share"
-          />
-        </div>
-        <div class="scene-controls">
-          <ActionButton
-            id="scene-export-btn"
-            class="scene-btn"
-            :label="t('EXPORT PRESETS')"
-            :title="
-              t('Download every scene as a JSON file you can import later')
-            "
-            :disabled="presentation.running"
-            @click="actions.export"
-          />
-          <ActionButton
-            id="scene-import-btn"
-            class="scene-btn"
-            :label="t('IMPORT')"
-            :title="t('Load scenes from an exported JSON file')"
-            :disabled="presentation.running"
-            @click="actions.import"
-          />
-          <ActionButton
-            id="scene-download-btn"
-            class="scene-btn"
-            :label="t('RUN LOG')"
-            :title="t('Download the timing log of the last play')"
-            :disabled="!presentation.hasRun"
-            @click="actions.download"
-          />
-          <input
-            id="scene-import-file"
-            type="file"
-            accept="application/json,.json"
-            hidden
-            @change="actions.importFile($event.target)"
-          />
-        </div>
-      </section>
+      <div id="scene-status" role="status" aria-live="polite">
+        {{ presentation.status }}
+      </div>
     </section>
   </div>
 </template>

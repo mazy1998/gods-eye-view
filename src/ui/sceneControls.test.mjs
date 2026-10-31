@@ -101,10 +101,9 @@ test('Scene controls render the supplied selection and running/download states',
       '<Shot A>',
     );
     assert.equal(f.elements.stop.disabled, true);
-    assert.equal(
-      document.getElementById('scene-status').hasAttribute('role'),
-      false,
-    );
+    const status = document.getElementById('scene-status');
+    assert.equal(status.getAttribute('role'), 'status');
+    assert.equal(status.getAttribute('aria-live'), 'polite');
     assert.equal(f.elements.download.disabled, true);
     f.state.hasRun = true;
     f.owner.setButtons(true);
@@ -158,6 +157,54 @@ test('Authoring disables idle actions that would do nothing', () => {
     assert.equal(f.elements.delete.disabled, true);
     assert.equal(f.elements.capture.disabled, true);
     assert.equal(f.elements.new.disabled, false);
+  } finally {
+    f.restore();
+  }
+});
+
+test('Create lays Authoring out as its four steps with its own PLAY', () => {
+  const f = fixture();
+  try {
+    const create = document.getElementById('stories-create');
+    const steps = [...create.querySelectorAll('.stories-step')];
+    assert.deepEqual(
+      steps.map((step) =>
+        step.querySelector('.scene-step-heading').textContent.trim(),
+      ),
+      ['SCENE', 'SHOTS', 'PREVIEW', 'SAVE & SHARE'],
+    );
+    for (const step of steps)
+      assert.equal(
+        step.getAttribute('aria-labelledby'),
+        step.querySelector('.scene-step-heading').id,
+      );
+    const holds = (index, selector) => !!steps[index].querySelector(selector);
+    assert.ok(holds(0, '#scene-select') && holds(0, '#scene-new-btn'));
+    assert.ok(holds(1, '#scene-capture-btn') && holds(1, '#scene-shot-list'));
+    assert.ok(holds(2, '#scene-stop-btn') && holds(2, '#scene-next-btn'));
+    assert.ok(
+      holds(3, '#scene-export-btn') && holds(3, '[data-director-authoring]'),
+    );
+    assert.deepEqual(
+      [...create.querySelectorAll('.scene-btn-primary')].map((b) => b.id),
+      ['scene-capture-btn', 'scene-create-play-btn'],
+    );
+    assert.equal(f.elements.capture.textContent.trim(), '+ CAPTURE SHOT');
+
+    // Create's PLAY starts the same playback as Browse's Play.
+    const play = document.getElementById('scene-create-play-btn');
+    assert.equal(play.textContent.trim(), 'PLAY');
+    play.click();
+    assert.deepEqual(f.calls.at(-1), ['start', 'scene-a']);
+
+    // The hint appears only once the scene has a shot to click.
+    assert.ok(create.querySelector('.scene-shot-hint'));
+    f.publish('shots-changed', {
+      scenes: [{ id: 'scene-a', title: 'A', shots: [] }],
+      selectedShotId: null,
+    });
+    assert.equal(create.querySelector('.scene-shot-hint'), null);
+    assert.equal(play.disabled, true);
   } finally {
     f.restore();
   }

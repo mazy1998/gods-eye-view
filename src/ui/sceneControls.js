@@ -46,6 +46,7 @@ export function sceneActionAvailability(library) {
   const scene = scenes.find((item) => item.id === library?.selectedSceneId);
   return {
     hasScene: !!scene,
+    hasShots: (scene?.shots?.length ?? 0) > 0,
     playableShots: scenes.reduce(
       (total, item) => total + (item.shots?.length ?? 0),
       0,
@@ -198,9 +199,7 @@ export class SceneControls {
     if (this.native)
       this.elements.panel?.classList.toggle(
         'has-shots',
-        !!this.library.scenes?.find(
-          (scene) => scene.id === this.library.selectedSceneId,
-        )?.shots?.length,
+        sceneActionAvailability(this.library).hasShots,
       );
     if (!this.native)
       this.elements.runtime?.classList.toggle(
