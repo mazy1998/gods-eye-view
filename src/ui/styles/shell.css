@@ -815,6 +815,83 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   border: 1px solid var(--gev-border-subtle);
   border-radius: var(--gev-radius-md);
 }
+/* Outside Cyber the pin leads the places instead of taking a row of its
+   own: a quiet icon button in the first column, with the landmarks, places
+   and results beside it in reading order. Rows that are empty (no landmarks
+   yet) take no space. */
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar:not(.collapsed)
+  #location-bar-popover {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--gev-space-2);
+  row-gap: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > * {
+  grid-column: 2;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > .dock-pin-btn {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  align-self: start;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > .dock-pin-btn:hover {
+  border-color: transparent;
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > .dock-pin-btn[aria-pressed='true'] {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > .dock-pin-btn
+  img {
+  width: 18px;
+  height: 18px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > :is(.poi-row-container:not(.expanded), .location-bar-divider:not(.visible)) {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #gev-header-places
+  > #location-bar
+  #location-bar-popover
+  > .poi-row-container.expanded {
+  padding: 0 0 var(--gev-space-2);
+}
 /* Places is the trailing affordance of the search field. The existing
    disclosure, focus return and popup stay with their original nodes. */
 :where(:root:not([data-ui-theme='cyber'])) #gev-header-places {

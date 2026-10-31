@@ -324,6 +324,62 @@
   background: var(--gev-control-bg-hover);
   border-color: var(--gev-border);
 }
+/* Each camera panel's header reads as a disclosure row, as Calibration
+   does: no hairline, and a borderless chevron (right collapsed, down open)
+   in place of the boxed triangle. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > :is(#cctv-panel, #street-level-panel)
+  .panel-header
+  > .panel-divider {
+  flex: 1;
+  height: 0;
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > :is(#cctv-panel, #street-level-panel)
+  .panel-header
+  > .panel-collapse-btn {
+  display: inline-grid;
+  place-items: center;
+  border-color: transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+  font-size: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > :is(#cctv-panel, #street-level-panel)
+  .panel-header
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > :is(#cctv-panel, #street-level-panel)
+  .panel-header
+  > .panel-collapse-btn::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--gev-text-muted);
+  border-bottom: 1.5px solid var(--gev-text-muted);
+  transform: rotate(-45deg);
+  transition: transform var(--transition-fast);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > :is(#cctv-panel, #street-level-panel)
+  .panel-header
+  > .panel-collapse-btn[aria-expanded='true']::before {
+  transform: rotate(45deg);
+}
 :where(:root:not([data-ui-theme='cyber']))
   :is(.gev-legacy-host, .mobile-shell)
   #context-cameras-view

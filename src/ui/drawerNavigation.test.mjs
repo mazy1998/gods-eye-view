@@ -9,6 +9,7 @@ const { DRAWER_DESTINATIONS, createDrawerNavigation } =
 const { PanelChrome, SHARE_PANEL_STATE_SPECS } =
   await import('./panelChrome.js');
 const { flushViews } = await import('./ownerState.js');
+const { syncRadioPanelPlacement } = await import('./radioPanelPlacement.js');
 
 const ORDER = SHARE_PANEL_STATE_SPECS.map((spec) => spec.id);
 
@@ -1233,16 +1234,66 @@ test("Inspect's Context collapse control joins the drawer header; its sections k
   );
 });
 
-test('the real Context header carries the collapse control the drawer looks for', () => {
+test("Inspect's compact Radio launcher joins the drawer header ahead of the collapse control, and goes home for Cyber", async (t) => {
+  const { drawer } = await collapseFixture(t);
+  document
+    .getElementById('left-panel-stack')
+    .insertAdjacentHTML(
+      'beforeend',
+      '<div id="global-context-panel" data-panel-id="global-context-panel" class="panel-collapsible"><div class="global-context-panel-inner"><div class="panel-header"><span class="panel-title">CONTEXT</span><div id="context-radio-dock" class="context-radio-dock"><button id="context-radio-toggle-btn">radio</button><div id="context-radio-mini" hidden></div></div><button class="panel-collapse-btn" data-collapse-target="global-context-panel">▶</button></div><div class="cyber-panel-body"></div></div></div><section id="radio-panel"></section>',
+    );
+  const dock = document.getElementById('context-radio-dock');
+  const toggle = document.getElementById('context-radio-toggle-btn');
+  const collapse = document.querySelector(
+    '[data-collapse-target="global-context-panel"]',
+  );
+  const header = collapse.parentElement;
+  let clicks = 0;
+  toggle.addEventListener('click', () => clicks++);
+
+  drawer.open('inspect');
+  assert.deepEqual(
+    [...drawer.headerActions.children],
+    [dock, collapse],
+    'the launcher, then the collapse control, beside Close',
+  );
+  toggle.click();
+  assert.equal(clicks, 1, 'the same button and listener');
+  // Radio's own placement leaves the launcher where the drawer put it.
+  syncRadioPanelPlacement(document);
+  assert.equal(dock.parentElement, drawer.headerActions);
+
+  toggle.focus();
+  document.documentElement.dataset.uiTheme = 'cyber';
+  await flushObservers();
+  assert.deepEqual(
+    [...header.children].map((node) => node.id || node.className),
+    ['panel-title', 'context-radio-dock', 'panel-collapse-btn'],
+    'its own header order again',
+  );
+  assert.equal(document.activeElement, toggle, 'focus follows the move');
+  delete document.documentElement.dataset.uiTheme;
+  await flushObservers();
+  assert.equal(dock.parentElement, drawer.headerActions);
+  assert.equal(document.activeElement, toggle);
+
+  drawer.close();
+  assert.equal(dock.nextElementSibling, collapse);
+  assert.equal(dock.parentElement, header);
+});
+
+test('the real Context header carries the collapse control and Radio launcher the drawer looks for', () => {
   const template = document.createElement('template');
   template.innerHTML = readFileSync(
     new URL('./templates/context.html', import.meta.url),
     'utf8',
   );
+  const collapse = template.content.querySelector(
+    '#global-context-panel .panel-header > .panel-collapse-btn[data-collapse-target="global-context-panel"]',
+  );
+  assert.ok(collapse);
   assert.ok(
-    template.content.querySelector(
-      '#global-context-panel .panel-header > .panel-collapse-btn[data-collapse-target="global-context-panel"]',
-    ),
+    collapse.parentElement.querySelector(':scope > .context-radio-dock'),
   );
 });
 

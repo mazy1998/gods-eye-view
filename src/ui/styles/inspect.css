@@ -29,9 +29,9 @@
 }
 
 /* The drawer's own surface replaces the panel frame. The compact Radio
-   control keeps a slim row of its own above the tabs, so reading and Tab
-   order still follow the page; the collapse control sits in the drawer
-   header. */
+   launcher and the collapse control sit in the drawer or phone sheet header
+   beside Close (drawerNavigation.js, mobileShell.js), so the panel's own
+   header row has nothing left to show and the mode tabs lead the body. */
 :where(:root:not([data-ui-theme='cyber']))
   :is(.gev-legacy-host, .phone-sheet-panels)
   > #global-context-panel:not(.collapsed)
@@ -55,25 +55,13 @@
   > #global-context-panel:not(.collapsed)
   > .global-context-panel-inner
   > .panel-header {
-  justify-content: flex-end;
-  height: 32px;
-  margin: 0 0 4px;
-  padding: 0;
-  gap: 8px;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .phone-sheet-panels)
-  > #global-context-panel:not(.collapsed)
-  > .global-context-panel-inner
-  > .panel-header
-  > :is(.panel-title, .panel-divider) {
   display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   :is(.gev-legacy-host, .phone-sheet-panels)
   > #global-context-panel
   .panel-header
-  :is(.panel-collapse-btn, .context-radio-toggle) {
+  .panel-collapse-btn {
   display: grid;
   width: 32px;
   height: 32px;
@@ -90,7 +78,7 @@
   :is(.gev-legacy-host, .phone-sheet-panels)
   > #global-context-panel
   .panel-header
-  :is(.panel-collapse-btn, .context-radio-toggle):hover {
+  .panel-collapse-btn:hover {
   background: var(--gev-control-bg-hover);
   color: var(--gev-text);
 }
@@ -98,17 +86,7 @@
   :is(.gev-legacy-host, .phone-sheet-panels)
   > #global-context-panel
   .panel-header
-  .context-radio-toggle.active {
-  border-color: var(--gev-accent-tint-border);
-  background: var(--gev-accent-tint);
-  color: var(--gev-accent-text);
-  box-shadow: none;
-}
-:where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .phone-sheet-panels)
-  > #global-context-panel
-  .panel-header
-  :is(.panel-collapse-btn, .context-radio-toggle):focus-visible {
+  .panel-collapse-btn:focus-visible {
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 1px;
 }
@@ -172,9 +150,49 @@
   background: var(--gev-border-subtle);
   box-shadow: none;
 }
+/* The compact Radio launcher in the header: a quiet round icon button like
+   Close, tinted while its strip is open. The strip keeps its place below
+   it. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .phone-sheet-panels)
-  > #global-context-panel
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  .context-radio-toggle {
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--gev-radius-pill);
+  background: transparent;
+  color: var(--gev-text-muted);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #mobile-sheet-panel-actions
+  .context-radio-toggle {
+  width: 36px;
+  height: 36px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  .context-radio-toggle:hover {
+  border-color: transparent;
+  background: var(--gev-control-bg-hover);
+  color: var(--gev-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  .context-radio-toggle.active {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
+  .context-radio-toggle:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-drawer-panel-actions, #mobile-sheet-panel-actions)
   .context-radio-toggle
   .material-symbols-outlined {
   font-size: 20px;

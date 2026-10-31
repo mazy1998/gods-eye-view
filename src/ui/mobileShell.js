@@ -187,19 +187,27 @@ export function initMobileShell({
           `.panel-header > .panel-collapse-btn[data-collapse-target="${id}"]`,
         );
         if (!button) continue;
-        const home = documentRef.createComment('phone collapse control home');
-        button.before(home);
-        entry = { button, home };
+        // Inspect's compact Radio launcher travels with it, as on desktop.
+        const dock = button.parentNode.querySelector(
+          ':scope > .context-radio-dock',
+        );
+        entry = [dock, button].filter(Boolean).map((node) => {
+          const home = documentRef.createComment('phone collapse control home');
+          node.before(home);
+          return { node, home };
+        });
         collapseHomes.set(id, entry);
       }
-      const { button, home } = entry;
       const inHeader =
         active && currentSheet && !cyber && chrome.host.contains(panel);
-      const focused = documentRef.activeElement === button;
-      if (inHeader && button.parentNode !== actions) actions.append(button);
-      else if (!inHeader && button.parentNode === actions) home.after(button);
-      else continue;
-      if (focused) button.focus({ preventScroll: true });
+      for (const { node, home } of entry) {
+        const current = documentRef.activeElement;
+        const focused = node.contains(current) ? current : null;
+        if (inHeader && node.parentNode !== actions) actions.append(node);
+        else if (!inHeader && node.parentNode === actions) home.after(node);
+        else continue;
+        focused?.focus({ preventScroll: true });
+      }
     }
   };
   const restoreNodes = () => {
@@ -739,7 +747,8 @@ export function initMobileShell({
       restoreNodes();
       destroyed = true;
       for (const remove of removers.splice(0)) remove();
-      for (const { home } of collapseHomes.values()) home.remove();
+      for (const entry of collapseHomes.values())
+        for (const { home } of entry) home.remove();
       collapseHomes.clear();
       body.classList.remove(MOBILE_SHELL_CLASS);
       body.removeAttribute(MOBILE_SHEET_ATTR);

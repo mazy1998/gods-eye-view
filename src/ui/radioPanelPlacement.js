@@ -18,7 +18,12 @@ export function syncRadioPanelPlacement(doc) {
     !panel.closest?.('#mobile-sheet-panels')
   )
     parent.append(panel);
-  if (dock.parentElement !== header)
+  // Its launcher may stand in the destination's header beside Close, where
+  // the drawer or phone sheet puts it back itself.
+  if (
+    dock.parentElement !== header &&
+    !dock.closest?.('.gev-drawer-panel-actions, #mobile-sheet-panel-actions')
+  )
     header.insertBefore(dock, header.querySelector('.panel-collapse-btn'));
   if (mini.parentElement !== dock) dock.append(mini);
 }

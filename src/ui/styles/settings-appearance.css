@@ -445,16 +445,20 @@
   color: var(--gev-text-muted);
   background: none;
 }
+/* The voice authentication choice reads as two radio options, as in the
+   design: the current method is the selected one, and the toggle, which
+   switches to the other, is the unselected one. The order stays API key,
+   then Local OAuth. */
 :where(:root:not([data-ui-theme='cyber'])) #key-setup .key-setup-cloud-auth {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 2px;
-  width: fit-content;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 24px;
   max-width: 100%;
-  padding: 2px;
-  border: 1px solid var(--gev-border-subtle);
-  border-radius: var(--gev-radius-sm);
-  background: var(--gev-control-bg);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup
@@ -464,27 +468,47 @@
   .key-setup-cloud-auth-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 32px;
+  gap: 10px;
+  min-height: 36px;
   box-sizing: border-box;
-  padding: 6px 10px;
+  margin: 0;
+  padding: 0;
   border: 0;
   border-radius: var(--gev-radius-sm);
-  font: 13px / 1.4 var(--gev-font-sans);
+  background: none;
+  font: 14px / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
   text-transform: none;
   color: var(--gev-text);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup
-  .key-setup-cloud-auth-state {
-  color: var(--gev-accent-text);
-  background: var(--gev-accent-tint);
+  :is(.key-setup-cloud-auth-state, .key-setup-cloud-auth-toggle)::before {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--gev-text-muted);
+  border-radius: 50%;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup
-  .key-setup-cloud-auth-toggle {
+  .key-setup-cloud-auth-state::before {
+  padding: 3.5px;
+  border-color: var(--gev-accent);
+  background: var(--gev-accent);
+  background-clip: content-box;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle:is(:hover, :focus-visible) {
   background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #key-setup
+  .key-setup-cloud-auth-toggle:hover::before {
+  border-color: var(--gev-text);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup
