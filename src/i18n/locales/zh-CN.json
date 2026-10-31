@@ -2845,8 +2845,8 @@
   "Coverage is estimated from the camera pose.": "覆盖范围根据摄像头的位置和朝向估算。",
   "Browse": "浏览",
   "Create": "创作",
-  "New scene": "新建场景",
-  "Delete scene": "删除场景",
+  "NEW SCENE": "新建场景",
+  "DELETE": "删除",
   "Delete shot": "删除镜头",
   "Appearance": "外观",
   "Original": "原始",
@@ -2950,8 +2950,11 @@
     "other": "{count} 个文件"
   },
   "DEL": "删除",
-  "CAPTURE SHOT": "保存镜头",
-  "Scene recipe": "场景方案",
-  "EXPORT PRESETS": "导出预设",
+  "SHOTS": "镜头",
+  "+ CAPTURE SHOT": "+ 保存镜头",
+  "SCENE": "场景",
+  "Scene": "场景",
+  "Click a shot to select it, double-click to rename.": "单击镜头即可选中，双击可重命名。",
+  "SAVE & SHARE": "保存与分享",
   "Operator": "运营方"
 }

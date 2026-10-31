@@ -2991,8 +2991,8 @@
   "Coverage is estimated from the camera pose.": "La cobertura se estima a partir de la posición y orientación de la cámara.",
   "Browse": "Explorar",
   "Create": "Crear",
-  "New scene": "Nueva escena",
-  "Delete scene": "Eliminar escena",
+  "NEW SCENE": "NUEVA ESCENA",
+  "DELETE": "ELIMINAR",
   "Delete shot": "Eliminar toma",
   "Appearance": "Apariencia",
   "Original": "Original",
@@ -3098,8 +3098,11 @@
     "other": "{count} archivos"
   },
   "DEL": "BORRAR",
-  "CAPTURE SHOT": "CAPTURAR PLANO",
-  "Scene recipe": "Receta de escena",
-  "EXPORT PRESETS": "EXPORTAR PREAJUSTES",
+  "SHOTS": "PLANOS",
+  "+ CAPTURE SHOT": "+ CAPTURAR PLANO",
+  "SCENE": "ESCENA",
+  "Scene": "Escena",
+  "Click a shot to select it, double-click to rename.": "Haz clic en un plano para seleccionarlo y doble clic para cambiarle el nombre.",
+  "SAVE & SHARE": "GUARDAR Y COMPARTIR",
   "Operator": "Operador"
 }

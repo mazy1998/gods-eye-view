@@ -3064,8 +3064,8 @@
   "Coverage is estimated from the camera pose.": "Покрытие оценивается по положению и ориентации камеры.",
   "Browse": "Обзор",
   "Create": "Создать",
-  "New scene": "Новая сцена",
-  "Delete scene": "Удалить сцену",
+  "NEW SCENE": "НОВАЯ СЦЕНА",
+  "DELETE": "УДАЛИТЬ",
   "Delete shot": "Удалить кадр",
   "Appearance": "Оформление",
   "Original": "Исходное",
@@ -3172,8 +3172,11 @@
     "other": "{count} файла"
   },
   "DEL": "УДАЛ.",
-  "CAPTURE SHOT": "СДЕЛАТЬ КАДР",
-  "Scene recipe": "Рецепт сцены",
-  "EXPORT PRESETS": "ЭКСПОРТ ПРЕСЕТОВ",
+  "SHOTS": "КАДРЫ",
+  "+ CAPTURE SHOT": "+ СДЕЛАТЬ КАДР",
+  "SCENE": "СЦЕНА",
+  "Scene": "Сцена",
+  "Click a shot to select it, double-click to rename.": "Щёлкните кадр, чтобы выбрать его, дважды — чтобы переименовать.",
+  "SAVE & SHARE": "СОХРАНИТЬ И ПОДЕЛИТЬСЯ",
   "Operator": "Оператор"
 }
