@@ -174,17 +174,15 @@ test('Appearance applies live through the appearance owner', async () => {
   const appearance = createAppearance({ storage, root });
   const f = launcher({ appearance });
   try {
-    const light = container.querySelector(
-      '[data-first-run-appearance="light"]',
+    const [original, , light] = container.querySelectorAll(
+      '.first-run-appearance .gev-segment',
     );
-    assert.equal(
-      container.querySelector('[data-first-run-appearance="original"]').checked,
-      true,
-    );
+    assert.equal(original.getAttribute('aria-checked'), 'true');
     light.click();
     assert.equal(appearance.get(), 'light');
     assert.equal(root.dataset.gevAppearance, 'light');
-    assert.equal(light.checked, true);
+    await tick();
+    assert.equal(light.getAttribute('aria-checked'), 'true');
     assert.equal(container.querySelector('.first-run-appearance-note'), null);
     root.dataset.uiTheme = 'cyber';
     await tick();

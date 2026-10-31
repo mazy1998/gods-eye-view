@@ -8,7 +8,7 @@
   z-index: 175;
   top: 50%;
   left: 50%;
-  width: min(57rem, calc(100vw - 2rem));
+  width: min(44rem, calc(100vw - 2rem));
   /* Cap the card to the viewport and let its body scroll inside — the
      heading, the skip button and the footer with Enter must stay reachable at
      every height. */
@@ -16,7 +16,7 @@
   max-height: calc(100dvh - 1.5rem);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 1.75rem 1.1rem;
+  padding: 1.1rem 1.25rem 0.9rem;
   overflow: hidden;
   color: var(--text-primary);
   background:
@@ -75,8 +75,8 @@
   gap: 1rem;
   color: rgba(171, 210, 220, 0.6);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.16rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.14rem;
   text-transform: uppercase;
 }
 
@@ -85,20 +85,27 @@
 }
 
 #first-run-launcher h2 {
-  margin-top: 0.7rem;
+  margin-top: 0.4rem;
   font-family: var(--font-mono);
-  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  font-size: 1.4rem;
   font-weight: 500;
-  letter-spacing: -0.045rem;
+  letter-spacing: -0.03rem;
   line-height: 1.2;
 }
 
 #first-run-description {
-  max-width: 46rem;
-  margin-top: 0.4rem;
-  color: rgba(215, 231, 235, 0.66);
-  font-size: 0.85rem;
-  line-height: 1.5;
+  margin-top: 0.3rem;
+  color: rgba(215, 231, 235, 0.72);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+/* The owner's line sits under the description, smaller and quieter. */
+.first-run-line {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(198, 220, 226, 0.55);
+  font-size: 0.72rem;
 }
 
 /* Skip sits at the top right, the size of its label: the ESC hint on a
@@ -106,10 +113,10 @@
 .first-run-dismiss {
   position: relative;
   flex: none;
-  padding: 0.3rem 0.6rem;
+  padding: 0.2rem 0.5rem;
   color: inherit;
   font: inherit;
-  letter-spacing: 0.12rem;
+  letter-spacing: 0.1rem;
   text-transform: inherit;
   background: none;
   border: 1px solid rgba(100, 200, 220, 0.32);
@@ -154,15 +161,15 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 1.1rem;
-  margin-top: 1.1rem;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
   /* min-height:0 is what actually lets this flex child shrink below its
      content. */
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  /* Room for the cards' focus rings inside the scroller's clip. */
+  /* Room for the rows' focus rings inside the scroller's clip. */
   padding: 3px;
   margin-inline: -3px;
   /* A visible, non-overlaying affordance that the body continues. */
@@ -181,108 +188,84 @@
 .first-run-section {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem;
 }
 
-/* Section labels with a rule running to the card's edge. */
 .first-run-section-heading {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   margin: 0;
   color: rgba(171, 210, 220, 0.6);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 500;
-  letter-spacing: 0.16rem;
+  letter-spacing: 0.14rem;
   text-transform: uppercase;
-}
-
-.first-run-section-heading::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(100, 200, 220, 0.18);
 }
 
 .first-run-step::after {
   content: '·';
-  margin-left: 0.6rem;
+  margin-left: 0.5rem;
 }
 
-.first-run-choices,
-.first-run-cards {
+.first-run-choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
-.first-run-appearances {
+/* A mission row is a label around a native radio, the row's mark at the right:
+   icon, title over subcopy, radio. */
+.first-run-choice {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-}
-
-/* Mission and appearance cards are labels around a native radio, which is the
-   card's radio mark at the top right. */
-.first-run-choice,
-.first-run-appearance {
-  position: relative;
-  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.65rem;
   min-width: 0;
+  min-height: 3.5rem;
+  padding: 0.45rem 0.7rem;
   color: rgba(225, 244, 248, 0.92);
   background: rgba(29, 69, 81, 0.18);
   border: 1px solid rgba(100, 200, 220, 0.18);
-  border-radius: 0.5rem;
+  border-radius: 0.45rem;
   cursor: pointer;
   transition:
     background var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    border-color var(--transition-fast);
 }
 
-.first-run-choice {
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  min-height: 5.5rem;
-  padding: 0.7rem 2.6rem 0.7rem 0.7rem;
+.first-run-choice > .material-symbols-outlined {
+  grid-column: 1;
+  grid-row: 1;
+  color: #55dff5;
+  font-size: 1.25rem;
 }
 
-.first-run-appearance {
-  grid-template-columns: 2.2rem minmax(0, 1fr);
-  min-height: 3.6rem;
-  padding: 0.6rem 2.4rem 0.6rem 0.7rem;
-}
-
-.first-run-choice:hover,
-.first-run-appearance:hover {
+.first-run-choice:hover {
   background: rgba(25, 151, 178, 0.12);
   border-color: rgba(54, 220, 255, 0.42);
 }
 
-.first-run-choice:has(input:checked),
-.first-run-appearance:has(input:checked) {
+.first-run-choice:has(input:checked) {
   background: rgba(25, 151, 178, 0.16);
   border-color: rgba(54, 220, 255, 0.72);
-  box-shadow: inset 0 0 0 1px rgba(54, 220, 255, 0.72);
 }
 
-.first-run-choice:has(input:focus-visible),
-.first-run-appearance:has(input:focus-visible) {
+.first-run-choice:has(input:focus-visible) {
   outline: 2px solid rgba(54, 220, 255, 0.9);
   outline-offset: 2px;
 }
 
-.first-run-choice input,
-.first-run-appearance input {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+/* The radio is drawn as the row's mark and placed last in the grid; its DOM
+   position stays first so the subcopy follows the mission it describes. */
+.first-run-choice input {
+  grid-column: 3;
+  grid-row: 1;
   display: grid;
   place-items: center;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.95rem;
+  height: 0.95rem;
   margin: 0;
   border: 1.5px solid rgba(171, 210, 220, 0.6);
   border-radius: 50%;
@@ -292,29 +275,33 @@
   cursor: pointer;
 }
 
-.first-run-choice input::after,
-.first-run-appearance input::after {
+.first-run-choice input::after {
   content: '';
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.45rem;
+  height: 0.45rem;
   border-radius: 50%;
-  background: transparent;
 }
 
-.first-run-choice input:checked,
-.first-run-appearance input:checked {
+.first-run-choice input:checked {
   border-color: #36dcff;
 }
 
-.first-run-choice input:checked::after,
-.first-run-appearance input:checked::after {
+.first-run-choice input:checked::after {
   background: #36dcff;
 }
 
-/* The focus ring is drawn on the card. */
-.first-run-choice input:focus-visible,
-.first-run-appearance input:focus-visible {
+/* The focus ring is drawn on the row. */
+.first-run-choice input:focus-visible {
   outline: none;
+}
+
+.first-run-choice-text {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
 }
 
 /* aria-disabled, not :disabled — the JS keeps the radios focusable while a
@@ -324,165 +311,75 @@
   opacity: 0.48;
 }
 
-/* The mission's own icon on a preview tile. */
-.first-run-preview {
-  display: grid;
-  place-items: center;
-  align-self: stretch;
-  min-height: 4rem;
-  color: #55dff5;
-  background: rgba(54, 220, 255, 0.07);
-  border: 1px solid rgba(100, 200, 220, 0.16);
-  border-radius: 0.35rem;
-}
-
-.first-run-preview .material-symbols-outlined {
-  font-size: 1.9rem;
-}
-
-.first-run-choice-text,
-.first-run-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.first-run-choice-text strong,
-.first-run-card-text strong {
+.first-run-choice-text strong {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.06rem;
 }
 
-.first-run-choice-text small,
-.first-run-card-text small {
+.first-run-choice-text small {
   color: rgba(198, 220, 226, 0.6);
-  font-size: 0.74rem;
-  line-height: 1.4;
+  font-size: 0.68rem;
+  line-height: 1.3;
 }
 
-/* A small sample of each appearance's panel and accent. */
-.first-run-swatch {
-  align-self: center;
-  height: 2.2rem;
-  border-radius: 0.3rem;
-  border: 1px solid rgba(100, 200, 220, 0.24);
-  background:
-    linear-gradient(var(--swatch-accent), var(--swatch-accent)) 0.35rem 0.4rem /
-      0.9rem 0.2rem no-repeat,
-    var(--swatch-surface);
+/* Label and segmented control on one line; the Cyber note wraps below. */
+.first-run-appearance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
 }
 
-.first-run-swatch[data-appearance='original'] {
-  --swatch-surface: #0f171c;
-  --swatch-accent: #00d4ff;
-}
-
-.first-run-swatch[data-appearance='transparent-dark'] {
-  --swatch-surface: linear-gradient(
-    135deg,
-    rgba(30, 40, 45, 0.55),
-    rgba(16, 24, 28, 0.85)
-  );
-  --swatch-accent: #2fd9ec;
-}
-
-.first-run-swatch[data-appearance='light'] {
-  --swatch-surface: #f2f6f6;
-  --swatch-accent: #007c8f;
+.first-run-appearance .gev-segment {
+  white-space: nowrap;
 }
 
 .first-run-appearance-note {
+  flex-basis: 100%;
   color: rgba(199, 225, 231, 0.62);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 
-/* Source, help and the Halfpixel links: icon, two lines, and an action. */
-.first-run-card,
-.first-run-more {
-  display: grid;
-  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-  padding: 0.7rem 0.8rem;
-  color: rgba(225, 244, 248, 0.92);
-  background: rgba(29, 69, 81, 0.12);
-  border: 1px solid rgba(100, 200, 220, 0.18);
-  border-radius: 0.5rem;
+/* Source, docs and the studio's links as one row of small chips. */
+.first-run-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.first-run-more {
-  text-decoration: none;
-  border-style: dashed;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.first-run-more:hover,
-.first-run-more:focus-visible {
-  background: rgba(25, 151, 178, 0.12);
-  border-color: rgba(54, 220, 255, 0.62);
-  outline: none;
-}
-
-.first-run-more:focus-visible {
-  outline: 2px solid rgba(54, 220, 255, 0.9);
-  outline-offset: 2px;
-}
-
-.first-run-card-icon {
-  display: grid;
-  place-items: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  color: #55dff5;
-  background: rgba(54, 220, 255, 0.07);
-  border: 1px solid rgba(100, 200, 220, 0.2);
-  border-radius: 0.35rem;
-}
-
-.first-run-card-icon .material-symbols-outlined {
-  font-size: 1.15rem;
-}
-
-.first-run-card-link {
+.first-run-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 2rem;
-  padding: 0 0.7rem;
+  gap: 0.3rem;
+  min-height: 1.75rem;
+  padding: 0 0.6rem;
   color: rgba(54, 220, 255, 0.92);
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.12rem;
+  font-size: 0.7rem;
   text-decoration: none;
-  border: 1px solid rgba(54, 220, 255, 0.42);
+  border: 1px solid rgba(54, 220, 255, 0.36);
   border-radius: 0.3rem;
 }
 
-.first-run-card-link:hover,
-.first-run-card-link:focus-visible {
-  background: rgba(25, 151, 178, 0.16);
-  border-color: rgba(54, 220, 255, 0.72);
+.first-run-link-studio {
+  border-style: dashed;
 }
 
-.first-run-external {
-  color: rgba(171, 210, 220, 0.6);
-  font-size: 0.9rem;
+.first-run-link:hover,
+.first-run-link:focus-visible {
+  background: rgba(25, 151, 178, 0.16);
+  border-color: rgba(54, 220, 255, 0.72);
 }
 
 /* The live region carries mission progress and failures, so it owns a full row
    and reserves its height — otherwise the card resizes as it speaks. */
 .first-run-note {
-  min-height: 1.1rem;
-  margin-top: 0.6rem;
+  min-height: 1rem;
+  margin-top: 0.35rem;
   color: rgba(199, 225, 231, 0.62);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   line-height: 1.35;
 }
 
@@ -495,9 +392,9 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: 1.25rem;
-  margin-top: 0.35rem;
-  padding-top: 0.8rem;
+  gap: 0.9rem;
+  margin-top: 0.25rem;
+  padding-top: 0.65rem;
   border-top: 1px solid rgba(100, 200, 220, 0.18);
 }
 
@@ -505,15 +402,15 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   color: rgba(199, 225, 231, 0.66);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   cursor: pointer;
 }
 
 .first-run-suppress input {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 0.85rem;
+  height: 0.85rem;
   margin: 0;
   accent-color: #36dcff;
   cursor: pointer;
@@ -527,21 +424,22 @@
   flex: 1;
   min-width: 0;
   color: rgba(199, 225, 231, 0.55);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
 }
 
 .first-run-enter {
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding: 0 1.2rem;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.9rem;
   color: #031317;
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12rem;
+  letter-spacing: 0.1rem;
   background: #36dcff;
   border: 1px solid #36dcff;
   border-radius: 0.4rem;
@@ -549,7 +447,7 @@
 }
 
 .first-run-enter .material-symbols-outlined {
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 .first-run-enter:hover,
@@ -584,40 +482,14 @@ body.scene-playback-mode #first-run-launcher {
 @media (max-width: 720px) {
   #first-run-launcher {
     width: calc(100vw - 1.5rem);
-    padding: 1rem 1rem 0.85rem;
+    padding: 0.9rem 0.9rem 0.8rem;
   }
-  #first-run-launcher h2 {
-    margin-top: 0.5rem;
-  }
-  #first-run-description {
-    font-size: 0.78rem;
-  }
-  .first-run-body {
-    gap: 0.95rem;
-    margin-top: 0.85rem;
-  }
-  .first-run-choices,
-  .first-run-cards,
-  .first-run-appearances {
+  .first-run-choices {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .first-run-choice {
-    grid-template-columns: 4rem minmax(0, 1fr);
-    min-height: 4rem;
-    padding: 0.55rem 2.4rem 0.55rem 0.55rem;
-  }
-  .first-run-preview {
-    min-height: 2.9rem;
-  }
-  .first-run-preview .material-symbols-outlined {
-    font-size: 1.5rem;
-  }
-  .first-run-appearance {
-    min-height: 3rem;
   }
   .first-run-footer {
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
   .first-run-tip {
     display: none;
@@ -625,6 +497,7 @@ body.scene-playback-mode #first-run-launcher {
   .first-run-enter {
     flex: 1 1 100%;
     justify-content: center;
+    min-height: 2.75rem;
   }
 }
 
@@ -633,29 +506,21 @@ body.scene-playback-mode #first-run-launcher {
    the only copy that says what this thing is. */
 @media (max-height: 620px) {
   #first-run-launcher {
-    padding: 0.75rem 0.95rem 0.7rem;
+    padding: 0.7rem 0.9rem 0.65rem;
   }
   #first-run-launcher h2 {
-    margin-top: 0.3rem;
+    margin-top: 0.25rem;
     font-size: 1.15rem;
   }
-  #first-run-description {
-    margin-top: 0.2rem;
-    font-size: 0.72rem;
-    line-height: 1.4;
-  }
   .first-run-body {
-    margin-top: 0.55rem;
+    margin-top: 0.5rem;
   }
   .first-run-note {
-    margin-top: 0.3rem;
+    margin-top: 0.2rem;
     min-height: 0;
   }
   .first-run-footer {
-    padding-top: 0.5rem;
-  }
-  .first-run-enter {
-    min-height: 2.4rem;
+    padding-top: 0.45rem;
   }
 }
 
@@ -697,12 +562,10 @@ body.scene-playback-mode #first-run-launcher {
 
 @media (prefers-reduced-motion: reduce) {
   #first-run-launcher,
-  .first-run-choice,
-  .first-run-appearance,
-  .first-run-more {
+  .first-run-choice {
     transition: none;
   }
-  /* Scrolling a card into view must not animate either. */
+  /* Scrolling a row into view must not animate either. */
   .first-run-body {
     scroll-behavior: auto;
   }

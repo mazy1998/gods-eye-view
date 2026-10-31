@@ -413,7 +413,7 @@ const MUTATIONS = [
     // those instead and prove nothing about this feature.
     defect: "the launcher's reduced-motion opt-out is dropped",
     file: 'css',
-    from: '  #first-run-launcher,\n  .first-run-choice,\n  .first-run-appearance,\n  .first-run-more {\n    transition: none;\n  }\n  /* Scrolling a card into view must not animate either. */\n  .first-run-body {\n    scroll-behavior: auto;\n  }',
+    from: '  #first-run-launcher,\n  .first-run-choice {\n    transition: none;\n  }\n  /* Scrolling a row into view must not animate either. */\n  .first-run-body {\n    scroll-behavior: auto;\n  }',
     to: '  .first-run-nothing {\n    transition: none;\n  }',
   },
 
@@ -439,8 +439,8 @@ const MUTATIONS = [
   {
     defect: 'an outbound link loses rel="noopener noreferrer"',
     file: 'html',
-    from: 'href="https://www.youtube.com/@bilawalsidhu"\n          target="_blank"\n          rel="noopener noreferrer"',
-    to: 'href="https://www.youtube.com/@bilawalsidhu"\n          target="_blank"',
+    from: 'href="https://www.youtube.com/@bilawalsidhu"\n        target="_blank"\n        rel="noopener noreferrer"',
+    to: 'href="https://www.youtube.com/@bilawalsidhu"\n        target="_blank"',
   },
 
   // ── Markup and startup ordering ───────────────────────────────────────────

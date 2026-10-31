@@ -57,8 +57,8 @@
 :root:not([data-ui-theme='cyber']) #global-loading-status[data-state='retry'] {
   border-color: var(--gev-warning);
 }
-/* The welcome card in the refreshed type: drawer labels, token cards, and an
-   accent Enter. */
+/* The welcome card in the refreshed type: drawer labels, token rows and
+   chips, and an accent Enter. */
 :root:not([data-ui-theme='cyber']) #first-run-launcher {
   font-family: var(--gev-font-sans);
   border-radius: var(--gev-radius-lg);
@@ -75,34 +75,28 @@
 :root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-kicker {
   color: var(--gev-accent-text);
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-section-heading::after {
-  background: var(--gev-border-subtle);
-}
 :root:not([data-ui-theme='cyber']) #first-run-launcher h2 {
   color: var(--gev-text);
-  font-family: var(--gev-font-sans);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font: 600 1.4rem / 1.25 var(--gev-font-sans);
+  letter-spacing: -0.01em;
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
   :is(
     #first-run-description,
+    .first-run-line,
     small,
     .first-run-suppress,
     .first-run-tip,
     .first-run-note,
-    .first-run-appearance-note,
-    .first-run-external
+    .first-run-appearance-note
   ) {
   color: var(--gev-text-muted);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-note, .first-run-appearance-note, .first-run-tip) {
-  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  :is(.first-run-note, .first-run-appearance-note, .first-run-tip, small) {
+  font: var(--gev-font-size-sm) / 1.35 var(--gev-font-sans);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher[data-state='loading']
@@ -113,7 +107,6 @@
   color: var(--gev-text-muted);
   border-color: var(--gev-border);
   border-radius: var(--gev-radius-sm);
-  letter-spacing: 1px;
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
@@ -124,99 +117,68 @@
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(
-    .first-run-dismiss,
-    .first-run-card-link,
-    .first-run-more,
-    .first-run-enter
-  ):focus-visible,
+  :is(.first-run-dismiss, .first-run-link, .first-run-enter):focus-visible,
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance):has(input:focus-visible) {
+  .first-run-choice:has(input:focus-visible) {
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(
-    .first-run-choice,
-    .first-run-appearance,
-    .first-run-card,
-    .first-run-more
-  ) {
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-choice {
   color: var(--gev-text);
   background: var(--gev-control-bg);
   border-color: var(--gev-border-subtle);
   border-radius: var(--gev-radius-md);
 }
-:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-more {
-  border-color: var(--gev-border);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance, .first-run-more):hover {
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-choice:hover {
   background: var(--gev-control-bg-hover);
   border-color: var(--gev-border);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance):has(input:checked) {
+  .first-run-choice:has(input:checked) {
   background: var(--gev-accent-tint);
   border-color: var(--gev-accent);
-  box-shadow: inset 0 0 0 1px var(--gev-accent);
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance)
-  input {
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-choice input {
   border-color: var(--gev-border);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance)
+  .first-run-choice
   input:checked {
   border-color: var(--gev-accent);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-choice, .first-run-appearance)
+  .first-run-choice
   input:checked::after {
   background: var(--gev-accent);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-preview, .first-run-card-icon) {
+  .first-run-choice
+  > .material-symbols-outlined {
   color: var(--gev-accent-text);
-  background: var(--gev-surface-raised);
-  border-color: var(--gev-border-subtle);
-  border-radius: var(--gev-radius-sm);
 }
 :root:not([data-ui-theme='cyber'])
   #first-run-launcher
-  :is(.first-run-choice-text, .first-run-card-text)
+  .first-run-choice-text
   strong {
   font: 600 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
   letter-spacing: 0.5px;
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(.first-run-choice-text, .first-run-card-text)
-  small {
-  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
-}
-:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-swatch {
-  border-color: var(--gev-border-subtle);
-}
-:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-card-link {
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-link {
   color: var(--gev-accent-text);
-  font: 600 var(--gev-font-size-xs) / 1 var(--gev-font-sans);
-  letter-spacing: 1px;
+  font: 500 var(--gev-font-size-sm) / 1 var(--gev-font-sans);
   border-color: var(--gev-accent-tint-border);
   border-radius: var(--gev-radius-sm);
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-card-link:hover {
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-link-studio {
+  color: var(--gev-text);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-link:hover {
   background: var(--gev-accent-tint);
   border-color: var(--gev-accent);
 }

@@ -65,8 +65,8 @@ defineProps({
             :aria-disabled="String(busy)"
             data-first-run-choice="contacts"
           />
-          <span class="first-run-preview" aria-hidden="true"
-            ><span class="material-symbols-outlined">radar</span></span
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >radar</span
           >
           <span class="first-run-choice-text"
             ><strong>{{ t('LIVE CONTACTS') }}</strong
@@ -84,8 +84,8 @@ defineProps({
             :aria-disabled="String(busy)"
             data-first-run-choice="space-missions"
           />
-          <span class="first-run-preview" aria-hidden="true"
-            ><span class="material-symbols-outlined">rocket_launch</span></span
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >rocket_launch</span
           >
           <span class="first-run-choice-text"
             ><strong>{{ t('SPACE MISSIONS') }}</strong
@@ -103,10 +103,8 @@ defineProps({
             :aria-disabled="String(busy)"
             data-first-run-choice="environmental"
           />
-          <span class="first-run-preview" aria-hidden="true"
-            ><span class="material-symbols-outlined"
-              >local_fire_department</span
-            ></span
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >local_fire_department</span
           >
           <!-- Title text is painted from ENVIRONMENTAL_LABEL_CHOICE at init. -->
           <!-- Subcopy names BOTH feeds this tile turns on, because the launcher
@@ -130,8 +128,8 @@ defineProps({
             :aria-disabled="String(busy)"
             data-first-run-choice="explore"
           />
-          <span class="first-run-preview" aria-hidden="true"
-            ><span class="material-symbols-outlined">public</span></span
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >public</span
           >
           <span class="first-run-choice-text"
             ><strong>{{ t('EXPLORE MANUALLY') }}</strong
@@ -141,88 +139,37 @@ defineProps({
       </div>
     </section>
     <FirstRunAppearance v-if="appearance" :appearance="appearance" />
-    <section class="first-run-section" aria-labelledby="first-run-run-heading">
-      <h3 id="first-run-run-heading" class="first-run-section-heading">
-        {{ t('Run it your way') }}
-      </h3>
-      <div class="first-run-cards">
-        <div class="first-run-card">
-          <span class="first-run-card-icon" aria-hidden="true"
-            ><span class="material-symbols-outlined">code</span></span
-          >
-          <span class="first-run-card-text"
-            ><strong>{{ t('GEV Git source') }}</strong
-            ><small>{{
-              t('Open source. Self-host, fork, add a layer.')
-            }}</small></span
-          >
-          <a
-            class="first-run-card-link"
-            href="https://github.com/bilawalsidhu/gods-eye-view"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{ t('GITHUB')
-            }}<span class="first-run-external" aria-hidden="true">↗</span></a
-          >
-        </div>
-        <div class="first-run-card">
-          <span class="first-run-card-icon" aria-hidden="true"
-            ><span class="material-symbols-outlined">menu_book</span></span
-          >
-          <span class="first-run-card-text"
-            ><strong>{{ t('Help & documentation') }}</strong
-            ><small>{{
-              t("Quick start, API keys and what's on the globe.")
-            }}</small></span
-          >
-          <a
-            class="first-run-card-link"
-            href="https://github.com/bilawalsidhu/gods-eye-view#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{ t('README')
-            }}<span class="first-run-external" aria-hidden="true">↗</span></a
-          >
-        </div>
-      </div>
-    </section>
-    <section class="first-run-section" aria-labelledby="first-run-more-heading">
-      <h3 id="first-run-more-heading" class="first-run-section-heading">
-        {{ t('More from Halfpixel') }}
-      </h3>
-      <div class="first-run-cards">
-        <a
-          class="first-run-more"
-          href="https://www.youtube.com/@bilawalsidhu"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="first-run-card-icon" aria-hidden="true"
-            ><span class="material-symbols-outlined">play_arrow</span></span
-          >
-          <span class="first-run-card-text"
-            ><strong>{{ t('Bilawal on YouTube') }}</strong
-            ><small>{{ t('Build logs and demos') }}</small></span
-          >
-          <span class="first-run-external" aria-hidden="true">↗</span>
-        </a>
-        <a
-          class="first-run-more"
-          href="https://halfpixel.ai"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span class="first-run-card-icon" aria-hidden="true"
-            ><span class="material-symbols-outlined">language</span></span
-          >
-          <span class="first-run-card-text"
-            ><strong>{{ t('halfpixel.ai') }}</strong
-            ><small>{{ t('The studio behind GEV') }}</small></span
-          >
-          <span class="first-run-external" aria-hidden="true">↗</span>
-        </a>
-      </div>
-    </section>
+    <div class="first-run-links">
+      <a
+        class="first-run-link"
+        href="https://github.com/bilawalsidhu/gods-eye-view"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ t('GitHub') }}<span aria-hidden="true">↗</span></a
+      >
+      <a
+        class="first-run-link"
+        href="https://github.com/bilawalsidhu/gods-eye-view#readme"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ t('README') }}<span aria-hidden="true">↗</span></a
+      >
+      <!-- Halfpixel's own links keep the dashed outline. -->
+      <a
+        class="first-run-link first-run-link-studio"
+        href="https://www.youtube.com/@bilawalsidhu"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ t('Bilawal on YouTube') }}<span aria-hidden="true">↗</span></a
+      >
+      <a
+        class="first-run-link first-run-link-studio"
+        href="https://halfpixel.ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ t('halfpixel.ai') }}<span aria-hidden="true">↗</span></a
+      >
+    </div>
   </div>
   <!-- Kept out of the footer row: it swaps to mission progress and errors, and
          a live region that also holds layout makes the row jump as it speaks. -->
