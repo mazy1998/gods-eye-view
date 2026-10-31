@@ -25,11 +25,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const TESTS = ['src/firstRunExperience.test.mjs', 'src/standalone/startupChrome.test.mjs'];
+const TESTS = [
+  'src/firstRunExperience.test.mjs',
+  'src/standalone/startupChrome.test.mjs',
+  'src/ui/feedback/feedbackViews.test.mjs',
+];
 
 const FILES = {
   keyboard: path.join(ROOT, 'src', 'ui', 'surfaceKeyboard.js'),
   module: path.join(ROOT, 'src', 'firstRunExperience.js'),
+  surfaces: path.join(ROOT, 'src', 'exclusiveSurfaces.js'),
   html: path.join(ROOT, 'src', 'ui', 'feedback', 'FirstRunContent.vue'),
   welcomeHost: path.join(ROOT, 'src', 'ui', 'templates', 'welcome.html'),
   css: path.join(ROOT, 'src', 'ui', 'styles', 'first-run.css'),
@@ -141,7 +146,7 @@ const MUTATIONS = [
   },
   {
     defect: 'cockpit drops off the exclusive list and can stack with the launcher',
-    file: 'module',
+    file: 'surfaces',
     from: "export const EXCLUSIVE_SURFACE_CLASSES = Object.freeze([\n  'cockpit-mode',",
     to: 'export const EXCLUSIVE_SURFACE_CLASSES = Object.freeze([',
   },
@@ -216,10 +221,10 @@ const MUTATIONS = [
     to: '    store?.setItem?.(key, value);\n    return true;',
   },
   {
-    defect: 'the scroll fade promises more list on a card where everything fits',
+    defect: 'the scroll fade promises more content on a card where everything fits',
     file: 'module',
-    from: 'choiceList.dataset.scrollable = String(overflows);',
-    to: "choiceList.dataset.scrollable = 'true'; void overflows;",
+    from: 'scrollBody.dataset.scrollable = String(overflows);',
+    to: "scrollBody.dataset.scrollable = 'true'; void overflows;",
   },
 
   {
@@ -305,8 +310,8 @@ const MUTATIONS = [
   {
     defect: 'the fires/quakes tile name stops being switchable from one constant',
     file: 'module',
-    from: 'return ENVIRONMENTAL_LABELS[choice] || ENVIRONMENTAL_LABELS.ENVIRONMENTAL;',
-    to: 'return ENVIRONMENTAL_LABELS.ENVIRONMENTAL;',
+    from: 'ENVIRONMENTAL_LABEL_KEYS[choice] || ENVIRONMENTAL_LABEL_KEYS.ENVIRONMENTAL;',
+    to: 'ENVIRONMENTAL_LABEL_KEYS.ENVIRONMENTAL;',
   },
 
   // ── Defaults interplay (the ruling this whole integration turns on) ────────
@@ -408,8 +413,34 @@ const MUTATIONS = [
     // those instead and prove nothing about this feature.
     defect: "the launcher's reduced-motion opt-out is dropped",
     file: 'css',
-    from: '  #first-run-launcher,\n  .first-run-choices button,\n  .first-run-arrow {\n    transition: none;\n  }\n  /* Scrolling a tile into view must not animate either. */\n  .first-run-choices {\n    scroll-behavior: auto;\n  }',
+    from: '  #first-run-launcher,\n  .first-run-choice,\n  .first-run-appearance,\n  .first-run-more {\n    transition: none;\n  }\n  /* Scrolling a card into view must not animate either. */\n  .first-run-body {\n    scroll-behavior: auto;\n  }',
     to: '  .first-run-nothing {\n    transition: none;\n  }',
+  },
+
+  // ── Select, then Enter ────────────────────────────────────────────────────
+  {
+    defect: 'a single click launches a mission again instead of selecting it',
+    file: 'module',
+    from: "    input.addEventListener('change', onSelect);",
+    to: "    input.addEventListener('click', () => launch(input.dataset.firstRunChoice));",
+  },
+  {
+    defect: 'Enter ignores the selection and always launches Live Contacts',
+    file: 'module',
+    from: "enterButton?.addEventListener('click', () => launch(selected));",
+    to: "enterButton?.addEventListener('click', () => launch('contacts'));",
+  },
+  {
+    defect: 'a selection change mid-launch is kept, retargeting the mission in flight',
+    file: 'module',
+    from: '      for (const input of choices)\n        input.checked = input.dataset.firstRunChoice === selected;\n      return;',
+    to: '      return;',
+  },
+  {
+    defect: 'an outbound link loses rel="noopener noreferrer"',
+    file: 'html',
+    from: 'href="https://www.youtube.com/@bilawalsidhu"\n          target="_blank"\n          rel="noopener noreferrer"',
+    to: 'href="https://www.youtube.com/@bilawalsidhu"\n          target="_blank"',
   },
 
   // ── Markup and startup ordering ───────────────────────────────────────────

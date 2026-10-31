@@ -170,8 +170,19 @@ async function watchLoadingChip(page) {
 
 const readLoadingChip = (page) => page.evaluate(() => window.__chipSeen || []);
 
+/**
+ * Choose a mission the way a visitor does: click its card, which only selects
+ * it, then press Enter. Returns what the card looked like between the two.
+ */
 async function pick(page, choice, { timeout = 40000, settle = [] } = {}) {
-  await page.click(`[data-first-run-choice="${choice}"]`);
+  await page.click(`label:has(> [data-first-run-choice="${choice}"])`);
+  await sleep(150);
+  const selected = await page.evaluate((sel, name) => ({
+    open: !!document.querySelector(sel)?.classList.contains('visible'),
+    checked: document.querySelector(`[data-first-run-choice="${name}"]`)?.checked === true,
+    session: sessionStorage.getItem('gev:first-run-mission-session:v1'),
+  }), LAUNCHER, choice);
+  await page.click('[data-first-run-enter]');
   await page.waitForFunction(
     (sel) => !document.querySelector(sel) || !document.querySelector(sel).classList.contains('visible'),
     { timeout },
@@ -185,6 +196,7 @@ async function pick(page, choice, { timeout = 40000, settle = [] } = {}) {
   }
   // Plus a render beat: settled data still has to reach the framebuffer.
   await sleep(settle.length ? 3500 : 1500);
+  return selected;
 }
 
 /** Every section the run is expected to reach; the teeth verdict requires all. */
@@ -659,7 +671,10 @@ async function main() {
 
     await section('mission-space', async () => {
     await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-    await pick(page, 'space-missions');
+    const selected = await pick(page, 'space-missions');
+    record('a click on a mission card selects it without launching',
+      selected.open && selected.checked && selected.session === null,
+      `open=${selected.open} checked=${selected.checked} session=${selected.session}`);
     state = await appState(page);
     record('SPACE MISSIONS activates its context mode', state.contextMode === 'space-missions',
       `contextMode=${state.contextMode}`);
@@ -687,6 +702,7 @@ async function main() {
     // Portrait phone, LANDSCAPE phone (the short viewport that clipped the card
     // at both ends before it grew a max-height), and a small desktop window.
     const VIEWPORTS = [
+      { name: 'mobile-360', width: 360, height: 740, dpr: 2, label: '360 x 740 narrow phone' },
       { name: 'mobile-375', width: 375, height: 812, dpr: 2, label: '375 x 812 portrait phone' },
       { name: 'landscape-667', width: 667, height: 390, dpr: 2, label: '667 x 390 landscape phone' },
       { name: 'desktop-800', width: 800, height: 600, dpr: 1, label: '800 x 600 small desktop' },
@@ -698,17 +714,22 @@ async function main() {
         const node = document.querySelector(sel);
         if (!node) return null;
         const rect = node.getBoundingClientRect();
-        const list = node.querySelector('.first-run-choices');
-        const checkbox = node.querySelector('[data-first-run-suppress]');
-        const cb = checkbox?.getBoundingClientRect();
+        const list = node.querySelector('.first-run-body');
+        const onScreen = (target) => {
+          const box = target?.getBoundingClientRect();
+          return !!box && box.top >= 0 && box.bottom <= window.innerHeight
+            && box.left >= 0 && box.right <= window.innerWidth;
+        };
         return {
           top: Math.round(rect.top), bottom: Math.round(rect.bottom),
           left: Math.round(rect.left), right: Math.round(rect.right),
           vw: window.innerWidth, vh: window.innerHeight,
           listScrolls: !!list && list.scrollHeight > list.clientHeight + 1,
-          // The checkbox and the status line live OUTSIDE the scrolling list, so
-          // they must be on screen at every height, scrollable list or not.
-          checkboxOnScreen: !!cb && cb.top >= 0 && cb.bottom <= window.innerHeight,
+          // The checkbox and Enter live OUTSIDE the scrolling body, so they
+          // must be on screen at every height, scrollable body or not.
+          checkboxOnScreen: onScreen(node.querySelector('[data-first-run-suppress]')),
+          enterOnScreen: onScreen(node.querySelector('[data-first-run-enter]')),
+          pageScrollsSideways: document.documentElement.scrollWidth > window.innerWidth,
         };
       }, LAUNCHER);
       const fits = !!box && box.top >= 0 && box.bottom <= box.vh
@@ -720,41 +741,19 @@ async function main() {
       );
       record(`"Don't show this again" stays on screen at ${vp.width}x${vp.height}`,
         !!box?.checkboxOnScreen);
-
-      // Discoverability: if the list scrolls, the LAST tile must still peek
-      // above the fold. A fold that lands exactly between tiles looks like a
-      // complete list of four, and the fifth mission is simply never found.
-      const peek = await page.evaluate((sel) => {
-        const node = document.querySelector(sel);
-        const list = node?.querySelector('.first-run-choices');
-        if (!list) return null;
-        list.scrollTop = 0;
-        const tiles = [...list.querySelectorAll('[data-first-run-choice]')];
-        const last = tiles[tiles.length - 1];
-        if (!last) return null;
-        const listBox = list.getBoundingClientRect();
-        const lastBox = last.getBoundingClientRect();
-        const visible = Math.max(0, Math.min(listBox.bottom, lastBox.bottom) - Math.max(listBox.top, lastBox.top));
-        return {
-          scrolls: list.scrollHeight > list.clientHeight + 1,
-          fraction: lastBox.height ? visible / lastBox.height : 0,
-          label: last.dataset.firstRunChoice,
-        };
-      }, LAUNCHER);
-      record(
-        `the last mission is discoverable at ${vp.width}x${vp.height}`,
-        !!peek && (!peek.scrolls || peek.fraction >= 0.25),
-        peek
-          ? `${peek.label} ${(peek.fraction * 100).toFixed(0)}% visible${peek.scrolls ? ' (list scrolls)' : ' (no scroll needed)'}`
-          : 'absent',
-      );
+      // Selecting is only half a choice; Enter has to be reachable without
+      // scrolling to launch it.
+      record(`Enter stays on screen at ${vp.width}x${vp.height}`,
+        !!box?.enterOnScreen);
+      record(`no horizontal page scroll at ${vp.width}x${vp.height}`,
+        !!box && !box.pageScrollsSideways);
 
       // Every tile plus the checkbox must still be reachable by Tab when the
       // list scrolls — and reaching one must bring it into view.
       const reach = await page.evaluate(async (sel) => {
         const node = document.querySelector(sel);
         if (!node) return null;
-        const targets = [...node.querySelectorAll('[data-first-run-choice], [data-first-run-suppress]')];
+        const targets = [...node.querySelectorAll('[data-first-run-choice], [data-first-run-suppress], [data-first-run-enter]')];
         const offscreen = [];
         for (const target of targets) {
           target.focus();
@@ -763,29 +762,31 @@ async function main() {
           const host = node.getBoundingClientRect();
           if (document.activeElement !== target
             || rect.bottom <= host.top || rect.top >= host.bottom) {
-            offscreen.push(target.dataset.firstRunChoice || 'suppress-checkbox');
+            offscreen.push(target.dataset.firstRunChoice
+              || (target.matches('[data-first-run-enter]') ? 'enter' : 'suppress-checkbox'));
           }
         }
         return { count: targets.length, offscreen };
       }, LAUNCHER);
-      // Derived, not a magic number: every rendered tile plus the checkbox.
+      // Derived, not a magic number: every rendered tile plus the checkbox and
+      // Enter.
       // A hardcoded count silently turns into a failure the day the menu
       // changes, which is exactly what it did when a tile was removed.
       const expectedFocusable = await page.$$eval(
         '[data-first-run-choice]', (nodes) => nodes.length,
-      ) + 1;
+      ) + 2;
       record(
-        `every tile and the checkbox are keyboard-reachable at ${vp.width}x${vp.height}`,
+        `every tile, the checkbox and Enter are keyboard-reachable at ${vp.width}x${vp.height}`,
         !!reach && reach.count === expectedFocusable && reach.offscreen.length === 0,
         reach
           ? `${reach.count}/${expectedFocusable} focusable${reach.offscreen.length ? `, unreachable: ${reach.offscreen.join(', ')}` : ''}`
           : 'absent',
       );
-      // The reachability probe above tabs to the last tile and scrolls the list
+      // The reachability probe above tabs to the last tile and scrolls the body
       // with it. Put it back to the top so the taste-pass shot shows what a
       // visitor actually opens on.
       await page.evaluate((sel) => {
-        const list = document.querySelector(sel)?.querySelector('.first-run-choices');
+        const list = document.querySelector(sel)?.querySelector('.first-run-body');
         if (list) list.scrollTop = 0;
         document.activeElement?.blur?.();
       }, LAUNCHER);
