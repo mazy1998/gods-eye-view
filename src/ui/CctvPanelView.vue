@@ -4,7 +4,6 @@ import StatusBadge from './primitives/StatusBadge.vue';
 import NumberField from './primitives/NumberField.vue';
 import SelectField from './primitives/SelectField.vue';
 import DisclosureRow from './primitives/DisclosureRow.vue';
-import { cctvSourceLabelText, cctvSourceStatusLabel } from './cctvFrames.js';
 import { t } from '../i18n/index.js';
 const props = defineProps({
   view: Object,
@@ -23,24 +22,20 @@ const props = defineProps({
 const OUTSIDE = 'cctv-outside-view';
 const listed = computed(() => {
   const query = (props.filter || '').trim().toLocaleLowerCase();
-  return props.view.cameras
-    .filter(
-      (camera) =>
-        camera.id === props.view.activeId ||
-        `${camera.city} ${camera.name} ${camera.sourceLabel || camera.provider || ''}`
-          .toLocaleLowerCase()
-          .includes(query),
-    )
-    .map((camera) => ({
-      value: camera.id,
-      label: [
-        `${camera.city} · ${camera.name}`,
-        cctvSourceLabelText(
-          camera.sourceLabel || camera.provider || 'Configured Source',
-        ),
-        cctvSourceStatusLabel(camera.sourceStatus || 'unknown'),
-      ].join(' · '),
-    }));
+  return (
+    props.view.cameras
+      // The light camera index carries only id, city and name; the active
+      // camera's source and health show in the panel's own meta and badge.
+      .filter(
+        (camera) =>
+          camera.id === props.view.activeId ||
+          `${camera.city} ${camera.name}`.toLocaleLowerCase().includes(query),
+      )
+      .map((camera) => ({
+        value: camera.id,
+        label: `${camera.city} · ${camera.name}`,
+      }))
+  );
 });
 // A focused picker is not rebuilt under the user as the view moves; it
 // takes the new list on blur. A camera activated meanwhile is added so the

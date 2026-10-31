@@ -276,52 +276,34 @@ test('a focused picker keeps its list as the view moves, and adds a camera activ
 test('camera search is owned, literal and preserves the active choice during notifications', (t) => {
   const { controls } = fixture(t);
   const cameras = [
-    {
-      id: 'a',
-      city: 'City',
-      name: '<img src=x onerror=alert(1)>',
-      sourceLabel: 'Network A',
-      sourceStatus: 'ok',
-    },
-    {
-      id: 'b',
-      city: 'City',
-      name: 'Bridge',
-      sourceLabel: 'Network B',
-      sourceStatus: 'degraded',
-    },
-    {
-      id: 'c',
-      city: 'City',
-      name: 'Junction',
-      sourceLabel: 'Network C',
-      sourceStatus: 'unknown',
-    },
+    { id: 'a', city: 'City', name: '<img src=x onerror=alert(1)>' },
+    { id: 'b', city: 'City', name: 'Bridge' },
+    { id: 'c', city: 'City', name: 'Junction' },
   ];
   const state = {
     enabled: true,
-    cameras,
+    cameraIndex: cameras,
     activeCameraId: 'a',
     activeCamera: cameras[0],
   };
   controls._renderCctvState(state);
   const filter = controls._cctvPanel.querySelector('#cctv-camera-filter');
-  filter.value = 'network b';
+  filter.value = 'bridge';
   filter.dispatchEvent(new Event('input', { bubbles: true }));
-  assert.equal(controls._pickerFilter, 'network b');
+  assert.equal(controls._pickerFilter, 'bridge');
   assert.deepEqual(
     [...controls._cctvSelect.options].map((o) => o.value),
     ['a', 'b'],
   );
   assert.match(controls._cctvSelect.options[0].textContent, /<img src=x/);
-  assert.match(
-    controls._cctvSelect.options[1].textContent,
-    /Network B · DEGRADED/,
+  assert.equal(
+    controls._cctvSelect.options[1].textContent.trim(),
+    'City · Bridge',
   );
   assert.equal(controls._cctvSelect.querySelector('img'), null);
   controls._renderCctvState({ ...state });
   assert.equal(controls._cctvSelect.value, 'a');
-  assert.equal(filter.value, 'network b');
+  assert.equal(filter.value, 'bridge');
 });
 
 test('a detached calibration input cannot finish a newer editor', (t) => {
@@ -413,4 +395,35 @@ test('a same-camera repaint leaves a natively edited calibration value for Enter
     selectedCameraId: 'a',
     calibration: { cameraId: 'a', patch: { headingDeg: 80 } },
   });
+});
+
+test('picker options come from the light camera index alone, with no invented source or health', (t) => {
+  const { controls } = fixture(t);
+  const state = {
+    enabled: true,
+    count: 2,
+    // The index's whole record; the full camera state is never read for it.
+    cameraIndex: [
+      { id: 'a', city: 'Oakland', name: 'North crossing' },
+      { id: 'b', city: 'Sacramento', name: 'River bridge' },
+    ],
+  };
+  Object.defineProperty(state, 'cameras', {
+    get() {
+      throw new Error('the full camera state must stay unread');
+    },
+  });
+  controls._renderCctvState(state);
+  const labels = () =>
+    [...controls._cctvSelect.options].map((option) =>
+      option.textContent.trim(),
+    );
+  assert.deepEqual(labels(), [
+    'Oakland · North crossing',
+    'Sacramento · River bridge',
+  ]);
+  const filter = controls._cctvPanel.querySelector('#cctv-camera-filter');
+  filter.value = 'river';
+  filter.dispatchEvent(new Event('input', { bubbles: true }));
+  assert.deepEqual(labels(), ['Sacramento · River bridge']);
 });
