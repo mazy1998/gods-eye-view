@@ -83,11 +83,15 @@
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
   .stories-controls
-  :is(.scene-shot-label, #scene-status, .stories-browse-status) {
+  :is(#scene-status, .stories-browse-status) {
   color: var(--gev-text);
   text-shadow: none;
   font: inherit;
   letter-spacing: normal;
+}
+:where(:root:not([data-ui-theme='cyber'])) #scene-controls-body #scene-status {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
@@ -129,7 +133,35 @@
   #scene-controls-body
   .stories-controls
   .scene-shot-label {
-  font-weight: 500;
+  color: var(--gev-text);
+  text-shadow: none;
+  font: 500 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* Shots are numbered 01, 02… in playback order; the selected one's number
+   takes the accent. */
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-label::before {
+  margin-right: var(--gev-space-2);
+  color: var(--gev-text-muted);
+  font: 600 var(--gev-font-size-xs) / 1 var(--gev-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-row.active
+  .scene-shot-label::before {
+  color: var(--gev-accent-text);
+}
+/* With no shots, the empty note needs no room for two rows. */
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-list:has(> .scene-shot-empty) {
+  min-height: 0;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
@@ -449,15 +481,71 @@ body:not(.ui-clean-view, .recording-mode):has(.gev-header:not([hidden]))
 :where(:root:not([data-ui-theme='cyber'])) .stories-create-link:focus-visible {
   outline-color: var(--gev-focus-ring);
 }
-.stories-authoring {
+/* Authoring's steps: SCENE, SHOTS, PREVIEW, SAVE & SHARE. */
+.stories-authoring,
+.stories-step {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
+  min-width: 0;
 }
-.stories-authoring h3 {
+/* The headings are h3 for the outline but read like Cyber's step labels. */
+.stories-controls .scene-step-heading {
+  margin: 4px 0 0;
+  font-weight: normal;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .scene-step-heading {
+  margin: var(--gev-space-2) 0 0;
+  color: var(--gev-text-muted);
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .stories-step:first-child
+  .scene-step-heading {
+  margin-top: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .stories-controls
+  .scene-step-heading::after {
+  background: var(--gev-border-subtle);
+}
+:where(:root:not([data-ui-theme='cyber'])) .stories-controls .scene-shot-hint {
   margin: 0;
-  font: inherit;
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* One primary action per step, CAPTURE SHOT and PLAY, in the accent tint;
+   Browse's filled Play stays the strongest. */
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-btn.scene-btn-primary:not(:disabled) {
+  color: var(--gev-accent-text);
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+  font-weight: 600;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-btn.scene-btn-primary:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--gev-on-accent);
+  background: var(--gev-accent);
+  border-color: var(--gev-accent);
+}
+/* The file row is housekeeping: the same type, with no fill. */
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-file-controls
+  .scene-btn:not(:hover, :focus-visible) {
+  background: transparent;
 }
 :where(:root:not([data-ui-theme='cyber']))
   .stories-controls
@@ -467,12 +555,7 @@ body:not(.ui-clean-view, .recording-mode):has(.gev-header:not([hidden]))
   letter-spacing: 0;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(
-    .stories-selected,
-    .stories-recipe,
-    .stories-authoring h3,
-    .stories-controls #scene-start-btn
-  ) {
+  :is(.stories-selected, .stories-recipe, .stories-controls #scene-start-btn) {
   font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
   letter-spacing: 0;
 }
