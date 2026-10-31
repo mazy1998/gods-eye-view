@@ -129,7 +129,8 @@ test('Authoring disables idle actions that would do nothing', () => {
     assert.equal(f.elements.start.textContent.trim(), 'Play');
     assert.equal(f.elements.start.disabled, false);
     assert.equal(f.elements.update.disabled, false);
-    assert.equal(f.elements.panel.classList.contains('has-shots'), true);
+    // The drawer view leaves the shared panel's classes alone.
+    assert.equal(f.elements.panel.classList.contains('has-shots'), false);
 
     f.state.selectedShotId = null;
     f.owner.setButtons(false);
@@ -150,7 +151,6 @@ test('Authoring disables idle actions that would do nothing', () => {
     assert.equal(f.elements.start.disabled, true);
     assert.equal(f.elements.next.disabled, true);
     assert.equal(f.elements.capture.disabled, false);
-    assert.equal(f.elements.panel.classList.contains('has-shots'), false);
 
     f.state.scenes = [];
     f.state.selectedSceneId = null;

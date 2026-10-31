@@ -193,12 +193,15 @@ export class SceneControls {
       running: this.presentation.running,
     });
     this.elements.panel?.classList.toggle('running', this.presentation.running);
-    this.elements.panel?.classList.toggle(
-      'has-shots',
-      !!this.library.scenes?.find(
-        (scene) => scene.id === this.library.selectedSceneId,
-      )?.shots?.length,
-    );
+    // The legacy panel's shot hint keys off this class; the drawer's view
+    // reads the selected scene itself, so the shared panel keeps its classes.
+    if (this.native)
+      this.elements.panel?.classList.toggle(
+        'has-shots',
+        !!this.library.scenes?.find(
+          (scene) => scene.id === this.library.selectedSceneId,
+        )?.shots?.length,
+      );
     if (!this.native)
       this.elements.runtime?.classList.toggle(
         'active',
