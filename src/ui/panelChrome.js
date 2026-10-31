@@ -87,8 +87,7 @@ export class PanelChrome {
         variant: this.hud.getVariant(),
       }),
       scheduleCockpitLayout: () => this.cockpitView?.scheduleContextLayout(),
-      syncPanelCollapseButton: (panel) =>
-        this._syncRailPanelCollapseButton(panel),
+      syncPanelCollapseButton: (panel) => this._syncPanelCollapseButton(panel),
       readDisplayScrollTop: () =>
         this._displayPortalScrollRestoreOwner === 'standard'
           ? this._standardDisplayScrollTop
@@ -271,19 +270,6 @@ export class PanelChrome {
     return this._panelLayout._scheduleLeftPanelLayout(options0);
   }
 
-  _syncRailPanelCollapseButton(panelEl) {
-    // Adaptive rail layout may directly restore an auto-collapsed Context
-    // without invoking setPanelCollapsed(). Enforce Radio ownership there too.
-    if (
-      panelEl?.id === 'global-context-panel' &&
-      !panelEl.classList.contains('collapsed') &&
-      this._contextRadioDock?.classList.contains('disclosure-open')
-    ) {
-      this._setRadioDisclosure?.(false);
-    }
-    this._syncPanelCollapseButton(panelEl);
-  }
-
   /**
    * @param {HTMLElement} panelEl
    * @param {{ presentation?: boolean, revealing?: string|null }} [options]
@@ -366,15 +352,6 @@ export class PanelChrome {
       dockToggle.setAttribute('aria-expanded', String(!collapsed));
       dockToggle.setAttribute('aria-label', t(titleKey, { name: panelName }));
       dockToggle.title = t(titleKey, { name: panelName });
-    }
-    if (panelEl.id === 'radio-panel' && this._contextRadioDetailsBtn) {
-      this._contextRadioDetailsBtn.setAttribute(
-        'aria-expanded',
-        String(!collapsed),
-      );
-    }
-    if (panelEl.id === 'radio-panel' || panelEl.id === 'global-context-panel') {
-      this._syncContextRadioLauncherState();
     }
     this.channel.publish({
       type: 'panel-changed',
@@ -580,15 +557,6 @@ export class PanelChrome {
         syncShare,
       });
     }
-    // A repeated Context-open request must clear a stale compact Radio mini
-    // even when no collapsed class changes.
-    if (
-      !nextCollapsed &&
-      panelId === 'global-context-panel' &&
-      this._contextRadioDock?.classList.contains('disclosure-open')
-    ) {
-      this._setRadioDisclosure?.(false);
-    }
     if (
       panelEl.classList.contains('collapsed') === nextCollapsed &&
       !wasAutoCollapsed
@@ -616,13 +584,6 @@ export class PanelChrome {
       if (this._cockpitContextCollapsedForDataPanel) {
         this.cockpitView.setContextCollapsed(true);
       }
-    }
-    if (
-      !nextCollapsed &&
-      panelId === 'global-context-panel' &&
-      this._contextRadioDock?.classList.contains('disclosure-open')
-    ) {
-      this._setRadioDisclosure?.(false);
     }
     if (
       !nextCollapsed &&

@@ -105,24 +105,21 @@ test('radio card text, volume and all playback shortcuts project one owner snaps
     assert.equal(f.elements._radioStationHomepage.rel, 'noopener noreferrer');
     for (const button of [
       f.elements._radioPlayBtn,
-      f.elements._contextRadioMiniPlayBtn,
       f.elements._cockpitRadioPlayBtn,
     ])
       button.click();
     assert.deepEqual(
       f.calls.filter((c) => c[0] === 'play'),
-      Array.from({ length: 3 }, () => ['play', { origin: 'user' }]),
+      Array.from({ length: 2 }, () => ['play', { origin: 'user' }]),
     );
     f.render({ audioState: 'playing', volume: 0.34 });
     for (const input of [
       f.elements._radioVolume,
-      f.elements._contextRadioMiniVolume,
       f.elements._cockpitRadioVolume,
     ])
       assert.equal(input.value, '34');
     for (const button of [
       f.elements._radioPlayBtn,
-      f.elements._contextRadioMiniPlayBtn,
       f.elements._cockpitRadioPlayBtn,
     ])
       assert.equal(

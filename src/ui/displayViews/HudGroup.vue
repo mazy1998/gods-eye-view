@@ -98,7 +98,6 @@ const SONAR = [
       <option
         v-for="[value, label] in [
           ['tactical', msg('Tactical')],
-          ['operator', msg('Operator')],
           ['minimal', msg('Minimal')],
           ['cyber', msg('Cyber')],
         ]"

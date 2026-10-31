@@ -73,7 +73,6 @@ test('the style tiles follow the published style and set it on click', (t) => {
       ['thermal', 'FLIR', '4'],
       ['anime', 'Anime', '5'],
       ['noir', 'Noir', '6'],
-      ['snow', 'Snow', '7'],
     ],
   );
   const pressed = () =>
@@ -89,12 +88,12 @@ test('the style tiles follow the published style and set it on click', (t) => {
     assert.equal(picture.getAttribute('aria-hidden'), 'true');
     assert.equal(picture.querySelector('image, img'), null);
   }
-  tiles()[6].click();
-  assert.deepEqual(calls, ['snow']);
+  tiles()[5].click();
+  assert.deepEqual(calls, ['noir']);
   // The tile does not light optimistically; the owner's publication does.
   assert.deepEqual(pressed(), ['thermal']);
-  view.update({ state: { style: 'snow' } });
-  assert.deepEqual(pressed(), ['snow']);
+  view.update({ state: { style: 'noir' } });
+  assert.deepEqual(pressed(), ['noir']);
 });
 
 test('wrappers moved into its slots survive every re-render', (t) => {

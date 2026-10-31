@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Look → the seven visual styles as tiles, with their 1–7 shortcut badges.
+ * Look → the six visual styles as tiles, with their 1–6 shortcut badges.
  * The selection is VisualSettings' published `style`; a click sets the style
  * through the shared Display operation, as the dock's buttons did.
  */
@@ -40,11 +40,6 @@ const STYLES = [
     'noir',
     msg('Noir'),
     msg('Apply high-contrast monochrome film-noir grading.'),
-  ],
-  [
-    'snow',
-    msg('Snow'),
-    msg('Add a cold, snowy whiteout treatment to the scene.'),
   ],
 ];
 </script>

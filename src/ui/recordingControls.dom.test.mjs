@@ -20,7 +20,7 @@ function fixture(t) {
   let published = 0;
   const hud = {
     mode: 'off',
-    variant: 'operator',
+    variant: 'minimal',
     get visible() {
       return this.mode !== 'off';
     },
@@ -71,7 +71,7 @@ function fixture(t) {
 
 test('recording entry and exit drive the mounted HUD view and restore the user HUD', (t) => {
   const f = fixture(t);
-  assert.deepEqual(f.shown(), { active: false, layout: 'operator' });
+  assert.deepEqual(f.shown(), { active: false, layout: 'minimal' });
   f.recording.setRecordingMode(true, { hudMode: 'minimal' });
   assert.equal(f.published(), 1);
   assert.deepEqual(f.shown(), { active: true, layout: 'minimal' });
@@ -80,7 +80,7 @@ test('recording entry and exit drive the mounted HUD view and restore the user H
   f.recording.setRecordingMode(true, { hudMode: 'full' });
   assert.deepEqual(f.shown(), { active: true, layout: 'tactical' });
   f.recording.setRecordingMode(false);
-  assert.deepEqual(f.shown(), { active: false, layout: 'operator' });
+  assert.deepEqual(f.shown(), { active: false, layout: 'minimal' });
   assert.equal(f.hud.getMode(), 'off');
   assert.equal(document.body.classList.contains('recording-mode'), false);
 });
@@ -88,14 +88,14 @@ test('recording entry and exit drive the mounted HUD view and restore the user H
 test('disposing an active recording session restores and paints the user HUD', (t) => {
   const f = fixture(t);
   f.recording.setRecordingMode(true, { hudMode: 'off' });
-  assert.deepEqual(f.shown(), { active: false, layout: 'operator' });
+  assert.deepEqual(f.shown(), { active: false, layout: 'minimal' });
   f.hud.setMode('on');
   f.recording.setRecordingMode(true, { hudMode: 'minimal' });
   assert.deepEqual(f.shown(), { active: true, layout: 'minimal' });
   f.recording.destroy();
   assert.equal(f.hud.getMode(), 'off');
-  assert.deepEqual(f.shown(), { active: false, layout: 'operator' });
+  assert.deepEqual(f.shown(), { active: false, layout: 'minimal' });
   // A destroyed owner ignores later calls without throwing.
   f.recording.setRecordingMode(true, { hudMode: 'minimal' });
-  assert.deepEqual(f.shown(), { active: false, layout: 'operator' });
+  assert.deepEqual(f.shown(), { active: false, layout: 'minimal' });
 });

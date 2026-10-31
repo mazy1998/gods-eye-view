@@ -68,7 +68,9 @@ export class CctvControls {
     }
   }
   _mountCctvView() {
-    if (!this._cctvPanel) return;
+    if (!this._cctvPanel && !this._cctvSelect && !this._cctvEnableBtn) return;
+    // Without the Vue mount point (a host passing its own controls, with or
+    // without their panel), the native painter keeps those controls current.
     const body = this._cctvPanel?.querySelector('#cctv-controls-body');
     if (!body) {
       this._panelView = {

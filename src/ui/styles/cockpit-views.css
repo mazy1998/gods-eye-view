@@ -1031,9 +1031,12 @@
   > .panel-glow {
   display: none;
 }
+/* Panel cards in the left stack: the child step outranks the rails' own
+   title colour. */
 :where(:root:not([data-ui-theme='cyber']))
   body.cockpit-mode
   #left-panel-stack
+  > .panel-collapsible
   .panel-header
   > .panel-title {
   color: var(--gev-text);

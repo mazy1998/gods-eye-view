@@ -122,6 +122,47 @@ test('Scene controls render the supplied selection and running/download states',
   }
 });
 
+test('Authoring disables idle actions that would do nothing', () => {
+  const f = fixture();
+  try {
+    // Browse's full-width Play keeps the design's label.
+    assert.equal(f.elements.start.textContent.trim(), 'Play');
+    assert.equal(f.elements.start.disabled, false);
+    assert.equal(f.elements.update.disabled, false);
+    assert.equal(f.elements.panel.classList.contains('has-shots'), true);
+
+    f.state.selectedShotId = null;
+    f.owner.setButtons(false);
+    assert.equal(f.elements.update.disabled, true);
+    assert.equal(f.elements.start.disabled, false);
+
+    // PLAY and NEXT run on into the following scenes, so an empty selected
+    // scene beside one with shots keeps them available.
+    f.state.scenes[0].shots = [];
+    f.state.scenes.push({ id: 'scene-b', title: 'B', shots: [{ id: 'b1' }] });
+    f.owner.setButtons(false);
+    assert.equal(f.elements.start.disabled, false);
+    assert.equal(f.elements.next.disabled, false);
+    assert.equal(f.elements.update.disabled, true);
+
+    f.state.scenes.pop();
+    f.owner.setButtons(false);
+    assert.equal(f.elements.start.disabled, true);
+    assert.equal(f.elements.next.disabled, true);
+    assert.equal(f.elements.capture.disabled, false);
+    assert.equal(f.elements.panel.classList.contains('has-shots'), false);
+
+    f.state.scenes = [];
+    f.state.selectedSceneId = null;
+    f.owner.setButtons(false);
+    assert.equal(f.elements.delete.disabled, true);
+    assert.equal(f.elements.capture.disabled, true);
+    assert.equal(f.elements.new.disabled, false);
+  } finally {
+    f.restore();
+  }
+});
+
 test('Scene controls dispatch explicit actions and revoke replaced shot-row listeners', () => {
   const f = fixture();
   try {
@@ -726,6 +767,47 @@ test('progress and status repaints leave a natively edited shot name in place', 
       'shot-a',
       'Native name',
     ]);
+  } finally {
+    f.restore();
+  }
+});
+
+test('Stories turns off idle actions that would do nothing, from published changes', () => {
+  const f = fixture();
+  try {
+    const disabled = (id) => document.getElementById(id).disabled;
+    assert.equal(disabled('scene-start-btn'), false);
+    assert.equal(disabled('scene-update-shot-btn'), false);
+    assert.ok(document.getElementById('scene-capture-btn').title);
+
+    f.publish('selection-changed', { selectedShotId: null });
+    assert.equal(disabled('scene-update-shot-btn'), true);
+
+    f.state.scenes[0].shots = [];
+    f.publish('shot-deleted');
+    assert.equal(disabled('scene-start-btn'), true);
+    assert.equal(disabled('scene-next-btn'), true);
+
+    // A run that ends hands the buttons back with the idle rules applied.
+    f.publish('buttons-changed', { running: true });
+    assert.equal(disabled('scene-capture-btn'), true);
+    assert.equal(disabled('scene-stop-btn'), false);
+    f.publish('buttons-changed', { running: false });
+    assert.equal(disabled('scene-capture-btn'), false);
+    assert.equal(disabled('scene-start-btn'), true);
+
+    f.publish('scene-deleted', { scenes: [], selectedSceneId: null });
+    assert.equal(disabled('scene-delete-btn'), true);
+    assert.equal(disabled('scene-capture-btn'), true);
+    assert.equal(disabled('scene-new-btn'), false);
+
+    f.publish('project-imported', {
+      scenes: [{ id: 'scene-b', title: 'B', shots: [{ id: 's', title: 'S' }] }],
+      selectedSceneId: 'scene-b',
+      selectedShotId: 's',
+    });
+    assert.equal(disabled('scene-start-btn'), false);
+    assert.equal(disabled('scene-update-shot-btn'), false);
   } finally {
     f.restore();
   }

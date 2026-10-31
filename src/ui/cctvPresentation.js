@@ -15,9 +15,27 @@ function _calBadgeLabel(badge) {
   }
 }
 
+/** The picker's closing line for the cameras the view leaves out. */
+function outsideNoteText(count) {
+  return tn(
+    count,
+    '{count} more camera outside this view · pan or zoom out',
+    '{count} more cameras outside this view · pan or zoom out',
+  );
+}
+
 /** Pure panel projection; camera selection, media and calibration stay with their owners. */
 export function presentCctvPanel(state, enabled) {
-  const cameras = state?.cameras || [];
+  // The light index, not `state.cameras`: reading that builds every camera's
+  // full state, which a large catalog cannot afford on each notification.
+  const cameras = state?.cameraIndex || state?.cameras || [];
+  // The picker lists what is in view; the catalog is every camera.
+  const catalogCount = Number.isFinite(state?.count)
+    ? state.count
+    : cameras.length;
+  // Cameras the view leaves out get one closing line, so a short list does
+  // not read as the whole catalog. A disabled layer has no view.
+  const outside = enabled ? Math.max(0, catalogCount - cameras.length) : 0;
   const activeId = state?.activeCameraId || '';
   const activeCamera = state?.activeCamera || null;
   let meta;
@@ -47,15 +65,15 @@ export function presentCctvPanel(state, enabled) {
         status: `${credit}${statusMsg}`,
       },
     );
-  } else if (cameras.length > 0) {
+  } else if (catalogCount > 0) {
     meta = enabled
       ? tn(
-          cameras.length,
+          catalogCount,
           '{count} camera loaded · click a camera to activate',
           '{count} cameras loaded · click a camera to activate',
         )
       : tn(
-          cameras.length,
+          catalogCount,
           '{count} camera loaded · enable CCTV to activate',
           '{count} cameras loaded · enable CCTV to activate',
         );
@@ -67,6 +85,9 @@ export function presentCctvPanel(state, enabled) {
   return {
     enabled,
     cameras,
+    catalogCount,
+    outsideCount: outside,
+    outsideNote: outside ? outsideNoteText(outside) : '',
     activeId,
     activeCamera,
     meta,
@@ -246,35 +267,87 @@ export function paintNativeCctvView(props) {
   const text = (el, value) => {
     if (el) el.textContent = value;
   };
+  // The picker lists the cameras in view; the step and focus controls work
+  // on the whole catalog.
   const noCamera = !view.enabled || !view.cameras.length;
+  const noCatalog = !view.enabled || !view.catalogCount;
   if (this._cctvSelect) {
-    const labels = view.cameras.map(
-      (camera) => `${camera.city} · ${camera.name}`,
-    );
-    if (
-      this._cctvSelect.options.length !== view.cameras.length ||
-      view.cameras.some(
-        (camera, index) =>
-          this._cctvSelect.options[index]?.value !== camera.id ||
-          this._cctvSelect.options[index]?.textContent !== labels[index],
-      )
-    ) {
-      this._cctvSelect.replaceChildren(
-        ...view.cameras.map((camera, index) => {
-          const option = this._cctvSelect.ownerDocument.createElement('option');
-          option.value = camera.id;
-          option.textContent = labels[index];
-          return option;
-        }),
-      );
+    const select = this._cctvSelect;
+    const doc = select.ownerDocument ?? document;
+    const cameras = view.cameras;
+    const { activeId, activeCamera } = view;
+    // The list keeps its identity until the view or the active camera
+    // changes, so an unchanged list skips the per-option comparison. A
+    // focused picker is not rebuilt under the user; blur re-renders it.
+    const picking = doc.activeElement === select;
+    const outside = view.outsideCount;
+    const shouldRebuild =
+      !picking &&
+      (this._cctvSelectSource !== cameras ||
+        this._cctvSelectOutside !== outside) &&
+      (this._cctvSelectOutside !== outside ||
+        select.options.length !== cameras.length + (outside ? 1 : 0) ||
+        cameras.some((cam, idx) => select.options[idx]?.value !== cam.id));
+    if (!picking) {
+      this._cctvSelectSource = cameras;
+      this._cctvSelectOutside = outside;
     }
-    this._cctvSelect.value = view.activeId;
-    this._cctvSelect.disabled = noCamera;
+    if (shouldRebuild) {
+      const options = doc.createDocumentFragment();
+      for (const camera of cameras) {
+        const option = doc.createElement('option');
+        option.value = camera.id;
+        option.textContent = `${camera.city} · ${camera.name}`;
+        options.appendChild(option);
+      }
+      if (outside) {
+        const note = doc.createElement('option');
+        note.value = '';
+        note.disabled = true;
+        note.dataset.cctvOutside = '';
+        note.textContent = view.outsideNote;
+        options.appendChild(note);
+      }
+      select.replaceChildren(options);
+    }
+    select.disabled = noCamera;
+    // A deferred rebuild can miss a camera activated meanwhile (auto-hop,
+    // voice); add it so the picker does not go blank.
+    if (
+      picking &&
+      activeId &&
+      activeCamera &&
+      ![...select.options].some((option) => option.value === activeId)
+    ) {
+      const option = doc.createElement('option');
+      option.value = activeId;
+      option.textContent = `${activeCamera.city} · ${activeCamera.name}`;
+      select.prepend(option);
+      // The added camera is one fewer outside the view.
+      const note = [...select.options].find(
+        (entry) => entry.dataset?.cctvOutside !== undefined,
+      );
+      if (note) {
+        const left = Math.max(
+          0,
+          view.catalogCount - (select.options.length - 1),
+        );
+        if (left) note.textContent = outsideNoteText(left);
+        else note.remove();
+      }
+    }
+    // The active camera is always one of the listed records.
+    if (activeId && activeCamera) select.value = activeId;
+    else if (!activeId)
+      // With nothing in view, the closed picker says where the cameras are.
+      // A focused picker keeps its old options, so it only clears.
+      select.selectedIndex =
+        !picking && cameras.length === 0 && outside ? 0 : -1;
   }
   for (const el of [this._cctvNearestBtn, this._cctvPrevBtn, this._cctvNextBtn])
-    if (el) el.disabled = noCamera;
+    if (el) el.disabled = noCatalog;
   if (this._cctvFocusBtn)
-    this._cctvFocusBtn.disabled = noCamera || !view.activeId;
+    this._cctvFocusBtn.disabled = noCatalog || !view.activeId;
   const toggle = (el, active, label, disabled) => {
     if (!el) return;
     el.classList.toggle('active', active);

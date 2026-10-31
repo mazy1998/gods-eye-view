@@ -56,7 +56,7 @@ test('published Cockpit controller binds native vision/contact/weather and paint
   owner.dispose();
   owner.dispose();
   by('cockpit-vision-next').click();
-  owner.setVisionMode('snow');
+  owner.setVisionMode('noir');
   owner.renderRegionalBriefStatus('unavailable');
   assert.equal(by('cockpit-vision-current-label').textContent, 'FLIR');
   assert.equal(by('cockpit-news-list').querySelector('a'), link);

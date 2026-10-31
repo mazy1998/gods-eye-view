@@ -135,7 +135,7 @@
   width: 100%;
 }
 
-/* Style tiles: a picture, then the label and its 1–7 key. */
+/* Style tiles: a picture, then the label and its 1–6 key. */
 .map-look-style-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -211,13 +211,11 @@
   height: 100%;
 }
 .map-look-thumb-scanlines,
-.map-look-thumb-tube,
-.map-look-thumb-snow {
+.map-look-thumb-tube {
   display: none;
 }
 [data-thumb='retro'] .map-look-thumb-scanlines,
-[data-thumb='surveillance'] .map-look-thumb-tube,
-[data-thumb='snow'] .map-look-thumb-snow {
+[data-thumb='surveillance'] .map-look-thumb-tube {
   display: inline;
 }
 [data-thumb='retro'] svg {
@@ -234,9 +232,6 @@
 }
 [data-thumb='noir'] svg {
   filter: grayscale(1) contrast(2) brightness(0.85);
-}
-[data-thumb='snow'] svg {
-  filter: grayscale(0.75) brightness(1.4) contrast(0.95);
 }
 
 /* The tabs' controls: a label and its switch on one row, its settings inset

@@ -8,7 +8,6 @@ const LABELS = {
   thermal: () => t('FLIR'),
   anime: () => t('ANIME'),
   noir: () => t('NOIR'),
-  snow: () => t('SNOW'),
 };
 const NAMES = {
   optical: () => t('Normal'),
@@ -17,7 +16,6 @@ const NAMES = {
   thermal: () => t('Thermal'),
   anime: () => t('Anime'),
   noir: () => t('Noir'),
-  snow: () => t('Snow'),
 };
 
 /** Resolve vision text for either the mounted view or supplied native controls. */

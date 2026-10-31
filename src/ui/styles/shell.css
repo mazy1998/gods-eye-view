@@ -503,12 +503,6 @@
 .gev-legacy-host > #data-panel #directions-controls-body {
   display: none;
 }
-/* Context's compact Radio controls hang below its header, over the panels
-   Inspect hosts after it. */
-.gev-legacy-host > #global-context-panel {
-  z-index: 1;
-}
-
 /* While the rail is in use, the legacy stacks it replaced stay out of view;
    their panels appear in the drawer. Cockpit and phones keep them. The
    chrome along the left edge moves clear of the rail. */

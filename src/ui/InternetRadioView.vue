@@ -43,7 +43,9 @@ const categoryTextColor = (color) =>
       :style="{ color: categoryTextColor(view.filterColor) }"
       :disabled="view.filterDisabled"
     >
-      <option v-if="!view.categories.length" value="all">{{ t('All') }}</option>
+      <option v-if="!view.categories.length" value="all">
+        {{ t('All', { context: 'radio tag' }) }}
+      </option>
       <option
         v-for="category in view.categories"
         :key="category.id"

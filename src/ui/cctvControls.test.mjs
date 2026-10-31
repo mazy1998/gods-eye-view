@@ -197,6 +197,82 @@ test('null camera selection stays empty and Focus is disabled with a populated c
   assert.equal(controls._cctvFocusBtn.disabled, true);
 });
 
+test('the picker lists the cameras in view and says how many more the view leaves out', (t) => {
+  const { controls } = fixture(t);
+  const inView = [
+    { id: 'a', city: 'City', name: 'North' },
+    { id: 'b', city: 'City', name: 'South' },
+  ];
+  const nearest = controls._cctvPanel.querySelector('#cctv-nearest-btn');
+  controls._renderCctvState({ enabled: true, cameraIndex: inView, count: 5 });
+  const options = [...controls._cctvSelect.options];
+  assert.deepEqual(
+    options.map((option) => option.disabled),
+    [false, false, true],
+  );
+  assert.match(options[2].textContent, /^3 more cameras outside this view/);
+  assert.equal(controls._cctvSelect.selectedIndex, -1);
+  assert.equal(controls._cctvSelect.disabled, false);
+  assert.equal(nearest.disabled, false);
+  assert.match(
+    controls._cctvPanel.querySelector('#cctv-meta').textContent,
+    /^5 cameras loaded/,
+  );
+
+  // Nothing in view: the closed picker shows where the cameras are, and the
+  // catalog-wide controls still work.
+  controls._renderCctvState({ enabled: true, cameraIndex: [], count: 5 });
+  assert.equal(controls._cctvSelect.disabled, true);
+  assert.equal(controls._cctvSelect.selectedIndex, 0);
+  assert.match(
+    controls._cctvSelect.options[0].textContent,
+    /^5 more cameras outside this view/,
+  );
+  assert.equal(nearest.disabled, false);
+  assert.equal(controls._cctvFocusBtn.disabled, true);
+
+  // A disabled layer has no view and no note.
+  controls._renderCctvState({ enabled: false, cameraIndex: inView, count: 5 });
+  assert.equal(controls._cctvSelect.options.length, 2);
+  assert.equal(nearest.disabled, true);
+});
+
+test('a focused picker keeps its list as the view moves, and adds a camera activated meanwhile', async (t) => {
+  const { controls } = fixture(t);
+  const a = { id: 'a', city: 'City', name: 'North' };
+  const b = { id: 'b', city: 'City', name: 'South' };
+  const c = { id: 'c', city: 'Town', name: 'Bridge' };
+  controls._renderCctvState({ enabled: true, cameraIndex: [a, b], count: 3 });
+  controls._cctvSelect.focus();
+  controls._cctvSelect.dispatchEvent(
+    new FocusEvent('focusin', { bubbles: true }),
+  );
+  controls._renderCctvState({
+    enabled: true,
+    cameraIndex: [c],
+    count: 3,
+    activeCameraId: 'c',
+    activeCamera: c,
+  });
+  const values = () =>
+    [...controls._cctvSelect.options]
+      .filter((option) => !option.disabled)
+      .map((option) => option.value);
+  assert.deepEqual(values(), ['c', 'a', 'b']);
+  assert.equal(controls._cctvSelect.value, 'c');
+  controls._cctvSelect.dispatchEvent(
+    new FocusEvent('focusout', { bubbles: true }),
+  );
+  controls._renderCctvState({
+    enabled: true,
+    cameraIndex: [c],
+    count: 3,
+    activeCameraId: 'c',
+    activeCamera: c,
+  });
+  assert.deepEqual(values(), ['c']);
+});
+
 test('camera search is owned, literal and preserves the active choice during notifications', (t) => {
   const { controls } = fixture(t);
   const cameras = [

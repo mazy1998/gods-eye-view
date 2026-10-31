@@ -9,7 +9,12 @@ export function rowTextParts(text) {
         parts.push({ text: `${index ? ' ' : ''}${piece}`, keep: false });
     });
   let cursor = 0;
-  for (const match of value.matchAll(/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+/g)) {
+  // A short Latin code joined by hyphens: every part after a hyphen is
+  // capitals or digits (ADS-B, RTL-SDR, GTFS-RT). A compound such as
+  // "ALPR-Kameras" is a word, not a code, and may break at its hyphen.
+  for (const match of value.matchAll(
+    /\b[A-Za-z0-9]+(?:-[A-Z0-9]+)+(?![A-Za-z0-9])/g,
+  )) {
     if (match[0].length > 16) continue;
     plain(value.slice(cursor, match.index));
     parts.push({ text: match[0], keep: true });

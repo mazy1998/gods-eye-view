@@ -292,7 +292,6 @@ for (const phone of [false, true]) {
     const chrome = new PanelChrome({
       elements: {},
       operations: {
-        _syncContextRadioLauncherState() {},
         _syncCctvPanelViewport() {},
       },
       readHud: () => ({ visible: true, getVariant: () => 'tactical' }),
@@ -411,7 +410,6 @@ for (const [panelId, anchorId] of [
     const chrome = new PanelChrome({
       elements: {},
       operations: {
-        _syncContextRadioLauncherState() {},
         _syncCctvPanelViewport() {},
       },
       readHud: () => ({ visible: true, getVariant: () => 'tactical' }),

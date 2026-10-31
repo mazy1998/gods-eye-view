@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, shallowRef } from 'vue';
 import StatusBadge from './primitives/StatusBadge.vue';
 import NumberField from './primitives/NumberField.vue';
 import SelectField from './primitives/SelectField.vue';
@@ -19,7 +19,9 @@ const props = defineProps({
   keyEdit: Function,
   toggleCalibration: Function,
 });
-const options = computed(() => {
+// The picker's own sentinel for its closing line about cameras out of view.
+const OUTSIDE = 'cctv-outside-view';
+const listed = computed(() => {
   const query = (props.filter || '').trim().toLocaleLowerCase();
   return props.view.cameras
     .filter(
@@ -40,8 +42,40 @@ const options = computed(() => {
       ].join(' · '),
     }));
 });
+// A focused picker is not rebuilt under the user as the view moves; it
+// takes the new list on blur. A camera activated meanwhile is added so the
+// picker does not go blank.
+const held = shallowRef(null);
+const options = computed(() => {
+  const base = held.value ?? listed.value;
+  const active = props.view.activeCamera;
+  const list =
+    held.value && active && !base.some((entry) => entry.value === active.id)
+      ? [
+          { value: active.id, label: `${active.city} · ${active.name}` },
+          ...base,
+        ]
+      : base;
+  return props.view.outsideNote
+    ? [
+        ...list,
+        { value: OUTSIDE, label: props.view.outsideNote, disabled: true },
+      ]
+    : list;
+});
+// With nothing in view, the closed picker says where the cameras are.
+const picked = computed(
+  () =>
+    props.view.activeId ||
+    (!props.view.cameras.length && props.view.outsideNote ? OUTSIDE : ''),
+);
+// The picker lists the cameras in view; the step and focus controls work on
+// the whole catalog.
 const noCamera = computed(
   () => !props.view.enabled || !props.view.cameras.length,
+);
+const noCatalog = computed(
+  () => !props.view.enabled || !props.view.catalogCount,
 );
 const canCalibrate = computed(
   () => props.view.enabled && !!props.view.activeCamera,
@@ -63,7 +97,7 @@ const canCalibrate = computed(
         id="cctv-nearest-btn"
         type="button"
         class="gev-action-button scene-btn"
-        :disabled="noCamera"
+        :disabled="noCatalog"
       >
         {{ t('NEAREST') }}
       </button>
@@ -97,22 +131,24 @@ const canCalibrate = computed(
         id="cctv-prev-btn"
         type="button"
         class="gev-action-button scene-btn"
-        :disabled="noCamera"
+        :disabled="noCatalog"
       >
         {{ t('PREV') }}
       </button>
       <SelectField
         id="cctv-camera-select"
         :label="t('CCTV camera')"
-        :model-value="view.activeId"
+        :model-value="picked"
         :options="options"
         :disabled="noCamera"
+        @focusin="held = listed"
+        @focusout="held = null"
       />
       <button
         id="cctv-next-btn"
         type="button"
         class="gev-action-button scene-btn"
-        :disabled="noCamera"
+        :disabled="noCatalog"
       >
         {{ t('NEXT') }}
       </button>
@@ -122,7 +158,7 @@ const canCalibrate = computed(
         id="cctv-focus-btn"
         type="button"
         class="gev-action-button scene-btn"
-        :disabled="noCamera || !view.activeId"
+        :disabled="noCatalog || !view.activeId"
       >
         {{ t('FOCUS') }}
       </button>

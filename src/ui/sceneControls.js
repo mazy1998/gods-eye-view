@@ -36,6 +36,26 @@ const SHOT_CHANGES = new Set([
   'shot-deleted',
 ]);
 
+/**
+ * Which authoring actions would do something: DELETE and CAPTURE SHOT need a
+ * scene, UPDATE SHOT a selected shot, and PLAY and NEXT a shot anywhere in
+ * the project, since both run on into the following scenes.
+ */
+export function sceneActionAvailability(library) {
+  const scenes = library?.scenes ?? [];
+  const scene = scenes.find((item) => item.id === library?.selectedSceneId);
+  return {
+    hasScene: !!scene,
+    playableShots: scenes.reduce(
+      (total, item) => total + (item.shots?.length ?? 0),
+      0,
+    ),
+    hasSelectedShot: (scene?.shots ?? []).some(
+      (shot) => shot.id === library?.selectedShotId,
+    ),
+  };
+}
+
 export class SceneControls {
   constructor({ read, actions, subscribe, elements = sceneElements() }) {
     this.read = read;
@@ -92,6 +112,9 @@ export class SceneControls {
     if (!elements.body) {
       this.native = true;
       if (!elements.select) return;
+      // The radio's PLAY means "listen"; this one plays the scene.
+      const playLabel = t('PLAY', { context: 'scene' });
+      if (elements.start) elements.start.textContent = playLabel;
       this._bindNativeControls();
       if (subscribe)
         this.unsubscribe = subscribe((notification) =>
@@ -129,6 +152,7 @@ export class SceneControls {
     return {
       library: this.library,
       presentation: { ...this.presentation },
+      available: sceneActionAvailability(this.library),
       tab: this.tab,
       draft: this._shownDraft(),
       actions: this.viewActions,
@@ -156,6 +180,7 @@ export class SceneControls {
         this.elements,
         this.presentation.running,
         this.presentation.hasRun,
+        sceneActionAvailability(this.library),
       );
       presentSceneProgress(this.elements.progress, this.presentation.progress);
       if (this.elements.status)
@@ -168,6 +193,12 @@ export class SceneControls {
       running: this.presentation.running,
     });
     this.elements.panel?.classList.toggle('running', this.presentation.running);
+    this.elements.panel?.classList.toggle(
+      'has-shots',
+      !!this.library.scenes?.find(
+        (scene) => scene.id === this.library.selectedSceneId,
+      )?.shots?.length,
+    );
     if (!this.native)
       this.elements.runtime?.classList.toggle(
         'active',
@@ -276,11 +307,9 @@ export class SceneControls {
       listen: (node, type, fn) => this.listen(node, type, fn, this.nativeRows),
       select: (id) => {
         this.run('selectShot', id);
-        if (!this.destroyed)
-          presentSceneSelection(
-            this.elements.shots,
-            this.read().selectedShotId,
-          );
+        if (this.destroyed) return;
+        presentSceneSelection(this.elements.shots, this.read().selectedShotId);
+        this.setButtons(this.read().running);
       },
       rename: (...args) => this.run('renameShot', ...args),
       load: (...args) => this.run('load', ...args),
@@ -372,8 +401,10 @@ export class SceneControls {
   }
   setButtons(running) {
     if (this.destroyed) return;
+    // Idle availability depends on the scenes and selection, read afresh.
+    this.library = this.read();
     this.presentation.running = running;
-    this.presentation.hasRun = this.read().hasRun;
+    this.presentation.hasRun = this.library.hasRun;
     this._paint();
   }
   updateStatus(status) {
@@ -420,6 +451,7 @@ export class SceneControls {
     this.view?.dispose();
     this.runtimeView?.dispose();
     this.elements.runtime?.classList.remove('active', 'stories-playback');
+    this.elements.panel?.classList.remove('has-shots');
     this.setPlaybackActive(false);
   }
 }

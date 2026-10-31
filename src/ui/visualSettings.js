@@ -1,4 +1,5 @@
 import { clampScopeFeatherPct } from '../scopeMaskPolicy.js';
+import { RETIRED_STYLES } from '../visualStylePolicy.js';
 import { UiLifetime } from './uiLifetime.js';
 import { createStateChannel } from '../app/stateChannel.js';
 import {
@@ -1273,8 +1274,9 @@ export class VisualSettings {
     const superseded = () => typeof isCurrent === 'function' && !isCurrent();
     if (superseded()) return false;
 
-    if (state.style && state.style !== this.activeStyle) {
-      this.setStyle(state.style, { applyPreset: false });
+    const style = RETIRED_STYLES.includes(state.style) ? 'normal' : state.style;
+    if (style && style !== this.activeStyle) {
+      this.setStyle(style, { applyPreset: false });
     }
 
     const bloomState = state.bloom || {};

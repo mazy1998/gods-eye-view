@@ -12,7 +12,15 @@ const props = defineProps({
   draft: Object,
   actions: Object,
   listRevision: Number,
+  /** Which actions would do something (sceneActionAvailability). */
+  available: Object,
 });
+// Idle, a button is off when it would do nothing.
+const off = computed(() => ({
+  scene: props.presentation.running || !props.available?.hasScene,
+  shot: props.presentation.running || !props.available?.hasSelectedShot,
+  play: props.presentation.running || !props.available?.playableShots,
+}));
 const playlistShots = computed(() =>
   props.library.scenes.reduce((count, scene) => count + scene.shots.length, 0),
 );
@@ -82,7 +90,8 @@ const percentage = computed(() =>
         <ActionButton
           id="scene-start-btn"
           class="scene-btn"
-          :disabled="presentation.running"
+          :title="t('Play from this scene through the rest of the project')"
+          :disabled="off.play"
           @click="actions.start"
           ><svg aria-hidden="true" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" /></svg
@@ -108,14 +117,16 @@ const percentage = computed(() =>
           id="scene-capture-btn"
           class="scene-btn"
           :label="t('CAPTURE SHOT')"
-          :disabled="presentation.running"
+          :title="t('Add the current view, style and layers as the next shot')"
+          :disabled="off.scene"
           @click="actions.capture"
         />
         <ActionButton
           id="scene-update-shot-btn"
           class="scene-btn"
           :label="t('UPDATE SHOT')"
-          :disabled="presentation.running"
+          :title="t('Replace the selected shot with the current view')"
+          :disabled="off.shot"
           @click="actions.update"
         />
       </div>
@@ -132,6 +143,7 @@ const percentage = computed(() =>
           class="scene-btn scene-btn-danger"
           variant="danger"
           :label="t('STOP')"
+          :title="t('Stop playback (Esc)')"
           :disabled="!presentation.running"
           @click="actions.stop"
         />
@@ -139,7 +151,12 @@ const percentage = computed(() =>
           id="scene-next-btn"
           class="scene-btn"
           :label="t('NEXT')"
-          :disabled="presentation.running"
+          :title="
+            t(
+              'Play the shot after the selected one, moving on to the next scene when needed',
+            )
+          "
+          :disabled="off.play"
           @click="actions.next"
         />
       </div>
@@ -176,6 +193,7 @@ const percentage = computed(() =>
             id="scene-new-btn"
             class="scene-btn"
             :label="t('New scene')"
+            :title="t('Start a new, empty scene')"
             :disabled="presentation.running"
             @click="actions.createScene"
           />
@@ -184,7 +202,8 @@ const percentage = computed(() =>
             class="scene-btn scene-btn-danger"
             variant="danger"
             :label="t('Delete scene')"
-            :disabled="presentation.running"
+            :title="t('Delete this scene and all of its shots')"
+            :disabled="off.scene"
             @click="actions.deleteScene"
           />
         </div>
@@ -192,11 +211,13 @@ const percentage = computed(() =>
           <ActionButton
             class="scene-btn"
             :label="t('EDIT DETAILS')"
+            :title="t('Edit anchors, data packs and shot details')"
             @click="actions.edit"
           />
           <ActionButton
             class="scene-btn"
             :label="t('SHARE SCENE')"
+            :title="t('Download this scene as JSON or an asset bundle')"
             @click="actions.share"
           />
         </div>
@@ -205,6 +226,9 @@ const percentage = computed(() =>
             id="scene-export-btn"
             class="scene-btn"
             :label="t('EXPORT PRESETS')"
+            :title="
+              t('Download every scene as a JSON file you can import later')
+            "
             :disabled="presentation.running"
             @click="actions.export"
           />
@@ -212,6 +236,7 @@ const percentage = computed(() =>
             id="scene-import-btn"
             class="scene-btn"
             :label="t('IMPORT')"
+            :title="t('Load scenes from an exported JSON file')"
             :disabled="presentation.running"
             @click="actions.import"
           />
@@ -219,6 +244,7 @@ const percentage = computed(() =>
             id="scene-download-btn"
             class="scene-btn"
             :label="t('RUN LOG')"
+            :title="t('Download the timing log of the last play')"
             :disabled="!presentation.hasRun"
             @click="actions.download"
           />

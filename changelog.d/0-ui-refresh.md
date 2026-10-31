@@ -11,9 +11,8 @@
   settings, Create's shot list and the voice settings drop the old compact
   monospace controls for the drawer's. Cockpit's cards and controls take the
   same look in each appearance, and the camera panels in its left stack show
-  only once opened. Inspect's Radio shortcut sits beside its header controls,
-  phone Search is one field, and the voice sign-in choice reads as two radio
-  options. The first view starts with the HUD off (`H` or Display turns it
-  on). Most panels are now Vue views of the same owners, so layers,
-  share links, voice actions and scenes behave as before, and hosts that build
-  the published UI modules the earlier way keep working (#0).
+  only once opened. Phone Search is one field, and the voice sign-in choice
+  reads as two radio options. The first view starts with the HUD off (`H` or
+  Display turns it on). Most panels are now Vue views of the same owners, so
+  layers, share links, voice actions and scenes behave as before, and hosts
+  that build the published UI modules the earlier way keep working (#0).

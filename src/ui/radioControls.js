@@ -1,4 +1,3 @@
-import { t, msg } from '../i18n/index.js';
 import { bindRadioControls } from './radioBindings.js';
 import { renderRadioState, paintNativeRadioView } from './radioPresentation.js';
 
@@ -143,101 +142,6 @@ export class RadioControls {
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
     return true;
-  }
-
-  /**
-   * Bring the Radio section into view in its scroller (Context, or Layers).
-   * This never changes Radio power, playback, selection, or Context mode.
-   * @param {{focusTarget?: HTMLElement|null}} [options]
-   * @returns {Promise<boolean>} Whether the internal scroller moved.
-   */
-  async _revealRadioPanelInsideContext({ focusTarget = null } = {}) {
-    const scroller = this._radioScroller();
-    if (
-      !scroller ||
-      !this._radioPanel ||
-      this._radioPanel.classList.contains('collapsed')
-    )
-      return false;
-
-    await new Promise((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(resolve)),
-    );
-    if (
-      this.destroyed ||
-      this._radioScroller() !== scroller ||
-      this._radioPanel.classList.contains('collapsed')
-    )
-      return false;
-
-    const viewport = scroller.getBoundingClientRect();
-    const radioRect = this._radioPanel.getBoundingClientRect();
-    const desired = scroller.scrollTop + radioRect.top - viewport.top - 10;
-    const next = Math.min(
-      Math.max(0, scroller.scrollHeight - scroller.clientHeight),
-      Math.max(0, desired),
-    );
-    const moved = Math.abs(next - scroller.scrollTop) >= 1;
-    if (moved) {
-      const reducedMotion = window.matchMedia?.(
-        '(prefers-reduced-motion: reduce)',
-      )?.matches;
-      scroller.scrollTo({
-        top: next,
-        behavior: reducedMotion ? 'auto' : 'smooth',
-      });
-    }
-    focusTarget?.focus?.({ preventScroll: true });
-    return moved;
-  }
-
-  /** Keep the launcher truthful for the active theme and Context route. */
-  _syncContextRadioLauncherState() {
-    if (this.destroyed || !this._contextRadioToggleBtn) return;
-    const contextPanel = globalThis.document?.getElementById(
-      'global-context-panel',
-    );
-    const contextExpanded = Boolean(
-      contextPanel && !contextPanel.classList.contains('collapsed'),
-    );
-    if (contextExpanded) {
-      const radioExpanded = Boolean(
-        this._radioPanel && !this._radioPanel.classList.contains('collapsed'),
-      );
-      this._contextRadioToggleBtn.setAttribute('aria-controls', 'radio-panel');
-      this._contextRadioToggleBtn.setAttribute(
-        'aria-expanded',
-        String(radioExpanded),
-      );
-      const label = t(
-        radioExpanded
-          ? msg('Go to expanded Radio section')
-          : msg('Show Radio in Layers'),
-      );
-      this._contextRadioToggleBtn.setAttribute('aria-label', label);
-      this._contextRadioToggleBtn.title = label;
-      return;
-    }
-    // This launcher toggles the compact player even when the detailed panel
-    // is open elsewhere. Its ARIA state must describe that same disclosure.
-    const compactOpen = Boolean(
-      this._contextRadioDock?.classList.contains('disclosure-open'),
-    );
-    this._contextRadioToggleBtn.setAttribute(
-      'aria-controls',
-      'context-radio-mini',
-    );
-    this._contextRadioToggleBtn.setAttribute(
-      'aria-expanded',
-      String(compactOpen),
-    );
-    const launcherLabel = t(
-      compactOpen
-        ? msg('Close compact Radio controls')
-        : msg('Open compact Radio controls'),
-    );
-    this._contextRadioToggleBtn.setAttribute('aria-label', launcherLabel);
-    this._contextRadioToggleBtn.title = launcherLabel;
   }
 
   destroy() {

@@ -203,9 +203,6 @@ export function createDrawerNavigation({
   // always be expanded again there. It is the same button, with its binding
   // and state; it goes back to its panel header when the panel leaves the
   // drawer or Cyber takes over, whose panels keep their own header row.
-  // Inspect's compact Radio launcher travels with it, ahead of the collapse
-  // control, so the mode tabs open the body as they do in the other
-  // destinations.
   const collapseHomes = new Map();
   function placeCollapseControls() {
     const cyber = doc.documentElement?.dataset.uiTheme === 'cyber';
@@ -217,27 +214,20 @@ export function createDrawerNavigation({
           `.panel-header > .panel-collapse-btn[data-collapse-target="${id}"]`,
         );
         if (!button) continue;
-        const dock = button.parentNode.querySelector(
-          ':scope > .context-radio-dock',
-        );
-        entry = [dock, button].filter(Boolean).map((node) => {
-          const home = doc.createComment(`gev-collapse-home:${id}`);
-          node.before(home);
-          return { node, home };
-        });
+        const home = doc.createComment(`gev-collapse-home:${id}`);
+        button.before(home);
+        entry = { button, home };
         collapseHomes.set(id, entry);
       }
+      const { button, home } = entry;
       const inHeader = !destroyed && !cyber && host.contains(panel);
-      for (const { node, home } of entry) {
-        const active = doc.activeElement;
-        const focused = node.contains(active) ? active : null;
-        if (inHeader && node.parentNode !== headerActions)
-          headerActions.append(node);
-        else if (!inHeader && node.parentNode === headerActions)
-          home.after(node);
-        else continue;
-        focused?.focus({ preventScroll: true });
-      }
+      const focused = doc.activeElement === button;
+      if (inHeader && button.parentNode !== headerActions)
+        headerActions.append(button);
+      else if (!inHeader && button.parentNode === headerActions)
+        home.after(button);
+      else continue;
+      if (focused) button.focus({ preventScroll: true });
     }
   }
 

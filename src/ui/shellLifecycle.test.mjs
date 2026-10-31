@@ -294,7 +294,6 @@ test('weather rail orders between CCTV and Context, observes and syncs chrome', 
     stack.children = [weather, f.nodes.get('global-context-panel')];
     const synced = [];
     const chrome = {
-      _syncContextRadioLauncherState() {},
       channel: { publish() {} },
     };
     const owner = new PanelLayoutController({

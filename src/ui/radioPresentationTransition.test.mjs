@@ -14,7 +14,7 @@ for (const lifecycleState of ['enabling', 'disabling']) {
     });
     try {
       assert.doesNotThrow(() => controls._renderRadioState({enabled: false, categories: [], filteredCount: 0, stationCount: 0, audioState: 'idle', volume: 0.8}));
-      for (const enable of [f.elements._radioEnableBtn, f.elements._contextRadioMiniEnableBtn, f.elements._cockpitRadioEnableBtn]) {
+      for (const enable of [f.elements._radioEnableBtn, f.elements._cockpitRadioEnableBtn]) {
         assert.equal(enable.getAttribute('aria-busy'), 'true');
         assert.equal(enable.textContent, lifecycleState.toUpperCase());
         assert.equal(enable.disabled, false, 'busy stays focusable');

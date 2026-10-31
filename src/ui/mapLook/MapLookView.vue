@@ -114,7 +114,7 @@ watch(
             d="M4 4.5h1.5M7.5 4.5H9M11 4.5h1.5M14.5 4.5H16M4 7h1.5M7.5 7H9M11 7h1.5M14.5 7H16M6 9.75h8"
           />
         </svg>
-        {{ t('Style shortcuts 1–7') }}
+        {{ t('Style shortcuts 1–6') }}
       </p>
     </section>
     <section

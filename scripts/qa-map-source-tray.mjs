@@ -195,8 +195,8 @@ const checkResponsiveStyleFocus = async (width) => {
   }
   await page.focus('#map-look-look-tab');
   await pressTabs(1); // Look tab -> Normal
-  for (const [index, style] of ['normal', 'thermal', 'snow'].entries()) {
-    if (index) await pressTabs(3);
+  for (const [tabs, style] of [[0, 'normal'], [3, 'thermal'], [2, 'noir']]) {
+    if (tabs) await pressTabs(tabs);
     const state = await styleFocusMetrics();
     check(`${width} px ${style} keyboard ring is visible and unclipped`,
       hasVisibleStyleFocus(state, style) && state.selectedStyle === 'normal'
@@ -396,17 +396,17 @@ try {
   await page.evaluate(() => {
     const tabbable = [...document.querySelectorAll('#map-look-look button, #map-look-look input, #map-look-look select')]
       .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length);
-    const snow = tabbable.findIndex((el) => el.matches('.style-btn[data-style="snow"]'));
-    (tabbable[snow + 1] ?? document.getElementById('map-look-display-tab')).focus();
+    const noir = tabbable.findIndex((el) => el.matches('.style-btn[data-style="noir"]'));
+    (tabbable[noir + 1] ?? document.getElementById('map-look-display-tab')).focus();
   });
   await pressTabs(1, true);
-  const snowFocus = await styleFocusMetrics();
-  check('Shift+Tab reaches Snow with a visible ring while Normal and OSM stay selected',
-    hasVisibleStyleFocus(snowFocus, 'snow') && !snowFocus.selected
-      && snowFocus.selectedStyle === 'normal' && snowFocus.selectedMap === 'osm',
-    JSON.stringify(snowFocus));
+  const noirFocus = await styleFocusMetrics();
+  check('Shift+Tab reaches Noir with a visible ring while Normal and OSM stay selected',
+    hasVisibleStyleFocus(noirFocus, 'noir') && !noirFocus.selected
+      && noirFocus.selectedStyle === 'normal' && noirFocus.selectedMap === 'osm',
+    JSON.stringify(noirFocus));
   await page.screenshot({ path: path.join(shotsDir, 'keyboard-style-focus.png') });
-  await pressTabs(3, true);
+  await pressTabs(2, true);
   const middleFocus = await styleFocusMetrics();
   check('Shift+Tab traverses the middle FLIR style without activating it',
     hasVisibleStyleFocus(middleFocus, 'thermal') && !middleFocus.selected
@@ -901,7 +901,7 @@ try {
     await openMapLook('map');
     const sources = await gridMetrics('map');
     check(`${width} px style and map-source tiles sit fully inside the drawer`,
-      styles.inside && sources.inside && styles.tiles.length === 7 && sources.tiles.length === 5,
+      styles.inside && sources.inside && styles.tiles.length === 6 && sources.tiles.length === 5,
       JSON.stringify({ styles, sources }));
   }
   await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });

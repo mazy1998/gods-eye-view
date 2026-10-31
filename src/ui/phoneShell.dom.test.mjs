@@ -43,7 +43,6 @@ function fixture(
     ? new PanelChrome({
         elements: {},
         operations: {
-          _syncContextRadioLauncherState() {},
           _syncCctvPanelViewport() {},
         },
         readHud: () => ({ visible: false, getVariant: () => 'tactical' }),
@@ -528,30 +527,6 @@ test('phone headers carry the same collapse controls, and clicking still reaches
     container.innerHTML.includes('phone collapse control home'),
     false,
   );
-});
-
-test("Inspect's compact Radio launcher rides in the phone header ahead of the collapse control", async (t) => {
-  const f = fixture(t, { realPanels: true });
-  const controls = await collapseControls(t, f);
-  const { header, button } = controls.get('global-context-panel');
-  const dock = document.createElement('div');
-  dock.className = 'context-radio-dock';
-  dock.innerHTML = '<button id="context-radio-toggle-btn">radio</button>';
-  button.before(dock);
-  const slot = document.getElementById('mobile-sheet-panel-actions');
-  t.after(() => delete document.documentElement.dataset.uiTheme);
-  f.owner.setSheet('inspect');
-  assert.deepEqual([...slot.children], [dock, button]);
-  dock.firstElementChild.focus();
-  document.documentElement.dataset.uiTheme = 'cyber';
-  await mutations();
-  assert.deepEqual([...header.children].slice(-2), [dock, button]);
-  assert.equal(document.activeElement, dock.firstElementChild);
-  delete document.documentElement.dataset.uiTheme;
-  await mutations();
-  assert.deepEqual([...slot.children], [dock, button]);
-  f.owner.setSheet(null);
-  assert.deepEqual([...header.children].slice(-2), [dock, button]);
 });
 
 test('Cyber, desktop and focused modes return the phone collapse control home', async (t) => {

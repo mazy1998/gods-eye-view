@@ -4,8 +4,8 @@
  * with its islands, textured land, snow on the northern mountains, borders
  * and city lights. It is all procedural, with no imagery and no fetch, so no
  * map provider's tiles ship as assets. Each style's look is a CSS filter on
- * the drawing plus at most one of its overlays (scanlines, a night-vision
- * tube, snow), shown by map-look.css.
+ * the drawing plus at most one of its overlays (scanlines or a night-vision
+ * tube), shown by map-look.css.
  */
 import { computed } from 'vue';
 
@@ -124,13 +124,6 @@ const url = (id) => `url(#${id})`;
         width="160"
         height="70"
         :fill="url(ids.tube)"
-      />
-      <rect
-        class="map-look-thumb-snow"
-        width="160"
-        height="70"
-        fill="#fff"
-        fill-opacity="0.35"
       />
     </svg>
   </span>
