@@ -3043,6 +3043,7 @@
       "src/ui/feedback/FeedbackContent.vue",
       "src/ui/feedback/LiteralText.vue",
       "src/ui/feedback/FirstRunContent.vue",
+      "src/ui/feedback/FirstRunAppearance.vue",
       "src/ui/feedback/CreditsHost.vue",
       "src/ui/creditText.js",
       "src/ui/StoriesPanelView.vue",

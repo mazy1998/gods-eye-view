@@ -25,7 +25,7 @@ import {
 const firstRunHtml = await renderToString(
   h(FirstRunContent, {
     environmentalTitle: environmentalLabel().title,
-    status: 'Tip: the GEV MIC button in the dock lets you talk to the map.',
+    status: '',
   }),
 );
 const expandApplicationHtml = (html) =>
@@ -401,8 +401,13 @@ test('one ESC does one thing — a Cockpit utility disclosure stops later docume
   // they own the same contract: their capture handler is the only one that can
   // keep a later document listener (Cockpit exit, the launcher) off the key, and
   // only the immediate form does it.
-  const utilityEsc = ui.slice(ui.indexOf('if (!displayOpen && !radioOpen) return;'));
-  const claim = utilityEsc.slice(0, utilityEsc.indexOf('setCockpitDisclosure(kind, false'));
+  const utilityEsc = ui.slice(
+    ui.indexOf('if (!displayOpen && !radioOpen) return;'),
+  );
+  const claim = utilityEsc.slice(
+    0,
+    utilityEsc.indexOf('setCockpitDisclosure(kind, false'),
+  );
   assert.match(claim, /event\.preventDefault\(\);/);
   assert.match(claim, /event\.stopImmediatePropagation\(\);/);
   assert.doesNotMatch(
@@ -520,29 +525,28 @@ test('the scroll fade only appears when the list really overflows', () => {
     'utf8',
   );
   const css = readStylesheet(new URL('../style.css', import.meta.url));
-  // A fade on a card where all five tiles fit promises a sixth mission that does
-  // not exist, which is worse than no affordance at all.
+  // A fade on a card where every section fits promises content that does not
+  // exist, which is worse than no affordance at all.
   assert.match(
     module,
-    /const overflows = choiceList\.scrollHeight > choiceList\.clientHeight \+ 1;/,
+    /const overflows = scrollBody\.scrollHeight > scrollBody\.clientHeight \+ 1;/,
   );
   assert.match(
     module,
-    /choiceList\.dataset\.scrollable = String\(overflows\);/,
+    /scrollBody\.dataset\.scrollable = String\(overflows\);/,
   );
   // ...and the CSS must be gated on that flag, never on the media query alone.
   assert.match(
     css,
-    /\.first-run-choices\[data-scrollable='true'\] \{[\s\S]*?mask-image/,
+    /\.first-run-body\[data-scrollable='true'\] \{[\s\S]*?mask-image/,
   );
-  const bareFade =
-    css.match(/^\s*\.first-run-choices \{[\s\S]*?\n\}/m)?.[0] || '';
+  const bareFade = css.match(/^\s*\.first-run-body \{[\s\S]*?\n\}/m)?.[0] || '';
   assert.doesNotMatch(
     bareFade,
     /mask-image/,
     'the fade must never apply unconditionally',
   );
-  // Rotating a phone changes which tiles fit, so it re-measures.
+  // Rotating a phone changes what fits, so it re-measures.
   assert.match(module, /addEventListener\?\.\('resize', onViewportResize\)/);
   assert.match(module, /removeEventListener\?\.\('resize', onViewportResize\)/);
 });
@@ -856,10 +860,14 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   // The card's one persuasive line is OWNER-AUTHORED and pinned verbatim,
   // unspaced em dash included. This is copy, not prose to be improved in a
   // passing edit — changing it needs the owner, not a nicer-sounding rewrite.
+  const description = html.slice(
+    html.indexOf('<p id="first-run-description">'),
+    html.indexOf('</p>', html.indexOf('<p id="first-run-description">')),
+  );
   assert.ok(
-    html.includes(
-      '<p id="first-run-description">It feels like a forbidden cockpit' +
-        '—then you realize the sources are public and the data is real.</p>',
+    description.includes(
+      '<span class="first-run-line">It feels like a forbidden cockpit' +
+        '—then you realize the sources are public and the data is real.</span>',
     ),
     'the owner-authored first-run line must ship exactly as written',
   );
@@ -905,9 +913,9 @@ test('markup, startup ordering and accessibility remain pinned', () => {
     reducedMotion.some(
       (block) =>
         block.includes('#first-run-launcher') &&
-        block.includes('.first-run-choices'),
+        block.includes('.first-run-body'),
     ),
-    'the launcher must keep its OWN prefers-reduced-motion block, covering the card and the scrolling list',
+    'the launcher must keep its OWN prefers-reduced-motion block, covering the card and its scrolling body',
   );
   // The card must be click-through until revealed and again while it fades out.
   const base = css.slice(
@@ -919,21 +927,21 @@ test('markup, startup ordering and accessibility remain pinned', () => {
     css,
     /#first-run-launcher\.visible \{[\s\S]*?pointer-events: auto/,
   );
-  // The card is a flex column so its mission list can scroll on a short
+  // The card is a flex column so its body can scroll on a short
   // viewport — and an AUTHOR `display` on this id outranks the UA's
   // `[hidden] { display: none }`, which would strand the card in the
   // accessibility tree until it is revealed or removed.
   assert.match(base, /display: flex/);
   assert.match(base, /max-height: calc\(100dvh/);
   assert.match(css, /#first-run-launcher\[hidden\] \{\s*display: none;\s*\}/);
-  // Only the mission list may scroll: the heading, checkbox and status line
-  // have to stay on screen at every height.
-  const choicesBlock = css.match(/\.first-run-choices \{([^}]*)\}/)?.[1] || '';
-  assert.match(choicesBlock, /min-height: 0;/);
-  assert.match(choicesBlock, /overflow-y: auto;/);
+  // Only the body may scroll: the heading, skip, status line and the footer
+  // with Enter have to stay on screen at every height.
+  const bodyBlock = css.match(/\.first-run-body \{([^}]*)\}/)?.[1] || '';
+  assert.match(bodyBlock, /min-height: 0;/);
+  assert.match(bodyBlock, /overflow-y: auto;/);
 });
 
-test('the card closes without a keyboard: the ESC hint is a button, kept on phones', () => {
+test('the card closes without a keyboard: ESC · SKIP is a button, kept on phones', () => {
   const html = expandApplicationHtml(
     fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8'),
   );
@@ -943,16 +951,17 @@ test('the card closes without a keyboard: the ESC hint is a button, kept on phon
   );
   // The whole stylesheet, so a hide rule added in any other file is caught too.
   const css = readStylesheet(new URL('../style.css', import.meta.url));
-  const footer = html.slice(
-    html.indexOf('class="first-run-footer"'),
-    html.indexOf('data-first-run-status'),
+  // It sits in the header at the top right, ahead of the title.
+  const header = html.slice(
+    html.indexOf('class="first-run-header"'),
+    html.indexOf('id="first-run-title"'),
   );
   assert.match(
-    footer,
+    header,
     /<button type="button" class="first-run-dismiss" data-first-run-dismiss(?:="")?>/,
   );
-  assert.match(footer, />ESC to dismiss</);
-  assert.match(footer, />DISMISS</);
+  assert.match(header, />ESC · SKIP</);
+  assert.match(header, />SKIP</);
   // It closes the way ESC does, through the one dismiss path, so the session
   // flag and focus handling are the same.
   assert.match(
@@ -968,19 +977,19 @@ test('the card closes without a keyboard: the ESC hint is a button, kept on phon
     /\.first-run-dismiss::before \{[^}]*position: absolute;[^}]*height: 44px;/,
   );
   assert.doesNotMatch(css, /\.first-run-dismiss \{[^}]*min-height/);
-  // Touch screens read DISMISS rather than a key they do not have.
+  // Touch screens read SKIP rather than a key they do not have.
   assert.match(
     css,
     /@media \(hover: none\) and \(pointer: coarse\) \{\s*\.first-run-dismiss-key \{\s*display: none;/,
   );
 });
 
-test('the launcher keeps focus, restores it, and never disables the focused button', () => {
+test('the launcher keeps focus, restores it, and never disables the focused control', () => {
   const module = fs.readFileSync(
     new URL('./firstRunExperience.js', import.meta.url),
     'utf8',
   );
-  // aria-disabled, never the `disabled` property: disabling a focused button
+  // aria-disabled, never the `disabled` property: disabling a focused control
   // drops the keyboard to <body> and strands the visitor outside the launcher.
   assert.match(
     fs.readFileSync(
@@ -989,14 +998,15 @@ test('the launcher keeps focus, restores it, and never disables the focused butt
     ),
     /:aria-disabled="String\(busy\)"/,
   );
-  assert.doesNotMatch(module, /button\.disabled = /);
+  assert.doesNotMatch(module, /(button|input)\.disabled = /);
   const view = fs.readFileSync(
     new URL('./ui/feedback/FirstRunContent.vue', import.meta.url),
     'utf8',
   );
+  // The four missions and Enter.
   assert.equal(
     (view.match(/:aria-disabled="String\(busy\)"/g) || []).length,
-    4,
+    5,
   );
   assert.doesNotMatch(view, /:disabled=/);
   // Tab is confined to the launcher, and ESC always releases it.

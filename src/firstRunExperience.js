@@ -330,11 +330,13 @@ export function exclusiveSurfaceActive(documentRef = globalThis.document) {
  * @param {Storage} [input.storage]
  * @param {Storage} [input.sessionStorageRef]
  * @param {Location} [input.location]
+ * @param {object} [input.appearance] The appearance owner (src/ui/appearance.js).
  * @returns {null|{dismiss: Function}}
  */
 export function initFirstRunExperience({
   styleManager,
   dataManager = styleManager?._dataManager,
+  appearance = styleManager?._appearance,
   documentRef = globalThis.document,
   storage,
   sessionStorageRef,
@@ -356,26 +358,31 @@ export function initFirstRunExperience({
     return null;
   }
 
-  const defaultStatus = t(
-    'Tip: the GEV MIC button in the dock lets you talk to the map.',
-  );
+  // The footer carries the tip, so the live region is quiet until it has
+  // progress or a failure to report.
+  const defaultStatus = '';
   let stickyStatus = false;
   let busy = false;
   let closing = false;
   let statusText = defaultStatus;
+  // One mission is always selected, so Enter always has something to launch.
+  let selected = 'contacts';
   root.classList.add('gev-surface');
   const view = mountView(FirstRunContent, {
     parent: root,
     props: {
       environmentalTitle: environmentalLabel().title,
       status: statusText,
+      selected,
+      appearance: appearance || null,
     },
   });
   const paint = () =>
-    view.update({ busy, sticky: stickyStatus, status: statusText });
+    view.update({ busy, sticky: stickyStatus, status: statusText, selected });
   const status = root.querySelector('[data-first-run-status]');
   const suppressBox = root.querySelector('[data-first-run-suppress]');
-  const buttons = [...root.querySelectorAll('[data-first-run-choice]')];
+  const choices = [...root.querySelectorAll('[data-first-run-choice]')];
+  const enterButton = root.querySelector('[data-first-run-enter]');
 
   /**
    * Is something painted OVER the card? A measurable box is not a visible card.
@@ -448,16 +455,15 @@ export function initFirstRunExperience({
     busy = next;
     root.dataset.state = next ? 'loading' : 'ready';
     root.setAttribute('aria-busy', String(next));
-    // aria-disabled keeps the focused mission button in the tab order.
+    // aria-disabled keeps the focused mission and Enter in the tab order.
     if (next)
       statusText = t(FIRST_RUN_MISSIONS[choice]?.busyKey || msg('Working…'));
     else if (!stickyStatus) statusText = defaultStatus;
     paint();
   };
 
-  const onChoice = async (event) => {
+  const launch = async (choice) => {
     if (busy || closing) return;
-    const choice = event.currentTarget?.dataset?.firstRunChoice;
     if (!FIRST_RUN_MISSIONS[choice]) return;
     stickyStatus = false;
     setBusy(true, choice);
@@ -535,7 +541,35 @@ export function initFirstRunExperience({
     fallbackFocus: () => documentRef.body,
   });
 
-  for (const button of buttons) button.addEventListener('click', onChoice);
+  // A click or an arrow key only selects a mission; Enter launches it. The
+  // radios stay focusable while a mission runs, so a selection change then is
+  // put back rather than retargeting the launch in flight.
+  const onSelect = (event) => {
+    const choice = event.currentTarget?.dataset?.firstRunChoice;
+    if (busy || closing || !FIRST_RUN_MISSIONS[choice]) {
+      for (const input of choices)
+        input.checked = input.dataset.firstRunChoice === selected;
+      return;
+    }
+    selected = choice;
+    paint();
+  };
+  const onChoiceKey = (event) => {
+    if (event.key !== 'Enter' || event.defaultPrevented) return;
+    event.preventDefault();
+    launch(event.currentTarget?.dataset?.firstRunChoice);
+  };
+  const onChoiceDoubleClick = (event) =>
+    launch(
+      event.currentTarget?.querySelector('[data-first-run-choice]')?.dataset
+        ?.firstRunChoice,
+    );
+  for (const input of choices) {
+    input.addEventListener('change', onSelect);
+    input.addEventListener('keydown', onChoiceKey);
+    input.closest('label')?.addEventListener('dblclick', onChoiceDoubleClick);
+  }
+  enterButton?.addEventListener('click', () => launch(selected));
   // The same dismissal as ESC, for screens without a keyboard.
   root
     .querySelector('[data-first-run-dismiss]')
@@ -545,14 +579,14 @@ export function initFirstRunExperience({
   // that cycle detection and styles), and the launcher owns the keyboard first.
   keyboard.activate();
 
-  // The scroll fade is an affordance, so it may only appear when the list really
-  // overflows. On a viewport where all five tiles fit, a faded bottom edge would
-  // promise a sixth mission that does not exist.
-  const choiceList = root.querySelector('.first-run-choices');
+  // The scroll fade is an affordance, so it may only appear when the card's
+  // body really overflows. On a viewport where every section fits, a faded
+  // bottom edge would promise content that does not exist.
+  const scrollBody = root.querySelector('.first-run-body');
   const syncScrollAffordance = () => {
-    if (!choiceList) return;
-    const overflows = choiceList.scrollHeight > choiceList.clientHeight + 1;
-    choiceList.dataset.scrollable = String(overflows);
+    if (!scrollBody) return;
+    const overflows = scrollBody.scrollHeight > scrollBody.clientHeight + 1;
+    scrollBody.dataset.scrollable = String(overflows);
   };
 
   let revealed = false;
@@ -564,7 +598,9 @@ export function initFirstRunExperience({
       if (closing) return;
       root.classList.add('visible');
       syncScrollAffordance();
-      buttons[0]?.focus?.({ preventScroll: true });
+      choices
+        .find((input) => input.dataset.firstRunChoice === selected)
+        ?.focus?.({ preventScroll: true });
     });
   };
 
@@ -628,7 +664,7 @@ export function initFirstRunExperience({
     else if (!revealed && !blocked) reveal();
   };
 
-  // A rotated phone changes which tiles fit, so the affordance re-measures.
+  // A rotated phone changes what fits, so the affordance re-measures.
   const onViewportResize = () => syncScrollAffordance();
   globalThis.addEventListener?.('resize', onViewportResize);
 

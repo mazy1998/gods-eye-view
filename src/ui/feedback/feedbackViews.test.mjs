@@ -6,9 +6,10 @@ const { initFirstRunExperience, FIRST_RUN_SESSION_KEY } =
 const { ShellFeedback } = await import('../shellFeedback.js');
 const { createStartupFeedback } = await import('../startupFeedback.js');
 const { mountCreditText } = await import('../creditText.js');
+const { createAppearance } = await import('../appearance.js');
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function launcher({ storage, layerResult = false } = {}) {
+function launcher({ storage, layerResult = false, appearance } = {}) {
   container.innerHTML = '<aside id="first-run-launcher" hidden></aside>';
   const values = new Map();
   const sessionStorageRef = {
@@ -16,14 +17,19 @@ function launcher({ storage, layerResult = false } = {}) {
     getItem: (k) => values.get(k),
   };
   const calls = [];
+  const contextModes = [];
   const owner = initFirstRunExperience({
+    appearance,
     documentRef: document,
     location: { search: '?welcome=1' },
     storage: storage || { setItem() {}, removeItem() {} },
     sessionStorageRef,
     styleManager: {
       resetToGlobeView() {},
-      setContextMode: async () => ({ ok: true }),
+      setContextMode: async (mode) => {
+        contextModes.push(mode);
+        return { ok: true };
+      },
       setPanelCollapsed: (...args) => calls.push(args),
     },
     dataManager: {
@@ -33,17 +39,173 @@ function launcher({ storage, layerResult = false } = {}) {
       },
     },
   });
-  return { owner, values, calls };
+  return { owner, values, calls, contextModes };
 }
+
+const choice = (name) =>
+  container.querySelector(`[data-first-run-choice="${name}"]`);
+const enter = () => container.querySelector('[data-first-run-enter]');
+function select(name) {
+  choice(name).click();
+  return choice(name);
+}
+
+test('a click selects a mission and Enter launches the selection', async () => {
+  const f = launcher();
+  try {
+    assert.equal(choice('contacts').checked, true);
+    assert.equal(choice('contacts').type, 'radio');
+    assert.equal(
+      container.querySelector('.first-run-choices').getAttribute('role'),
+      'radiogroup',
+    );
+    select('space-missions');
+    await tick();
+    assert.equal(choice('space-missions').checked, true);
+    assert.equal(choice('contacts').checked, false);
+    assert.deepEqual(f.contextModes, []);
+    assert.equal(f.values.has(FIRST_RUN_SESSION_KEY), false);
+    enter().click();
+    await tick();
+    assert.deepEqual(f.contextModes, ['space-missions']);
+    assert.equal(f.values.get(FIRST_RUN_SESSION_KEY), 'dismissed');
+  } finally {
+    f.owner.destroy();
+  }
+});
+
+test('Enter is ready from the start with Live Contacts selected', async () => {
+  const f = launcher();
+  try {
+    enter().click();
+    await tick();
+    assert.deepEqual(f.contextModes, ['contacts']);
+  } finally {
+    f.owner.destroy();
+  }
+});
+
+test('the Enter key on a focused mission, or a double-click, launches it', async () => {
+  const key = launcher();
+  try {
+    const space = choice('space-missions');
+    const event = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    });
+    space.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, true);
+    await tick();
+    assert.deepEqual(key.contextModes, ['space-missions']);
+  } finally {
+    key.owner.destroy();
+  }
+  const double = launcher();
+  try {
+    choice('contacts')
+      .closest('label')
+      .dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await tick();
+    assert.deepEqual(double.contextModes, ['contacts']);
+  } finally {
+    double.owner.destroy();
+  }
+});
+
+test('the selection holds while a mission runs', async () => {
+  const f = launcher();
+  try {
+    select('environmental');
+    enter().click();
+    assert.equal(enter().getAttribute('aria-disabled'), 'true');
+    choice('explore').click();
+    assert.equal(choice('environmental').checked, true);
+    assert.equal(choice('explore').checked, false);
+    await tick();
+    assert.equal(choice('environmental').checked, true);
+  } finally {
+    f.owner.destroy();
+  }
+});
+
+test('Skip sits in the header and the footer stays outside the scrolling body', () => {
+  const f = launcher();
+  try {
+    const skip = container.querySelector('[data-first-run-dismiss]');
+    assert.ok(skip.closest('.first-run-header'));
+    const body = container.querySelector('.first-run-body');
+    assert.equal(body.contains(enter()), false);
+    assert.equal(
+      body.contains(container.querySelector('[data-first-run-status]')),
+      false,
+    );
+    assert.equal(
+      body.contains(container.querySelector('[data-first-run-suppress]')),
+      false,
+    );
+    for (const link of container.querySelectorAll('.first-run-body a')) {
+      assert.equal(link.target, '_blank');
+      assert.equal(link.rel, 'noopener noreferrer');
+    }
+    assert.deepEqual(
+      [...container.querySelectorAll('.first-run-body a')].map((a) => a.href),
+      [
+        'https://github.com/bilawalsidhu/gods-eye-view',
+        'https://github.com/bilawalsidhu/gods-eye-view#readme',
+        'https://www.youtube.com/@bilawalsidhu',
+        'https://halfpixel.ai/',
+      ],
+    );
+    skip.click();
+    assert.equal(f.values.get(FIRST_RUN_SESSION_KEY), 'dismissed');
+  } finally {
+    f.owner.destroy();
+  }
+});
+
+test('Appearance applies live through the appearance owner', async () => {
+  const values = new Map();
+  const storage = {
+    getItem: (k) => values.get(k) ?? null,
+    setItem: (k, v) => values.set(k, v),
+  };
+  const root = document.documentElement;
+  const appearance = createAppearance({ storage, root });
+  const f = launcher({ appearance });
+  try {
+    const light = container.querySelector(
+      '[data-first-run-appearance="light"]',
+    );
+    assert.equal(
+      container.querySelector('[data-first-run-appearance="original"]').checked,
+      true,
+    );
+    light.click();
+    assert.equal(appearance.get(), 'light');
+    assert.equal(root.dataset.gevAppearance, 'light');
+    assert.equal(light.checked, true);
+    assert.equal(container.querySelector('.first-run-appearance-note'), null);
+    root.dataset.uiTheme = 'cyber';
+    await tick();
+    assert.match(
+      container.querySelector('.first-run-appearance-note').textContent,
+      /Cyber HUD layout uses its own colors/,
+    );
+  } finally {
+    f.owner.destroy();
+    appearance.destroy();
+    delete root.dataset.uiTheme;
+    delete root.dataset.gevAppearance;
+  }
+});
 
 test('mission failures stay sticky, remain literal, and retry through the same owner', async () => {
   const f = launcher();
   try {
-    const button = container.querySelector(
-      '[data-first-run-choice="environmental"]',
-    );
+    const button = select('environmental');
     button.focus();
-    button.click();
+    enter().click();
     assert.equal(button.getAttribute('aria-disabled'), 'true');
     assert.equal(button.disabled, false);
     assert.equal(document.activeElement, button);
@@ -53,7 +215,7 @@ test('mission failures stay sticky, remain literal, and retry through the same o
       /Could not open.*earthquakes, local-firms/,
     );
     assert.equal(button.getAttribute('aria-disabled'), 'false');
-    button.click();
+    enter().click();
     await tick();
     assert.equal(f.calls.length, 4);
     assert.deepEqual(f.calls[0], ['earthquakes', true, { origin: 'user' }]);
@@ -85,7 +247,8 @@ test('blocked suppression reverts the tick; teardown writes no dismissal', () =>
 
 test('dismissal keeps the session policy and destroy cancels late mission painting', async () => {
   const f = launcher({ layerResult: true });
-  container.querySelector('[data-first-run-choice="environmental"]').click();
+  select('environmental');
+  enter().click();
   f.owner.destroy();
   await tick();
   assert.equal(container.textContent, '');

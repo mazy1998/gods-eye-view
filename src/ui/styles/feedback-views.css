@@ -15,74 +15,10 @@
   background: var(--gev-accent);
   box-shadow: none;
 }
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(.first-run-kicker, .first-run-arrow, .material-symbols-outlined),
 :root:not([data-ui-theme='cyber']) #global-loading-label,
 :root:not([data-ui-theme='cyber']) #global-loading-detail,
 :root:not([data-ui-theme='cyber']) #traffic-sync-label,
 :root:not([data-ui-theme='cyber']) #traffic-sync-progress {
-  color: var(--gev-accent-text);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  :is(
-    .first-run-header,
-    .first-run-footer,
-    #first-run-description,
-    small,
-    .first-run-suppress,
-    .first-run-note
-  ) {
-  color: var(--gev-text-muted);
-}
-:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-choices {
-  scrollbar-color: var(--gev-accent-tint-border) transparent;
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-choices::-webkit-scrollbar-thumb {
-  background: var(--gev-accent-tint-border);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-choices
-  button {
-  color: var(--gev-text);
-  background: var(--gev-control-bg);
-  border-color: var(--gev-border);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-choices
-  button:is(:hover, :focus-visible) {
-  background: var(--gev-control-bg-hover);
-  border-color: var(--gev-accent-tint-border);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-choices
-  button:focus-visible {
-  outline: 2px solid var(--gev-focus-ring);
-  outline-offset: 2px;
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-dismiss:is(:hover, :focus-visible),
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-suppress:hover {
-  color: var(--gev-text);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher
-  .first-run-suppress
-  input {
-  accent-color: var(--gev-accent);
-}
-:root:not([data-ui-theme='cyber'])
-  #first-run-launcher[data-state='loading']
-  .first-run-note {
   color: var(--gev-accent-text);
 }
 :root:not([data-ui-theme='cyber'])
@@ -120,4 +56,201 @@
 }
 :root:not([data-ui-theme='cyber']) #global-loading-status[data-state='retry'] {
   border-color: var(--gev-warning);
+}
+/* The welcome card in the refreshed type: drawer labels, token cards, and an
+   accent Enter. */
+:root:not([data-ui-theme='cyber']) #first-run-launcher {
+  font-family: var(--gev-font-sans);
+  border-radius: var(--gev-radius-lg);
+  backdrop-filter: var(--gev-backdrop-blur);
+  -webkit-backdrop-filter: var(--gev-backdrop-blur);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-header, .first-run-section-heading) {
+  color: var(--gev-text-muted);
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-kicker {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-section-heading::after {
+  background: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher h2 {
+  color: var(--gev-text);
+  font-family: var(--gev-font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(
+    #first-run-description,
+    small,
+    .first-run-suppress,
+    .first-run-tip,
+    .first-run-note,
+    .first-run-appearance-note,
+    .first-run-external
+  ) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-note, .first-run-appearance-note, .first-run-tip) {
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher[data-state='loading']
+  .first-run-note {
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-dismiss {
+  color: var(--gev-text-muted);
+  border-color: var(--gev-border);
+  border-radius: var(--gev-radius-sm);
+  letter-spacing: 1px;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-dismiss:is(:hover, :focus-visible) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(
+    .first-run-dismiss,
+    .first-run-card-link,
+    .first-run-more,
+    .first-run-enter
+  ):focus-visible,
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance):has(input:focus-visible) {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(
+    .first-run-choice,
+    .first-run-appearance,
+    .first-run-card,
+    .first-run-more
+  ) {
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border-subtle);
+  border-radius: var(--gev-radius-md);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-more {
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance, .first-run-more):hover {
+  background: var(--gev-control-bg-hover);
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance):has(input:checked) {
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+  box-shadow: inset 0 0 0 1px var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance)
+  input {
+  border-color: var(--gev-border);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance)
+  input:checked {
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice, .first-run-appearance)
+  input:checked::after {
+  background: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-preview, .first-run-card-icon) {
+  color: var(--gev-accent-text);
+  background: var(--gev-surface-raised);
+  border-color: var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice-text, .first-run-card-text)
+  strong {
+  font: 600 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: 0.5px;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  :is(.first-run-choice-text, .first-run-card-text)
+  small {
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-swatch {
+  border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-card-link {
+  color: var(--gev-accent-text);
+  font: 600 var(--gev-font-size-xs) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+  border-color: var(--gev-accent-tint-border);
+  border-radius: var(--gev-radius-sm);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-card-link:hover {
+  background: var(--gev-accent-tint);
+  border-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-footer {
+  border-top-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-suppress:hover {
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-suppress
+  input {
+  accent-color: var(--gev-accent);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-enter {
+  color: var(--gev-on-accent);
+  font: 600 var(--gev-font-size-sm) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+  background: var(--gev-accent);
+  border-color: var(--gev-accent);
+  border-radius: var(--gev-radius-md);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-enter:hover {
+  background: var(--gev-accent-text);
+  border-color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber']) #first-run-launcher .first-run-body {
+  scrollbar-color: var(--gev-accent-tint-border) transparent;
+}
+:root:not([data-ui-theme='cyber'])
+  #first-run-launcher
+  .first-run-body::-webkit-scrollbar-thumb {
+  background: var(--gev-accent-tint-border);
 }
