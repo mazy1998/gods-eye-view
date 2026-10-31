@@ -94,21 +94,42 @@
   .stories-controls
   .scene-shot-meta {
   color: var(--gev-text-muted);
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  font-variant-numeric: tabular-nums;
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
   .stories-controls
+  .scene-shot-list {
+  gap: 0;
+  padding: 0;
+}
+/* Shots are one list with dividers, as Browse lists its stories; the
+   selected shot takes the accent tint. */
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
   .scene-shot-row {
-  background: var(--gev-surface-raised);
+  padding: var(--gev-space-2);
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: none;
   border-color: var(--gev-border-subtle);
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
   .stories-controls
   .scene-shot-row.active {
-  background: var(--gev-surface-raised);
-  border-color: var(--gev-accent);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-accent-tint);
+  border-color: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #scene-controls-body
+  .stories-controls
+  .scene-shot-label {
+  font-weight: 500;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
@@ -116,6 +137,8 @@
   .scene-shot-empty {
   color: var(--gev-text-muted);
   border-color: var(--gev-border);
+  font: inherit;
+  letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #scene-controls-body
@@ -289,7 +312,12 @@ body:not(.ui-clean-view, .recording-mode):has(.gev-header:not([hidden]))
   .stories-controls
   .scene-shot-actions
   .gev-action-button {
+  min-height: 28px;
+  padding: var(--gev-space-1) var(--gev-space-3);
+  border-radius: var(--gev-radius-sm);
   color: var(--gev-text);
+  font: 500 var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  letter-spacing: 0;
 }
 
 .stories-runtime .stories-runtime-stop {

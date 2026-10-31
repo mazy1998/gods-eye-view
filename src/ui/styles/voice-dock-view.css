@@ -234,10 +234,35 @@
 :root:not([data-ui-theme='cyber'])
   :is(#command-dock, body)
   #gev-voice-control.gev-surface
+  .gev-voice-provider-field {
+  border-radius: var(--gev-radius-pill);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+/* The chooser reads as the voice pill's own field: round, in sans. */
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-provider-field
+  select {
+  padding-inline: var(--gev-space-3);
+  border-radius: var(--gev-radius-pill);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
   .gev-voice-settings-button {
   color: var(--gev-text-muted);
   background: var(--gev-surface-raised);
   border-color: var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  :is(#command-dock, body)
+  #gev-voice-control.gev-surface
+  .gev-voice-settings-button {
+  border-radius: 50%;
 }
 :root:not([data-ui-theme='cyber'])
   :is(#command-dock, body)

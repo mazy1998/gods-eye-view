@@ -351,6 +351,22 @@
   border-color: var(--gev-accent);
   background: var(--gev-accent-tint);
 }
+/* Light gives the main import action a filled accent. */
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  #geo-import-button {
+  color: var(--gev-on-accent);
+  border-color: var(--gev-accent);
+  background: var(--gev-accent);
+  font-weight: 600;
+}
+:where(:root:not([data-ui-theme='cyber'])):where([data-gev-appearance='light'])
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  #geo-import-button:hover:not(:disabled) {
+  color: var(--gev-on-accent);
+  border-color: var(--gev-accent-text);
+  background: var(--gev-accent-text);
+}
 :where(:root:not([data-ui-theme='cyber']))
   :is(.gev-legacy-host, .phone-sheet-panels)
   .directions-view--hosted {
@@ -516,4 +532,127 @@
 :where(:root[data-ui-theme='cyber']) .gev-tools-subtitle {
   font-size: 9px;
   line-height: 1.4;
+}
+
+/* Draw's settings continue the row above them: no inset band, Map & Look's
+   label and one-of-many track, and the drawer's sans fields and button,
+   indented to the heading copy. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .pp-slider-row {
+  min-width: 0;
+  padding: 0 0 var(--gev-space-3) calc(24px + 16px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .pp-slider-row.visible {
+  gap: var(--gev-space-2) var(--gev-space-3);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .pp-slider-mini-label {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-segmented {
+  flex: 1 1 auto;
+  border-color: var(--gev-border-subtle);
+  border-radius: var(--gev-radius-sm);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-segment {
+  min-height: 32px;
+  color: var(--gev-text-muted);
+  background: none;
+  font: 500 var(--gev-font-size-sm) / 1.25 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-segment:hover {
+  color: var(--gev-text);
+  background: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-segment[aria-checked='true'] {
+  color: var(--gev-text);
+  background: var(--gev-accent-tint);
+  box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  :is(.pp-text-input, .pp-select, .gev-action-button) {
+  box-sizing: border-box;
+  height: auto;
+  min-height: 32px;
+  border-radius: var(--gev-radius-sm);
+  font: var(--gev-font-size-sm) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .pp-text-input {
+  padding: var(--gev-space-1) var(--gev-space-2);
+}
+/* Sized to its longest colour name in the wider sans face. */
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .draw-color-select {
+  flex: 0 0 auto;
+  min-width: 74px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .pp-text-input:focus {
+  border-color: var(--gev-accent);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-action-button {
+  padding: var(--gev-space-1) var(--gev-space-3);
+  color: var(--gev-text);
+  background: var(--gev-control-bg);
+  border-color: var(--gev-border);
+  font-weight: 500;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .gev-action-button--danger:hover:not(:disabled) {
+  color: var(--gev-danger-text);
+  background: var(--gev-danger-tint);
+  border-color: var(--gev-danger);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #draw-group
+  .draw-hint {
+  font: var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
 }

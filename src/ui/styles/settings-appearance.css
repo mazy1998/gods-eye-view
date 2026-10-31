@@ -246,6 +246,9 @@
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  /* A second blur inside the drawer's own reads as a lighter inset. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   font: 400 14px / 1.5 var(--gev-font-sans);
   color: var(--gev-text);
 }
@@ -260,6 +263,17 @@
 }
 :where(:root:not([data-ui-theme='cyber'])) .gev-settings-section > a {
   color: var(--gev-accent-text);
+}
+/* Section actions (Voice Settings, provider settings) are drawer buttons. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-section
+  > .gev-action-button {
+  min-height: 36px;
+  padding: var(--gev-space-2) var(--gev-space-4);
+  border-radius: var(--gev-radius-md);
+  color: var(--gev-text);
+  font: 500 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
   .gev-settings-providers
@@ -536,6 +550,18 @@
     .locale-picker-search::placeholder
   ) {
   color: var(--gev-text-muted);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-heading {
+  font: 600 var(--gev-font-size-2xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-settings-language
+  .locale-picker-meta {
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
   .gev-settings-language

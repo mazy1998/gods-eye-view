@@ -444,6 +444,9 @@
   .pp-mode-btn {
   color: var(--gev-text-muted);
   background: none;
+  font: 500 var(--gev-font-size-sm) / 1.25 var(--gev-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #pp-toggles
@@ -455,8 +458,8 @@
   #pp-toggles
   .map-look-slot
   .pp-mode-btn.active {
-  /* Accent text on the tint falls below AA at this 9px size in Light; the
-     tint and its border mark the choice. */
+  /* Accent text on the tint falls below AA in Light; the tint and its
+     border mark the choice. */
   color: var(--gev-text);
   background: var(--gev-accent-tint);
   box-shadow: inset 0 0 0 1px var(--gev-accent-tint-border);
@@ -668,6 +671,12 @@
 .map-look .map-stack-chip-req {
   font: var(--gev-font-size-2xs) / 1 var(--gev-font-mono);
   letter-spacing: 0.06em;
+}
+/* The requirement tag reads as the drawer's small-capitals label. */
+:where(:root:not([data-ui-theme='cyber'])) .map-look .map-stack-chip-req {
+  font: 600 var(--gev-font-size-2xs) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 /* Rest, hover, active, then unavailable: the selected ring survives hover,
    and a source that cannot load never lights up. The focus ring is the only

@@ -972,6 +972,11 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m12 3 9 5v8l-9 5-9-5V8Zm0 10 9-5M3 8l9 5v8'/%3E%3C/svg%3E")
     center / contain no-repeat;
 }
+/* Outside Cyber the north letter is in the sans face wherever the compass
+   sits; the map controls also resize and move it. */
+:where(:root:not([data-ui-theme='cyber'])) .camera-compass-n {
+  font-family: var(--gev-font-sans);
+}
 :where(:root:not([data-ui-theme='cyber'])) #gev-map-controls .camera-compass-n {
   top: auto;
   bottom: 3px;
@@ -987,6 +992,10 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
 }
 
 /* Status bar: position and clock, then the provider attribution. */
+/* The credit line takes the status bar's sans face, as the clock does. */
+:where(:root:not([data-ui-theme='cyber'])) #cesium-credits.gev-credits {
+  font: var(--gev-font-size-xs) / 1.2 var(--gev-font-sans);
+}
 .gev-status-bar {
   position: fixed;
   bottom: 0;
