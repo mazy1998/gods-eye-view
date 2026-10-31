@@ -7,6 +7,7 @@
   in three tabs, replacing the dock's Visual Presets tray; old share links
   with the tray open now open Map & Look. Inspect holds Contacts, Missions and
   Cameras; Stories splits Browse from Create; phones get four tabs and one
-  sheet. The first view starts with the HUD off (`H` or Display turns it on).
+  sheet. Cockpit's cards and controls take the same look in each appearance,
+  and its camera panels show only once opened. The first view starts with the HUD off (`H` or Display turns it on).
   Most panels are now Vue views of the same owners, so layers, share links,
   voice actions and scenes behave as before (#0).

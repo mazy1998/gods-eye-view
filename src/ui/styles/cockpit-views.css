@@ -90,7 +90,7 @@
     .cockpit-context-nearest small,
     .cockpit-context-footer,
     .cockpit-signal-list time,
-    .cockpit-signal-list span,
+    .cockpit-signal-list span:not(.material-symbols-outlined),
     .cockpit-news-list span,
     .cockpit-brief-status,
     .cockpit-local-place small,
@@ -622,4 +622,499 @@
   #cockpit-hud
   :is(#cockpit-radio-enable-btn, .cockpit-radio-volume > span)::first-letter {
   text-transform: uppercase;
+}
+
+/* Type and controls: the drawer's language on Cockpit's cards. Labels are
+   the Layers group headings' small sans capitals, titles and text are sans,
+   and only readouts (counts, distances, bearings, times) stay monospaced.
+   Icon controls are the drawer header's round buttons; text controls are
+   pills; the page tabs are a segmented strip. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-context-window, .cockpit-signal-window) {
+  font-family: var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-kicker,
+    .cockpit-context-qualifier,
+    .cockpit-context-cohorts span,
+    .cockpit-context-nearest small,
+    .cockpit-signal-kicker,
+    .cockpit-route-heading,
+    .cockpit-route-airport span
+  ) {
+  color: var(--gev-text-muted);
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    #cockpit-context-subject,
+    #cockpit-context-nearest-label,
+    .cockpit-signal-header strong,
+    .cockpit-route-airport strong
+  ) {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-md) / 1.35 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-signal-list strong,
+    .cockpit-signal-list span:not(.material-symbols-outlined),
+    .cockpit-news-list,
+    .cockpit-local-grid,
+    .cockpit-local-place,
+    .cockpit-brief-status
+  ) {
+  font-family: var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-list
+  strong {
+  font-size: var(--gev-font-size-sm);
+  font-weight: 600;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-signal-list span:not(.material-symbols-outlined),
+    .cockpit-brief-status,
+    .cockpit-context-cohorts small,
+    #cockpit-context-uncertainty,
+    #cockpit-brief-source
+  ) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-cohorts strong,
+    #cockpit-context-bearing,
+    #cockpit-context-distance,
+    #cockpit-context-updated,
+    .cockpit-signal-list time,
+    #cockpit-brief-position
+  ) {
+  font-family: var(--gev-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+/* Round icon buttons, as in the drawer header. Whether each one shows is
+   cockpit.css's call: a collapsed card keeps only its expand button. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-actions button,
+    .cockpit-brief-actions button:not(#cockpit-brief-auto)
+  ) {
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-context-actions, .cockpit-brief-actions)
+  .material-symbols-outlined {
+  font-size: 18px;
+}
+/* Text controls are pills: the briefing's cycle and the weather toggle. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-brief-auto, .cockpit-context-weather) {
+  min-height: 28px;
+  padding: 0 var(--gev-space-3);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-xs) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-actions button,
+    .cockpit-brief-actions button,
+    .cockpit-context-weather
+  ):hover:not(:disabled) {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(#cockpit-brief-auto, .cockpit-context-weather)[aria-pressed='true'] {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-context-actions button, .cockpit-brief-actions button):disabled {
+  opacity: 0.4;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(
+    .cockpit-context-actions button,
+    .cockpit-brief-actions button,
+    .cockpit-context-weather,
+    .cockpit-brief-tabs button
+  ):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+/* The briefing pages are a segmented strip. */
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-brief-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-tabs
+  button {
+  min-height: 22px;
+  padding: 0 var(--gev-space-2);
+  border: 0;
+  border-radius: var(--gev-radius-pill);
+  background: none;
+  color: var(--gev-text-muted);
+  font: 600 var(--gev-font-size-2xs) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-tabs
+  button[aria-current='true'] {
+  background: var(--gev-accent);
+  color: var(--gev-on-accent);
+}
+/* At the drawer's type size the heading gives way to the briefing's
+   controls, and the source line to the page tabs. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-header
+  > div {
+  min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-brief-actions {
+  gap: var(--gev-space-1);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-brief-actions
+  > * {
+  flex-shrink: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud #cockpit-brief-auto {
+  width: auto;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-signal-footer {
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-2) var(--gev-space-2) 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-footer
+  > span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-brief-tabs {
+  flex: none;
+}
+/* The briefing card keeps its header, route and page tabs in view; only the
+   page between them scrolls, and nothing in it is wider than the card. */
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-signal-window {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-window
+  > * {
+  flex: none;
+  min-width: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-window
+  > .cockpit-brief-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-news-list
+  strong {
+  font: 600 var(--gev-font-size-sm) / 1.35 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-news-list span, .cockpit-weather-credit) {
+  color: var(--gev-text-muted);
+  font: var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 0;
+}
+
+/* The heading keeps a readable width; the controls wrap below it. */
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-signal-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gev-space-2);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-header
+  > .cockpit-brief-heading {
+  flex: 1 1 170px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-signal-header
+  > .cockpit-brief-actions {
+  margin-left: auto;
+}
+
+/* Display and Radio launchers: a label and the drawer header's round
+   toggle, without the hairline. The toggle's chevron is drawn from its
+   expanded state; its text glyph stays in the markup, hidden. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-launcher {
+  grid-template-columns: minmax(0, 1fr) auto;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-divider {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber'])) #cockpit-hud .cockpit-utility-glyph {
+  width: 28px;
+  height: 28px;
+  border-color: var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  font-size: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-glyph::before {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-glyph[aria-expanded='true']::before {
+  margin-top: 3px;
+  transform: rotate(225deg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-utility-glyph:focus-visible {
+  outline-offset: 2px;
+}
+/* The Display groups Cockpit borrows read in sans, as in Map & Look; the
+   slider values stay monospaced readouts. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  #cockpit-display-panel
+  :not(.material-symbols-outlined, .pp-icon, output, .gev-slider-value) {
+  font-family: var(--gev-font-sans);
+  letter-spacing: 0.06em;
+}
+
+/* Vision: a pill stepper with the drawer's label type; the current style
+   reads as a sans title. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-vision-controls {
+  grid-template-columns: 64px 92px 64px;
+  gap: var(--gev-space-1);
+  padding: var(--gev-space-1);
+  border-radius: var(--gev-radius-pill);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-vision-controls
+  button {
+  min-height: 34px;
+  border-radius: var(--gev-radius-pill);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-vision-controls
+  small {
+  font: 600 var(--gev-font-size-2xs) / 1.2 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-vision-current
+  strong {
+  font: 600 var(--gev-font-size-sm) / 1.2 var(--gev-font-sans);
+  letter-spacing: 0.04em;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  .cockpit-vision-controls
+  .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Reset and Exit are the drawer's pill buttons, in its label type. */
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #view-switcher
+  button {
+  font: 600 var(--gev-font-size-xs) / 1 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+
+/* Data Layers (and a camera panel the operator opens) in Cockpit's left
+   stack: the appearance's card, a small sans title, and the drawer
+   header's quiet collapse button showing "−" or "+". */
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  > .panel-collapsible
+  > :is(.data-panel-inner, .cctv-panel-inner, .street-level-panel-inner) {
+  border-color: var(--gev-border-subtle);
+  background: var(--gev-surface-base);
+  box-shadow: var(--gev-elevation-2);
+  color: var(--gev-text);
+  backdrop-filter: var(--gev-backdrop-blur);
+  -webkit-backdrop-filter: var(--gev-backdrop-blur);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  > .panel-collapsible
+  > .panel-glow {
+  display: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-title {
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-divider {
+  visibility: hidden;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-collapse-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  font-size: 0;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-collapse-btn::before {
+  content: '−';
+  font: 18px / 1 var(--gev-font-sans);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  > .panel-collapsible.collapsed
+  .panel-header
+  > .panel-collapse-btn::before {
+  content: '+';
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-collapse-btn:hover {
+  background: var(--gev-control-bg-hover);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  body.cockpit-mode
+  #left-panel-stack
+  .panel-header
+  > .panel-collapse-btn:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+/* On a phone the stepper leaves the callsign its width. */
+@media (max-width: 720px) {
+  :where(:root:not([data-ui-theme='cyber']))
+    #cockpit-hud
+    .cockpit-vision-controls {
+    grid-template-columns: 48px 72px 48px;
+  }
+  :where(:root:not([data-ui-theme='cyber']))
+    #cockpit-hud
+    .cockpit-vision-controls
+    small {
+    letter-spacing: 0.5px;
+  }
+}
+
+/* The route card's kicker and its small qualifier take the label type too. */
+:where(:root:not([data-ui-theme='cyber']))
+  #cockpit-hud
+  :is(.cockpit-route-kicker, .cockpit-route-heading small) {
+  font: 600 var(--gev-font-size-2xs) / 1.4 var(--gev-font-sans);
+  letter-spacing: 1px;
 }

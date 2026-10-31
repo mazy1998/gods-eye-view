@@ -755,6 +755,73 @@ test('in Cockpit the camera panels stand in the visible left stack, and go back 
   assert.equal(cctv.parentElement, cameras, 'home in Context again');
 });
 
+for (const [id, expandedBefore] of [
+  ['cctv-panel', false],
+  ['street-level-panel', true],
+]) {
+  test(`${id} ${expandedBefore ? 'expanded' : 'collapsed'} before Cockpit: hidden on entry, shown and focusable once opened, home and state restored on exit`, (t) => {
+    const { drawer, chrome } = fixture({ chrome: true });
+    // Cockpit's own rule for the camera panels in its left stack.
+    const css = readFileSync(
+      new URL('./styles/cockpit.css', import.meta.url),
+      'utf8',
+    );
+    const rule = css.match(
+      /body\.cockpit-mode\s+#left-panel-stack\s+>\s+:is\(#cctv-panel, #street-level-panel\)\.collapsed\s*\{[^}]*\}/,
+    )?.[0];
+    assert.ok(rule, 'the cockpit rule exists');
+    const style = document.createElement('style');
+    style.textContent = rule;
+    document.head.append(style);
+    t.after(() => {
+      style.remove();
+      document.body.classList.remove('cockpit-mode');
+      drawer.destroy();
+      chrome.destroy();
+    });
+    // Both camera panels at home in Context's Cameras view.
+    const cameras = document.createElement('section');
+    cameras.id = 'context-cameras-view';
+    document.getElementById('global-context-panel').append(cameras);
+    cameras.append(document.getElementById('cctv-panel'));
+    cameras.insertAdjacentHTML(
+      'beforeend',
+      '<div id="street-level-panel" data-panel-id="street-level-panel" class="panel-collapsible collapsed"></div>',
+    );
+    const panel = document.getElementById(id);
+    panel.insertAdjacentHTML(
+      'beforeend',
+      `<button class="panel-collapse-btn" data-collapse-target="${id}">+</button>`,
+    );
+    if (expandedBefore) chrome.setPanelCollapsed(id, false, {});
+    const homeOrder = [...cameras.children].map((node) => node.id);
+    document.body.classList.add('cockpit-mode');
+    drawer.suspend();
+    chrome.enterCockpit();
+    assert.equal(panel.parentElement.id, 'left-panel-stack');
+    assert.equal(panel.classList.contains('collapsed'), true);
+    assert.equal(getComputedStyle(panel).display, 'none', 'hidden on entry');
+    chrome.setPanelCollapsed(id, false, { explicit: true });
+    assert.notEqual(getComputedStyle(panel).display, 'none');
+    const button = panel.querySelector('.panel-collapse-btn');
+    button.focus();
+    assert.equal(document.activeElement, button);
+    document.body.classList.remove('cockpit-mode');
+    chrome.exitCockpit();
+    drawer.resume();
+    assert.equal(panel.parentElement, cameras, 'home in Context again');
+    assert.deepEqual(
+      [...cameras.children].map((node) => node.id),
+      homeOrder,
+    );
+    assert.equal(
+      panel.classList.contains('collapsed'),
+      !expandedBefore,
+      'its collapse state from before Cockpit',
+    );
+  });
+}
+
 test('the shell suspends the drawer before Cockpit snapshots and resumes it after Cockpit restores', () => {
   const shell = readFileSync(
     new URL('./applicationShell.js', import.meta.url),

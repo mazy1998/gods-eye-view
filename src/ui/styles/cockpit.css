@@ -2010,6 +2010,13 @@ body.cockpit-mode #left-panel-stack {
 body.cockpit-mode #left-panel-stack > #scene-panel {
   display: none !important;
 }
+/* Cockpit shows a camera panel only once the operator opens it (CCTV
+   details from Data); collapsed, they stay out of the cockpit view. */
+body.cockpit-mode
+  #left-panel-stack
+  > :is(#cctv-panel, #street-level-panel).collapsed {
+  display: none;
+}
 body.cockpit-mode #right-context-rail {
   display: none !important;
 }
