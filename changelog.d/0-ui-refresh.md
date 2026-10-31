@@ -13,7 +13,10 @@
   monospace controls for the drawer's. Cockpit's cards and controls take the
   same look in each appearance, and the camera panels in its left stack show
   only once opened. Phone Search is one field, and the voice sign-in choice
-  reads as two radio options. The first view starts with the HUD off (`H` or
-  Display turns it on). Most panels are now Vue views of the same owners, so
-  layers, share links, voice actions and scenes behave as before, and hosts
-  that build the published UI modules the earlier way keep working (#0).
+  reads as two radio options. The welcome card picks a first view and Enter
+  launches it, sets the appearance, and links to the source, the README,
+  Bilawal's YouTube and halfpixel.ai. The first view starts with the HUD off
+  (`H` or Display turns it on). Most panels are now Vue views of the same
+  owners, so layers, share links, voice actions and scenes behave as before,
+  and hosts that build the published UI modules the earlier way keep working
+  (#0).
