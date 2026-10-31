@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createStateChannel } from '../app/stateChannel.js';
-import { container } from '../testSupport/componentDom.mjs';
+import { container, mount } from '../testSupport/componentDom.mjs';
 const { SceneControls } = await import('./sceneControls.js');
 const { SceneDirector } = await import('../scenes/director.js');
 const { sceneElements } = await import('./scenePresentation.js');
+const { default: StoriesPanelView } = await import('./StoriesPanelView.vue');
 
 function fixture() {
   const saved = { prompt: window.prompt, confirm: window.confirm };
@@ -101,9 +102,17 @@ test('Scene controls render the supplied selection and running/download states',
       '<Shot A>',
     );
     assert.equal(f.elements.stop.disabled, true);
-    const status = document.getElementById('scene-status');
-    assert.equal(status.getAttribute('role'), 'status');
-    assert.equal(status.getAttribute('aria-live'), 'polite');
+    // Browse is open, so its copy of the status is the live one.
+    const live = [...document.querySelectorAll('[role="status"]')];
+    assert.deepEqual(
+      live.map((node) => node.className),
+      ['stories-browse-status'],
+    );
+    assert.equal(live[0].getAttribute('aria-live'), 'polite');
+    assert.equal(
+      document.getElementById('scene-status').hasAttribute('role'),
+      false,
+    );
     assert.equal(f.elements.download.disabled, true);
     f.state.hasRun = true;
     f.owner.setButtons(true);
@@ -207,6 +216,47 @@ test('Create lays Authoring out as its four steps with its own PLAY', () => {
     assert.equal(play.disabled, true);
   } finally {
     f.restore();
+  }
+});
+
+test('Authoring status updates are announced once, from the open tab', () => {
+  const presentation = {
+    running: false,
+    hasRun: false,
+    progress: 0,
+    status: 'Ready',
+    runtime: '',
+  };
+  const props = {
+    library: { scenes: [], selectedSceneId: null, selectedShotId: null },
+    presentation,
+    available: { hasScene: false, hasSelectedShot: false, playableShots: 0 },
+    tab: 'create',
+    actions: {},
+    draft: null,
+    listRevision: 0,
+  };
+  const view = mount(StoriesPanelView, { props });
+  try {
+    view.update({
+      ...props,
+      presentation: { ...presentation, status: 'Saved scene' },
+    });
+    const status = container.querySelector('#scene-status');
+    assert.equal(status.textContent, 'Saved scene');
+    assert.equal(status.getAttribute('role'), 'status');
+    assert.equal(status.getAttribute('aria-live'), 'polite');
+    const browse = container.querySelector('.stories-browse-status');
+    assert.equal(browse.textContent, 'Saved scene');
+    assert.equal(browse.hasAttribute('aria-live'), false);
+    assert.equal(container.querySelectorAll('[aria-live]').length, 1);
+
+    view.update({ ...props, tab: 'browse' });
+    assert.equal(browse.getAttribute('role'), 'status');
+    assert.equal(status.hasAttribute('role'), false);
+    assert.equal(container.querySelectorAll('[aria-live]').length, 1);
+  } finally {
+    view.dispose();
   }
 });
 

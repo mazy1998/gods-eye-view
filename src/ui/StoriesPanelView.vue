@@ -58,6 +58,10 @@ async function openCreate() {
   await nextTick();
   root.value?.querySelector('#stories-create-tab')?.focus();
 }
+// Browse and Create show the same owner status. Only the copy in the open
+// tab is a live region, so each update is announced once.
+const live = (name) =>
+  props.tab === name ? { role: 'status', 'aria-live': 'polite' } : {};
 const percentage = computed(() =>
   Math.round(Math.max(0, Math.min(1, props.presentation.progress)) * 100),
 );
@@ -100,7 +104,11 @@ const percentage = computed(() =>
       </div>
       <!-- Play's own feedback ("Running…", "No shots to run") where it was
            pressed; the Create tab shows the same status. -->
-      <div class="stories-browse-status">{{ presentation.status }}</div>
+      <div
+        class="stories-browse-status"
+        v-bind="live('browse')"
+        v-text="presentation.status"
+      ></div>
       <button type="button" class="stories-create-link" @click="openCreate">
         <span>{{ t('Create') }}</span>
         <span aria-hidden="true">→</span>
@@ -289,9 +297,11 @@ const percentage = computed(() =>
           v-text="`${percentage}%`"
         ></div>
       </div>
-      <div id="scene-status" role="status" aria-live="polite">
-        {{ presentation.status }}
-      </div>
+      <div
+        id="scene-status"
+        v-bind="live('create')"
+        v-text="presentation.status"
+      ></div>
     </section>
   </div>
 </template>
