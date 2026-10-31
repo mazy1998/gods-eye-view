@@ -580,8 +580,6 @@ export const exceptions = [
     ['play', 'width', 350, 332, 'primary-transport'],
     ['play', 'height', 354, 44, 'primary-transport'],
     ['authoring', 'width', 350, 332, 'authoring-order'],
-    ['authoring', 'height', 183, 189, 'authoring-order'],
-    ['authoring', 'y', 205, 249, 'authoring-order'],
     ['select', 'width', 350, 332, 'authoring-order'],
   ].map(([node, property, reference, actual, reason]) => ({
     fixture: 'stories',
@@ -665,5 +663,39 @@ export const exceptions = [
     reference,
     actual,
     reason: mapLookReasons[reason],
+  })),
+  // Upstream sizes these in every theme, Cyber included, by its maintainer's
+  // choice; Cyber follows it rather than keeping the original sizes.
+  ...[
+    ['play', 'paddingTop', 6, 8],
+    ['play', 'paddingBottom', 6, 8],
+    ['select', 'height', 27, 32],
+    ['authoring', 'height', 183, 210],
+    ['authoring', 'y', 205, 287.390625],
+  ].map(([node, property, reference, actual]) => ({
+    fixture: 'stories',
+    profile: 'playlist-cards',
+    node,
+    property,
+    reference,
+    actual,
+    reason:
+      'Upstream gives the story buttons 8px padding and the scene list a 32px select in every theme, Cyber included, so the authoring controls also grow taller and sit lower. Cyber follows that deliberate choice.',
+  })),
+  ...[
+    ['title', 'width', 43.515625, 80.875],
+    ['title', 'height', 9, 19],
+    ['title', 'y', 11.5, 6.5],
+    ['divider', 'width', 264.484375, 227.125],
+    ['divider', 'x', 55.515625, 92.875],
+  ].map(([node, property, reference, actual]) => ({
+    fixture: 'map-look',
+    profile: 'drawer',
+    node,
+    property,
+    reference,
+    actual,
+    reason:
+      "Upstream sets every side panel title in the command dock's label type in every theme, Cyber included, so the Display title is longer and its divider starts later. Cyber follows that deliberate choice.",
   })),
 ];

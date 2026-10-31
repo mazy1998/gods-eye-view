@@ -250,7 +250,19 @@ test('Map & Look geometry keeps the Display frame strict and exempts only its st
   const reasons = new Set(fixture.structuralExceptions.map((e) => e.reason));
   const own = exceptions.filter((e) => e.fixture === 'map-look');
   assert.ok(own.length > 0);
-  for (const e of own) {
+  // Upstream's side-panel title type, which it applies in every theme, is the
+  // one difference allowed in the frame: the title's and divider's geometry.
+  const titleType = own.filter((e) =>
+    /label type in every theme/.test(e.reason),
+  );
+  assert.deepEqual(titleType.map((e) => `${e.node}.${e.property}`).sort(), [
+    'divider.width',
+    'divider.x',
+    'title.height',
+    'title.width',
+    'title.y',
+  ]);
+  for (const e of own.filter((entry) => !titleType.includes(entry))) {
     assert.ok(reasons.has(e.reason), `${e.node}.${e.property}`);
     assert.ok(!['header', 'title', 'divider', 'collapse'].includes(e.node));
   }
