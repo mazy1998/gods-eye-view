@@ -757,7 +757,15 @@ async function main() {
         const offscreen = [];
         for (const target of targets) {
           target.focus();
-          await new Promise((resolve) => requestAnimationFrame(resolve));
+          // The body scrolls smoothly, so wait for the scroll that focus
+          // started to come to rest before measuring where the target ended.
+          const body = node.querySelector('.first-run-body');
+          let last = -1;
+          for (let frame = 0; frame < 90 && body && body.scrollTop !== last; frame++) {
+            last = body.scrollTop;
+            await new Promise((resolve) => setTimeout(resolve, 16));
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+          }
           const rect = target.getBoundingClientRect();
           const host = node.getBoundingClientRect();
           if (document.activeElement !== target
