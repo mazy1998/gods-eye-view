@@ -514,6 +514,11 @@ body:not(.ui-clean-view, .recording-mode):has(.gev-header:not([hidden]))
   .scene-step-heading::after {
   background: var(--gev-border-subtle);
 }
+/* The view renders the hint only when the scene has shots, so it ignores the
+   legacy panel's has-shots marker, which the drawer view leaves unset. */
+#scene-panel #scene-controls-body .scene-shot-hint {
+  display: block;
+}
 :where(:root:not([data-ui-theme='cyber'])) .stories-controls .scene-shot-hint {
   margin: 0;
   color: var(--gev-text-muted);
