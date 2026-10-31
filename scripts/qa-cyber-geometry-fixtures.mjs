@@ -560,7 +560,7 @@ export const exceptions = [
     ['summary', 'display', 'block', 'flex', 'playlist-summary'],
     ['play', 'display', 'block', 'flex', 'primary-transport'],
     ['authoring', 'display', 'block', 'flex', 'authoring-order'],
-    ['frame', 'height', 954, 700, 'library-cap'],
+    ['frame', 'height', 968, 700, 'library-cap'],
     ['library', 'width', 350, 332, 'library-cap'],
     ['library', 'height', 38, 360, 'library-cap'],
     ['recipe', 'width', 84.28125, 332, 'recipe-art-cards'],
@@ -670,8 +670,6 @@ export const exceptions = [
     ['play', 'paddingTop', 6, 8],
     ['play', 'paddingBottom', 6, 8],
     ['select', 'height', 27, 32],
-    ['authoring', 'height', 183, 210],
-    ['authoring', 'y', 205, 287.390625],
   ].map(([node, property, reference, actual]) => ({
     fixture: 'stories',
     profile: 'playlist-cards',
@@ -681,6 +679,25 @@ export const exceptions = [
     actual,
     reason:
       'Upstream gives the story buttons 8px padding and the scene list a 32px select in every theme, Cyber included, so the authoring controls also grow taller and sit lower. Cyber follows that deliberate choice.',
+  })),
+  // Create follows upstream's Authoring steps in every theme, so its content
+  // runs taller than the panel. The original header shrinks under it; Stories
+  // keeps Cyber's header at full height (stories.css).
+  ...[
+    ['authoring', 'height', 442, 529.390625],
+    ['header', 'height', 28, 38],
+    ['title', 'y', 5, 10],
+    ['divider', 'y', 9.5, 14.5],
+    ['collapse', 'y', -5, 0],
+  ].map(([node, property, reference, actual]) => ({
+    fixture: 'stories',
+    profile: 'playlist-cards',
+    node,
+    property,
+    reference,
+    actual,
+    reason:
+      "Create lays out upstream's Authoring steps (Scene, Shots, Preview, Save & share) with their headings, hint and own Play in every theme, Cyber included, so the authoring block is taller. Under that content the original header would shrink; Stories keeps Cyber's header at its full height.",
   })),
   ...[
     ['title', 'width', 43.515625, 80.875],

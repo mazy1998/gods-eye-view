@@ -19,16 +19,16 @@
   },
   {
     "id": "authoring-order",
-    "reason": "Recipe selection, New and Delete follow playback in the authoring section. Reading and Tab order follow that visual order for every appearance.",
+    "reason": "Create follows upstream's Authoring steps: Scene (the scene, New, Delete), Shots, Preview with its own Play, then Save & share, before progress and status. Reading and Tab order follow that visual order for every appearance.",
     "expected": {
       "order": [
         "stories-browse",
         "stories-create",
         "stories-selected",
         "stories-transport",
+        "stories-authoring",
         "scene-progress",
-        "scene-status",
-        "stories-authoring"
+        "scene-status"
       ]
     }
   },
