@@ -11,13 +11,22 @@ export function _initGlobalContextPanel() {
       return;
     void this._trackContextLayerReaction(this.exitSpaceMissions());
   });
-  const contextTabs = [
+  const allTabs = [
     this._globalContextFlightsBtn,
     this._globalContextMissionsBtn,
     this._globalContextCamerasBtn,
   ].filter(Boolean);
-  contextTabs.forEach((tab, index) =>
+  allTabs.forEach((tab) =>
     this.listen(tab, 'keydown', (event) => {
+      // Arrow keys move among the tabs shown: Cameras is hidden while the
+      // shell is in use (camera-views.css).
+      const contextTabs = allTabs.filter(
+        (item) =>
+          item === tab ||
+          typeof item.checkVisibility !== 'function' ||
+          item.checkVisibility(),
+      );
+      const index = contextTabs.indexOf(tab);
       let nextIndex = null;
       if (event.key === 'ArrowRight')
         nextIndex = (index + 1) % contextTabs.length;
