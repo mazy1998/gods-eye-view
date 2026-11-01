@@ -28,6 +28,28 @@ export function localizeVisibilityBlockReason(reason) {
 
 export function _handleContextLayerChange(change) {
   if (this.destroyed) return;
+  const pendingEnable = this._pendingMissionLayerEnables?.get(change?.layerId);
+  if (
+    pendingEnable &&
+    pendingEnable.intentEpoch === change.intentEpoch &&
+    [
+      'visibility',
+      'visibility-blocked',
+      'visibility-cancelled',
+      'visibility-failed',
+    ].includes(change.type)
+  ) {
+    this._pendingMissionLayerEnables.delete(change.layerId);
+    if (pendingEnable.notify && change.type === 'visibility' && change.enabled)
+      this.showToast(
+        t('Left Space Missions to show {layer}.', {
+          layer: localizeLayerName(
+            this._dataManager?.layers?.get(change.layerId)?.module?.name ||
+              change.layerId,
+          ),
+        }),
+      );
+  }
   if (
     change?.layerId === 'radio' &&
     [
@@ -110,6 +132,7 @@ export function _handleContextLayerChange(change) {
   }
   if (change?.type === 'visibility-blocked') {
     if (
+      !pendingEnable?.exitFailed &&
       !this._userFacingContextNotificationTokens.has(change.notificationToken)
     ) {
       this.showToast(

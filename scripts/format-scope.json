@@ -1251,5 +1251,6 @@
   "src/layers/launches/compat.test.mjs",
   "src/ui/nativeCockpitViews.js",
   "src/ui/cockpitVisionLabels.js",
-  "src/ui/cockpit.compat.test.mjs"
+  "src/ui/cockpit.compat.test.mjs",
+  "src/ui/contextMissionExit.test.mjs"
 ]

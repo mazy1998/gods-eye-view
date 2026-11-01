@@ -3112,5 +3112,7 @@
   "General": "Général",
   "HUD & overlays": "HUD et surcouches",
   "Radio & signals": "Radio et signaux",
-  "Hazards": "Risques"
+  "Hazards": "Risques",
+  "Exit Space Missions": "Quitter Missions spatiales",
+  "Left Space Missions to show {layer}.": "Vous avez quitté les missions spatiales pour afficher {layer}."
 }

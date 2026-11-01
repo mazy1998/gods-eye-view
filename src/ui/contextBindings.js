@@ -2,6 +2,15 @@ import { t } from '../i18n/index.js';
 import { shouldExpandGlobalContextPanel } from '../rightRailPolicy.js';
 
 export function _initGlobalContextPanel() {
+  this.listen(this._exitSpaceMissionsBtn, 'click', () => {
+    if (
+      this.destroyed ||
+      this._spaceMissionsExit?.generation === this._contextModeGeneration ||
+      this._clearSelectedLayersPromise
+    )
+      return;
+    void this._trackContextLayerReaction(this.exitSpaceMissions());
+  });
   const contextTabs = [
     this._globalContextFlightsBtn,
     this._globalContextMissionsBtn,

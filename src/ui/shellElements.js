@@ -105,6 +105,7 @@ export function readShellElements(document = globalThis.document) {
       'global-context-missions-btn',
     ),
     _contextModeStandby: document.getElementById('context-mode-standby'),
+    _exitSpaceMissionsBtn: document.getElementById('space-missions-exit-btn'),
     _globalContextCamerasBtn: document.getElementById(
       'global-context-cameras-btn',
     ),

@@ -1516,13 +1516,21 @@ export class LayerLifecycle {
    * The newest named successor must reach a terminal state before restore can
    * judge the layer; an obsolete caller boolean is never sufficient.
    */
-  async _waitForAuthoritativeVisibilityIntent(layerId, intentEpoch) {
+  async _waitForAuthoritativeVisibilityIntent(
+    layerId,
+    intentEpoch,
+    defer = null,
+  ) {
     const entry = this.layers.get(layerId);
     if (!entry || !Number.isInteger(intentEpoch)) return null;
     let epoch = intentEpoch;
     let outcome = null;
     while (Number.isInteger(epoch)) {
+      // A caller may own a newer enable which itself waits for this restore.
+      // Following that intent here would make the two operations await each other.
+      if (defer?.()) return { deferred: true };
       outcome = await this._waitForVisibilityIntent(layerId, epoch);
+      if (defer?.()) return { deferred: true };
       if (!outcome) return null;
       const newerEpoch =
         entry.visibilityIntentEpoch > epoch
@@ -1703,6 +1711,8 @@ export class LayerLifecycle {
    * @param {Iterable<string>} [options.excludeLayerIds] Layers owned by an
    * in-flight transition that must not enqueue behind themselves.
    * @param {AbortSignal|null} [options.signal] Caller cancellation authority.
+   * @param {Set<string>|null} [options.deferredLayerIds] In-flight caller-owned
+   * enables waiting for this restore; do not wait for those queues in return.
    * @returns {Promise<void>} Resolves after every registered layer settles.
    */
   async restoreEnabledLayerIds(
@@ -1712,6 +1722,7 @@ export class LayerLifecycle {
       excludeLayerIds = [],
       notificationToken = null,
       signal = null,
+      deferredLayerIds = null,
     } = {},
   ) {
     const target = new Set(enabledLayerIds || []);
@@ -1741,12 +1752,15 @@ export class LayerLifecycle {
         this._waitForAuthoritativeVisibilityIntent(
           layerIds[index],
           handle.intentEpoch,
+          deferredLayerIds ? () => deferredLayerIds.has(layerIds[index]) : null,
         ),
       ),
     );
     const failedLayerIds = results.flatMap((result, index) => {
+      if (deferredLayerIds?.has(layerIds[index])) return [];
       if (result.status === 'rejected') return [layerIds[index]];
       const outcome = result.value;
+      if (outcome?.deferred) return [];
       const layerId = layerIds[index];
       const state = this.getLayerLifecycleState(layerId);
       const desiredState = target.has(layerId);

@@ -214,20 +214,38 @@ export async function _selectContextMode(
 
 export async function _deactivateContextForLayerChange({
   notificationToken = null,
+  excludeLayerIds = [],
+  deferredLayerIds = null,
 } = {}) {
-  this._contextModeGeneration += 1;
+  const generation = ++this._contextModeGeneration;
   this._contextModeChanging = true;
   this._contextMode = null;
   this._contextModeEntryIntent = null;
   this._contextModeReplacementIntent = null;
+  this._contextModeEntering = null;
+  this._contextModeDeferredEntryIntent = null;
   if (this.cockpitView?.active)
     this.cockpitView.exit({ restoreTracking: false });
   this._syncContextModeButtons();
   try {
-    await this._restoreContextSession({ notificationToken });
+    await this._restoreContextSession({
+      notificationToken,
+      excludeLayerIds,
+      deferredLayerIds,
+    });
+    // A newer transaction cancelled this exit; it did not fail to restore.
+    return !this.destroyed && generation === this._contextModeGeneration
+      ? true
+      : null;
+  } catch (error) {
+    if (this.destroyed || generation !== this._contextModeGeneration)
+      return null;
+    throw error;
   } finally {
-    this._contextModeChanging = false;
-    this._syncContextModeButtons();
+    if (!this.destroyed && generation === this._contextModeGeneration) {
+      this._contextModeChanging = false;
+      this._syncContextModeButtons();
+    }
   }
 }
 

@@ -2964,5 +2964,7 @@
   "General": "一般",
   "HUD & overlays": "HUD 與疊加層",
   "Radio & signals": "無線電與訊號",
-  "Hazards": "災害"
+  "Hazards": "災害",
+  "Exit Space Missions": "離開太空任務",
+  "Left Space Missions to show {layer}.": "已離開太空任務以顯示{layer}。"
 }
