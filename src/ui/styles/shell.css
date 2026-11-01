@@ -339,7 +339,9 @@
     .cctv-panel-inner,
     .street-level-panel-inner
   ),
-:where(:root:not([data-ui-theme='cyber'])) :is(.gev-legacy-host, .phone-sheet-panels) > #pp-toggles,
+:where(:root:not([data-ui-theme='cyber']))
+  :is(.gev-legacy-host, .phone-sheet-panels)
+  > #pp-toggles,
 :where(:root:not([data-ui-theme='cyber']))
   .gev-drawer-body
   > .gev-appearance-settings {
@@ -486,11 +488,16 @@
 /* Import and Draw are Tools' own, at full host width as in the Display
    panel; the Display panel Map hosts no longer shows them. */
 .gev-legacy-host > :is(#geo-import-group, #draw-group),
-:where(:root:not([data-ui-theme='cyber'])) .phone-sheet-panels > :is(#geo-import-group, #draw-group) {
+:where(:root:not([data-ui-theme='cyber']))
+  .phone-sheet-panels
+  > :is(#geo-import-group, #draw-group) {
   width: auto;
 }
 .gev-legacy-host > :is(#geo-import-group, #draw-group) .pp-toggle-btn,
-:where(:root:not([data-ui-theme='cyber'])) .phone-sheet-panels > :is(#geo-import-group, #draw-group) .pp-toggle-btn {
+:where(:root:not([data-ui-theme='cyber']))
+  .phone-sheet-panels
+  > :is(#geo-import-group, #draw-group)
+  .pp-toggle-btn {
   width: 100%;
   min-height: 38px;
   box-sizing: border-box;
@@ -876,7 +883,10 @@ body:is(.ui-clean-view, .recording-mode) :is(.gev-rail, .gev-drawer) {
   #gev-header-places
   > #location-bar
   #location-bar-popover
-  > :is(.poi-row-container:not(.expanded), .location-bar-divider:not(.visible)) {
+  > :is(
+    .poi-row-container:not(.expanded),
+    .location-bar-divider:not(.visible)
+  ) {
   display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
@@ -1156,9 +1166,9 @@ body.scene-playback-mode .gev-map-controls {
   body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode) #style-indicator {
     top: calc(var(--gev-header-height) + 24px);
   }
-  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode):not(.ui-clean-view):not(
-      .recording-mode
-    )
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode):not(
+      .ui-clean-view
+    ):not(.recording-mode)
     #intel-hud {
     top: var(--gev-header-height);
     right: calc(var(--gev-map-control-size) + 3 * var(--gev-drawer-inset));
@@ -1218,4 +1228,144 @@ body.scene-playback-mode .gev-map-controls {
 .gev-status-item + .gev-status-credits {
   padding-left: var(--gev-space-3);
   border-left: 1px solid currentColor;
+}
+
+/* The right-hand selection slot (ShellSlot.vue): one item over the globe,
+   below the header and above the map controls, which keep the corner.
+   Token colours, so Cyber paints it with its own. It rests where the drawer
+   does, and in clean view, recording and embed. */
+:root {
+  --gev-slot-width: 340px;
+  /* North, Tilt and Home: three buttons, their gaps, padding and border. */
+  --gev-map-controls-stack: calc(
+    3 * var(--gev-map-control-size) + 4 * var(--gev-space-1) + 2px
+  );
+  --gev-slot-bottom: calc(
+    var(--gev-status-height) + 3.25rem + var(--gev-map-controls-stack) +
+      var(--gev-space-3)
+  );
+}
+:root:not([data-ui-theme='cyber']) {
+  --gev-map-controls-stack: calc(3 * var(--gev-map-control-size) + 26px);
+  --gev-slot-bottom: calc(
+    var(--gev-status-height) + 16px + var(--gev-map-controls-stack) +
+      var(--gev-space-3)
+  );
+}
+.gev-slot {
+  position: fixed;
+  top: calc(var(--gev-header-height) + var(--gev-drawer-inset));
+  right: var(--gev-drawer-inset);
+  bottom: var(--gev-slot-bottom);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  width: min(
+    var(--gev-slot-width),
+    calc(100vw - var(--gev-rail-width) - 2 * var(--gev-drawer-inset))
+  );
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-lg);
+  background: var(--gev-surface-base);
+  box-shadow: var(--gev-elevation-2);
+  backdrop-filter: var(--gev-backdrop-blur);
+  overflow: hidden;
+}
+.gev-slot[hidden],
+body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
+  display: none;
+}
+@media (max-width: 720px) {
+  .gev-slot {
+    display: none;
+  }
+}
+.gev-slot-header.gev-surface {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--gev-space-2);
+  padding: var(--gev-space-3) var(--gev-space-3) var(--gev-space-2)
+    var(--gev-space-4);
+  border: 0;
+  border-bottom: 1px solid var(--gev-border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.gev-slot-icon {
+  flex: none;
+  color: var(--gev-text-muted);
+  font-size: 20px;
+}
+.gev-slot-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--gev-text);
+  font: 600 var(--gev-font-size-md) / 1.3 var(--gev-font-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gev-slot-actions-home,
+.gev-slot-actions {
+  display: contents;
+}
+.gev-slot-header .gev-icon-button {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.gev-slot-header .gev-icon-button:hover:not(:disabled) {
+  background: var(--gev-control-bg-hover);
+}
+/* Street Level's on/off switch rides in the header beside Close. */
+.gev-slot-actions > #sl-status {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid var(--gev-border);
+  border-radius: var(--gev-radius-pill);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+  box-shadow: none;
+  text-shadow: none;
+  font: 600 var(--gev-font-size-xs) / 1.2 var(--gev-font-sans);
+  letter-spacing: normal;
+}
+.gev-slot-actions > #sl-status[aria-pressed='true'] {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+}
+.gev-slot-actions > #sl-status:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
+}
+.gev-slot-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: var(--gev-space-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--gev-border) transparent;
+  scrollbar-width: thin;
+}
+/* The slot's header names the item and closes it: a hosted panel's own
+   header row (title, divider, collapse control) stays out of view. */
+.gev-slot-body > [data-panel-id] .panel-header {
+  display: none;
+}
+/* The HUD's right column and the style readout give the slot its side. */
+body:has(#gev-selection-slot:not([hidden])):not(.ui-clean-view):not(
+    .recording-mode
+  )
+  :is(
+    #intel-hud .hud-top-right,
+    #intel-hud .hud-right-edge,
+    #intel-hud .hud-bottom-right,
+    #style-indicator
+  ) {
+  visibility: hidden;
 }
