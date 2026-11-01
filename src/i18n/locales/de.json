@@ -3040,5 +3040,18 @@
   "Radio & signals": "Funk & Signale",
   "Hazards": "Gefahren",
   "Exit Space Missions": "Raummissionen verlassen",
-  "Left Space Missions to show {layer}.": "Raummissionen beendet, um {layer} anzuzeigen."
+  "Left Space Missions to show {layer}.": "Raummissionen beendet, um {layer} anzuzeigen.",
+  "Aircraft": "Flugzeug",
+  "Registration": "Kennzeichen",
+  "Origin": "Abflugort",
+  "Altitude": "Höhe",
+  "On ground": "Am Boden",
+  "Ground track": "Kurs über Grund",
+  "Vertical speed": "Vertikalgeschwindigkeit",
+  "Squawk": "Transpondercode",
+  "Position": "Position",
+  "Received {seconds} s ago": "Vor {seconds} s empfangen",
+  "Receive time unavailable": "Empfangszeit nicht verfügbar",
+  "Ground speed": "Geschwindigkeit über Grund",
+  "ft/min": "ft/min"
 }

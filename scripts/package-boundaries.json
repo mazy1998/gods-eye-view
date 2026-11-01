@@ -752,7 +752,6 @@
       "src/ui/phoneChrome.js",
       "src/ui/phoneDestinations.js",
       "src/ui/styles/phone-shell-view.css",
-
       "src/exclusiveSurfaces.js",
       "src/ui/placeNames.js",
       "src/hudLayouts.js",
@@ -994,11 +993,17 @@
       "src/ui/ShellMapControls.vue",
       "src/ui/ShellStatusBar.vue",
       "src/ui/shellChrome.js",
+      "src/ui/selectionSlot.js",
+      "src/ui/cameraSlot.js",
+      "src/ui/ShellSlot.vue",
       "src/ui/statusReadout.js",
       "src/search/coordinateParser.js",
       "src/ui/settings/SettingsView.vue",
       "src/ui/settings/settingsSurface.js",
-      "src/visualStylePolicy.js"
+      "src/visualStylePolicy.js",
+      "src/ui/AircraftCard.vue",
+      "src/ui/aircraftSlot.js",
+      "src/ui/aircraftPresentation.js"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2571,7 +2576,6 @@
       "src/ui/phoneChrome.js",
       "src/ui/phoneDestinations.js",
       "src/ui/styles/phone-shell-view.css",
-
       "src/exclusiveSurfaces.js",
       "src/ui/localePicker.js",
       "src/ui/localePickerGlyphs.js",
@@ -3061,10 +3065,16 @@
       "src/ui/ShellMapControls.vue",
       "src/ui/ShellStatusBar.vue",
       "src/ui/shellChrome.js",
+      "src/ui/selectionSlot.js",
+      "src/ui/cameraSlot.js",
+      "src/ui/ShellSlot.vue",
       "src/ui/statusReadout.js",
       "src/ui/settings/SettingsView.vue",
       "src/ui/settings/settingsSurface.js",
-      "src/visualStylePolicy.js"
+      "src/visualStylePolicy.js",
+      "src/ui/AircraftCard.vue",
+      "src/ui/aircraftSlot.js",
+      "src/ui/aircraftPresentation.js"
     ],
     "external": [
       "hls.js",

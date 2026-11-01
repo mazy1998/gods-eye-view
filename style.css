@@ -53,4 +53,5 @@
 @import './src/ui/styles/cockpit-views.css';
 @import './src/ui/styles/map-look.css';
 @import './src/ui/styles/phone-shell-view.css';
+@import './src/ui/styles/aircraft-card.css';
 @import './src/ui/styles/cyber.css';

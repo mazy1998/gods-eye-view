@@ -212,6 +212,18 @@ test('every Layers category icon is in the icon_names subset', () => {
   );
 });
 
+test('every selection slot icon is in the icon_names subset', async () => {
+  // The slot draws its item's icon from the state, which the text scan above
+  // cannot follow; the camera viewers name theirs in cameraSlot.js.
+  const { SLOT_CAMERA_PANELS } = await import('./ui/cameraSlot.js');
+  const icons = Object.values(SLOT_CAMERA_PANELS).map(({ icon }) => icon);
+  const subset = subsettedGlyphs();
+  assert.deepEqual(
+    icons.filter((icon) => !subset.has(icon)),
+    [],
+  );
+});
+
 test('the unused Material Icons Round family is not loaded', () => {
   // A second icon font, 173 kB, for a family no source ever uses — and
   // src/cockpitMarkup.test.mjs already asserts the markup must not use it.

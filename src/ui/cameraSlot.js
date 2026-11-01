@@ -1,0 +1,176 @@
+import { msg } from '../i18n/marker.js';
+
+/**
+ * The camera viewers the selection slot shows on desktop, with the header
+ * controls that move into the slot's header beside its close button.
+ */
+export const SLOT_CAMERA_PANELS = Object.freeze({
+  'cctv-panel': Object.freeze({
+    title: msg('CCTV'),
+    icon: 'camera_alt',
+    actions: Object.freeze([]),
+  }),
+  'street-level-panel': Object.freeze({
+    title: msg('Street Level'),
+    icon: 'streetview',
+    actions: Object.freeze(['sl-status']),
+  }),
+});
+
+const CLOSE = Object.freeze({ explicit: true });
+
+/**
+ * Show an expanded camera panel in the selection slot. The panel moves into
+ * the slot behind a placeholder and keeps its id, bindings and collapse
+ * state, as the drawer borrows panels; the same expansions that opened
+ * Inspect → Cameras (a camera pick, a switch-on, voice, a shortcut, a share
+ * restore) now show it there, and collapsing it from anywhere puts it back.
+ * Close collapses it, as its own collapse control does, and so does a newer
+ * item taking the slot. Collapsed, a viewer stays in Inspect → Cameras,
+ * whose header expands it into the slot.
+ * @param {object} options
+ * @param {Document} options.document
+ * @param {ReturnType<import('./selectionSlot.js').createSelectionSlot>} options.slot
+ * @param {{subscribe: Function}} options.panelChannel PanelChrome.channel
+ * @param {(id: string, collapsed: boolean, options: object) => void} options.setPanelCollapsed
+ * @param {string[]} options.restoreOrder Panel ids in share-restore order.
+ * @param {(key: string) => string} options.translate
+ * @param {() => boolean} [options.isPhonePresenting] Whether the phone shell
+ *   is changing panels for its own layout, which it can do before the slot
+ *   rests: its media query is answered first.
+ * @returns {() => void} Disconnect.
+ */
+export function connectCameraSlot({
+  document: doc,
+  slot,
+  panelChannel,
+  setPanelCollapsed,
+  restoreOrder,
+  translate,
+  isPhonePresenting = () => false,
+}) {
+  const ids = Object.keys(SLOT_CAMERA_PANELS);
+  const isCamera = (id) => ids.includes(id);
+  const expanded = (id) => {
+    const panel = doc.getElementById(id);
+    return Boolean(panel && !panel.classList.contains('collapsed'));
+  };
+  // A restore sets each panel's own state: the one it leads with shows, and
+  // a camera it leaves expanded is not collapsed for being replaced.
+  let restoring = false;
+  let panels = {};
+
+  function mount(id, { body, actions }) {
+    const panel = doc.getElementById(id);
+    if (!panel?.parentNode) return () => {};
+    const moved = [];
+    const take = (node, target) => {
+      const home = doc.createComment(`gev-slot-home:${node.id}`);
+      node.before(home);
+      target.append(node);
+      moved.push({ node, home });
+    };
+    take(panel, body);
+    for (const actionId of SLOT_CAMERA_PANELS[id].actions) {
+      const control = doc.getElementById(actionId);
+      if (control?.parentNode && panel.contains(control))
+        take(control, actions);
+    }
+    // Back home, focus stays on the very control that had it (a phone sheet
+    // presents the panel there); the slot moves focus on for a replacement
+    // or a close.
+    return () => {
+      const focused = moved.some(({ node }) => node.contains(doc.activeElement))
+        ? doc.activeElement
+        : null;
+      for (const { node, home } of moved.reverse())
+        if (home.parentNode) home.replaceWith(node);
+      if (focused?.isConnected) focused.focus({ preventScroll: true });
+    };
+  }
+
+  function show(id) {
+    const { title, icon } = SLOT_CAMERA_PANELS[id];
+    slot.show({
+      id,
+      title: translate(title),
+      icon,
+      mount: (place) => mount(id, place),
+      close: () => setPanelCollapsed(id, true, CLOSE),
+      // Resting, the slot's items change nothing on the phone sheets, which
+      // show both viewers at once.
+      replaced: () => {
+        if (!restoring && active() && expanded(id))
+          setPanelCollapsed(id, true, CLOSE);
+      },
+    });
+  }
+
+  // The camera a restore or startup shows: its lead when that is an expanded
+  // camera, else the first expanded one in share-restore order.
+  function follow(lead = null) {
+    const first =
+      isCamera(lead) && expanded(lead)
+        ? lead
+        : restoreOrder.find((id) => isCamera(id) && expanded(id));
+    if (!first) return;
+    restoring = true;
+    try {
+      show(first);
+    } finally {
+      restoring = false;
+    }
+  }
+
+  // What the panels show now: a collapsed viewer leaves the slot, and with
+  // no viewer there the first expanded one shows.
+  function sync() {
+    const current = slot.current();
+    if (isCamera(current) && !expanded(current)) slot.hide(current);
+    if (!slot.current()) follow();
+  }
+
+  // While the slot rests (phones, Cockpit) the phone sheets and Cockpit
+  // present the panels themselves, collapsing and expanding them for their
+  // own layout; the slot catches up with the panels when it is back.
+  const active = () => slot.channel.getSnapshot().active;
+  let wasActive = active();
+  const unsubscribeSlot = slot.channel.subscribe(
+    ({ state }) => {
+      if (state.active && !wasActive) sync();
+      wasActive = state.active;
+    },
+    { emitCurrent: false },
+  );
+
+  const unsubscribe = panelChannel.subscribe(({ state, change, initial }) => {
+    const previous = panels;
+    panels = state.panels ?? {};
+    if (!active() || isPhonePresenting()) return;
+    if (initial) return sync();
+    // A collapse from anywhere (its own control, Escape, a restore) takes the
+    // viewer out of the slot.
+    const current = slot.current();
+    if (isCamera(current) && !expanded(current)) slot.hide(current);
+    if (state.restoring || change?.presentation || change?.revealing) return;
+    if (change?.type === 'panels-restored') return follow(change.lead);
+    if (change?.type === 'panel-revealed') {
+      if (isCamera(change.panelId) && expanded(change.panelId))
+        show(change.panelId);
+      return;
+    }
+    for (const id of ids) {
+      const was = previous[id];
+      const next = panels[id];
+      if (was?.collapsed && !was.autoCollapsed && next && !next.collapsed)
+        show(id);
+    }
+  });
+
+  return () => {
+    unsubscribe();
+    unsubscribeSlot();
+    const current = slot.current();
+    if (isCamera(current)) slot.hide(current);
+  };
+}

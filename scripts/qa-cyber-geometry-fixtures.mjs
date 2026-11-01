@@ -438,6 +438,72 @@ export function createFixtures(read) {
         ],
       });
     }
+  // The selection slot borrows each camera viewer with its real markup. Cyber
+  // keeps the panel's frame, header row, title, divider and controls inside
+  // the slot's frame: only presence and layout mode are compared, so nothing
+  // the panel showed at home may be hidden there.
+  const cameras = doc.createElement('template');
+  cameras.innerHTML = read('src/ui/templates/context.html');
+  for (const [id, title, icon, actions] of [
+    ['cctv-panel', 'CCTV', 'camera_alt', []],
+    ['street-level-panel', 'Street Level', 'streetview', ['sl-status']],
+  ]) {
+    const panel = cameras.content.querySelector(`#${id}`);
+    if (!panel) throw Error(`Missing camera viewer: ${id}`);
+    panel.classList.remove('collapsed');
+    panel.dataset.geometry = 'panel';
+    for (const [key, selector] of [
+      ['panel-inner', ':scope > [class$="-panel-inner"]'],
+      ['panel-header', '.panel-header'],
+      ['panel-title', '.panel-title'],
+      ['panel-divider', '.panel-divider'],
+      ['panel-collapse', '.panel-collapse-btn'],
+    ])
+      panel.querySelector(selector).dataset.geometry = key;
+    const moved = actions.map((actionId) => {
+      const control = panel.querySelector(`#${actionId}`);
+      control.dataset.geometry = actionId;
+      control.remove();
+      return control.outerHTML;
+    });
+    result.push({
+      id: `slot-${id}`,
+      profile: 'default',
+      properties: ['visible', 'display'],
+      html: `<style>.material-symbols-outlined{display:inline-block}</style><section id="gev-selection-slot" class="gev-slot" data-slot-item="${id}" data-geometry="slot"><div class="gev-slot-header gev-surface" data-geometry="slot-header"><span class="material-symbols-outlined gev-slot-icon" aria-hidden="true">${icon}</span><h2 class="gev-slot-title" data-geometry="slot-title">${title}</h2><span class="gev-slot-actions-home"><span class="gev-slot-actions">${moved.join('')}</span></span><button type="button" class="gev-icon-button gev-icon-button--sm gev-slot-close" aria-label="Close" data-geometry="slot-close"><span class="material-symbols-outlined">close</span></button></div><div class="gev-slot-scroll" data-geometry="slot-scroll"><div class="gev-slot-body">${panel.outerHTML}</div></div></section>`,
+    });
+  }
+  // A control the slot borrows keeps the paint it inherits at home: Street
+  // Level's switch, off and on, in its panel header and in the slot's header.
+  const markup = doc.createElement('template');
+  markup.innerHTML = read('src/ui/templates/context.html');
+  const street = markup.content.querySelector('#street-level-panel');
+  const status = street.querySelector('#sl-status');
+  const pair = (state) => {
+    const home = street.cloneNode(true);
+    home.classList.remove('collapsed');
+    for (const node of home.querySelectorAll('[data-geometry]'))
+      delete node.dataset.geometry;
+    const own = home.querySelector('#sl-status');
+    own.classList.toggle('is-on', state === 'on');
+    own.dataset.geometry = `home-${state}`;
+    const borrowed = status.cloneNode(true);
+    borrowed.classList.toggle('is-on', state === 'on');
+    borrowed.dataset.geometry = `slot-${state}`;
+    return `<div class="gev-rail-home">${home.outerHTML}</div><section class="gev-slot" style="position:relative;inset:auto"><div class="gev-slot-header gev-surface"><span class="gev-slot-actions-home"><span class="gev-slot-actions">${borrowed.outerHTML}</span></span></div></section>`;
+  };
+  result.push({
+    id: 'slot-borrowed-control-paint',
+    profile: 'default',
+    properties: ['visible'],
+    html: pair('off') + pair('on'),
+    sameStyle: ['off', 'on'].map((state) => ({
+      nodes: [`home-${state}`, `slot-${state}`],
+      properties: ['fontSize', 'color', 'borderTopColor', 'backgroundColor'],
+      reason:
+        'A control the selection slot borrows keeps the type and state colours it inherits in its own panel.',
+    })),
+  });
   return result;
 }
 const reasons = {
@@ -543,6 +609,24 @@ const mapLookReasons = Object.fromEntries(
     .structuralExceptions.map((e) => [e.id, e.reason]),
 );
 export const exceptions = [
+  ...['slot-cctv-panel', 'slot-street-level-panel'].flatMap((fixture) =>
+    [
+      ['slot', 'block', 'flex'],
+      ['slot-header', 'block', 'flex'],
+      ['slot-close', 'inline-block', 'flex'],
+      ...(fixture === 'slot-street-level-panel'
+        ? [['sl-status', 'inline-block', 'block']]
+        : []),
+    ].map(([node, reference, actual]) => ({
+      fixture,
+      node,
+      property: 'display',
+      reference,
+      actual,
+      reason:
+        "The selection slot is new shell chrome with no baseline rule: its frame and header lay out as flex columns and rows, and its close button and the header controls a viewer lends it (Street Level's switch) are flex items. Every node of the hosted camera panel keeps its Cyber frame, header row, title, divider and controls visible.",
+    })),
+  ),
   {
     fixture: 'shell-visibility',
     node: 'rail-circle',

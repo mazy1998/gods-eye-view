@@ -41,6 +41,13 @@ let _contextClearedHandler = null;
 let _aircraftSelectedHandler = null;
 let _activeEntryId = null;
 let _overlayHost = DEFAULT_TRACKED_OVERLAY_HOST;
+const presentationListeners = new Set();
+
+/** Observe feed-driven presentation changes without installing a frame hook. */
+export function subscribeTrackedPresentation(listener) {
+  presentationListeners.add(listener);
+  return () => presentationListeners.delete(listener);
+}
 
 /**
  * Convert the former newline/inline label text into the explicit presentation
@@ -211,6 +218,7 @@ function syncActiveEntity() {
  */
 export function refreshTrackedReadout(entity) {
   if (entity && entity === activeEntity()) publishEntity(entity);
+  if (entity) for (const listener of presentationListeners) listener(entity);
 }
 
 /** Current tracked host entry id, used to resolve its actual painted rectangle. */

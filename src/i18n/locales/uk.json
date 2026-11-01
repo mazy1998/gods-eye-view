@@ -3188,5 +3188,18 @@
   "Radio & signals": "Радіо та сигнали",
   "Hazards": "Загрози",
   "Exit Space Missions": "Вийти з космічних місій",
-  "Left Space Missions to show {layer}.": "Режим космічних місій закрито для показу {layer}."
+  "Left Space Missions to show {layer}.": "Режим космічних місій закрито для показу {layer}.",
+  "Aircraft": "Повітряне судно",
+  "Registration": "Реєстрація",
+  "Origin": "Пункт відправлення",
+  "Altitude": "Висота",
+  "On ground": "На землі",
+  "Ground track": "Шляховий кут",
+  "Vertical speed": "Вертикальна швидкість",
+  "Squawk": "Код транспондера",
+  "Position": "Положення",
+  "Received {seconds} s ago": "Отримано {seconds} с тому",
+  "Receive time unavailable": "Час приймання недоступний",
+  "Ground speed": "Шляхова швидкість",
+  "ft/min": "фт/хв"
 }

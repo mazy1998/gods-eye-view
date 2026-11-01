@@ -1318,14 +1318,15 @@ test('UI exclusions stay per-rect: overlapping chrome never merges into a boundi
 
 test('the shell around the map keeps placements clear of it', () => {
   // Synthetic shell rectangles exercise each exclusion independently: rail,
-  // header, an open drawer, the map controls and the status bar, all fixed
-  // above the host.
+  // header, an open drawer, the map controls, the status bar and an open
+  // selection slot, all fixed above the host.
   const shell = {
     '.gev-rail': { left: 0, top: 0, width: 40, height: 300 },
     '#gev-header': { left: 40, top: 0, width: 360, height: 30 },
     '#gev-drawer': { left: 48, top: 38, width: 120, height: 200 },
     '#gev-map-controls': { left: 352, top: 150, width: 40, height: 100 },
     '#gev-status-bar': { left: 40, top: 280, width: 360, height: 20 },
+    '#gev-selection-slot': { left: 250, top: 120, width: 90, height: 140 },
   };
   const env = installMockEnvironment({
     width: 400,
@@ -1363,7 +1364,8 @@ test('the shell around the map keeps placements clear of it', () => {
   env.cleanup();
 });
 
-test('a drawer mounted closed after the overlay still excludes once it opens', () => {
+for (const [id, name] of [['gev-drawer', 'drawer'], ['gev-selection-slot', 'selection slot']])
+test(`a ${name} mounted closed after the overlay still excludes once it opens`, () => {
   const env = installMockEnvironment({ width: 400, height: 300, dpr: 1 });
   initWorldOverlay(env.viewer);
   let uiRects = null;
@@ -1371,9 +1373,9 @@ test('a drawer mounted closed after the overlay still excludes once it opens', (
     uiRects = frame.uiRects.slice(0, frame.uiRectCount)
       .map(({ x, y, w, h }) => ({ x, y, w, h }));
   }, { id: 'detection', active: true, target: 'detection' });
-  // The shell mounts its drawer after the overlay host, closed.
+  // The shell mounts its drawer and slot after the overlay host, closed.
   const drawer = env.document.createElement('section');
-  drawer.id = 'gev-drawer';
+  drawer.id = id;
   drawer.hidden = true;
   drawer._rect = { left: 48, top: 38, width: 200, height: 220 };
   Object.assign(drawer.style, { position: 'fixed', zIndex: '120' });
@@ -1385,19 +1387,19 @@ test('a drawer mounted closed after the overlay still excludes once it opens', (
     position: positionAtScreen(150, 120),
   })]);
   env.postRender.raise();
-  assert.deepEqual(uiRects, [], 'the closed drawer excludes nothing');
-  // Opening a destination flips only the drawer's own `hidden`; a browser
+  assert.deepEqual(uiRects, [], `the closed ${name} excludes nothing`);
+  // Opening a destination or showing an item flips only its own `hidden`; a browser
   // reports that only for an element the overlay observes.
   const observed = env.mutationObservers
     .flatMap((observer) => observer.observations)
     .some(({ target }) => target === drawer);
-  assert.ok(observed, 'the closed drawer is observed so its opening is seen');
+  assert.ok(observed, `the closed ${name} is observed so its opening is seen`);
   drawer.hidden = false;
   env.mutationObservers[0].callback([{ type: 'attributes', target: drawer, attributeName: 'hidden' }]);
   env.moveEnd.raise();
   env.advanceTime(1000);
   env.postRender.raise();
-  assert.deepEqual(uiRects, [{ x: 42, y: 32, w: 212, h: 232 }], 'the open drawer is an exclusion');
+  assert.deepEqual(uiRects, [{ x: 42, y: 32, w: 212, h: 232 }], `the open ${name} is an exclusion`);
   env.cleanup();
 });
 

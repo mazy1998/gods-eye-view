@@ -50,6 +50,18 @@ export function compare(reference, actual, tolerance) {
     ? Math.abs(reference - actual) <= tolerance
     : reference === actual;
 }
+/** Each pair of nodes must compute the same values: a borrowed control and its home. */
+export function checkSameStyle(pairs = [], snapshot) {
+  return pairs.flatMap(({ nodes: [home, borrowed], properties, reason }) =>
+    properties.flatMap((property) => {
+      const reference = snapshot[home]?.[property];
+      const actual = snapshot[borrowed]?.[property];
+      return reference !== undefined && compare(reference, actual, 0.05)
+        ? []
+        : [{ node: borrowed, property, reference, actual, reason }];
+    }),
+  );
+}
 export function checkExpectedGeometry(expectations = [], snapshot) {
   return expectations.flatMap(({ node, property, value, reason }) => {
     const actual = snapshot[node]?.[property];
@@ -94,6 +106,8 @@ export function validateExceptions(entries) {
         'shell-visibility',
         'settings',
         'map-look',
+        'slot-cctv-panel',
+        'slot-street-level-panel',
       ].includes(e.fixture) ||
       !e.node ||
       !e.property ||
@@ -175,6 +189,9 @@ export async function audit(options) {
                   };
                   if (typography) {
                     values.fontSize = parseFloat(s.fontSize);
+                    values.color = s.color;
+                    values.borderTopColor = s.borderTopColor;
+                    values.backgroundColor = s.backgroundColor;
                     const range = document.createRange();
                     range.selectNodeContents(el);
                     values.textLines = new Set(
@@ -198,7 +215,7 @@ export async function audit(options) {
                   return [el.dataset.geometry, values];
                 }),
               ),
-            Boolean(fixture.expectedGeometry),
+            Boolean(fixture.expectedGeometry || fixture.sameStyle),
           ),
         );
         await page.close();
@@ -233,6 +250,7 @@ export async function audit(options) {
         }
       result.mismatches.push(
         ...checkExpectedGeometry(fixture.expectedGeometry, snapshots[1]),
+        ...checkSameStyle(fixture.sameStyle, snapshots[1]),
       );
       report.failures += result.mismatches.length;
       report.results.push(result);

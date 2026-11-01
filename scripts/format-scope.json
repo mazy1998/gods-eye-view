@@ -1188,6 +1188,11 @@
   "src/ui/ShellStatusBar.vue",
   "src/ui/shellChrome.js",
   "src/ui/shellChrome.test.mjs",
+  "src/ui/selectionSlot.js",
+  "src/ui/selectionSlot.test.mjs",
+  "src/ui/cameraSlot.js",
+  "src/ui/cameraSlot.test.mjs",
+  "src/ui/ShellSlot.vue",
   "src/ui/headerSearch.test.mjs",
   "src/ui/statusReadout.js",
   "scripts/qa-cyber-geometry.mjs",
@@ -1252,5 +1257,11 @@
   "src/ui/nativeCockpitViews.js",
   "src/ui/cockpitVisionLabels.js",
   "src/ui/cockpit.compat.test.mjs",
-  "src/ui/contextMissionExit.test.mjs"
+  "src/ui/contextMissionExit.test.mjs",
+  "src/ui/AircraftCard.vue",
+  "src/ui/aircraftSlot.js",
+  "src/ui/aircraftPresentation.js",
+  "src/ui/aircraftSlot.test.mjs",
+  "src/ui/aircraftCard.dom.test.mjs",
+  "src/ui/styles/aircraft-card.css"
 ]

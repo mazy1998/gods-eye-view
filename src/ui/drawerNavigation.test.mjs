@@ -21,6 +21,7 @@ function fixture({
   chrome = false,
   isPhonePresenting,
   onRevealPanel,
+  slotted,
 } = {}) {
   document.body.insertAdjacentHTML(
     'beforeend',
@@ -96,6 +97,7 @@ function fixture({
     phone: media,
     isPhonePresenting,
     onRevealPanel,
+    slotted,
   });
   document.body.append(drawer.host);
   // As PanelChrome restores a share or history state: the listed panels only.
@@ -1411,4 +1413,60 @@ test("the drawer and phone sheet headers show every collapse control's state as 
     css,
     /:is\(\.gev-drawer-panel-actions, #mobile-sheet-panel-actions\)\s*>\s*\.panel-collapse-btn\[aria-expanded='false'\]::before\s*\{\s*content: '\+';/,
   );
+});
+
+// The selection slot shows the camera viewers at desktop width (K33).
+const CAMERAS = ['cctv-panel', 'street-level-panel'];
+
+test('slotted camera panels open no destination at desktop width', (t) => {
+  const { drawer, setPanelCollapsed, panelChannel, restore } = fixture({
+    slotted: CAMERAS,
+  });
+  t.after(() => drawer.destroy());
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  assert.equal(destination(drawer), null, 'an expansion');
+  panelChannel.publish({ type: 'panel-revealed', panelId: 'cctv-panel' });
+  assert.equal(destination(drawer), null, 'an explicit reveal');
+  restore(['cctv-panel']);
+  assert.equal(destination(drawer), null, 'a restore');
+  drawer.followPanels('cctv-panel');
+  assert.equal(destination(drawer), null, 'a restore that leads with it');
+  setPanelCollapsed('pp-toggles', false, {});
+  assert.equal(destination(drawer), 'map', 'other panels still follow');
+});
+
+test('opening Inspect leaves slotted camera panels where they are and as they are', (t) => {
+  const { drawer, calls } = fixture({ slotted: CAMERAS });
+  t.after(() => drawer.destroy());
+  const panel = document.getElementById('cctv-panel');
+  const parent = panel.parentElement;
+  drawer.open('inspect');
+  assert.equal(panel.parentElement, parent, 'not borrowed');
+  assert.ok(panel.classList.contains('collapsed'), 'not expanded');
+  assert.ok(!calls.some(([id]) => id === 'cctv-panel'));
+  assert.equal(drawer.sharedCollapsed('cctv-panel'), undefined);
+  drawer.close();
+  assert.equal(panel.parentElement, parent);
+});
+
+test('a camera switched on from the Layers list is not held back when slotted', (t) => {
+  const { drawer, setPanelCollapsed } = fixture({ slotted: CAMERAS });
+  t.after(() => drawer.destroy());
+  drawer.open('layers');
+  drawer.noteLayerSwitch('cctv', true)(true);
+  setPanelCollapsed('cctv-panel', false, {});
+  assert.equal(destination(drawer), 'layers', 'the list stays');
+  assert.equal(cctvCollapsed(), false, 'the panel stays open for the slot');
+});
+
+test('phones still present a revealed slotted camera through Inspect', (t) => {
+  const revealed = [];
+  const { drawer, panelChannel } = fixture({
+    phone: true,
+    slotted: CAMERAS,
+    onRevealPanel: (id) => revealed.push(id),
+  });
+  t.after(() => drawer.destroy());
+  panelChannel.publish({ type: 'panel-revealed', panelId: 'cctv-panel' });
+  assert.deepEqual(revealed, ['cctv-panel']);
 });

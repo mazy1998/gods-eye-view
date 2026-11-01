@@ -2966,5 +2966,18 @@
   "Radio & signals": "无线电与信号",
   "Hazards": "灾害",
   "Exit Space Missions": "退出太空任务",
-  "Left Space Missions to show {layer}.": "已退出太空任务以显示{layer}。"
+  "Left Space Missions to show {layer}.": "已退出太空任务以显示{layer}。",
+  "Aircraft": "航空器",
+  "Registration": "注册号",
+  "Origin": "出发地",
+  "Altitude": "高度",
+  "On ground": "在地面",
+  "Ground track": "地面航迹",
+  "Vertical speed": "垂直速度",
+  "Squawk": "应答机编码",
+  "Position": "位置",
+  "Received {seconds} s ago": "{seconds} 秒前接收",
+  "Receive time unavailable": "接收时间不可用",
+  "Ground speed": "地速",
+  "ft/min": "ft/分钟"
 }

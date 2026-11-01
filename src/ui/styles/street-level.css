@@ -1,6 +1,9 @@
 /* ── Street Level panel ─────────────────────────────────────────
-   The rail owns position and width (layers.css). */
-#street-level-panel {
+   The rail owns position and width (layers.css). Street Level's switch
+   carries the panel's variables itself: the selection slot borrows it into
+   its own header, outside the panel. */
+#street-level-panel,
+#sl-status {
   --sl-green: #05cb63;
   /* KartaView's purple for lines; a lighter one where it is text (WCAG AA). */
   --sl-kartaview: #635bff;

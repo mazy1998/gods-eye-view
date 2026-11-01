@@ -193,6 +193,9 @@ export function createQueries({
       // narration, getTrackedSubject) can use it as a label link without
       // re-guarding a whitespace-only enrichment value.
       registration: _toCleanText(info?.registration) || null,
+      lastContactAtMs: Number.isFinite(info?.lastContactEpochMs)
+        ? info.lastContactEpochMs
+        : null,
       origin:
         info?.route && parts.tracking._routeIsPlausible(icao24, info.route)
           ? info.route.origin.code

@@ -3114,5 +3114,18 @@
   "Radio & signals": "Rádio e sinais",
   "Hazards": "Riscos",
   "Exit Space Missions": "Sair de Missões espaciais",
-  "Left Space Missions to show {layer}.": "Saiu de Missões espaciais para mostrar {layer}."
+  "Left Space Missions to show {layer}.": "Saiu de Missões espaciais para mostrar {layer}.",
+  "Aircraft": "Aeronave",
+  "Registration": "Matrícula",
+  "Origin": "Origem",
+  "Altitude": "Altitude",
+  "On ground": "No solo",
+  "Ground track": "Rumo sobre o solo",
+  "Vertical speed": "Velocidade vertical",
+  "Squawk": "Código do transponder",
+  "Position": "Posição",
+  "Received {seconds} s ago": "Recebido há {seconds} s",
+  "Receive time unavailable": "Hora de receção indisponível",
+  "Ground speed": "Velocidade no solo",
+  "ft/min": "ft/min"
 }
