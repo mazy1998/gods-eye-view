@@ -94,6 +94,8 @@ export function validateExceptions(entries) {
         'shell-visibility',
         'settings',
         'map-look',
+        'slot-cctv-panel',
+        'slot-street-level-panel',
       ].includes(e.fixture) ||
       !e.node ||
       !e.property ||

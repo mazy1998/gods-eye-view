@@ -1352,9 +1352,13 @@ body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
   scrollbar-color: var(--gev-border) transparent;
   scrollbar-width: thin;
 }
-/* The slot's header names the item and closes it: a hosted panel's own
-   header row (title, divider, collapse control) stays out of view. */
-.gev-slot-body > [data-panel-id] .panel-header {
+/* Outside Cyber the slot's header names the item and closes it, so a hosted
+   panel's own header row (title, divider, collapse control) stays out of
+   view. Cyber keeps each panel's header row, as in the drawer. */
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-slot-body
+  > [data-panel-id]
+  .panel-header {
   display: none;
 }
 /* The HUD's right column and the style readout give the slot its side. */
