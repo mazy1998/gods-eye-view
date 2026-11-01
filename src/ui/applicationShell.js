@@ -1296,8 +1296,17 @@ export class StyleManager extends ShellFacade {
     if (!this._disposed) this._settingsSurface.connect(control);
   }
 
+  /**
+   * Select Inspect's Cameras tab for a camera viewer on the phone, where the
+   * Inspect sheet is the viewers' home. While the shell is in use the
+   * selection slot shows them and Inspect has no Cameras tab.
+   */
   _revealInspectCameraPanel(id) {
-    if (this._disposed || !['cctv-panel', 'street-level-panel'].includes(id))
+    if (
+      this._disposed ||
+      !['cctv-panel', 'street-level-panel'].includes(id) ||
+      this._drawer?.channel.getSnapshot().active
+    )
       return false;
     if (!this._contextControls?.showInspectTab('cameras')) return false;
     this._mobileShell?.setSheet('inspect', { revealPanelId: id });
@@ -1336,6 +1345,14 @@ export class StyleManager extends ShellFacade {
     // can focus, scroll and measure its panels at once.
     this._drawer.channel.subscribe(({ state }) => {
       for (const view of views) view.update({ state });
+      // A Cameras tab chosen on the phone is hidden here: Inspect opens on
+      // Contacts and Missions.
+      if (
+        state.active &&
+        state.destination === 'inspect' &&
+        this._contextControls?._shownContextTab === 'cameras'
+      )
+        this._contextControls.showInspectTab('context');
     });
     this._initShellChrome();
     // Panels left open by a stored preference open their destination.

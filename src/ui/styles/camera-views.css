@@ -202,6 +202,20 @@
 .global-context-modes:has(#global-context-cameras-btn) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+/* While the shell is in use, the selection slot shows the camera viewers and
+   Layers → Imagery & cameras reopens them, so Inspect is Contacts and
+   Missions only. The ids stay for published hosts. Phones keep the Cameras
+   tab: the slot rests there, and the Inspect sheet is the viewers' home. */
+@media not all and (max-width: 720px) {
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
+    :is(#global-context-cameras-btn, #context-cameras-view) {
+    display: none;
+  }
+  body:has(.gev-rail):not(.mobile-shell):not(.cockpit-mode)
+    .global-context-modes:has(#global-context-cameras-btn) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 :is(#context-cameras-view, .gev-slot-body)
   > :is(#cctv-panel, #street-level-panel) {
   position: relative;
