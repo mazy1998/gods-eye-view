@@ -622,6 +622,28 @@ test('selecting a marker publishes the readout card and eviction clears it', asy
   assert.equal(calls.removed.at(-1).retainIds.size, 0);
 });
 
+test('the selected receiver snapshot and guarded close use the existing selection', async (t) => {
+  const receiver = fakeReceiver({ mode: 'adsb', connected: true });
+  const clock = { now: 100_000 };
+  const { layer, calls } = await enabledLayer(receiver, clock);
+  t.after(() => layer.destroy());
+  assert.equal(layer.getSelectedAircraftInfo(), null);
+  receiver.set({ aircraft: [record()] });
+  await layer.update();
+  layer.selectAircraft('abc123');
+  const info = layer.getSelectedAircraftInfo();
+  assert.equal(info.icao24, 'abc123');
+  assert.equal(info.altitudeM, 3048);
+  assert.equal(Math.round(info.velocityMps * 1.9438444924406), 180);
+  assert.equal(info.lastContactAtMs, 100_000);
+  assert.equal(info.stale, false);
+  assert.equal(layer.deselectAircraft('other'), false);
+  assert.ok(layer.getSelectedAircraftInfo());
+  assert.equal(layer.deselectAircraft('abc123'), true);
+  assert.equal(layer.getSelectedAircraftInfo(), null);
+  assert.deepEqual(calls.cleared, [{ layerId: 'local-adsb', evicted: false }]);
+});
+
 test('the click card lists identity, kinematics, freshness and the receiver line', () => {
   const card = localAdsbCardModel(
     record({

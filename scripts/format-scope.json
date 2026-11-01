@@ -1256,5 +1256,11 @@
   "src/layers/launches/compat.test.mjs",
   "src/ui/nativeCockpitViews.js",
   "src/ui/cockpitVisionLabels.js",
-  "src/ui/cockpit.compat.test.mjs"
+  "src/ui/cockpit.compat.test.mjs",
+  "src/ui/AircraftCard.vue",
+  "src/ui/aircraftSlot.js",
+  "src/ui/aircraftPresentation.js",
+  "src/ui/aircraftSlot.test.mjs",
+  "src/ui/aircraftCard.dom.test.mjs",
+  "src/ui/styles/aircraft-card.css"
 ]

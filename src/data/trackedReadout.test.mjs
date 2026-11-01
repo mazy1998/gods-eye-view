@@ -11,8 +11,22 @@ import {
   getActiveTrackedReadoutId,
   initTrackedReadout,
   refreshTrackedReadout,
+  subscribeTrackedPresentation,
   trackedLabelModelFromText,
 } from './trackedReadout.js';
+
+test('presentation observers follow feed changes without taking readout ownership', () => {
+  const seen = [];
+  const stop = subscribeTrackedPresentation((entity) => seen.push(entity));
+  const entity = { gevTrackedId: 'local-adsb:abc' };
+  const before = getActiveTrackedReadoutId();
+  refreshTrackedReadout(entity);
+  assert.deepEqual(seen, [entity]);
+  assert.equal(getActiveTrackedReadoutId(), before);
+  stop();
+  refreshTrackedReadout(entity);
+  assert.equal(seen.length, 1);
+});
 
 function makeCesiumEvent() {
   const listeners = new Set();

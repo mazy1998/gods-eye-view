@@ -37,6 +37,8 @@ import { createSettingsSurface } from './settings/settingsSurface.js';
 import { createDrawerNavigation } from './drawerNavigation.js';
 import { createSelectionSlot } from './selectionSlot.js';
 import { connectCameraSlot, SLOT_CAMERA_PANELS } from './cameraSlot.js';
+import { connectAircraftSlot } from './aircraftSlot.js';
+import AircraftCard from './AircraftCard.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountContactsPanel } from './contactsPanel.js';
 import { mountMissionPanels } from './missionPanels.js';
@@ -1428,6 +1430,21 @@ export class StyleManager extends ShellFacade {
       translate: t,
       isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
     });
+    this._disconnectAircraftSlot = connectAircraftSlot({
+      slot,
+      viewer: this.viewer,
+      events: window,
+      layers: {
+        flights: this.services.flightsLayer,
+        military: this.services.militaryFlightsLayer,
+        'local-adsb': this.services.localAdsbLayer,
+      },
+      subscribePresentation:
+        this.services.subscribeTrackedPresentation || (() => () => {}),
+      readSelectedContext:
+        this.services.getSelectedEntityContext || (() => null),
+      mount: (body, props) => mountView(AircraftCard, { parent: body, props }),
+    });
   }
 
   /**
@@ -2083,6 +2100,7 @@ export class StyleManager extends ShellFacade {
     this._mobileShell?.destroy();
     this._shellChrome?.destroy();
     this._disconnectCameraSlot?.();
+    this._disconnectAircraftSlot?.();
     this._selectionSlot?.destroy();
     this._statusReadout?.destroy();
     this._drawer?.destroy();

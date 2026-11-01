@@ -25,7 +25,9 @@ import {
 import {
   destroyTrackedReadout,
   initTrackedReadout,
+  subscribeTrackedPresentation,
 } from '../data/trackedReadout.js';
+import { getSelectedEntityContext } from '../data/contextStore.js';
 import {
   destroyWorldOverlay,
   initWorldOverlay,
@@ -86,6 +88,8 @@ export class StyleManager extends ApplicationShell {
         setKeyholeFadeTuning,
         destroyTrackedReadout,
         initTrackedReadout,
+        subscribeTrackedPresentation,
+        getSelectedEntityContext,
         destroyWorldOverlay,
         initWorldOverlay,
         destroyDetection,

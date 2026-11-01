@@ -1,0 +1,52 @@
+/* The selected aircraft's existing measurements inside the shared slot. */
+.gev-aircraft-card {
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.gev-aircraft-card p {
+  margin: 0 0 12px;
+}
+.gev-aircraft-card dl {
+  margin: 0;
+}
+.gev-aircraft-card dl > div {
+  min-width: 0;
+}
+.gev-aircraft-card dt {
+  font-size: 11px;
+}
+.gev-aircraft-card dd {
+  margin: 2px 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+.gev-aircraft-identity,
+.gev-aircraft-telemetry,
+.gev-aircraft-route {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+.gev-aircraft-telemetry > div:last-child {
+  grid-column: 1 / -1;
+}
+.gev-aircraft-source {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  font-size: 11px;
+}
+:root:not([data-ui-theme='cyber']) .gev-aircraft-card {
+  color: var(--gev-text);
+  font-family: var(--gev-font-sans);
+  font-size: var(--gev-font-size-sm);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-card
+  :where(dt, .gev-aircraft-subtitle, .gev-aircraft-source) {
+  color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber']) .gev-aircraft-warning {
+  color: var(--gev-error-text);
+}

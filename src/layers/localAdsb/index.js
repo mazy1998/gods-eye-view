@@ -820,6 +820,47 @@ export function createLocalAdsbLayer({
       return enabled && selectMarker(`${ENTITY_PREFIX}${icao}`);
     },
 
+    /** Read the selected receiver record and already-cached enrichment only. */
+    getSelectedAircraftInfo() {
+      const marker = selectedId ? markers.get(selectedId) : null;
+      if (!marker) return null;
+      const record = marker.record;
+      const meta = enrichment.get(record.icao);
+      const route = plausibleRoute(marker, meta);
+      return {
+        icao24: record.icao,
+        callsign: record.callsign,
+        registration: meta?.registration ?? null,
+        typeName: meta?.typeName ?? meta?.typeCode ?? null,
+        airline: meta?.airline ?? null,
+        latitude: marker.lat ?? record.lat,
+        longitude: marker.lon ?? record.lon,
+        altitudeM: Number.isFinite(record.altitudeFt)
+          ? record.altitudeFt * FEET_TO_METERS
+          : null,
+        velocityMps: Number.isFinite(record.groundSpeedKt)
+          ? record.groundSpeedKt / 1.9438444924406
+          : null,
+        track: record.trackDeg,
+        verticalRateMps: Number.isFinite(record.verticalRateFpm)
+          ? (record.verticalRateFpm * FEET_TO_METERS) / 60
+          : null,
+        onGround: record.onGround === true,
+        origin: route?.origin?.code ?? null,
+        destination: route?.destination?.code ?? null,
+        lastContactAtMs: record.lastPositionAt,
+        source: localAdsbSourceText(record),
+        stale: !localAdsbPositionIsFresh(record, now()),
+      };
+    },
+
+    /** The same deselection path as an empty-globe click, identity guarded. */
+    deselectAircraft(icao) {
+      if (selectedId !== `${ENTITY_PREFIX}${icao}`) return false;
+      clearSelection();
+      return true;
+    },
+
     /**
      * Snapshot loaded locally received aircraft as plain JSON-safe records for the analyst
      * query engine. On demand only (once per spoken query); [] while the

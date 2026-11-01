@@ -752,7 +752,6 @@
       "src/ui/phoneChrome.js",
       "src/ui/phoneDestinations.js",
       "src/ui/styles/phone-shell-view.css",
-
       "src/exclusiveSurfaces.js",
       "src/ui/placeNames.js",
       "src/hudLayouts.js",
@@ -1001,7 +1000,10 @@
       "src/search/coordinateParser.js",
       "src/ui/settings/SettingsView.vue",
       "src/ui/settings/settingsSurface.js",
-      "src/visualStylePolicy.js"
+      "src/visualStylePolicy.js",
+      "src/ui/AircraftCard.vue",
+      "src/ui/aircraftSlot.js",
+      "src/ui/aircraftPresentation.js"
     ],
     "external": ["cesium", "vue"]
   },
@@ -2574,7 +2576,6 @@
       "src/ui/phoneChrome.js",
       "src/ui/phoneDestinations.js",
       "src/ui/styles/phone-shell-view.css",
-
       "src/exclusiveSurfaces.js",
       "src/ui/localePicker.js",
       "src/ui/localePickerGlyphs.js",
@@ -3070,7 +3071,10 @@
       "src/ui/statusReadout.js",
       "src/ui/settings/SettingsView.vue",
       "src/ui/settings/settingsSurface.js",
-      "src/visualStylePolicy.js"
+      "src/visualStylePolicy.js",
+      "src/ui/AircraftCard.vue",
+      "src/ui/aircraftSlot.js",
+      "src/ui/aircraftPresentation.js"
     ],
     "external": [
       "hls.js",

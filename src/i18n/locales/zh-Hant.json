@@ -2964,5 +2964,16 @@
   "General": "一般",
   "HUD & overlays": "HUD 與疊加層",
   "Radio & signals": "無線電與訊號",
-  "Hazards": "災害"
+  "Hazards": "災害",
+  "Aircraft": "航空器",
+  "Registration": "註冊號",
+  "Origin": "出發地",
+  "Altitude": "高度",
+  "On ground": "在地面",
+  "Ground track": "地面航跡",
+  "Vertical speed": "垂直速度",
+  "Squawk": "應答機編碼",
+  "Position": "位置",
+  "Received {seconds} s ago": "{seconds} 秒前接收",
+  "Receive time unavailable": "接收時間無法取得"
 }

@@ -3038,5 +3038,16 @@
   "General": "Allgemein",
   "HUD & overlays": "HUD & Einblendungen",
   "Radio & signals": "Funk & Signale",
-  "Hazards": "Gefahren"
+  "Hazards": "Gefahren",
+  "Aircraft": "Flugzeug",
+  "Registration": "Kennzeichen",
+  "Origin": "Abflugort",
+  "Altitude": "Höhe",
+  "On ground": "Am Boden",
+  "Ground track": "Kurs über Grund",
+  "Vertical speed": "Vertikalgeschwindigkeit",
+  "Squawk": "Transpondercode",
+  "Position": "Position",
+  "Received {seconds} s ago": "Vor {seconds} s empfangen",
+  "Receive time unavailable": "Empfangszeit nicht verfügbar"
 }

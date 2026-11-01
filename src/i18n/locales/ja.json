@@ -2964,5 +2964,16 @@
   "General": "一般",
   "HUD & overlays": "HUD とオーバーレイ",
   "Radio & signals": "無線と信号",
-  "Hazards": "災害"
+  "Hazards": "災害",
+  "Aircraft": "航空機",
+  "Registration": "機体記号",
+  "Origin": "出発地",
+  "Altitude": "高度",
+  "On ground": "地上",
+  "Ground track": "対地針路",
+  "Vertical speed": "昇降速度",
+  "Squawk": "トランスポンダーコード",
+  "Position": "位置",
+  "Received {seconds} s ago": "{seconds} 秒前に受信",
+  "Receive time unavailable": "受信時刻不明"
 }

@@ -482,6 +482,10 @@ const mapLookHtml = `<div class="gev-legacy-host"><div id="pp-toggles" class="pa
 
 export const fixtures = [
   {
+    sheet: 'aircraft-card',
+    html: `<article class="gev-aircraft-card"><p data-audit="aircraft-type" class="gev-aircraft-subtitle">A320</p><dl class="gev-aircraft-telemetry"><div><dt data-audit="aircraft-label">Altitude</dt><dd data-audit="aircraft-value">32000 ft</dd></div></dl><footer data-audit="aircraft-source" class="gev-aircraft-source">Source: adsb.lol</footer></article>`,
+  },
+  {
     sheet: 'phone-shell-view',
     html: `<div class="gev-phone-shell"><section id="mobile-sheet" class="phone-sheet gev-surface"><header class="phone-sheet-header"><h2 data-audit="phone-heading">Layers</h2>${b('phone-close', 'gev-icon-button gev-icon-button--sm')}</header><nav class="phone-more-destinations">${b('phone-destination', 'gev-chip', 'aria-pressed="false" data-state-pressed', 'Map & Look')}</nav></section><nav id="mobile-tab-bar">${b('phone-tab', 'mobile-tab', 'aria-expanded="false" data-state-expanded', 'Layers')}</nav></div>`,
   },

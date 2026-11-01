@@ -3186,5 +3186,16 @@
   "General": "Общие",
   "HUD & overlays": "HUD и наложения",
   "Radio & signals": "Радио и сигналы",
-  "Hazards": "Угрозы"
+  "Hazards": "Угрозы",
+  "Aircraft": "Воздушное судно",
+  "Registration": "Регистрация",
+  "Origin": "Пункт отправления",
+  "Altitude": "Высота",
+  "On ground": "На земле",
+  "Ground track": "Путевой угол",
+  "Vertical speed": "Вертикальная скорость",
+  "Squawk": "Код транспондера",
+  "Position": "Положение",
+  "Received {seconds} s ago": "Получено {seconds} с назад",
+  "Receive time unavailable": "Время приёма недоступно"
 }

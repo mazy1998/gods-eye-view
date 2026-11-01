@@ -3112,5 +3112,16 @@
   "General": "Général",
   "HUD & overlays": "HUD et surcouches",
   "Radio & signals": "Radio et signaux",
-  "Hazards": "Risques"
+  "Hazards": "Risques",
+  "Aircraft": "Aéronef",
+  "Registration": "Immatriculation",
+  "Origin": "Origine",
+  "Altitude": "Altitude",
+  "On ground": "Au sol",
+  "Ground track": "Route sol",
+  "Vertical speed": "Vitesse verticale",
+  "Squawk": "Code transpondeur",
+  "Position": "Position",
+  "Received {seconds} s ago": "Reçu il y a {seconds} s",
+  "Receive time unavailable": "Heure de réception indisponible"
 }
