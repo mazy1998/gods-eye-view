@@ -1426,6 +1426,7 @@ export class StyleManager extends ShellFacade {
         this._panelChrome.setPanelCollapsed(panelId, collapsed, options),
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       translate: t,
+      isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
     });
   }
 

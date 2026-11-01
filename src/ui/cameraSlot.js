@@ -35,6 +35,9 @@ const CLOSE = Object.freeze({ explicit: true });
  * @param {(id: string, collapsed: boolean, options: object) => void} options.setPanelCollapsed
  * @param {string[]} options.restoreOrder Panel ids in share-restore order.
  * @param {(key: string) => string} options.translate
+ * @param {() => boolean} [options.isPhonePresenting] Whether the phone shell
+ *   is changing panels for its own layout, which it can do before the slot
+ *   rests: its media query is answered first.
  * @returns {() => void} Disconnect.
  */
 export function connectCameraSlot({
@@ -44,6 +47,7 @@ export function connectCameraSlot({
   setPanelCollapsed,
   restoreOrder,
   translate,
+  isPhonePresenting = () => false,
 }) {
   const ids = Object.keys(SLOT_CAMERA_PANELS);
   const isCamera = (id) => ids.includes(id);
@@ -89,8 +93,11 @@ export function connectCameraSlot({
       icon,
       mount: (place) => mount(id, place),
       close: () => setPanelCollapsed(id, true, CLOSE),
+      // Resting, the slot's items change nothing on the phone sheets, which
+      // show both viewers at once.
       replaced: () => {
-        if (!restoring && expanded(id)) setPanelCollapsed(id, true, CLOSE);
+        if (!restoring && active() && expanded(id))
+          setPanelCollapsed(id, true, CLOSE);
       },
     });
   }
@@ -111,14 +118,36 @@ export function connectCameraSlot({
     }
   }
 
+  // What the panels show now: a collapsed viewer leaves the slot, and with
+  // no viewer there the first expanded one shows.
+  function sync() {
+    const current = slot.current();
+    if (isCamera(current) && !expanded(current)) slot.hide(current);
+    if (!slot.current()) follow();
+  }
+
+  // While the slot rests (phones, Cockpit) the phone sheets and Cockpit
+  // present the panels themselves, collapsing and expanding them for their
+  // own layout; the slot catches up with the panels when it is back.
+  const active = () => slot.channel.getSnapshot().active;
+  let wasActive = active();
+  const unsubscribeSlot = slot.channel.subscribe(
+    ({ state }) => {
+      if (state.active && !wasActive) sync();
+      wasActive = state.active;
+    },
+    { emitCurrent: false },
+  );
+
   const unsubscribe = panelChannel.subscribe(({ state, change, initial }) => {
     const previous = panels;
     panels = state.panels ?? {};
-    // A collapse from anywhere (its own control, Escape, Cockpit's entry, a
-    // restore) takes the viewer out of the slot.
+    if (!active() || isPhonePresenting()) return;
+    if (initial) return sync();
+    // A collapse from anywhere (its own control, Escape, a restore) takes the
+    // viewer out of the slot.
     const current = slot.current();
     if (isCamera(current) && !expanded(current)) slot.hide(current);
-    if (initial) return follow();
     if (state.restoring || change?.presentation || change?.revealing) return;
     if (change?.type === 'panels-restored') return follow(change.lead);
     if (change?.type === 'panel-revealed') {
@@ -136,6 +165,7 @@ export function connectCameraSlot({
 
   return () => {
     unsubscribe();
+    unsubscribeSlot();
     const current = slot.current();
     if (isCamera(current)) slot.hide(current);
   };

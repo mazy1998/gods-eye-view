@@ -10,7 +10,11 @@ const { connectCameraSlot, SLOT_CAMERA_PANELS } =
 const ORDER = ['data-panel', 'cctv-panel', 'street-level-panel'];
 
 /** Inspect's Cameras view and a PanelChrome-shaped channel over its panels. */
-function fixture({ expanded = [], active = true } = {}) {
+function fixture({
+  expanded = [],
+  active = true,
+  presenting = () => false,
+} = {}) {
   document.body.insertAdjacentHTML(
     'beforeend',
     `<section id="context-cameras-view">
@@ -56,6 +60,7 @@ function fixture({ expanded = [], active = true } = {}) {
     setPanelCollapsed,
     restoreOrder: ORDER,
     translate: (key) => `t:${key}`,
+    isPhonePresenting: presenting,
   });
   const restore = (open) => {
     restoring = true;
@@ -204,6 +209,60 @@ test('a camera expanded on the phone shows in the slot back at desktop width', (
   assert.equal($('cctv-panel').parentElement, home(), 'the sheet has it');
   slot.setActive(true);
   assert.ok(inSlot(slot, 'cctv-panel'));
+});
+
+test('the phone sheets present the panels as they like while the slot rests', (t) => {
+  const { slot, setPanelCollapsed, calls, cleanup } = fixture();
+  t.after(cleanup);
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  slot.setActive(false);
+  const before = calls.length;
+  // The phone layout collapses what it does not show, opens both viewers in
+  // the Inspect sheet, and gives the panels back at desktop width.
+  setPanelCollapsed('cctv-panel', true, {});
+  setPanelCollapsed('cctv-panel', false, {});
+  setPanelCollapsed('street-level-panel', false, {});
+  setPanelCollapsed('street-level-panel', true, {});
+  assert.equal(calls.length, before + 4, 'the slot collapsed nothing');
+  assert.equal(slot.current(), 'cctv-panel');
+  slot.setActive(true);
+  assert.equal(slot.current(), 'cctv-panel');
+  assert.ok(inSlot(slot, 'cctv-panel'));
+});
+
+test('the phone layout collapsing panels before the slot rests changes nothing', (t) => {
+  let presenting = false;
+  const { slot, setPanelCollapsed, cleanup } = fixture({
+    presenting: () => presenting,
+  });
+  t.after(cleanup);
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  presenting = true;
+  setPanelCollapsed('cctv-panel', true, {});
+  presenting = false;
+  assert.equal(slot.current(), 'cctv-panel');
+});
+
+test('back at desktop width the slot follows what the panels show', (t) => {
+  const { slot, setPanelCollapsed, cleanup } = fixture();
+  t.after(cleanup);
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  slot.setActive(false);
+  setPanelCollapsed('cctv-panel', true, { explicit: true });
+  setPanelCollapsed('street-level-panel', false, { explicit: true });
+  slot.setActive(true);
+  assert.equal(slot.current(), 'street-level-panel');
+  assert.ok(inSlot(slot, 'street-level-panel'));
+  assert.equal($('cctv-panel').parentElement, home());
+});
+
+test('an item shown while the slot rests collapses no camera', (t) => {
+  const { slot, setPanelCollapsed, cleanup } = fixture();
+  t.after(cleanup);
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  slot.setActive(false);
+  slot.show({ id: 'aircraft', mount: () => () => {} });
+  assert.equal($('cctv-panel').classList.contains('collapsed'), false);
 });
 
 test('the slot names a translated title and a subset glyph for each viewer', () => {
