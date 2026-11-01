@@ -76,12 +76,16 @@ export function connectCameraSlot({
       if (control?.parentNode && panel.contains(control))
         take(control, actions);
     }
+    // Back home, focus stays on the very control that had it (a phone sheet
+    // presents the panel there); the slot moves focus on for a replacement
+    // or a close.
     return () => {
-      for (const { node, home } of moved.reverse()) {
-        const focused = node.contains(doc.activeElement);
+      const focused = moved.some(({ node }) => node.contains(doc.activeElement))
+        ? doc.activeElement
+        : null;
+      for (const { node, home } of moved.reverse())
         if (home.parentNode) home.replaceWith(node);
-        if (focused) node.focus?.({ preventScroll: true });
-      }
+      if (focused?.isConnected) focused.focus({ preventScroll: true });
     };
   }
 

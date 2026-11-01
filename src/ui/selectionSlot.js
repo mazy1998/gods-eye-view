@@ -29,8 +29,44 @@ export function createSelectionSlot({ document: doc, active = true }) {
       : null,
   }));
 
+  // The view's frame around the body, with its close button, once mounted.
+  const frame = () => body.closest('.gev-slot');
   const contains = (node) =>
-    Boolean(node) && (body.contains(node) || actions.contains(node));
+    Boolean(node) &&
+    (body.contains(node) ||
+      actions.contains(node) ||
+      Boolean(frame()?.contains(node)));
+  const FOCUSABLE =
+    'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+  const focusable = (node) =>
+    Boolean(node?.isConnected) &&
+    node.matches?.(FOCUSABLE) &&
+    !node.closest('[hidden]') &&
+    (typeof node.checkVisibility !== 'function' || node.checkVisibility());
+
+  /**
+   * Keep keyboard focus with what the user was using. Moving content blurs a
+   * focused node in it, and a header the slot hides (a borrowed panel's
+   * disclosure) cannot hold focus. When showing an item took focus from the
+   * user or out of the slot, it comes back to the node that had it, if that
+   * is now usable in the slot, or else to the slot's first control (its
+   * close button, or the item's own header control).
+   */
+  function keepFocus(focused, wasInSlot) {
+    if (!active || !focused || focused === doc.body) return;
+    const now = doc.activeElement;
+    const lost = !now || now === doc.body || !focusable(now);
+    if (!lost && !(wasInSlot && !contains(now))) return;
+    if (contains(focused) && focusable(focused)) {
+      focused.focus({ preventScroll: true });
+      return;
+    }
+    const root = frame();
+    (root ? [root] : [actions, body])
+      .flatMap((root) => [...root.querySelectorAll(FOCUSABLE)])
+      .find(focusable)
+      ?.focus({ preventScroll: true });
+  }
 
   function mount() {
     if (!item || unmount || !active || destroyed) return;
@@ -57,12 +93,18 @@ export function createSelectionSlot({ document: doc, active = true }) {
       return true;
     }
     const previous = item;
+    // Read focus before the current item goes: its release blurs a field in
+    // it. An opener outside the slot is where closing returns focus; a
+    // replacement made from inside the slot keeps the first opener.
+    const focused = doc.activeElement;
+    const wasInSlot = contains(focused);
+    if (!wasInSlot)
+      returnFocus = focused && focused !== doc.body ? focused : null;
     release();
     item = next;
-    const focused = doc.activeElement;
-    if (!contains(focused)) returnFocus = focused ?? null;
     mount();
     channel.publish({ type: 'shown', id: next.id });
+    keepFocus(focused, wasInSlot);
     previous?.replaced?.();
     return true;
   }
