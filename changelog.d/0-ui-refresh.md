@@ -15,9 +15,14 @@
   Create's shot list and the voice settings drop the old compact monospace
   controls for the drawer's. Cockpit's cards and controls take the same look in
   each appearance, and the camera panels in its left stack show only once
-  opened. Phone Search is one field, and the voice sign-in choice reads as two
-  radio options. The welcome card picks a first view and Enter launches it, sets
-  the appearance, and links to the source, the README, Bilawal's YouTube and
+  opened. On desktop, a selected aircraft shows its flight details, and CCTV and
+  Street Level open their viewers, in a panel on the right, so Layers stays
+  open; Inspect → Cameras keeps a launcher for each. Turning on another layer
+  during Space Missions now leaves the mode and restores the earlier layers
+  first, and an Exit Space Missions button sits under the mode tabs. Phone
+  Search is one field, and the voice sign-in choice reads as two radio options.
+  The welcome card picks a first view and Enter launches it, sets the
+  appearance, and links to the source, the README, Bilawal's YouTube and
   halfpixel.ai. The first view starts with the HUD off (`H` or HUD & overlays
   turns it on). Most panels are now Vue views of the same owners, so layers,
   share links, voice actions and scenes behave as before, and hosts that build
