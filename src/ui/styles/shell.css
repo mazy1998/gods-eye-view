@@ -1237,15 +1237,17 @@ body.scene-playback-mode .gev-map-controls {
 :root {
   --gev-slot-width: 340px;
 }
-/* The bottom clears the map controls: their offset, then North, Tilt and
-   Home with their gaps, padding and border, then a gap. */
+/* The slot is as tall as its item, up to the map controls: below it come
+   their offset, then North, Tilt and Home with their gaps, padding and
+   border, then a gap. A taller item scrolls inside. */
 .gev-slot {
   position: fixed;
   top: calc(var(--gev-header-height) + var(--gev-drawer-inset));
   right: var(--gev-drawer-inset);
-  bottom: calc(
-    var(--gev-status-height) + 3.25rem + 3 * var(--gev-map-control-size) + 4 *
-      var(--gev-space-1) + 2px + var(--gev-space-3)
+  max-height: calc(
+    100vh - var(--gev-header-height) - var(--gev-drawer-inset) -
+      var(--gev-status-height) - 3.25rem - 3 * var(--gev-map-control-size) - 4 *
+      var(--gev-space-1) - 2px - var(--gev-space-3)
   );
   z-index: 120;
   display: flex;
@@ -1262,8 +1264,9 @@ body.scene-playback-mode .gev-map-controls {
   overflow: hidden;
 }
 :where(:root:not([data-ui-theme='cyber'])) .gev-slot {
-  bottom: calc(
-    var(--gev-status-height) + 16px + 3 * var(--gev-map-control-size) + 26px +
+  max-height: calc(
+    100vh - var(--gev-header-height) - var(--gev-drawer-inset) -
+      var(--gev-status-height) - 16px - 3 * var(--gev-map-control-size) - 26px -
       var(--gev-space-3)
   );
 }
@@ -1348,13 +1351,19 @@ body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
   outline-offset: 2px;
 }
 .gev-slot-scroll {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   padding: var(--gev-space-3);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-color: var(--gev-border) transparent;
   scrollbar-width: thin;
+}
+/* A hosted panel's glow (Cyber's frame) reaches past its box; the slot's
+   padding shows it, and it adds no scroll range to a short item. */
+.gev-slot-body {
+  overflow: clip;
+  overflow-clip-margin: var(--gev-space-3);
 }
 /* Outside Cyber the slot's header names the item and closes it, so a hosted
    panel's own header row (title, divider, collapse control) stays out of
