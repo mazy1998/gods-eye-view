@@ -33,6 +33,7 @@ export function connectAircraftSlot({
   let nearby = [];
   let availability = {};
   let actionBusy = false;
+  let actionTarget = null;
   let actionGeneration = 0;
   const owner = () => layers[selected?.layerId];
   const read = () => {
@@ -69,7 +70,9 @@ export function connectAircraftSlot({
       presentation: aircraftPresentation(info, at, nearby),
       availability: {
         ...availability,
+        cockpit: Boolean(availability.cockpit && !actionBusy),
         contacts: Boolean(availability.contacts && !actionBusy),
+        busy: actionBusy,
       },
     };
   };
@@ -97,34 +100,33 @@ export function connectAircraftSlot({
     });
     view?.update(props);
   };
-  const actions = {
-    cockpit() {
-      if (!view || !selected || !read() || !readAvailability(selected).cockpit)
-        return false;
-      return enterCockpit({ ...selected });
-    },
-    async contacts() {
-      if (
-        !view ||
-        !selected ||
-        !read() ||
-        actionBusy ||
-        !readAvailability(selected).contacts
-      )
-        return false;
-      const target = { ...selected };
-      const generation = actionGeneration;
-      const isCurrent = () => !destroyed && generation === actionGeneration;
-      actionBusy = true;
+  const runAction = async (name, operation) => {
+    if (
+      !view ||
+      !selected ||
+      !read() ||
+      actionBusy ||
+      !readAvailability(selected)[name]
+    )
+      return false;
+    const target = { ...selected };
+    const generation = actionGeneration;
+    const isCurrent = () => !destroyed && generation === actionGeneration;
+    actionBusy = true;
+    actionTarget = target;
+    paint();
+    try {
+      return await operation(target, isCurrent);
+    } finally {
+      actionBusy = false;
+      actionTarget = null;
+      cacheKey = null;
       paint();
-      try {
-        return await openContacts(target, isCurrent);
-      } finally {
-        actionBusy = false;
-        cacheKey = null;
-        paint();
-      }
-    },
+    }
+  };
+  const actions = {
+    cockpit: () => runAction('cockpit', enterCockpit),
+    contacts: () => runAction('contacts', openContacts),
     nearby(key) {
       if (!view || !selected) return false;
       const target = nearby.find((row) => row.key === key);
@@ -149,7 +151,14 @@ export function connectAircraftSlot({
   };
   const select = (layerId, id) => {
     revision++;
-    actionGeneration++;
+    // The action's own focus reselects this subject after Contacts settles.
+    // Keep that request current; another target or camera still invalidates it.
+    if (
+      !actionBusy ||
+      actionTarget?.layerId !== layerId ||
+      actionTarget?.icao !== String(id).toLowerCase()
+    )
+      actionGeneration++;
     cacheKey = null;
     if (!layers[layerId] || !id) {
       withdraw();

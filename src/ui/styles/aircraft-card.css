@@ -227,10 +227,10 @@
 :root:not([data-ui-theme='cyber']) .gev-aircraft-warning {
   color: var(--gev-error-text);
 }
-:root:not([data-ui-theme='cyber']) .gev-aircraft-actions .gev-action-button {
-  border-color: var(--gev-border);
-  background: var(--gev-control-bg);
-  color: var(--gev-text);
+.gev-aircraft-actions .gev-action-button {
+  border-color: var(--gev-accent);
+  background: transparent;
+  color: var(--gev-accent-text);
 }
 :root:not([data-ui-theme='cyber'])
   .gev-aircraft-actions

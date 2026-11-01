@@ -186,6 +186,13 @@
     0 8px 20px rgba(0, 0, 0, 0.28);
 }
 
+/* Aircraft actions use the accent outline; shared state rules below still
+   paint their hover and pressed states. */
+:root[data-ui-theme='cyber'] :where(.gev-aircraft-actions .gev-action-button) {
+  border-color: var(--cyber-red-bright);
+  color: var(--accent);
+}
+
 /* Compact Cyber rails must wrap multi-word actions within their own button. */
 :root[data-ui-theme='cyber'] #scene-panel .scene-controls .scene-btn {
   white-space: normal;

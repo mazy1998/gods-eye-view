@@ -15,6 +15,7 @@ defineProps({
     <div class="gev-aircraft-actions">
       <ActionButton
         :disabled="!availability.cockpit"
+        :aria-busy="availability.busy || undefined"
         :title="availability.cockpitReason || undefined"
         :aria-describedby="
           availability.cockpitReason ? 'gev-aircraft-cockpit-reason' : undefined
@@ -26,6 +27,7 @@ defineProps({
       </ActionButton>
       <ActionButton
         :disabled="!availability.contacts"
+        :aria-busy="availability.busy || undefined"
         :title="availability.contactsReason || undefined"
         @click="actions?.contacts?.()"
       >

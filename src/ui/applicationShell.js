@@ -1446,7 +1446,8 @@ export class StyleManager extends ShellFacade {
       readSelectedContext:
         this.services.getSelectedEntityContext || (() => null),
       readAvailability: (target) => this._aircraftActionAvailability(target),
-      enterCockpit: () => this.cockpitView?.enter() ?? false,
+      enterCockpit: (target, isCurrent) =>
+        this._enterAircraftCockpit(target, isCurrent),
       openContacts: (target, isCurrent) =>
         this._openAircraftContacts(target, isCurrent),
       mount: (body, props, header) => {
@@ -1471,21 +1472,12 @@ export class StyleManager extends ShellFacade {
 
   _aircraftActionAvailability(target) {
     const supported = ['flights', 'military'].includes(target.layerId);
-    const state = this.getCockpitState();
-    const sameTarget =
-      state?.subject?.layerId === target.layerId &&
-      String(state?.subject?.id || '').toLowerCase() === target.icao;
-    const cockpit = supported && sameTarget && Boolean(state?.entryAllowed);
     const starting = Boolean(this.getContextModeState()?.changing);
     return {
-      cockpit,
-      cockpitReason: cockpit
+      cockpit: supported,
+      cockpitReason: supported
         ? ''
-        : !supported || !sameTarget
-          ? t('Cockpit is available for tracked Flights and Military aircraft')
-          : state?.entryBlockedReason === 'contacts-starting'
-            ? t('Contacts is still starting up — try Cockpit again in a moment')
-            : t('Open Contacts to enter Cockpit'),
+        : t('Cockpit is available for tracked Flights and Military aircraft'),
       contacts: supported && !starting,
       contactsReason: !supported
         ? t('Contacts supports Flights and Military aircraft')
@@ -1493,6 +1485,41 @@ export class StyleManager extends ShellFacade {
           ? t('Contacts is still starting up — try Cockpit again in a moment')
           : '',
     };
+  }
+
+  /** A user may enter Cockpit through the same Contacts preparation as its button. */
+  async _enterAircraftCockpit(target, isCurrent) {
+    if (
+      this._disposed ||
+      !isCurrent() ||
+      !['flights', 'military'].includes(target.layerId)
+    )
+      return false;
+    const matches = (state) =>
+      state?.subject?.layerId === target.layerId &&
+      String(state?.subject?.id || '').toLowerCase() === target.icao;
+    try {
+      const initial = this.getCockpitState();
+      if (!initial?.entryAllowed || !matches(initial)) {
+        if (!(await this._openAircraftContacts(target, isCurrent)))
+          return false;
+      }
+      if (this._disposed || !isCurrent()) return false;
+      const settled = this.getCockpitState();
+      if (
+        settled?.entryAllowed &&
+        matches(settled) &&
+        this.cockpitView?.enter()
+      )
+        return true;
+    } catch {
+      // The entry may lose its tracked entity while Contacts is settling.
+    }
+    if (!this._disposed && isCurrent())
+      this._showToast(
+        t('Contacts could not complete the requested transition; try again'),
+      );
+    return false;
   }
 
   /** Explicit Contacts entry, followed by the existing source-owned focus. */

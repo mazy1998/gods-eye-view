@@ -466,12 +466,18 @@ test('action callbacks use current eligibility and invalidate pending Contacts i
     },
   });
   state.track();
-  assert.equal(state.props.actions.cockpit(), false);
+  assert.equal(await state.props.actions.cockpit(), false);
   cockpit = true;
-  state.props.actions.cockpit();
+  await state.props.actions.cockpit();
   assert.equal(entered, 1);
   const pending = state.props.actions.contacts();
   assert.equal(isCurrent(), true);
+  state.track('flights', 'abc');
+  assert.equal(
+    isCurrent(),
+    true,
+    'the action may focus the same aircraft itself',
+  );
   state.track('military', 'def');
   assert.equal(isCurrent(), false);
   finish(false);
