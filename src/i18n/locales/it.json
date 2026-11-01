@@ -2960,7 +2960,6 @@
   "Destination": "Destinazione",
   "Destinations": "Destinazioni",
   "Details for {name}": "Dettagli di {name}",
-  "Display": "Display",
   "Distance from Earth": "Distanza dalla Terra",
   "Drop map files onto the globe": "Trascina i file mappa sul globo",
   "Enter cockpit": "Entra nel cockpit",
@@ -2985,7 +2984,6 @@
   "Intensity": "Intensità",
   "Keys are saved on this machine.": "Le chiavi vengono salvate su questo computer.",
   "Language": "Lingua",
-  "Language & help": "Lingua e aiuto",
   "Launch site": "Sito di lancio",
   "Launch time": "Ora del lancio",
   "Light": "Chiaro",
@@ -3112,5 +3110,7 @@
   "Bilawal on YouTube": "Bilawal su YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Suggerimento: cerca un luogo qualsiasi per volarci subito.",
-  "ENTER GOD'S EYE VIEW": "ENTRA IN GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ENTRA IN GOD'S EYE VIEW",
+  "General": "Generali",
+  "HUD & overlays": "HUD e sovrapposizioni"
 }

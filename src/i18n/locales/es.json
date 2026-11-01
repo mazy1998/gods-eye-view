@@ -3049,7 +3049,6 @@
   "Missions — launches and orbital assets": "Misiones — lanzamientos y activos orbitales",
   "Providers": "Proveedores",
   "Voice": "Voz",
-  "Language & help": "Idioma y ayuda",
   "The globe works without keys.": "El globo funciona sin claves.",
   "Loading provider settings…": "Cargando ajustes de proveedores…",
   "Provider keys can be configured on the machine running the app.": "Las claves de proveedores se configuran en el equipo que ejecuta la aplicación.",
@@ -3067,7 +3066,6 @@
   "Keys are saved on this machine.": "Las claves se guardan en este equipo.",
   "Voice settings are unavailable.": "Los ajustes de voz no están disponibles.",
   "Look": "Aspecto",
-  "Display": "Visualización",
   "Image adjustments": "Ajustes de imagen",
   "Style shortcuts 1–6": "Atajos de estilo 1–6",
   "Configure map providers": "Configurar proveedores de mapas",
@@ -3112,5 +3110,7 @@
   "Bilawal on YouTube": "Bilawal en YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Consejo: busca cualquier lugar para volar directo allí.",
-  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW",
+  "General": "General",
+  "HUD & overlays": "HUD y superposiciones"
 }

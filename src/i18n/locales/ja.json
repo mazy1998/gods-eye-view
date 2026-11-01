@@ -2820,7 +2820,6 @@
   "Destination": "目的地",
   "Destinations": "移動先",
   "Details for {name}": "{name}の詳細",
-  "Display": "ディスプレイ",
   "Distance from Earth": "地球からの距離",
   "Drop map files onto the globe": "地図ファイルを地球儀にドロップ",
   "Enter cockpit": "コックピットに入る",
@@ -2845,7 +2844,6 @@
   "Intensity": "強度",
   "Keys are saved on this machine.": "キーはこのマシンに保存されます。",
   "Language": "言語",
-  "Language & help": "言語とヘルプ",
   "Launch site": "射場",
   "Launch time": "打ち上げ時刻",
   "Light": "ライト",
@@ -2964,5 +2962,7 @@
   "Bilawal on YouTube": "YouTube の Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "ヒント：場所を検索すると、そこへ直接移動します。",
-  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る"
+  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る",
+  "General": "一般",
+  "HUD & overlays": "HUD とオーバーレイ"
 }

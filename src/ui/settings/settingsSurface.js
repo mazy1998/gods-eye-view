@@ -25,7 +25,12 @@ export function createSettingsSurface({
   }));
   const publish = () => !disposed && channel.publish();
   const select = (section) => {
-    if (disposed || !['providers', 'voice', 'language'].includes(section))
+    // General keeps the language section's identifier for existing callers.
+    if (section === 'general') section = 'language';
+    if (
+      disposed ||
+      !['providers', 'voice', 'language', 'help'].includes(section)
+    )
       return;
     if (state.section === section) return;
     state.section = section;
@@ -51,7 +56,11 @@ export function createSettingsSurface({
     select,
     openVoice: () => !disposed && canOpenVoice() && openVoice?.(),
     closeLanguage: () => !disposed && closeLanguage?.(),
-    openProviders: () => !disposed && provider?.open?.(),
+    openProviders() {
+      if (disposed) return;
+      select('providers');
+      return provider?.open?.();
+    },
     connect(control) {
       if (disposed) return;
       release?.();

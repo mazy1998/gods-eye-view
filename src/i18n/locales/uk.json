@@ -3030,7 +3030,6 @@
   "Destination": "Пункт призначення",
   "Destinations": "Пункти призначення",
   "Details for {name}": "Подробиці: {name}",
-  "Display": "Дисплей",
   "Distance from Earth": "Відстань від Землі",
   "Drop map files onto the globe": "Перетягніть файли карти на глобус",
   "Enter cockpit": "Увійти в кабіну",
@@ -3055,7 +3054,6 @@
   "Intensity": "Інтенсивність",
   "Keys are saved on this machine.": "Ключі зберігаються на цьому компʼютері.",
   "Language": "Мова",
-  "Language & help": "Мова й довідка",
   "Launch site": "Місце запуску",
   "Launch time": "Час запуску",
   "Light": "Світлий",
@@ -3186,5 +3184,7 @@
   "Bilawal on YouTube": "Bilawal на YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Порада: знайдіть будь-яке місце, щоб одразу туди перелетіти.",
-  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW",
+  "General": "Загальні",
+  "HUD & overlays": "HUD і накладки"
 }

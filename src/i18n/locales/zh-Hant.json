@@ -2903,7 +2903,6 @@
   "Missions — launches and orbital assets": "任務：發射與在軌資產",
   "Providers": "供應商",
   "Voice": "語音",
-  "Language & help": "語言與說明",
   "The globe works without keys.": "無需金鑰也可使用地球視圖。",
   "Loading provider settings…": "正在載入供應商設定…",
   "Provider keys can be configured on the machine running the app.": "可在執行此應用程式的電腦上設定供應商金鑰。",
@@ -2921,7 +2920,6 @@
   "Keys are saved on this machine.": "金鑰儲存在此電腦上。",
   "Voice settings are unavailable.": "語音設定無法使用。",
   "Look": "外觀",
-  "Display": "顯示",
   "Image adjustments": "影像調整",
   "Style shortcuts 1–6": "樣式快速鍵 1–6",
   "Configure map providers": "設定地圖供應商",
@@ -2964,5 +2962,7 @@
   "Bilawal on YouTube": "YouTube 上的 Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "提示：搜尋任何地點即可直接飛往該處。",
-  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW",
+  "General": "一般",
+  "HUD & overlays": "HUD 與疊加層"
 }
