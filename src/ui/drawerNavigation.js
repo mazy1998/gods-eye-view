@@ -121,6 +121,9 @@ const HEADER_COLLAPSE_PANELS = Object.freeze([
  * @param {string[]} options.restoreOrder Panel ids in share-restore order.
  * @param {MediaQueryList|null} [options.phone] The phone-shell media query.
  * @param {(panelId: string) => void} [options.onRevealPanel] Select a hosted view before scrolling to its panel.
+ * @param {string[]} [options.slotted] Hosted panels the selection slot shows
+ *   at desktop width instead: the drawer neither borrows them nor opens their
+ *   destination for them there. The phone sheets still present them.
  */
 export function createDrawerNavigation({
   document: doc,
@@ -130,6 +133,7 @@ export function createDrawerNavigation({
   phone = null,
   isPhonePresenting = () => false,
   onRevealPanel = () => {},
+  slotted = [],
 }) {
   const host = doc.createElement('div');
   host.id = 'gev-legacy-host';
@@ -160,14 +164,21 @@ export function createDrawerNavigation({
         .map((id) => [id, item.id]),
     ),
   ]);
+  // At desktop width the selection slot shows these: their destination's
+  // view keeps them where they are, collapsed or not, and their expansion
+  // moves no destination.
+  const inSlot = (id) => slotted.includes(id);
+  const destinationAtDesktop = (id) =>
+    inSlot(id) ? undefined : destinationOf.get(id);
   // Panels a layer's own switch-on expands, by layer id.
   const switchedPanels = new Map();
   for (const item of DRAWER_DESTINATIONS)
     for (const [panelId, layerId] of Object.entries(item.switches ?? {}))
-      switchedPanels.set(layerId, [
-        ...(switchedPanels.get(layerId) ?? []),
-        panelId,
-      ]);
+      if (!inSlot(panelId))
+        switchedPanels.set(layerId, [
+          ...(switchedPanels.get(layerId) ?? []),
+          panelId,
+        ]);
   // Panels a switch from the open list turned on: their next expansion is
   // declined, so the list stays and the panel stays collapsed.
   const held = new Set();
@@ -275,6 +286,7 @@ export function createDrawerNavigation({
   function borrow(destination) {
     borrowed = { before: new Map(), applied: new Map(), moved: [] };
     for (const id of [...destination.panels, ...(destination.elements ?? [])]) {
+      if (inSlot(id)) continue;
       const node = doc.getElementById(id);
       if (!node?.parentNode) continue;
       const placeholder = doc.createComment(`gev-drawer-home:${id}`);
@@ -289,7 +301,7 @@ export function createDrawerNavigation({
       borrowed.moved.push({ node, placeholder });
     }
     for (const id of destination.panels) {
-      if (!doc.getElementById(id)) continue;
+      if (inSlot(id) || !doc.getElementById(id)) continue;
       borrowed.before.set(id, isCollapsed(id));
       if (isCollapsed(id)) setPanelCollapsed(id, false, BORROW);
     }
@@ -446,10 +458,11 @@ export function createDrawerNavigation({
 
   // The panel a restore leads with, when shown, or else the first shown
   // followed panel in share-restore order: the phone shell's rule too.
-  const firstShown = (lead = null) =>
-    lead && followed.has(lead) && shown(lead)
+  // At desktop width a slotted panel is shown in the slot, not followed.
+  const firstShown = (lead = null, skip = () => false) =>
+    lead && followed.has(lead) && !skip(lead) && shown(lead)
       ? lead
-      : restoreOrder.find((id) => followed.has(id) && shown(id));
+      : restoreOrder.find((id) => followed.has(id) && !skip(id) && shown(id));
 
   /**
    * The first shown followed panel, in share-restore order, picks the
@@ -461,7 +474,7 @@ export function createDrawerNavigation({
     // Resting, the drawer follows nothing: on a phone the phone shell
     // presents the panels, and back at desktop width the drawer follows them.
     if (!isActive()) return;
-    const first = firstShown(lead);
+    const first = firstShown(lead, inSlot);
     if (!first) return close();
     open(followed.get(first));
     onRevealPanel(first);
@@ -507,7 +520,7 @@ export function createDrawerNavigation({
           change?.type === 'panel-revealed' ||
           Object.entries(panels).some(
             ([id, next]) =>
-              destinationOf.has(id) &&
+              destinationAtDesktop(id) &&
               previous[id]?.collapsed &&
               !previous[id].autoCollapsed &&
               !next.collapsed,
@@ -530,7 +543,7 @@ export function createDrawerNavigation({
         return followPanels(change.lead);
       }
       if (change?.type === 'panel-revealed') {
-        const destination = destinationOf.get(change.panelId);
+        const destination = destinationAtDesktop(change.panelId);
         if (!destination) return;
         open(destination);
         onRevealPanel(change.panelId);
@@ -538,7 +551,7 @@ export function createDrawerNavigation({
       }
       for (const [id, next] of Object.entries(panels)) {
         const was = previous[id];
-        const destination = destinationOf.get(id);
+        const destination = destinationAtDesktop(id);
         if (
           !destination ||
           !was?.collapsed ||
@@ -573,7 +586,8 @@ export function createDrawerNavigation({
     const observer = new Observer((records) => {
       if (!isActive()) return;
       for (const { target } of records) {
-        if (!hostOf.has(target.id) || !shown(target.id)) continue;
+        if (!hostOf.has(target.id) || inSlot(target.id) || !shown(target.id))
+          continue;
         if (!current) open(hostOf.get(target.id));
         if (current === hostOf.get(target.id))
           target.scrollIntoView?.({ block: 'nearest' });

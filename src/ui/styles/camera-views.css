@@ -202,7 +202,8 @@
 .global-context-modes:has(#global-context-cameras-btn) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-#context-cameras-view > :is(#cctv-panel, #street-level-panel) {
+:is(#context-cameras-view, .gev-slot-body)
+  > :is(#cctv-panel, #street-level-panel) {
   position: relative;
   inset: auto;
   width: 100%;
@@ -213,7 +214,7 @@
   transform: none;
   flex: none;
 }
-#context-cameras-view
+:is(#context-cameras-view, .gev-slot-body)
   > :is(#cctv-panel, #street-level-panel):not(.collapsed)
   > :is(.cctv-panel-inner, .street-level-panel-inner) {
   max-height: none;
@@ -226,8 +227,11 @@
   font-size: 20px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   > :is(.cctv-panel-inner, .street-level-panel-inner) {
   padding: 0;
@@ -241,8 +245,11 @@
   gap: 12px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.camera-controls, .street-level-controls) {
   padding: 0;
   border-radius: 0;
@@ -256,23 +263,32 @@
   gap: 12px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   > .panel-glow {
   display: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   #street-level-panel {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--gev-border-subtle);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .panel-header {
   margin: 0;
   padding: 10px 0;
@@ -282,29 +298,41 @@
   border-bottom: 1px solid var(--gev-border-subtle);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.panel-title, .inspect-camera-icon) {
   color: var(--gev-text);
   text-shadow: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .panel-title {
   font: 600 var(--gev-font-size-md) / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-divider {
   background: var(--gev-border-subtle);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.panel-collapse-btn, #sl-status) {
   min-width: 32px;
   min-height: 32px;
@@ -317,8 +345,11 @@
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.panel-collapse-btn, #sl-status):hover {
   color: var(--gev-text);
   background: var(--gev-control-bg-hover);
@@ -328,8 +359,11 @@
    does: no hairline, and a borderless chevron (right collapsed, down open)
    in place of the boxed triangle. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-header
   > .panel-divider {
@@ -338,8 +372,11 @@
   background: none;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-header
   > .panel-collapse-btn {
@@ -351,16 +388,22 @@
   font-size: 0;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-header
   > .panel-collapse-btn:hover {
   background: var(--gev-control-bg-hover);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-header
   > .panel-collapse-btn::before {
@@ -373,39 +416,54 @@
   transition: transform var(--transition-fast);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   > :is(#cctv-panel, #street-level-panel)
   .panel-header
   > .panel-collapse-btn[aria-expanded='true']::before {
   transform: rotate(45deg);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   #sl-status[aria-pressed='true'] {
   color: var(--gev-accent-text);
   background: var(--gev-accent-tint);
   border-color: var(--gev-accent-tint-border);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.panel-collapse-btn, #sl-status):focus-visible {
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .cctv-controls {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.cctv-controls, .cctv-calibration-header)
   :is(.scene-btn, #cctv-camera-select) {
   min-height: 36px;
@@ -414,15 +472,21 @@
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .cctv-controls
   #cctv-camera-select {
   flex: 1 1 160px;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .cctv-calibration-block {
   padding: 12px 0;
   border: 0;
@@ -431,16 +495,22 @@
   background: transparent;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .sl-controls {
   border: 0;
   margin: 12px 0 0;
   padding: 0;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(
     #cctv-meta,
     #cctv-summary,
@@ -454,8 +524,11 @@
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(.cctv-cal-value, .data-toggle-chip, .sl-seg-btn) {
   font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
@@ -471,8 +544,11 @@
 /* Static labels read in sentence case; camera names, provider names, pose
    values and summaries keep the case they arrive in. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(
     #street-level-panel .panel-title,
     :is(.cctv-controls, .cctv-calibration-header)
@@ -487,8 +563,11 @@
   text-transform: lowercase;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(
     #street-level-panel .panel-title,
     :is(.cctv-controls, .cctv-calibration-header)
@@ -503,29 +582,41 @@
   text-transform: uppercase;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(label.cctv-summary-label, .sl-btn-text, .sl-since-label) {
   display: inline-block;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .cctv-summary-label {
   color: var(--gev-text-muted);
   font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .cctv-frame-caption {
   font: 500 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   #sl-nearest-btn {
   min-height: 36px;
   font: 500 var(--gev-font-size-sm) / 1.4 var(--gev-font-sans);
@@ -534,8 +625,11 @@
 /* The source and calibration badges keep their status capitals, in the
    drawer's sans face rather than tracked mono. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   :is(#cctv-source-badge, #cctv-quality-chip) {
   font: 500 var(--gev-font-size-xs) / 1.4 var(--gev-font-sans);
   letter-spacing: normal;
@@ -543,21 +637,30 @@
 /* Provider chips match the Layers chips: one row of compact rounded
    buttons, the provider's colour kept to the dot. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .sl-providers {
   display: grid;
   gap: var(--gev-space-2);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .sl-chips {
   gap: var(--gev-space-2);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .sl-chips
   .data-toggle-chip {
   min-height: 32px;
@@ -568,8 +671,11 @@
   border-radius: var(--gev-radius-sm);
 }
 :where(:root:not([data-ui-theme='cyber']))
-  :is(.gev-legacy-host, .mobile-shell)
-  #context-cameras-view
+  :is(
+    .gev-legacy-host #context-cameras-view,
+    .mobile-shell #context-cameras-view,
+    .gev-slot-body
+  )
   .sl-chips
   .data-toggle-chip.chip-error {
   color: var(--gev-warning-text);

@@ -195,7 +195,7 @@ export class PanelLayoutController {
       this._streetLevelPanel,
     ]) {
       if (!panel) continue;
-      if (!panel.closest('#context-cameras-view'))
+      if (!panel.closest('#context-cameras-view, .gev-slot-body'))
         stack.insertBefore(panel, globalContextPanel);
       this._syncPanelCollapseButton(panel);
     }

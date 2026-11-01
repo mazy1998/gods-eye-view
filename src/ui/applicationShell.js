@@ -29,11 +29,14 @@ import ShellRail from './ShellRail.vue';
 import ShellHeader from './ShellHeader.vue';
 import ShellMapControls from './ShellMapControls.vue';
 import ShellStatusBar from './ShellStatusBar.vue';
+import ShellSlot from './ShellSlot.vue';
 import { createShellChrome } from './shellChrome.js';
 import { createStatusReadout } from './statusReadout.js';
 import SettingsView from './settings/SettingsView.vue';
 import { createSettingsSurface } from './settings/settingsSurface.js';
 import { createDrawerNavigation } from './drawerNavigation.js';
+import { createSelectionSlot } from './selectionSlot.js';
+import { connectCameraSlot, SLOT_CAMERA_PANELS } from './cameraSlot.js';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountContactsPanel } from './contactsPanel.js';
 import { mountMissionPanels } from './missionPanels.js';
@@ -1312,6 +1315,7 @@ export class StyleManager extends ShellFacade {
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
       isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
       onRevealPanel: (id) => this._revealInspectCameraPanel(id),
+      slotted: Object.keys(SLOT_CAMERA_PANELS),
     });
     const destinationViews = {
       settings: {
@@ -1371,6 +1375,7 @@ export class StyleManager extends ShellFacade {
       for (const view of views) view.update({ state });
       this._statusReadout?.setActive(state.active);
     });
+    this._initSelectionSlot(after);
     const byId = (id) => () => document.getElementById(id);
     const { search, results } = this._locationViews;
     this._shellChrome = createShellChrome({
@@ -1392,6 +1397,36 @@ export class StyleManager extends ShellFacade {
     const dismissResult = (event) => this._dismissHeaderSearchResult(event);
     this._lifetime.listen(document, 'pointerdown', dismissResult, true);
     this._lifetime.listen(document, 'focusin', dismissResult, true);
+  }
+
+  /**
+   * The right-hand selection slot, beside the map controls. It rests where
+   * the drawer does (phones, Cockpit) and paints each change before the
+   * operation that made it returns, as the drawer does. The camera viewers
+   * are its first items.
+   */
+  _initSelectionSlot(before) {
+    const slot = createSelectionSlot({
+      document,
+      active: this._drawer.channel.getSnapshot().active,
+    });
+    this._selectionSlot = slot;
+    const view = this._mountView(ShellSlot, {
+      parent: document.body,
+      before,
+      props: { selection: slot },
+    });
+    slot.channel.subscribe(({ state }) => view.update({ state }));
+    this._drawer.channel.subscribe(({ state }) => slot.setActive(state.active));
+    this._disconnectCameraSlot = connectCameraSlot({
+      document,
+      slot,
+      panelChannel: this._panelChrome.channel,
+      setPanelCollapsed: (panelId, collapsed, options) =>
+        this._panelChrome.setPanelCollapsed(panelId, collapsed, options),
+      restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
+      translate: t,
+    });
   }
 
   /**
@@ -1981,7 +2016,7 @@ export class StyleManager extends ShellFacade {
     this._lifetime.frame(() => {
       if (
         this._cctvPanel.parentElement?.id === 'right-context-rail' ||
-        this._cctvPanel.closest('#context-cameras-view')
+        this._cctvPanel.closest('#context-cameras-view, .gev-slot-body')
       ) {
         this._cctvPanel.style.maxHeight = '';
         if (inner) inner.style.maxHeight = '';
@@ -2046,6 +2081,8 @@ export class StyleManager extends ShellFacade {
     this._recording.destroy();
     this._mobileShell?.destroy();
     this._shellChrome?.destroy();
+    this._disconnectCameraSlot?.();
+    this._selectionSlot?.destroy();
     this._statusReadout?.destroy();
     this._drawer?.destroy();
     this._panelChrome.destroy();
