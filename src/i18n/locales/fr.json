@@ -3123,9 +3123,19 @@
   "Ground track": "Route sol",
   "Vertical speed": "Vitesse verticale",
   "Squawk": "Code transpondeur",
-  "Position": "Position",
   "Received {seconds} s ago": "Reçu il y a {seconds} s",
   "Receive time unavailable": "Heure de réception indisponible",
   "Ground speed": "Vitesse sol",
-  "ft/min": "ft/min"
+  "ft/min": "ft/min",
+  "Flight": "Vol",
+  "Military": "Militaire",
+  "Cockpit": "Cockpit",
+  "Nearby aircraft": "Aéronefs à proximité",
+  "Callsign": "Indicatif",
+  "Category": "Catégorie",
+  "Route": "Itinéraire",
+  "Cockpit is available for tracked Flights and Military aircraft": "Le cockpit est disponible pour les vols civils et militaires suivis",
+  "Contacts is still starting up — try Cockpit again in a moment": "Contacts est en cours de démarrage — réessayez le cockpit dans un instant",
+  "Open Contacts to enter Cockpit": "Ouvrez Contacts pour accéder au cockpit",
+  "Contacts supports Flights and Military aircraft": "Contacts prend en charge les vols civils et militaires"
 }

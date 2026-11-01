@@ -118,6 +118,7 @@ export function createQueries({
       // descriptor instead of reaching back into `_flightData`.
       registration: _toCleanText(info?.registration) || null,
       typeName: tr3bTypeLabel(icao24, _toCleanText(info?.type) || null),
+      category: tr3bAircraftClass(icao24, info?.klass ?? null),
       operator: _toCleanText(info?.operator) || null,
       lastContactAtMs: Number.isFinite(info?.lastContactEpochMs)
         ? info.lastContactEpochMs

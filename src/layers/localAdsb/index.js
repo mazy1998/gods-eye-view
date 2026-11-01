@@ -832,6 +832,7 @@ export function createLocalAdsbLayer({
         callsign: record.callsign,
         registration: meta?.registration ?? null,
         typeName: meta?.typeName ?? meta?.typeCode ?? null,
+        category: marker.evidence ? marker.klass : null,
         airline: meta?.airline ?? null,
         latitude: marker.lat ?? record.lat,
         longitude: marker.lon ?? record.lon,
@@ -848,6 +849,12 @@ export function createLocalAdsbLayer({
         onGround: record.onGround === true,
         origin: route?.origin?.code ?? null,
         destination: route?.destination?.code ?? null,
+        route: route
+          ? {
+              origin: { ...route.origin },
+              destination: { ...route.destination },
+            }
+          : null,
         lastContactAtMs: record.lastPositionAt,
         source: localAdsbSourceText(record),
         stale: !localAdsbPositionIsFresh(record, now()),

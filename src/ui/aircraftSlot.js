@@ -1,4 +1,5 @@
 import { aircraftPresentation } from './aircraftPresentation.js';
+import { nearbyAircraft } from './aircraftNearby.js';
 
 /**
  * Bridge existing aircraft selections into the shared slot. Feed notifications
@@ -13,6 +14,10 @@ export function connectAircraftSlot({
   subscribePresentation,
   readSelectedContext,
   mount,
+  readNearby = nearbyAircraft,
+  readAvailability = () => ({ cockpit: false, contacts: false }),
+  enterCockpit = () => false,
+  openContacts = () => false,
   now = Date.now,
   schedule = setInterval,
   cancel = clearInterval,
@@ -23,6 +28,12 @@ export function connectAircraftSlot({
   let revision = 0;
   let destroyed = false;
   let lastPaint = '';
+  let cacheKey = null;
+  let cachedAt = -Infinity;
+  let nearby = [];
+  let availability = {};
+  let actionBusy = false;
+  let actionGeneration = 0;
   const owner = () => layers[selected?.layerId];
   const read = () => {
     const layer = owner();
@@ -32,7 +43,35 @@ export function connectAircraftSlot({
         : layer?.getTrackedInfo?.();
     if (!info || String(info.icao24).toLowerCase() !== selected?.icao)
       return null;
-    return { ...info, source: info.source || layer.getStats?.().source };
+    return {
+      ...info,
+      layerId: selected.layerId,
+      source: info.source || layer.getStats?.().source,
+    };
+  };
+  const cardProps = (info) => {
+    const at = now();
+    const key = `${selected.layerId}:${selected.icao}`;
+    if (key !== cacheKey || at - cachedAt >= 1000) {
+      cacheKey = key;
+      cachedAt = at;
+      const context = readSelectedContext();
+      const entity =
+        selected.layerId === 'local-adsb'
+          ? context?.entity
+          : viewer.trackedEntity;
+      const position =
+        entity?.gevTrackedId === key ? entity.gevDisplayPosition?.() : null;
+      nearby = readNearby(layers, selected, info, position);
+      availability = readAvailability(selected);
+    }
+    return {
+      presentation: aircraftPresentation(info, at, nearby),
+      availability: {
+        ...availability,
+        contacts: Boolean(availability.contacts && !actionBusy),
+      },
+    };
   };
   const withdraw = () => {
     selected = null;
@@ -45,15 +84,73 @@ export function connectAircraftSlot({
       withdraw();
       return;
     }
-    const presentation = aircraftPresentation(info, now());
-    const serialized = JSON.stringify(presentation);
+    const props = view
+      ? cardProps(info)
+      : { presentation: aircraftPresentation(info, now()) };
+    const serialized = JSON.stringify(props);
     if (serialized === lastPaint) return;
     lastPaint = serialized;
-    slot.show({ id: 'aircraft', title: presentation.title, icon: 'flight' });
-    view?.update({ presentation });
+    slot.show({
+      id: 'aircraft',
+      title: props.presentation.title,
+      icon: 'flight',
+    });
+    view?.update(props);
+  };
+  const actions = {
+    cockpit() {
+      if (!view || !selected || !read() || !readAvailability(selected).cockpit)
+        return false;
+      return enterCockpit({ ...selected });
+    },
+    async contacts() {
+      if (
+        !view ||
+        !selected ||
+        !read() ||
+        actionBusy ||
+        !readAvailability(selected).contacts
+      )
+        return false;
+      const target = { ...selected };
+      const generation = actionGeneration;
+      const isCurrent = () => !destroyed && generation === actionGeneration;
+      actionBusy = true;
+      paint();
+      try {
+        return await openContacts(target, isCurrent);
+      } finally {
+        actionBusy = false;
+        cacheKey = null;
+        paint();
+      }
+    },
+    nearby(key) {
+      if (!view || !selected) return false;
+      const target = nearby.find((row) => row.key === key);
+      if (!target) return false;
+      const layer = layers[target.layerId];
+      const changed =
+        target.layerId === 'local-adsb'
+          ? Boolean(layer?.selectAircraft?.(target.id))
+          : Boolean(layer?.trackById?.(target.id, { origin: 'user' }));
+      if (changed)
+        queueMicrotask(() => {
+          if (
+            !destroyed &&
+            selected?.layerId === target.layerId &&
+            selected?.icao === target.id &&
+            slot.current() === 'aircraft'
+          )
+            view?.focus?.();
+        });
+      return changed;
+    },
   };
   const select = (layerId, id) => {
     revision++;
+    actionGeneration++;
+    cacheKey = null;
     if (!layers[layerId] || !id) {
       withdraw();
       return;
@@ -69,15 +166,14 @@ export function connectAircraftSlot({
       id: 'aircraft',
       title: aircraftPresentation(info, now()).title,
       icon: 'flight',
-      mount({ body }) {
+      mount({ body, actions: header }) {
         const current = read();
         if (!current) {
           queueMicrotask(paint);
           return () => {};
         }
-        const presentation = aircraftPresentation(current, now());
-        view = mount(body, { presentation });
-        timer = schedule(paint, 5000);
+        view = mount(body, { ...cardProps(current), actions }, header);
+        timer = schedule(paint, 1000);
         return () => {
           cancel(timer);
           timer = null;
@@ -86,6 +182,7 @@ export function connectAircraftSlot({
         };
       },
       close() {
+        actionGeneration++;
         const closing = selected;
         const layer = owner();
         // A delayed close must not stop a newer aircraft owned by this layer.
@@ -97,6 +194,7 @@ export function connectAircraftSlot({
         withdraw();
       },
       replaced() {
+        actionGeneration++;
         selected = null;
         revision++;
       },
@@ -175,6 +273,7 @@ export function connectAircraftSlot({
   else if (viewer.trackedEntity) onTracked();
   return () => {
     destroyed = true;
+    actionGeneration++;
     revision++;
     removeTracked?.();
     unsubscribe();

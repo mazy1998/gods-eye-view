@@ -22,10 +22,13 @@ test('aircraft values are literal text, grouped and updated without new actions'
   assert.equal(document.querySelector('img'), null);
   assert.match(document.querySelector('article').textContent, /<img src=x/);
   assert.equal(
-    document.querySelectorAll('.gev-aircraft-telemetry > div').length,
-    6,
+    document.querySelectorAll('.gev-aircraft-metrics > div').length,
+    0,
   );
-  assert.equal(document.querySelectorAll('button, a').length, 0);
+  assert.equal(document.querySelectorAll('button').length, 2);
+  assert.ok(
+    [...document.querySelectorAll('button')].every((button) => button.disabled),
+  );
   view.update({
     presentation: aircraftPresentation({
       icao24: 'abc',

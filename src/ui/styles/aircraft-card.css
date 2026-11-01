@@ -1,52 +1,247 @@
-/* The selected aircraft's existing measurements inside the shared slot. */
-.gev-aircraft-card {
-  padding: 16px;
-  font-size: 12px;
-  line-height: 1.5;
+/* Selected-aircraft hierarchy; data and actions remain with the existing owners. */
+#gev-selection-slot[data-slot-item='aircraft'] .gev-slot-icon {
+  display: none;
+}
+#gev-selection-slot[data-slot-item='aircraft'] .gev-slot-header {
+  gap: 8px;
+}
+#gev-selection-slot[data-slot-item='aircraft'] .gev-slot-title {
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.gev-aircraft-kind {
+  display: block;
+  max-width: 82px;
+  padding: 3px 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 9px;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.gev-aircraft-card p {
-  margin: 0 0 12px;
+.gev-aircraft-card {
+  padding: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
+.gev-aircraft-card p,
 .gev-aircraft-card dl {
   margin: 0;
+}
+.gev-aircraft-card .gev-aircraft-operator {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.gev-aircraft-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.gev-aircraft-actions .gev-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 8px;
+  font: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gev-aircraft-actions .material-symbols-outlined {
+  font-size: 17px;
+}
+.gev-aircraft-card .gev-aircraft-action-reason {
+  margin-top: 6px;
+  font-size: 10px;
+}
+.gev-aircraft-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.gev-aircraft-route > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gev-aircraft-route > div:last-child {
+  text-align: end;
+}
+.gev-aircraft-route strong {
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.15;
+}
+.gev-aircraft-route > div > span {
+  margin-top: 4px;
+  font-size: 11px;
+}
+.gev-aircraft-route-arrow {
+  font-size: 24px;
+  text-align: center;
 }
 .gev-aircraft-card dl > div {
   min-width: 0;
 }
 .gev-aircraft-card dt {
-  font-size: 11px;
+  font-size: 10px;
 }
 .gev-aircraft-card dd {
-  margin: 2px 0 12px;
+  margin: 2px 0 0;
   font-variant-numeric: tabular-nums;
 }
-.gev-aircraft-identity,
-.gev-aircraft-telemetry,
-.gev-aircraft-route {
+.gev-aircraft-card .gev-aircraft-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.gev-aircraft-metrics > div {
+  display: flex;
+  flex-direction: column;
+}
+.gev-aircraft-metrics dt {
+  order: 2;
+  margin-top: 3px;
+}
+.gev-aircraft-metrics dd {
+  order: 1;
+  margin: 0;
+  line-height: 1.15;
+}
+.gev-aircraft-metrics strong {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+.gev-aircraft-metrics dd > span {
+  font-size: 10px;
+}
+.gev-aircraft-card .gev-aircraft-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 16px;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
 }
-.gev-aircraft-telemetry > div:last-child {
-  grid-column: 1 / -1;
+.gev-aircraft-details dd {
+  font-size: 12px;
+}
+.gev-aircraft-nearby {
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.gev-aircraft-nearby h3 {
+  margin: 0 0 6px;
+  font: inherit;
+  font-weight: 650;
+}
+.gev-aircraft-nearby .gev-aircraft-nearby-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+  padding: 6px 0;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: start;
+}
+.gev-aircraft-nearby-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
 }
 .gev-aircraft-source {
   display: flex;
   flex-direction: column;
-  padding-top: 12px;
-  font-size: 11px;
+  margin-top: 12px;
+  padding-top: 10px;
+  font-size: 10px;
+}
+.gev-aircraft-warning {
+  font-weight: 600;
 }
 :root:not([data-ui-theme='cyber']) .gev-aircraft-card {
   color: var(--gev-text);
   font-family: var(--gev-font-sans);
-  font-size: var(--gev-font-size-sm);
+}
+:root:not([data-ui-theme='cyber']) .gev-aircraft-kind {
+  color: var(--gev-accent-text);
+  border-color: var(--gev-accent-tint-border);
 }
 :root:not([data-ui-theme='cyber'])
   .gev-aircraft-card
-  :where(dt, .gev-aircraft-subtitle, .gev-aircraft-source) {
+  :where(
+    dt,
+    .gev-aircraft-operator,
+    .gev-aircraft-source,
+    .gev-aircraft-route > div > span,
+    .gev-aircraft-action-reason
+  ) {
   color: var(--gev-text-muted);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-card
+  :where(
+    .gev-aircraft-route,
+    .gev-aircraft-metrics,
+    .gev-aircraft-details,
+    .gev-aircraft-nearby,
+    .gev-aircraft-source
+  ) {
+  border-top: 1px solid var(--gev-border-subtle);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-nearby
+  .gev-aircraft-nearby-button {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  border-color: var(--gev-border-subtle);
+  background: transparent;
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-nearby-button:where(:hover:not(:disabled)) {
+  background: var(--gev-control-bg-hover);
+}
+:root:not([data-ui-theme='cyber']) .gev-aircraft-nearby-button:focus-visible {
+  outline-color: var(--gev-focus-ring);
 }
 :root:not([data-ui-theme='cyber']) .gev-aircraft-warning {
   color: var(--gev-error-text);
+}
+:root:not([data-ui-theme='cyber']) .gev-aircraft-actions .gev-action-button {
+  border-color: var(--gev-border);
+  background: var(--gev-control-bg);
+  color: var(--gev-text);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-actions
+  .gev-action-button:hover:not(:disabled) {
+  border-color: var(--gev-accent-tint-border);
+  background: var(--gev-accent-tint);
+  color: var(--gev-accent-text);
+}
+:root:not([data-ui-theme='cyber'])
+  .gev-aircraft-card
+  .gev-action-button:focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: 2px;
 }

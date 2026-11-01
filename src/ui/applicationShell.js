@@ -39,6 +39,7 @@ import { createSelectionSlot } from './selectionSlot.js';
 import { connectCameraSlot, SLOT_CAMERA_PANELS } from './cameraSlot.js';
 import { connectAircraftSlot } from './aircraftSlot.js';
 import AircraftCard from './AircraftCard.vue';
+import AircraftTypeBadge from './AircraftTypeBadge.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountContactsPanel } from './contactsPanel.js';
 import { mountMissionPanels } from './missionPanels.js';
@@ -1444,8 +1445,89 @@ export class StyleManager extends ShellFacade {
         this.services.subscribeTrackedPresentation || (() => () => {}),
       readSelectedContext:
         this.services.getSelectedEntityContext || (() => null),
-      mount: (body, props) => mountView(AircraftCard, { parent: body, props }),
+      readAvailability: (target) => this._aircraftActionAvailability(target),
+      enterCockpit: () => this.cockpitView?.enter() ?? false,
+      openContacts: (target, isCurrent) =>
+        this._openAircraftContacts(target, isCurrent),
+      mount: (body, props, header) => {
+        const card = mountView(AircraftCard, { parent: body, props });
+        const badge = mountView(AircraftTypeBadge, { parent: header, props });
+        return {
+          focus() {
+            card.element?.focus({ preventScroll: true });
+          },
+          update(next) {
+            card.update(next);
+            badge.update(next);
+          },
+          dispose() {
+            card.dispose();
+            badge.dispose();
+          },
+        };
+      },
     });
+  }
+
+  _aircraftActionAvailability(target) {
+    const supported = ['flights', 'military'].includes(target.layerId);
+    const state = this.getCockpitState();
+    const sameTarget =
+      state?.subject?.layerId === target.layerId &&
+      String(state?.subject?.id || '').toLowerCase() === target.icao;
+    const cockpit = supported && sameTarget && Boolean(state?.entryAllowed);
+    const starting = Boolean(this.getContextModeState()?.changing);
+    return {
+      cockpit,
+      cockpitReason: cockpit
+        ? ''
+        : !supported || !sameTarget
+          ? t('Cockpit is available for tracked Flights and Military aircraft')
+          : state?.entryBlockedReason === 'contacts-starting'
+            ? t('Contacts is still starting up — try Cockpit again in a moment')
+            : t('Open Contacts to enter Cockpit'),
+      contacts: supported && !starting,
+      contactsReason: !supported
+        ? t('Contacts supports Flights and Military aircraft')
+        : starting
+          ? t('Contacts is still starting up — try Cockpit again in a moment')
+          : '',
+    };
+  }
+
+  /** Explicit Contacts entry, followed by the existing source-owned focus. */
+  async _openAircraftContacts(target, isCurrent) {
+    if (
+      this._disposed ||
+      !isCurrent() ||
+      !['flights', 'military'].includes(target.layerId)
+    )
+      return false;
+    try {
+      const result = await this.setContextMode('contacts', { isCurrent });
+      if (!isCurrent() || this._disposed || result?.cancelled) return false;
+      if (
+        !result?.ok ||
+        !this.services.militaryAwarenessLayer.focusTarget(
+          target.layerId,
+          target.icao,
+          { origin: 'user' },
+        )
+      )
+        throw new Error('Contacts target unavailable');
+      this._contextControls.showInspectTab('context');
+      this.setPanelCollapsed('global-context-panel', false, { explicit: true });
+      if (this._mobileShell?.isPresenting())
+        this._mobileShell.setDestination('inspect');
+      else this._drawer?.open('inspect');
+      return true;
+    } catch {
+      if (isCurrent() && !this._disposed)
+        this._showToast(
+          t('Contacts could not complete the requested transition; try again'),
+        );
+      return false;
+    }
   }
 
   /**
