@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, nextTick, onBeforeUpdate, onUpdated } from 'vue';
+import { computed, ref, watch, onBeforeUpdate, onUpdated } from 'vue';
 import TabList from './primitives/TabList.vue';
 import ToggleSwitch from './primitives/ToggleSwitch.vue';
 import ActionButton from './primitives/ActionButton.vue';
@@ -21,11 +21,6 @@ const props = defineProps({
 const tab = ref('all');
 const query = ref('');
 const category = ref(null);
-const categoryButtons = new Map();
-const setCategoryButton = (group, button) => {
-  if (button) categoryButtons.set(group, button);
-  else categoryButtons.delete(group);
-};
 // Every group is a category: closed until opened, one open at a time, so the
 // overview fits and no long group pushes the others out of view.
 const browsing = computed(() => tab.value === 'all' && !query.value.trim());
@@ -54,12 +49,6 @@ const visible = (row) =>
     matches(row.englishName) ||
     (row.id === 'directions' && matches(t('Route planning'))));
 const visibleRows = (group) => !browsing.value || category.value === group.key;
-const closeCategory = async (group) => {
-  const heading = categoryButtons.get(group.key);
-  category.value = null;
-  await nextTick();
-  heading?.focus({ preventScroll: true });
-};
 const visibleGroup = (group) =>
   props.rows.some(
     (row) =>
@@ -148,7 +137,6 @@ onUpdated(() => {
       >
         <button
           v-if="browsing"
-          :ref="(button) => setCategoryButton(group.key, button)"
           type="button"
           class="gev-action-button layer-category"
           :aria-expanded="String(category === group.key)"
@@ -165,14 +153,6 @@ onUpdated(() => {
         </button>
         <h3 v-else class="data-layer-group-heading">{{ t(group.label) }}</h3>
         <div :id="groupId(group)" v-show="visibleRows(group)">
-          <button
-            v-if="browsing && category === group.key"
-            type="button"
-            class="gev-action-button layer-category-back"
-            @click="closeCategory(group)"
-          >
-            {{ t('Back to layers') }}
-          </button>
           <LayerRow
             v-for="row in rows.filter(
               (row) => row.group.key === group.key && row.id !== 'directions',

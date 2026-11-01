@@ -668,9 +668,12 @@ test('category navigation keeps rows mounted while search, active and reveals ex
   assert.equal(shown(row('satellites')), true);
   assert.equal(shown(row('flights')), false, 'one category open at a time');
   assert.equal(categories[1].getAttribute('aria-expanded'), 'true');
-  container.querySelector('.layer-category-back').click();
+  // The open header collapses it again, keeping focus.
+  categories[1].focus();
+  categories[1].click();
   await nextTick();
   assert.equal(shown(row('satellites')), false);
+  assert.equal(categories[1].getAttribute('aria-expanded'), 'false');
   assert.equal(document.activeElement, categories[1]);
   const input = container.querySelector('.layer-filter');
   for (const id of ids) {

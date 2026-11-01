@@ -496,7 +496,7 @@
 }
 
 :root[data-ui-theme='cyber']
-  :is(.layer-category, .layer-route-link, .layer-category-back):where(
+  :is(.layer-category, .layer-route-link):where(
     :hover:not(:disabled)
   ),
 :root[data-ui-theme='cyber']

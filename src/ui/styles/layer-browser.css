@@ -50,11 +50,6 @@
   background: transparent;
   color: var(--gev-text);
 }
-:where(:root:not([data-ui-theme='cyber']))
-  .layer-browser
-  .data-toggle-row:hover {
-  background: var(--gev-control-bg-hover);
-}
 .layer-browser .data-toggle-top,
 .layer-browser .data-toggle-left,
 .layer-browser .data-toggle-right {
@@ -498,27 +493,6 @@
 :where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-route-link {
   color: var(--gev-accent-text);
 }
-:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-category:hover,
-:where(:root:not([data-ui-theme='cyber']))
-  .layer-browser
-  .layer-route-link:hover {
-  background: var(--gev-control-bg-hover);
-}
-
-.layer-browser .layer-category-back {
-  margin: var(--gev-space-2) var(--gev-space-3);
-}
-
-:where(:root:not([data-ui-theme='cyber'])) .layer-browser .layer-category-back {
-  min-height: 36px;
-  padding: 6px 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--gev-accent-text);
-  font: 400 14px / 1.4 var(--gev-font-sans);
-  letter-spacing: 0;
-}
 :where(:root:not([data-ui-theme='cyber']))
   .layer-browser
   .layer-category:hover:not(:disabled) {
@@ -531,10 +505,71 @@
   color: var(--gev-accent-text);
   border-color: var(--gev-border-subtle);
 }
+
+/* Outside Cyber, rows and category headers sit a little in from the panel's
+   edges and draw hover and keyboard focus as a rounded surface; the lines
+   between them are inset too, so nothing reads as a full-width box. */
 :where(:root:not([data-ui-theme='cyber']))
   .layer-browser
-  .layer-category-back:hover:not(:disabled) {
-  color: var(--gev-accent-text);
+  :is(.data-toggle-row, .layer-category, .layer-route-link) {
+  position: relative;
+  margin-inline: var(--gev-space-1);
+  padding-inline: var(--gev-space-2);
+  border-bottom: 0;
+  border-radius: var(--gev-radius-md);
+}
+/* A button is only as wide as its content unless told otherwise. */
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(.layer-category, .layer-route-link) {
+  width: calc(100% - 2 * var(--gev-space-1));
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(.data-toggle-row:not(.layer-route-row), .layer-category)::after {
+  content: '';
+  position: absolute;
+  right: var(--gev-space-2);
+  bottom: 0;
+  left: var(--gev-space-2);
+  height: 1px;
+  background: var(--gev-border-subtle);
+  pointer-events: none;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(.data-toggle-row, .layer-category, .layer-route-link):hover {
   background: var(--gev-control-bg-hover);
-  border-color: transparent;
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  :is(.layer-category, .layer-route-link):focus-visible {
+  outline: 2px solid var(--gev-focus-ring);
+  outline-offset: -2px;
+}
+/* An open category reads as one nested block: its header and its rows share
+   a rounded inset surface, the rows sit further in, and the block ends with
+   space before the next category. */
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-groups
+  > [data-layer-group]:has(> .layer-category[aria-expanded='true']) {
+  margin-block: var(--gev-space-2) var(--gev-space-3);
+  padding-block: var(--gev-space-1);
+  border: 1px solid var(--gev-border-subtle);
+  border-radius: var(--gev-radius-lg);
+  background: var(--gev-control-bg);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .layer-groups
+  > [data-layer-group]
+  > .layer-category[aria-expanded='true']
+  + [id] {
+  padding-inline-start: var(--gev-space-3);
+}
+:where(:root:not([data-ui-theme='cyber']))
+  .layer-browser
+  .data-toggle-row:has(+ .layer-group-home)::after {
+  display: none;
 }
