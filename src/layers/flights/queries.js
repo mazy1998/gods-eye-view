@@ -186,6 +186,7 @@ export function createQueries({
       // (cockpit, Contacts, analyst) agrees with the triangle on screen.
       typeName: tr3bTypeLabel(icao24, info?.typeName ?? null),
       typeCode: tr3bTypeLabel(icao24, info?.typeCode ?? null),
+      category: tr3bAircraftClass(icao24, info?.klass ?? null),
       // IDENTITY, deliberately NOT converted: registration is the airframe's tail
       // number and feeds `_contactLabel`'s callsign → registration → hex chain, so
       // a converted contact keeps the label convention every other contact uses.

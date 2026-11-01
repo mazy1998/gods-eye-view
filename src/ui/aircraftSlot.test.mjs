@@ -5,7 +5,7 @@ import { aircraftPresentation } from './aircraftPresentation.js';
 import { setLocale, t as translate } from '../i18n/index.js';
 import { formatQuantity } from './unitLabels.js';
 
-function setup(t, { initialOrigin } = {}) {
+function setup(t, { initialOrigin, ...overrides } = {}) {
   const events = new EventTarget();
   let tracked, item, release, trackedListener, feedListener, tick;
   let current = null;
@@ -14,6 +14,7 @@ function setup(t, { initialOrigin } = {}) {
       gevTrackedId: 'flights:abc',
       gevSelectionOrigin: initialOrigin,
     };
+  let props;
   let paints = 0,
     disposed = 0;
   const infos = {
@@ -83,10 +84,12 @@ function setup(t, { initialOrigin } = {}) {
         feedListener = null;
       };
     },
-    mount() {
+    mount(_body, nextProps) {
+      props = nextProps;
       paints++;
       return {
-        update() {
+        update(next) {
+          props = { ...props, ...next };
           paints++;
         },
         dispose() {
@@ -102,10 +105,15 @@ function setup(t, { initialOrigin } = {}) {
       tick = null;
     },
     now: () => 100_000,
+    ...overrides,
   });
   t.after(disconnect);
   return {
     slot,
+    layers,
+    get props() {
+      return props;
+    },
     infos,
     closed,
     get item() {
@@ -155,13 +163,18 @@ test('presentation keeps unknowns, zero measurements, units, route and honest re
   assert.equal(model.title, 'abc');
   assert.deepEqual(
     model.telemetry.map((row) => row.value),
-    ['0\u00a0ft', '0\u00a0kt', '0°', '—', '0070', '—'],
+    ['0\u00a0ft', '0\u00a0kt', '0°'],
   );
   assert.equal(model.received, 'Received 10 s ago');
-  assert.equal(model.route[0].value, 'LHR');
+  assert.equal(model.route.origin.code, 'LHR');
+  assert.equal(
+    model.details.find((row) => row.label === 'Squawk').value,
+    '0070',
+  );
   const unknown = aircraftPresentation({});
   assert.equal(unknown.received, 'Receive time unavailable');
-  assert.equal(unknown.telemetry[0].value, '—');
+  assert.deepEqual(unknown.telemetry, []);
+  assert.deepEqual(unknown.details, []);
   assert.equal(
     aircraftPresentation({ onGround: true }).telemetry[0].value,
     'On ground',
@@ -271,7 +284,6 @@ test('aircraft speed labels and quantities follow every locale without changing 
       for (const [index, value, unit] of [
         [0, 10000, 'ft'],
         [1, 230 * 1.9438444924406, 'kt'],
-        [3, 60 / 0.3048, 'ft/min'],
       ]) {
         assert.equal(
           model.telemetry[index].value,
@@ -282,6 +294,17 @@ test('aircraft speed labels and quantities follow every locale without changing 
           `${locale}: ${unit}`,
         );
       }
+      const vertical = model.details.find(
+        (row) => row.label === translate('Vertical speed'),
+      ).value;
+      assert.equal(
+        vertical,
+        formatQuantity(60 / 0.3048, 'ft/min', {
+          useGrouping: true,
+          maximumFractionDigits: 0,
+        }),
+        locale,
+      );
       if (['ja', 'zh-CN', 'zh-Hant'].includes(locale)) {
         assert.notEqual(model.telemetry[1].label, translate('Speed'), locale);
         assert.equal(translate('Speed'), locale === 'zh-CN' ? '风速' : '風速');
@@ -289,10 +312,9 @@ test('aircraft speed labels and quantities follow every locale without changing 
       if (locale === 'ru') {
         assert.match(model.telemetry[0].value, /\u00a0фт$/);
         assert.match(model.telemetry[1].value, /\u00a0уз$/);
-        assert.match(model.telemetry[3].value, /\u00a0фт\/мин$/);
+        assert.match(vertical, /\u00a0фт\/мин$/);
       }
-      if (locale === 'ja')
-        assert.match(model.telemetry[3].value, /\u00a0ft\/分$/);
+      if (locale === 'ja') assert.match(vertical, /\u00a0ft\/分$/);
     }
   } finally {
     setLocale('en');
@@ -383,4 +405,81 @@ test('a later automatic intent cancels a queued explicit selection on either pat
   state.track('military', 'def', 'programmatic');
   await Promise.resolve();
   assert.equal(state.slot.current(), 'cctv');
+});
+
+test('Nearby is cached for a second and its clicks use the existing source tracker only', (t) => {
+  let clock = 0,
+    queries = 0;
+  const state = setup(t, {
+    now: () => clock,
+    readNearby: () => {
+      queries++;
+      return [
+        {
+          key: 'military:def',
+          layerId: 'military',
+          id: 'def',
+          label: 'MIL',
+          distanceM: 1000,
+          altitudeM: 3048,
+        },
+      ];
+    },
+  });
+  const calls = [];
+  state.layers.military.trackById = (...args) => {
+    calls.push(args);
+    return true;
+  };
+  state.track();
+  for (let i = 0; i < 10; i++) state.refresh();
+  assert.equal(queries, 1);
+  clock = 999;
+  state.refresh();
+  assert.equal(queries, 1);
+  clock = 1000;
+  state.refresh();
+  assert.equal(queries, 2);
+  const retained = state.props.actions;
+  assert.equal(retained.nearby('military:def'), true);
+  assert.deepEqual(calls, [['def', { origin: 'user' }]]);
+  state.slot.show({ id: 'cctv' });
+  clock = 2000;
+  state.refresh();
+  assert.equal(queries, 2);
+  assert.equal(retained.nearby('military:def'), false);
+});
+
+test('action callbacks use current eligibility and invalidate pending Contacts intent on a fresh selection', async (t) => {
+  let cockpit = false,
+    entered = 0,
+    finish,
+    isCurrent;
+  const state = setup(t, {
+    readAvailability: () => ({ cockpit, contacts: true }),
+    enterCockpit: () => ++entered,
+    openContacts: (_target, valid) => {
+      isCurrent = valid;
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    },
+  });
+  state.track();
+  assert.equal(await state.props.actions.cockpit(), false);
+  cockpit = true;
+  await state.props.actions.cockpit();
+  assert.equal(entered, 1);
+  const pending = state.props.actions.contacts();
+  assert.equal(isCurrent(), true);
+  state.track('flights', 'abc');
+  assert.equal(
+    isCurrent(),
+    true,
+    'the action may focus the same aircraft itself',
+  );
+  state.track('military', 'def');
+  assert.equal(isCurrent(), false);
+  finish(false);
+  await pending;
 });

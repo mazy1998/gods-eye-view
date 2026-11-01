@@ -2975,9 +2975,18 @@
   "Ground track": "地面航迹",
   "Vertical speed": "垂直速度",
   "Squawk": "应答机编码",
-  "Position": "位置",
   "Received {seconds} s ago": "{seconds} 秒前接收",
   "Receive time unavailable": "接收时间不可用",
   "Ground speed": "地速",
-  "ft/min": "ft/分钟"
+  "ft/min": "ft/分钟",
+  "Flight": "航班",
+  "Military": "军用",
+  "Cockpit": "驾驶舱",
+  "Nearby aircraft": "附近航空器",
+  "Callsign": "呼号",
+  "Category": "类别",
+  "Route": "航线",
+  "Cockpit is available for tracked Flights and Military aircraft": "驾驶舱适用于正在跟踪的民航和军用航空器",
+  "Contacts is still starting up — try Cockpit again in a moment": "目标仍在启动，请稍后重试进入驾驶舱",
+  "Contacts supports Flights and Military aircraft": "目标支持民航和军用航空器"
 }

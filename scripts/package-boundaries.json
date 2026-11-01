@@ -1003,7 +1003,10 @@
       "src/visualStylePolicy.js",
       "src/ui/AircraftCard.vue",
       "src/ui/aircraftSlot.js",
-      "src/ui/aircraftPresentation.js"
+      "src/ui/aircraftPresentation.js",
+      "src/ui/aircraftNearby.js",
+      "src/data/aircraftClass.js",
+      "src/ui/AircraftTypeBadge.vue"
     ],
     "external": ["cesium", "vue"]
   },
@@ -3074,7 +3077,9 @@
       "src/visualStylePolicy.js",
       "src/ui/AircraftCard.vue",
       "src/ui/aircraftSlot.js",
-      "src/ui/aircraftPresentation.js"
+      "src/ui/aircraftPresentation.js",
+      "src/ui/aircraftNearby.js",
+      "src/ui/AircraftTypeBadge.vue"
     ],
     "external": [
       "hls.js",

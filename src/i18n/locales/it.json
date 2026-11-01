@@ -3123,9 +3123,18 @@
   "Ground track": "Rotta al suolo",
   "Vertical speed": "Velocità verticale",
   "Squawk": "Codice transponder",
-  "Position": "Posizione",
   "Received {seconds} s ago": "Ricevuto {seconds} s fa",
   "Receive time unavailable": "Orario di ricezione non disponibile",
   "Ground speed": "Velocità al suolo",
-  "ft/min": "ft/min"
+  "ft/min": "ft/min",
+  "Flight": "Volo",
+  "Military": "Militare",
+  "Cockpit": "Cabina",
+  "Nearby aircraft": "Aeromobili vicini",
+  "Callsign": "Nominativo",
+  "Category": "Categoria",
+  "Route": "Rotta",
+  "Cockpit is available for tracked Flights and Military aircraft": "La cabina è disponibile per i voli civili e militari seguiti",
+  "Contacts is still starting up — try Cockpit again in a moment": "Contatti si sta ancora avviando: riprova ad aprire la cabina tra un momento",
+  "Contacts supports Flights and Military aircraft": "Contatti supporta voli civili e militari"
 }

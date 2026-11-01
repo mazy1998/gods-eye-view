@@ -3197,9 +3197,18 @@
   "Ground track": "Путевой угол",
   "Vertical speed": "Вертикальная скорость",
   "Squawk": "Код транспондера",
-  "Position": "Положение",
   "Received {seconds} s ago": "Получено {seconds} с назад",
   "Receive time unavailable": "Время приёма недоступно",
   "Ground speed": "Путевая скорость",
-  "ft/min": "фт/мин"
+  "ft/min": "фт/мин",
+  "Flight": "Рейс",
+  "Military": "Военный",
+  "Cockpit": "Кабина",
+  "Nearby aircraft": "Воздушные суда поблизости",
+  "Callsign": "Позывной",
+  "Category": "Категория",
+  "Route": "Маршрут",
+  "Cockpit is available for tracked Flights and Military aircraft": "Кабина доступна для отслеживаемых гражданских и военных рейсов",
+  "Contacts is still starting up — try Cockpit again in a moment": "Контакты ещё запускаются — попробуйте открыть кабину через некоторое время",
+  "Contacts supports Flights and Military aircraft": "Контакты поддерживают гражданские и военные рейсы"
 }

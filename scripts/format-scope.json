@@ -1263,5 +1263,9 @@
   "src/ui/aircraftPresentation.js",
   "src/ui/aircraftSlot.test.mjs",
   "src/ui/aircraftCard.dom.test.mjs",
-  "src/ui/styles/aircraft-card.css"
+  "src/ui/styles/aircraft-card.css",
+  "src/ui/aircraftNearby.js",
+  "src/ui/aircraftNearby.test.mjs",
+  "src/ui/AircraftTypeBadge.vue",
+  "src/ui/aircraftActions.dom.test.mjs"
 ]

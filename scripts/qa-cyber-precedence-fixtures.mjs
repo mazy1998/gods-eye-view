@@ -483,7 +483,28 @@ const mapLookHtml = `<div class="gev-legacy-host"><div id="pp-toggles" class="pa
 export const fixtures = [
   {
     sheet: 'aircraft-card',
-    html: `<article class="gev-aircraft-card"><p data-audit="aircraft-type" class="gev-aircraft-subtitle">A320</p><dl class="gev-aircraft-telemetry"><div><dt data-audit="aircraft-label">Altitude</dt><dd data-audit="aircraft-value">32000 ft</dd></div></dl><footer data-audit="aircraft-source" class="gev-aircraft-source">Source: adsb.lol</footer></article>`,
+    html: `<section id="gev-selection-slot" class="gev-slot" data-slot-item="aircraft"><div class="gev-slot-header gev-surface"><h2 class="gev-slot-title" data-audit="aircraft-title">ETD765</h2><span class="gev-slot-actions"><span class="gev-aircraft-kind" data-audit="aircraft-kind">Flight</span></span></div><div class="gev-slot-scroll"><div class="gev-slot-body"><article class="gev-aircraft-card"><p data-audit="aircraft-operator" class="gev-aircraft-operator">Etihad Airways</p><div class="gev-aircraft-actions">${b('aircraft-cockpit', 'gev-action-button', '', 'Cockpit')}${b('aircraft-contacts', 'gev-action-button', '', 'Contacts')}</div><dl class="gev-aircraft-metrics"><div><dt data-audit="aircraft-label">Altitude</dt><dd data-audit="aircraft-value"><strong>32000</strong> ft</dd></div></dl><section class="gev-aircraft-nearby">${b('aircraft-nearby', 'gev-action-button gev-aircraft-nearby-button', '', 'ETD431 · 4.2 km')}</section><footer data-audit="aircraft-source" class="gev-aircraft-source">Source: adsb.lol</footer></article></div></div></section>`,
+    exceptions: [
+      'rest',
+      'hover',
+      'active',
+      'pressed',
+      'checked',
+      'selected',
+      'focus',
+    ].map((state) => ({
+      variant: 'aircraft-kind',
+      state,
+      comparison: 'sheet',
+      properties: ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'],
+      expected: Object.fromEntries(
+        ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'].map(
+          (property) => [property, '1px solid rgb(242, 245, 244)'],
+        ),
+      ),
+      reason:
+        'The new noninteractive aircraft-kind badge keeps the same thin currentColor outline in every sampled state; no previous Cyber badge exists.',
+    })),
   },
   {
     sheet: 'phone-shell-view',

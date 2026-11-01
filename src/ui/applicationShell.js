@@ -39,6 +39,7 @@ import { createSelectionSlot } from './selectionSlot.js';
 import { connectCameraSlot, SLOT_CAMERA_PANELS } from './cameraSlot.js';
 import { connectAircraftSlot } from './aircraftSlot.js';
 import AircraftCard from './AircraftCard.vue';
+import AircraftTypeBadge from './AircraftTypeBadge.vue';
 import { StreetLevelControls } from './streetLevelControls.js';
 import { mountContactsPanel } from './contactsPanel.js';
 import { mountMissionPanels } from './missionPanels.js';
@@ -1461,8 +1462,116 @@ export class StyleManager extends ShellFacade {
         this.services.subscribeTrackedPresentation || (() => () => {}),
       readSelectedContext:
         this.services.getSelectedEntityContext || (() => null),
-      mount: (body, props) => mountView(AircraftCard, { parent: body, props }),
+      readAvailability: (target) => this._aircraftActionAvailability(target),
+      enterCockpit: (target, isCurrent) =>
+        this._enterAircraftCockpit(target, isCurrent),
+      openContacts: (target, isCurrent) =>
+        this._openAircraftContacts(target, isCurrent),
+      mount: (body, props, header) => {
+        const card = mountView(AircraftCard, { parent: body, props });
+        const badge = mountView(AircraftTypeBadge, { parent: header, props });
+        return {
+          focus() {
+            card.element?.focus({ preventScroll: true });
+          },
+          update(next) {
+            card.update(next);
+            badge.update(next);
+          },
+          dispose() {
+            card.dispose();
+            badge.dispose();
+          },
+        };
+      },
     });
+  }
+
+  _aircraftActionAvailability(target) {
+    const supported = ['flights', 'military'].includes(target.layerId);
+    const starting = Boolean(this.getContextModeState()?.changing);
+    return {
+      cockpit: supported,
+      cockpitReason: supported
+        ? ''
+        : t('Cockpit is available for tracked Flights and Military aircraft'),
+      contacts: supported && !starting,
+      contactsReason: !supported
+        ? t('Contacts supports Flights and Military aircraft')
+        : starting
+          ? t('Contacts is still starting up — try Cockpit again in a moment')
+          : '',
+    };
+  }
+
+  /** A user may enter Cockpit through the same Contacts preparation as its button. */
+  async _enterAircraftCockpit(target, isCurrent) {
+    if (
+      this._disposed ||
+      !isCurrent() ||
+      !['flights', 'military'].includes(target.layerId)
+    )
+      return false;
+    const matches = (state) =>
+      state?.subject?.layerId === target.layerId &&
+      String(state?.subject?.id || '').toLowerCase() === target.icao;
+    try {
+      const initial = this.getCockpitState();
+      if (!initial?.entryAllowed || !matches(initial)) {
+        if (!(await this._openAircraftContacts(target, isCurrent)))
+          return false;
+      }
+      if (this._disposed || !isCurrent()) return false;
+      const settled = this.getCockpitState();
+      if (
+        settled?.entryAllowed &&
+        matches(settled) &&
+        this.cockpitView?.enter()
+      )
+        return true;
+    } catch {
+      // The entry may lose its tracked entity while Contacts is settling.
+    }
+    if (!this._disposed && isCurrent())
+      this._showToast(
+        t('Contacts could not complete the requested transition; try again'),
+      );
+    return false;
+  }
+
+  /** Explicit Contacts entry, followed by the existing source-owned focus. */
+  async _openAircraftContacts(target, isCurrent) {
+    if (
+      this._disposed ||
+      !isCurrent() ||
+      !['flights', 'military'].includes(target.layerId)
+    )
+      return false;
+    try {
+      const result = await this.setContextMode('contacts', { isCurrent });
+      if (!isCurrent() || this._disposed || result?.cancelled) return false;
+      if (
+        !result?.ok ||
+        !this.services.militaryAwarenessLayer.focusTarget(
+          target.layerId,
+          target.icao,
+          { origin: 'user' },
+        )
+      )
+        throw new Error('Contacts target unavailable');
+      this._contextControls.showInspectTab('context');
+      this.setPanelCollapsed('global-context-panel', false, { explicit: true });
+      if (this._mobileShell?.isPresenting())
+        this._mobileShell.setDestination('inspect');
+      else this._drawer?.open('inspect');
+      return true;
+    } catch {
+      if (isCurrent() && !this._disposed)
+        this._showToast(
+          t('Contacts could not complete the requested transition; try again'),
+        );
+      return false;
+    }
   }
 
   /**
