@@ -777,6 +777,15 @@ try {
       }
     }
     // Drive the real row control and read durable state after the user action.
+    // Transport is a Layers category that starts closed: open it first, as a
+    // user would, and let the list paint.
+    await page.evaluate(async () => {
+      for (const category of document.querySelectorAll(
+        '[data-layer-group="transport"] > .layer-category[aria-expanded="false"]',
+      ))
+        category.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     await page.waitForSelector(
       '[data-layer-id="traffic"] [data-chip-id="roads-osm"]',
     );

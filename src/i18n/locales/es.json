@@ -2962,8 +2962,6 @@
   "Space": "Espacio",
   "Environment": "Medio ambiente",
   "Imagery & cameras": "Imágenes y cámaras",
-  "Signals & events": "Señales y eventos",
-  "Audio": "Audio",
   "{count} layers active": {
     "one": "{count} capa activa",
     "many": "{count} capas activas",
@@ -3112,5 +3110,7 @@
   "Internet radio": "Radio por internet",
   "Local receiver (RTL-SDR)": "Receptor local (RTL-SDR)",
   "General": "General",
-  "HUD & overlays": "HUD y capas"
+  "HUD & overlays": "HUD y capas",
+  "Radio & signals": "Radio y señales",
+  "Hazards": "Riesgos"
 }

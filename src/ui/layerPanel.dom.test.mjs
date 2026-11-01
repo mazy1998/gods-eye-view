@@ -647,19 +647,31 @@ test('category navigation keeps rows mounted while search, active and reveals ex
     for (let el = node.parentElement; el; el = el.parentElement) yield el;
   }
   const identities = new Map(ids.map((id) => [id, row(id)]));
-  assert.equal(shown(row('flights')), true);
-  assert.equal(shown(row('radio')), true);
-  for (const id of ids.slice(1, -1)) assert.equal(shown(row(id)), false, id);
+  // Every group is a closed category in the overview, in presentation order.
+  for (const id of ids) assert.equal(shown(row(id)), false, id);
   const categories = [...container.querySelectorAll('.layer-category')];
-  assert.equal(categories.length, 5);
-  categories[0].click();
+  assert.deepEqual(
+    categories.map(
+      (button) => button.closest('[data-layer-group]').dataset.layerGroup,
+    ),
+    [
+      'transport',
+      'space',
+      'environment',
+      'hazards',
+      'imagery-cameras',
+      'radio-signals',
+    ],
+  );
+  categories[1].click();
   await nextTick();
   assert.equal(shown(row('satellites')), true);
-  assert.equal(categories[0].getAttribute('aria-expanded'), 'true');
+  assert.equal(shown(row('flights')), false, 'one category open at a time');
+  assert.equal(categories[1].getAttribute('aria-expanded'), 'true');
   container.querySelector('.layer-category-back').click();
   await nextTick();
   assert.equal(shown(row('satellites')), false);
-  assert.equal(document.activeElement, categories[0]);
+  assert.equal(document.activeElement, categories[1]);
   const input = container.querySelector('.layer-filter');
   for (const id of ids) {
     input.value = row(id).dataset.layerName;

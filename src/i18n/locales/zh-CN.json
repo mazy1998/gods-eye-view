@@ -2818,8 +2818,6 @@
   "Space": "太空",
   "Environment": "环境",
   "Imagery & cameras": "影像与摄像头",
-  "Signals & events": "信号与事件",
-  "Audio": "音频",
   "{count} layers active": {
     "other": "已启用 {count} 个图层"
   },
@@ -2964,5 +2962,7 @@
   "Internet radio": "网络电台",
   "Local receiver (RTL-SDR)": "本地接收机 (RTL-SDR)",
   "General": "常规",
-  "HUD & overlays": "HUD 与叠加层"
+  "HUD & overlays": "HUD 与叠加层",
+  "Radio & signals": "无线电与信号",
+  "Hazards": "灾害"
 }

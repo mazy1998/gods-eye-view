@@ -3034,8 +3034,6 @@
   "Space": "Космос",
   "Environment": "Окружающая среда",
   "Imagery & cameras": "Снимки и камеры",
-  "Signals & events": "Сигналы и события",
-  "Audio": "Аудио",
   "{count} layers active": {
     "one": "{count} активный слой",
     "few": "{count} активных слоя",
@@ -3186,5 +3184,7 @@
   "Internet radio": "Интернет-радио",
   "Local receiver (RTL-SDR)": "Локальный приёмник (RTL-SDR)",
   "General": "Общие",
-  "HUD & overlays": "HUD и наложения"
+  "HUD & overlays": "HUD и наложения",
+  "Radio & signals": "Радио и сигналы",
+  "Hazards": "Угрозы"
 }

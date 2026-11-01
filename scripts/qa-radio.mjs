@@ -2180,8 +2180,20 @@ async function main() {
       const toggleList = dataPanel.querySelector('.data-toggle-list');
       const toggleRows = [...toggleList.querySelectorAll('.data-toggle-row')]
         .filter((row) => row.querySelector('.data-toggle-btn'));
-      const toggleRow = toggleRows.find((row) => String(row.dataset.layerId).startsWith('local-'))
+      // Local ADS-B first: the presentation order no longer puts it ahead of
+      // the network-backed local layers (FIRMS).
+      const toggleRow = toggleRows.find((row) => row.dataset.layerId === 'local-adsb')
+        || toggleRows.find((row) => String(row.dataset.layerId).startsWith('local-'))
         || toggleRows.find((row) => !/flight|military|vessel|ais|radio/i.test(row.dataset.layerId || ''));
+      // Layers groups are categories that start closed: open the row's
+      // category as a user would, and close it again once the proof is done.
+      const toggleCategory = toggleRow
+        ?.closest('[data-layer-group]')
+        ?.querySelector(':scope > .layer-category[aria-expanded="false"]');
+      toggleCategory?.click();
+      // The click queues Vue's flush as a microtask; awaiting one more lets the
+      // disclosure apply before the row is scrolled. No time passes.
+      await Promise.resolve();
       toggleRow?.scrollIntoView({ block: 'center' });
       await waitForLayout();
       const toggleLayerId = toggleRow?.dataset.layerId || null;
@@ -2207,6 +2219,7 @@ async function main() {
       await waitForLayout();
       const toggleRestored = toggleLayerId
         ? window.__godsEyeView.dataManager.isEnabled(toggleLayerId) === toggleBefore : false;
+      toggleCategory?.click();
       const cockpitPanelInteraction = {
         toggleLayerId,
         contactClearancePx,

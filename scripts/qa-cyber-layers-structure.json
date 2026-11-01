@@ -46,10 +46,10 @@
   },
   {
     "id": "category-navigation",
-    "reason": "All appearances use in-place category disclosures; Transport and Audio stay expanded. Search and Active expose matching rows across every category, and reveals open their category before scrolling. Mounted layer controls, Cyber type and palette remain shared.",
+    "reason": "All appearances use in-place category disclosures for every group, closed by default and one open at a time. Search and Active expose matching rows across every category, and reveals open their category before scrolling. Mounted layer controls, Cyber type and palette remain shared.",
     "expected": {
       "categoryMinHeight": 52,
-      "expandedGroups": ["Transport", "Audio"]
+      "expandedGroups": []
     }
   },
   {

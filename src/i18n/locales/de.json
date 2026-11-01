@@ -2863,7 +2863,6 @@
   "All layers": "Alle Ebenen",
   "Appearance": "Erscheinungsbild",
   "Ascent path": "Aufstiegspfad",
-  "Audio": "Audio",
   "Available missions": "Verfügbare Missionen",
   "Back to layers": "Zurück zu den Ebenen",
   "Browse": "Durchsuchen",
@@ -2980,7 +2979,6 @@
   "Session only": "Nur für diese Sitzung",
   "Session only — files clear when you reload": "Nur für diese Sitzung — Dateien werden beim Neuladen entfernt",
   "Share view": "Ansicht teilen",
-  "Signals & events": "Signale & Ereignisse",
   "Space": "Weltraum",
   "Stage": "Stufe",
   "Stages and recovery": "Stufen und Bergung",
@@ -3038,5 +3036,7 @@
   "Internet radio": "Internetradio",
   "Local receiver (RTL-SDR)": "Lokaler Empfänger (RTL-SDR)",
   "General": "Allgemein",
-  "HUD & overlays": "HUD & Einblendungen"
+  "HUD & overlays": "HUD & Einblendungen",
+  "Radio & signals": "Funk & Signale",
+  "Hazards": "Gefahren"
 }

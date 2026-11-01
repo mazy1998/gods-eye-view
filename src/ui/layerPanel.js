@@ -39,13 +39,16 @@ function lifecycleStateLabel(lifecycleState) {
 }
 
 // Presentation order is independent of catalog registration and startup order.
+// Each group is a Layers category: `key` is its stable data-layer-group hook
+// (drawer homes and harnesses select it), `label` is what it shows.
 const PANEL_GROUPS = [
   {
+    key: 'transport',
     label: msg('Transport'),
+    icon: 'flight',
     ids: [
       'flights',
       'military',
-      'local-adsb',
       'ais-live-vessels',
       'traffic',
       'transit',
@@ -53,9 +56,16 @@ const PANEL_GROUPS = [
       'directions',
     ],
   },
-  { label: msg('Space'), ids: ['satellites', 'rocket-launches'] },
   {
+    key: 'space',
+    label: msg('Space'),
+    icon: 'satellite_alt',
+    ids: ['satellites', 'rocket-launches'],
+  },
+  {
+    key: 'environment',
     label: msg('Environment'),
+    icon: 'air',
     ids: [
       'air-quality',
       'wind',
@@ -66,13 +76,28 @@ const PANEL_GROUPS = [
     ],
   },
   {
-    label: msg('Imagery & cameras'),
-    ids: ['cctv', 'recent-imagery', 'street-level', 's2-ghostmaps'],
+    key: 'hazards',
+    label: msg('Hazards'),
+    icon: 'local_fire_department',
+    ids: ['earthquakes', 'local-firms', 'fire-perimeters'],
   },
   {
-    label: msg('Infrastructure'),
+    key: 'imagery-cameras',
+    label: msg('Imagery & cameras'),
+    icon: 'videocam',
     ids: [
+      'cctv',
       'alpr-cameras',
+      'recent-imagery',
+      'street-level',
+      's2-ghostmaps',
+    ],
+  },
+  {
+    key: 'infrastructure',
+    label: msg('Infrastructure'),
+    icon: 'cable',
+    ids: [
       'military-installations',
       'local-datacenters',
       'telegeography-submarine-cables',
@@ -80,14 +105,22 @@ const PANEL_GROUPS = [
     ],
   },
   {
-    label: msg('Signals & events'),
-    ids: ['earthquakes', 'local-firms', 'fire-perimeters', 'gnss-integrity'],
+    key: 'radio-signals',
+    label: msg('Radio & signals'),
+    icon: 'sensors',
+    ids: ['radio', 'local-adsb', 'gnss-integrity'],
   },
-  { label: msg('Audio'), ids: ['radio'] },
 ];
-const PANEL_ORDER = PANEL_GROUPS.flatMap(({ label, ids }) =>
-  ids.map((id) => ({ id, label })),
-);
+// Layers no group names (host-registered ones) gather last, in the same form.
+const OTHER_GROUP = Object.freeze({
+  key: 'other',
+  label: msg('Other layers'),
+  icon: 'more_horiz',
+});
+const PANEL_ORDER = PANEL_GROUPS.flatMap(({ ids, ...presentation }) => {
+  const group = Object.freeze(presentation);
+  return ids.map((id) => ({ id, group }));
+});
 const PANEL_POSITIONS = new Map(
   PANEL_ORDER.map(({ id }, index) => [id, index]),
 );
@@ -351,8 +384,7 @@ export class LayerPanel {
           name: panelLabel(layer),
           englishName: englishPanelLabel(layer),
           group:
-            PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.label ||
-            msg('Other layers'),
+            PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.group ?? OTHER_GROUP,
           order: PANEL_POSITIONS.get(layer.id) ?? PANEL_ORDER.length,
           count: this._layerCountText(layer.stats || {}),
           countLine:

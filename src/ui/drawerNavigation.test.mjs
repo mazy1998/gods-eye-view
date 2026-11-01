@@ -253,14 +253,14 @@ test('a panel expanded elsewhere opens its destination; Radio opens Layers', (t)
   assert.equal(radio.parentElement.id, 'global-context-panel');
 });
 
-test("Radio's home in Layers is the Audio group, after its layer row, and expanding it shows it there", async (t) => {
+test("Radio's home in Layers is the Radio & signals group, after its rows, and expanding it shows it there", async (t) => {
   const { drawer, setPanelCollapsed } = fixture();
   t.after(() => drawer.destroy());
   document
     .getElementById('data-panel')
     .insertAdjacentHTML(
       'beforeend',
-      '<section data-layer-group="Weather"><div data-layer-id="wind"></div></section><section data-layer-group="Audio"><div data-layer-id="radio"></div></section>',
+      '<section data-layer-group="environment"><div data-layer-id="wind"></div><div class="layer-group-home"></div></section><section data-layer-group="radio-signals"><div data-layer-id="radio"></div><div class="layer-group-home"></div></section>',
     );
   const radio = document.getElementById('radio-panel');
   const home = radio.previousSibling;
@@ -271,24 +271,31 @@ test("Radio's home in Layers is the Audio group, after its layer row, and expand
   document.addEventListener('gev:focus-layer-row', reveal);
   t.after(() => document.removeEventListener('gev:focus-layer-row', reveal));
   radio.scrollIntoView = (options) =>
-    shown.push(radio.parentElement.dataset.layerGroup, options);
+    shown.push(radio.closest('[data-layer-group]').dataset.layerGroup, options);
   setPanelCollapsed('radio-panel', false, { explicit: true });
   assert.equal(destination(drawer), 'layers');
   assert.deepEqual(shown, ['reveal radio']);
   await flushViews();
-  assert.deepEqual(shown, ['reveal radio', 'Audio', { block: 'nearest' }]);
-  const audio = document.querySelector('[data-layer-group="Audio"]');
+  assert.deepEqual(shown, [
+    'reveal radio',
+    'radio-signals',
+    { block: 'nearest' },
+  ]);
+  const group = document.querySelector('[data-layer-group="radio-signals"]');
   assert.deepEqual(
-    [...audio.children].map((node) => node.id || node.dataset.layerId),
+    [...group.querySelectorAll('[data-layer-id], #radio-panel')].map(
+      (node) => node.id || node.dataset.layerId,
+    ),
     ['radio', 'radio-panel'],
   );
+  assert.equal(radio.parentElement.className, 'layer-group-home');
   assert.ok(drawer.host.contains(radio));
   assert.equal(document.querySelectorAll('#radio-panel').length, 1);
   drawer.close();
   assert.equal(radio.previousSibling, home, 'back in its place in Context');
 });
 
-test('Radio borrowed before the Layers list renders moves into the Audio group once it does', async (t) => {
+test('Radio borrowed before the Layers list renders moves into the Radio & signals group once it does', async (t) => {
   const { drawer } = fixture();
   t.after(() => drawer.destroy());
   // A stored preference opens Layers at startup, before its list mounts.
@@ -302,11 +309,13 @@ test('Radio borrowed before the Layers list renders moves into the Audio group o
     .getElementById('data-panel')
     .insertAdjacentHTML(
       'beforeend',
-      '<section data-layer-group="Audio"><div data-layer-id="radio"></div></section>',
+      '<section data-layer-group="radio-signals"><div data-layer-id="radio"></div><div class="layer-group-home"></div></section>',
     );
   await Promise.resolve();
-  const audio = document.querySelector('[data-layer-group="Audio"]');
-  assert.equal(radio.parentElement, audio);
+  const home = document.querySelector(
+    '[data-layer-group="radio-signals"] .layer-group-home',
+  );
+  assert.equal(radio.parentElement, home);
   assert.equal(document.activeElement, focus, 'focus moves with it');
   drawer.close();
   assert.equal(drawer.host.contains(radio), false);

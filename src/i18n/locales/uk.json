@@ -3003,7 +3003,6 @@
   "All layers": "Усі шари",
   "Appearance": "Оформлення",
   "Ascent path": "Траєкторія виведення",
-  "Audio": "Аудіо",
   "Available missions": "Доступні місії",
   "Back to layers": "Назад до шарів",
   "Browse": "Огляд",
@@ -3122,7 +3121,6 @@
   "Session only": "Лише на час сеансу",
   "Session only — files clear when you reload": "Лише на час сеансу — після перезавантаження файли очищаються",
   "Share view": "Поділитися виглядом",
-  "Signals & events": "Сигнали й події",
   "Space": "Космос",
   "Stage": "Ступінь",
   "Stages and recovery": "Ступені та їх повернення",
@@ -3186,5 +3184,7 @@
   "Internet radio": "Інтернет-радіо",
   "Local receiver (RTL-SDR)": "Локальний приймач (RTL-SDR)",
   "General": "Загальні",
-  "HUD & overlays": "HUD і накладки"
+  "HUD & overlays": "HUD і накладки",
+  "Radio & signals": "Радіо та сигнали",
+  "Hazards": "Загрози"
 }

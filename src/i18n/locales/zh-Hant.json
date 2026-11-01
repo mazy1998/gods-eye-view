@@ -2818,8 +2818,6 @@
   "Space": "太空",
   "Environment": "環境",
   "Imagery & cameras": "影像與攝影機",
-  "Signals & events": "訊號與事件",
-  "Audio": "音訊",
   "{count} layers active": {
     "other": "已啟用 {count} 個圖層"
   },
@@ -2964,5 +2962,7 @@
   "Internet radio": "網路電台",
   "Local receiver (RTL-SDR)": "本機接收器 (RTL-SDR)",
   "General": "一般",
-  "HUD & overlays": "HUD 與疊加層"
+  "HUD & overlays": "HUD 與疊加層",
+  "Radio & signals": "無線電與訊號",
+  "Hazards": "災害"
 }

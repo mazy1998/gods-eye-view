@@ -54,6 +54,8 @@ export const PANEL_LABEL_KEYS = Object.freeze({
   'alpr-cameras': msg('Mapped ALPR Cameras'),
   'local-datacenters': msg('Data Centers'),
   'local-firms': msg('Active Fires'),
+  // The row is the stream player; the RTL-SDR receiver has its own row.
+  radio: msg('Internet radio'),
 });
 
 // Looked up by the English text, so a surface that holds `layer.name` keeps
