@@ -22,7 +22,8 @@ function renderToggle(layer) {
   };
 }
 
-test('panel presentation places Transit between Street Traffic and Bike Share in Transport', () => {
+// The presentation table, read from source so no module side effects run.
+function panelOrder() {
   const source = readFileSync(
     new URL('./layerPanel.js', import.meta.url),
     'utf8',
@@ -31,25 +32,55 @@ test('panel presentation places Transit between Street Traffic and Bike Share in
     source.indexOf('const PANEL_GROUPS ='),
     source.indexOf('const PANEL_POSITIONS ='),
   );
-  const order = JSON.parse(
+  return JSON.parse(
     runInNewContext(
       `const msg = (text) => text;\n${declarations}\nJSON.stringify(PANEL_ORDER)`,
     ),
   );
+}
+const groupIds = (order, key) =>
+  order.filter(({ group }) => group.key === key).map(({ id }) => id);
+
+test('panel presentation places Transit between Street Traffic and Bike Share in Transport', () => {
+  const order = panelOrder();
+  assert.deepEqual(groupIds(order, 'transport'), [
+    'flights',
+    'military',
+    'ais-live-vessels',
+    'traffic',
+    'transit',
+    'bikeshare',
+    'directions',
+  ]);
+  assert.equal(order.filter(({ id }) => id === 'transit').length, 1);
+});
+
+test('Layers groups keep stable keys, with radio, hazards and cameras each in one group', () => {
+  const order = panelOrder();
   assert.deepEqual(
-    order.filter(({ label }) => label === 'Transport').map(({ id }) => id),
+    [...new Map(order.map(({ group }) => [group.key, group.label])).entries()],
     [
-      'flights',
-      'military',
-      'local-adsb',
-      'ais-live-vessels',
-      'traffic',
-      'transit',
-      'bikeshare',
-      'directions',
+      ['transport', 'Transport'],
+      ['space', 'Space'],
+      ['environment', 'Environment'],
+      ['hazards', 'Hazards'],
+      ['imagery-cameras', 'Imagery & cameras'],
+      ['infrastructure', 'Infrastructure'],
+      ['radio-signals', 'Radio & signals'],
     ],
   );
-  assert.equal(order.filter(({ id }) => id === 'transit').length, 1);
+  assert.deepEqual(groupIds(order, 'radio-signals'), [
+    'radio',
+    'local-adsb',
+    'gnss-integrity',
+  ]);
+  assert.deepEqual(groupIds(order, 'hazards'), [
+    'earthquakes',
+    'local-firms',
+    'fire-perimeters',
+  ]);
+  assert.ok(groupIds(order, 'imagery-cameras').includes('alpr-cameras'));
+  assert.equal(new Set(order.map(({ id }) => id)).size, order.length);
 });
 
 test('partial feed controls distinguish incomplete records from stale data and outages', async () => {
@@ -271,7 +302,7 @@ test('uncertain lifecycle state overrides ordinary feed status without disabling
     false,
     'the lifecycle toggle remains available to reconcile authority',
   );
-  assert.equal(button.getAttribute('aria-label'), 'Radio: UNCERTAIN');
+  assert.equal(button.getAttribute('aria-label'), 'Internet radio: UNCERTAIN');
   assert.equal(button.classList.contains('lifecycle-uncertain'), true);
   assert.equal(button.classList.contains('feed-nominal'), false);
   assert.equal(

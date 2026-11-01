@@ -19,11 +19,13 @@ export const DRAWER_DESTINATIONS = Object.freeze(
       label: msg('Layers'),
       subtitle: msg('Choose what appears on the globe'),
       panels: ['data-panel', 'weather-panel', 'recent-imagery-panel'],
-      // Radio lives under Layers → Audio: the one Radio panel moves from
-      // Context into that group, after its layer row, with its own
+      // Radio lives under Layers → Radio & signals: the one Radio panel moves
+      // from Context into that group, after its rows, with its own
       // disclosure, and expanding it opens Layers.
       elements: ['radio-panel'],
-      homes: { 'radio-panel': '[data-layer-group="Audio"]' },
+      homes: {
+        'radio-panel': '[data-layer-group="radio-signals"] .layer-group-home',
+      },
       rows: { 'radio-panel': 'radio' },
       opens: ['radio-panel'],
     },

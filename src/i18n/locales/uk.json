@@ -3004,7 +3004,6 @@
   "All layers": "Усі шари",
   "Appearance": "Оформлення",
   "Ascent path": "Траєкторія виведення",
-  "Audio": "Аудіо",
   "Available missions": "Доступні місії",
   "Back to layers": "Назад до шарів",
   "Browse": "Огляд",
@@ -3126,7 +3125,6 @@
   "Session only": "Лише на час сеансу",
   "Session only — files clear when you reload": "Лише на час сеансу — після перезавантаження файли очищаються",
   "Share view": "Поділитися виглядом",
-  "Signals & events": "Сигнали й події",
   "Space": "Космос",
   "Stage": "Ступінь",
   "Stages and recovery": "Ступені та їх повернення",
@@ -3186,5 +3184,8 @@
   "Bilawal on YouTube": "Bilawal на YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Порада: знайдіть будь-яке місце, щоб одразу туди перелетіти.",
-  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW",
+  "Internet radio": "Інтернет-радіо",
+  "Radio & signals": "Радіо та сигнали",
+  "Hazards": "Загрози"
 }

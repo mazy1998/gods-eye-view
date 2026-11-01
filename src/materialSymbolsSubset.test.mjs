@@ -192,6 +192,26 @@ test('every glyph the sources render is in the icon_names subset', () => {
   );
 });
 
+test('every Layers category icon is in the icon_names subset', () => {
+  // The categories draw `group.icon` from layerPanel.js's presentation table,
+  // which the text scan above cannot follow into a template expression.
+  const source = readFileSync(path.join(SRC_ROOT, 'ui/layerPanel.js'), 'utf8');
+  const table = source.slice(
+    source.indexOf('const PANEL_GROUPS ='),
+    source.indexOf('const PANEL_ORDER ='),
+  );
+  const icons = [...table.matchAll(/\bicon:\s*'([a-z0-9_]+)'/g)].map(
+    ([, icon]) => icon,
+  );
+  // Seven groups plus the fallback for layers no group names.
+  assert.equal(icons.length, 8);
+  const subset = subsettedGlyphs();
+  assert.deepEqual(
+    icons.filter((icon) => !subset.has(icon)),
+    [],
+  );
+});
+
 test('the unused Material Icons Round family is not loaded', () => {
   // A second icon font, 173 kB, for a family no source ever uses — and
   // src/cockpitMarkup.test.mjs already asserts the markup must not use it.

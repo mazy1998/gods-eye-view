@@ -26,17 +26,10 @@ const setCategoryButton = (group, button) => {
   if (button) categoryButtons.set(group, button);
   else categoryButtons.delete(group);
 };
-const categoryIcons = {
-  Space: 'satellite_alt',
-  Environment: 'air',
-  'Imagery & cameras': 'videocam',
-  Infrastructure: 'cable',
-  'Signals & events': 'sensors',
-};
+// Every group is a category: closed until opened, one open at a time, so the
+// overview fits and no long group pushes the others out of view.
 const browsing = computed(() => tab.value === 'all' && !query.value.trim());
-const isCategory = (group) => Object.hasOwn(categoryIcons, group);
-const groupId = (group) =>
-  `layer-category-${Object.keys(categoryIcons).indexOf(group)}`;
+const groupId = (group) => `layer-category-${group.key}`;
 watch(
   [tab, query],
   () => {
@@ -44,28 +37,14 @@ watch(
   },
   { flush: 'sync' },
 );
-const overviewOrder = [
-  'Transport',
-  'Space',
-  'Environment',
-  'Imagery & cameras',
-  'Audio',
-];
-const groups = computed(() =>
-  [
-    ...new Set(
-      props.rows
-        .filter((row) => row.id !== 'directions')
-        .map((row) => row.group),
-    ),
-  ].sort((a, b) => {
-    const rank = (group) => {
-      const index = overviewOrder.indexOf(group);
-      return index < 0 ? overviewOrder.length : index;
-    };
-    return rank(a) - rank(b);
-  }),
-);
+// Rows arrive in presentation order, so groups do too.
+const groups = computed(() => [
+  ...new Map(
+    props.rows
+      .filter((row) => row.id !== 'directions')
+      .map((row) => [row.group.key, row.group]),
+  ).values(),
+]);
 const matches = (name) =>
   name.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase());
 const visible = (row) =>
@@ -74,25 +53,25 @@ const visible = (row) =>
   (matches(row.name) ||
     matches(row.englishName) ||
     (row.id === 'directions' && matches(t('Route planning'))));
-const visibleRows = (group) =>
-  !browsing.value || !isCategory(group) || category.value === group;
+const visibleRows = (group) => !browsing.value || category.value === group.key;
 const closeCategory = async (group) => {
-  const heading = categoryButtons.get(group);
+  const heading = categoryButtons.get(group.key);
   category.value = null;
   await nextTick();
   heading?.focus({ preventScroll: true });
 };
 const visibleGroup = (group) =>
   props.rows.some(
-    (row) => row.id !== 'directions' && row.group === group && visible(row),
+    (row) =>
+      row.id !== 'directions' && row.group.key === group.key && visible(row),
   );
 watch(
   () => props.reveal,
   () => {
     tab.value = 'all';
     query.value = '';
-    const group = props.rows.find((row) => row.id === props.reveal?.id)?.group;
-    category.value = isCategory(group) ? group : null;
+    category.value =
+      props.rows.find((row) => row.id === props.reveal?.id)?.group.key ?? null;
   },
   { flush: 'sync' },
 );
@@ -163,34 +142,31 @@ onUpdated(() => {
     <div v-show="tab !== 'mine'" class="layer-groups">
       <section
         v-for="group in groups"
-        :key="group"
+        :key="group.key"
         v-show="visibleGroup(group)"
-        :data-layer-group="group"
+        :data-layer-group="group.key"
       >
         <button
-          v-if="isCategory(group) && browsing"
-          :ref="(button) => setCategoryButton(group, button)"
+          v-if="browsing"
+          :ref="(button) => setCategoryButton(group.key, button)"
           type="button"
           class="gev-action-button layer-category"
-          :aria-expanded="String(category === group)"
+          :aria-expanded="String(category === group.key)"
           :aria-controls="groupId(group)"
-          @click="category = category === group ? null : group"
+          @click="category = category === group.key ? null : group.key"
         >
           <span class="material-symbols-outlined" aria-hidden="true">{{
-            categoryIcons[group]
+            group.icon
           }}</span>
-          <span>{{ t(group) }}</span>
+          <span>{{ t(group.label) }}</span>
           <span class="material-symbols-outlined" aria-hidden="true">{{
-            category === group ? 'expand_more' : 'chevron_right'
+            category === group.key ? 'expand_more' : 'chevron_right'
           }}</span>
         </button>
-        <h3 v-else class="data-layer-group-heading">{{ t(group) }}</h3>
-        <div
-          :id="isCategory(group) ? groupId(group) : undefined"
-          v-show="visibleRows(group)"
-        >
+        <h3 v-else class="data-layer-group-heading">{{ t(group.label) }}</h3>
+        <div :id="groupId(group)" v-show="visibleRows(group)">
           <button
-            v-if="isCategory(group) && browsing && category === group"
+            v-if="browsing && category === group.key"
             type="button"
             class="gev-action-button layer-category-back"
             @click="closeCategory(group)"
@@ -199,7 +175,7 @@ onUpdated(() => {
           </button>
           <LayerRow
             v-for="row in rows.filter(
-              (row) => row.group === group && row.id !== 'directions',
+              (row) => row.group.key === group.key && row.id !== 'directions',
             )"
             :key="row.id"
             v-show="visible(row)"
@@ -209,6 +185,9 @@ onUpdated(() => {
             :list-item="listItem"
             :details="details"
           />
+          <!-- Where a panel that belongs to the group (Radio) is placed, so it
+               shows and hides with the group's rows. Vue never patches it. -->
+          <div class="layer-group-home"></div>
         </div>
       </section>
       <LayerRow

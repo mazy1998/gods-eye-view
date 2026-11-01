@@ -2964,8 +2964,6 @@
   "Space": "Espacio",
   "Environment": "Medio ambiente",
   "Imagery & cameras": "Imágenes y cámaras",
-  "Signals & events": "Señales y eventos",
-  "Audio": "Audio",
   "{count} layers active": {
     "one": "{count} capa activa",
     "many": "{count} capas activas",
@@ -3112,5 +3110,8 @@
   "Bilawal on YouTube": "Bilawal en YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Consejo: busca cualquier lugar para volar directo allí.",
-  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW",
+  "Internet radio": "Radio por internet",
+  "Radio & signals": "Radio y señales",
+  "Hazards": "Riesgos"
 }

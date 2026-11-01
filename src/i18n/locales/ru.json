@@ -3036,8 +3036,6 @@
   "Space": "Космос",
   "Environment": "Окружающая среда",
   "Imagery & cameras": "Снимки и камеры",
-  "Signals & events": "Сигналы и события",
-  "Audio": "Аудио",
   "{count} layers active": {
     "one": "{count} активный слой",
     "few": "{count} активных слоя",
@@ -3186,5 +3184,8 @@
   "Bilawal on YouTube": "Bilawal на YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Совет: найдите любое место, чтобы сразу туда перелететь.",
-  "ENTER GOD'S EYE VIEW": "ВОЙТИ В GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ВОЙТИ В GOD'S EYE VIEW",
+  "Internet radio": "Интернет-радио",
+  "Radio & signals": "Радио и сигналы",
+  "Hazards": "Угрозы"
 }

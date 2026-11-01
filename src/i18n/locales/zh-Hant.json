@@ -2820,8 +2820,6 @@
   "Space": "太空",
   "Environment": "環境",
   "Imagery & cameras": "影像與攝影機",
-  "Signals & events": "訊號與事件",
-  "Audio": "音訊",
   "{count} layers active": {
     "other": "已啟用 {count} 個圖層"
   },
@@ -2964,5 +2962,8 @@
   "Bilawal on YouTube": "YouTube 上的 Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "提示：搜尋任何地點即可直接飛往該處。",
-  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW",
+  "Internet radio": "網路電台",
+  "Radio & signals": "無線電與訊號",
+  "Hazards": "災害"
 }

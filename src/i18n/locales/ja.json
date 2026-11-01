@@ -2794,7 +2794,6 @@
   "All layers": "すべてのレイヤー",
   "Appearance": "表示テーマ",
   "Ascent path": "上昇経路",
-  "Audio": "オーディオ",
   "Available missions": "利用可能なミッション",
   "Back to layers": "レイヤーに戻る",
   "Browse": "一覧",
@@ -2913,7 +2912,6 @@
   "Session only": "このセッションのみ",
   "Session only — files clear when you reload": "このセッションのみ — 再読み込みするとファイルは消去されます",
   "Share view": "ビューを共有",
-  "Signals & events": "信号とイベント",
   "Space": "宇宙",
   "Stage": "段",
   "Stages and recovery": "段と回収",
@@ -2964,5 +2962,8 @@
   "Bilawal on YouTube": "YouTube の Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "ヒント：場所を検索すると、そこへ直接移動します。",
-  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る"
+  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る",
+  "Internet radio": "インターネットラジオ",
+  "Radio & signals": "無線と信号",
+  "Hazards": "災害"
 }

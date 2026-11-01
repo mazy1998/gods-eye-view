@@ -2864,7 +2864,6 @@
   "All layers": "Alle Ebenen",
   "Appearance": "Erscheinungsbild",
   "Ascent path": "Aufstiegspfad",
-  "Audio": "Audio",
   "Available missions": "Verfügbare Missionen",
   "Back to layers": "Zurück zu den Ebenen",
   "Browse": "Durchsuchen",
@@ -2984,7 +2983,6 @@
   "Session only": "Nur für diese Sitzung",
   "Session only — files clear when you reload": "Nur für diese Sitzung — Dateien werden beim Neuladen entfernt",
   "Share view": "Ansicht teilen",
-  "Signals & events": "Signale & Ereignisse",
   "Space": "Weltraum",
   "Stage": "Stufe",
   "Stages and recovery": "Stufen und Bergung",
@@ -3038,5 +3036,8 @@
   "Bilawal on YouTube": "Bilawal auf YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Tipp: Suche einen beliebigen Ort, um direkt dorthin zu fliegen.",
-  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW STARTEN"
+  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW STARTEN",
+  "Internet radio": "Internetradio",
+  "Radio & signals": "Funk & Signale",
+  "Hazards": "Gefahren"
 }
