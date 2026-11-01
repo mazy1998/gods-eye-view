@@ -233,10 +233,13 @@ export async function _deactivateContextForLayerChange({
       excludeLayerIds,
       deferredLayerIds,
     });
-    return !this.destroyed && generation === this._contextModeGeneration;
+    // A newer transaction cancelled this exit; it did not fail to restore.
+    return !this.destroyed && generation === this._contextModeGeneration
+      ? true
+      : null;
   } catch (error) {
     if (this.destroyed || generation !== this._contextModeGeneration)
-      return false;
+      return null;
     throw error;
   } finally {
     if (!this.destroyed && generation === this._contextModeGeneration) {

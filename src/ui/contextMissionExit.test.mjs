@@ -342,3 +342,29 @@ test(
     assert.equal(f.manager.isEnabled('rocket-launches'), true);
   },
 );
+
+test(
+  'Clear during a Layers-off exit is a silent supersession, not a restore failure',
+  { timeout: 3000 },
+  async (t) => {
+    const f = fixture(t);
+    await enter(f);
+    const gate = hold();
+    t.after(() => gate.resolve());
+    f.hooks['weather:enable'] = () => gate.promise;
+    assert.equal(
+      await f.manager.setEnabled('rocket-launches', false, { origin: 'user' }),
+      true,
+    );
+    await turn();
+    assert.ok(f.log.includes('weather:enable:start'));
+    const clear = f.controls.clearSelectedLayers();
+    gate.resolve();
+    await clear;
+    await f.controls._waitForContextLayerSettlement();
+    assert.deepEqual([...f.manager.getEnabledLayerIds()], []);
+    assert.equal(f.controls.getContextModeState().changing, false);
+    assert.equal(f.notices.length, 1, 'only Clear reports an outcome');
+    assert.match(f.notices[0], /^Cleared /);
+  },
+);

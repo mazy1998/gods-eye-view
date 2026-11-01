@@ -3039,6 +3039,6 @@
   "HUD & overlays": "HUD & Einblendungen",
   "Radio & signals": "Funk & Signale",
   "Hazards": "Gefahren",
-  "Exit Space Missions": "Weltraummissionen verlassen",
-  "Left Space Missions to show {layer}.": "Weltraummissionen verlassen, um {layer} anzuzeigen."
+  "Exit Space Missions": "Raummissionen verlassen",
+  "Left Space Missions to show {layer}.": "Raummissionen beendet, um {layer} anzuzeigen."
 }
