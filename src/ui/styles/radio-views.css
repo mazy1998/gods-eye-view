@@ -11,6 +11,10 @@
   font: inherit;
   font-weight: 600;
 }
+:root[data-ui-theme='cyber'] #radio-panel .radio-subsection-title {
+  font-weight: normal;
+  text-transform: uppercase;
+}
 
 /* The same player returns to Context when Layers releases it. Only the
    modern Inspect hosts conceal that retained launcher, not independent hosts. */

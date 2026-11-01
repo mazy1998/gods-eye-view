@@ -19,7 +19,7 @@ const categoryTextColor = (color) =>
     : undefined;
 </script>
 <template>
-  <section class="radio-internet-section" :aria-label="t('Internet radio')">
+  <div class="radio-internet-section">
     <h3 class="radio-subsection-title">{{ t('Internet radio') }}</h3>
     <div class="radio-directory-row">
       <button
@@ -216,5 +216,5 @@ const categoryTextColor = (color) =>
         )
       }}
     </p>
-  </section>
+  </div>
 </template>

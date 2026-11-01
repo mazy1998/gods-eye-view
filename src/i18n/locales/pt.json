@@ -2763,7 +2763,6 @@
   "STATION SITE": "SITE DA ESTAÇÃO",
   "DIRECTORY: RADIO BROWSER": "DIRETÓRIO: RADIO BROWSER",
   "Audio connects directly to the broadcaster after you press play. Your IP is visible to that broadcaster.": "O áudio conecta direto à emissora depois que você aperta \"Ouvir\". Seu IP fica visível para essa emissora.",
-  "Local RTL-SDR receiver": "Receptor RTL-SDR local",
   "Chrome/Edge · WebUSB · one local tuner shared by FM and the Local ADS-B layer.": "Chrome/Edge · WebUSB · um sintonizador local compartilhado entre o FM e a camada ADS-B local.",
   "Use your location for faster ADS-B position decoding": "Usar sua localização para decodificar as posições ADS-B mais rápido",
   "CHANGE DEVICE": "TROCAR",

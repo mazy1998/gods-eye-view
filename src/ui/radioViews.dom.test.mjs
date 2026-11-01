@@ -19,9 +19,13 @@ test('Radio labels its two sources and hides only the hosted Inspect stub in eve
   const host = document.createElement('div');
   f.container.append(host);
   try {
+    const internet = panel.querySelector('.radio-internet-section');
+    assert.equal(internet.tagName, 'DIV');
+    assert.equal(internet.hasAttribute('aria-label'), false);
+    assert.equal(internet.hasAttribute('role'), false);
     assert.equal(
-      panel.querySelector('.radio-internet-section').getAttribute('aria-label'),
-      'Internet radio',
+      document.getElementById('sdr-radio-card').getAttribute('aria-label'),
+      'Local receiver (RTL-SDR)',
     );
     assert.equal(
       panel.querySelector('.radio-subsection-title').textContent,
@@ -384,6 +388,25 @@ test('the expanded Radio reads in the drawer language outside Cyber, and Cyber k
       'label[for="sdr-frequency-input"]',
     );
     assert.equal(getComputedStyle(heading).textTransform, 'uppercase');
+    const internetHeading = getComputedStyle(
+      document.querySelector('.radio-subsection-title'),
+    );
+    const receiverHeading = getComputedStyle(heading);
+    for (const property of [
+      'fontFamily',
+      'fontSize',
+      'fontWeight',
+      'lineHeight',
+      'letterSpacing',
+      'textTransform',
+      'color',
+    ]) {
+      assert.equal(
+        internetHeading[property],
+        receiverHeading[property],
+        `Cyber source headings share ${property}`,
+      );
+    }
     assert.equal(computed('sdr-seek-back-btn').textTransform, 'uppercase');
     assert.equal(getComputedStyle(frequency).textTransform, 'uppercase');
     document.documentElement.lang = 'zh-CN';

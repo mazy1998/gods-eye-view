@@ -1088,7 +1088,8 @@ html:not([lang='en']) .data-row-list-text {
 .sdr-radio-heading {
   justify-content: space-between;
 }
-.sdr-radio-heading strong {
+.sdr-radio-heading strong,
+:root[data-ui-theme='cyber'] #radio-panel .radio-subsection-title {
   color: #ffd38a;
   font: 9px/1 var(--font-mono);
   letter-spacing: 0.1em;

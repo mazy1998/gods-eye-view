@@ -2619,7 +2619,6 @@
   "STATION SITE": "放送局サイト",
   "DIRECTORY: RADIO BROWSER": "ディレクトリ：Radio Browser",
   "Audio connects directly to the broadcaster after you press play. Your IP is visible to that broadcaster.": "再生ボタンを押すと、音声は放送局に直接接続されます。お使いのIPアドレスは放送局側から見えます。",
-  "Local RTL-SDR receiver": "ローカルRTL-SDR受信機",
   "Chrome/Edge · WebUSB · one local tuner shared by FM and the Local ADS-B layer.": "Chrome/Edge · WebUSB · FMとローカルADS-Bレイヤーで1台のローカルチューナーを共有します。",
   "Use your location for faster ADS-B position decoding": "位置情報を使ってADS-Bの位置デコードを高速化",
   "CHANGE DEVICE": "デバイスを変更",
