@@ -1102,6 +1102,7 @@ export class StyleManager extends ShellFacade {
         _globalContextMissionsBtn: this._globalContextMissionsBtn,
         _globalContextCamerasBtn: this._globalContextCamerasBtn,
         _contextModeStandby: this._contextModeStandby,
+        _exitSpaceMissionsBtn: this._exitSpaceMissionsBtn,
         _contextFlightsView: this._contextFlightsView,
         _contextMissionsView: this._contextMissionsView,
         _contextCamerasView: this._contextCamerasView,

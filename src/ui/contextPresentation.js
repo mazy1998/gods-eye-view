@@ -28,6 +28,26 @@ export function _syncContextModeButtons({ presentationOnly = false } = {}) {
     String(camerasShown),
   );
   const transitionBusy = Boolean(this._contextModeChanging);
+  const exitingMissions =
+    this._spaceMissionsExit?.generation === this._contextModeGeneration;
+  if (this._exitSpaceMissionsBtn) {
+    const focused =
+      this._exitSpaceMissionsBtn.ownerDocument?.activeElement ===
+      this._exitSpaceMissionsBtn;
+    this._exitSpaceMissionsBtn.hidden = !(
+      missionsActive ||
+      this._contextModeEntering === 'space-missions' ||
+      exitingMissions
+    );
+    const busy = Boolean(exitingMissions || this._clearSelectedLayersPromise);
+    this._exitSpaceMissionsBtn.setAttribute('aria-busy', String(busy));
+    this._exitSpaceMissionsBtn.setAttribute('aria-disabled', String(busy));
+    if (this._exitSpaceMissionsBtn.hidden && focused)
+      (camerasShown
+        ? this._globalContextCamerasBtn
+        : this._globalContextMissionsBtn
+      )?.focus?.({ preventScroll: true });
+  }
   // Both Context choices stay in the ordinary Tab sequence. Arrow keys still
   // provide tablist navigation, but must not be the only way to reach Space
   // Missions from the keyboard. Semantic busy state keeps them perceivable

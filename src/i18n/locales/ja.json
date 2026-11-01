@@ -2964,5 +2964,7 @@
   "General": "一般",
   "HUD & overlays": "HUD とオーバーレイ",
   "Radio & signals": "無線と信号",
-  "Hazards": "災害"
+  "Hazards": "災害",
+  "Exit Space Missions": "宇宙ミッションを終了",
+  "Left Space Missions to show {layer}.": "{layer}を表示するため宇宙ミッションを終了しました。"
 }

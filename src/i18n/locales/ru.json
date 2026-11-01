@@ -3186,5 +3186,7 @@
   "General": "Общие",
   "HUD & overlays": "HUD и наложения",
   "Radio & signals": "Радио и сигналы",
-  "Hazards": "Угрозы"
+  "Hazards": "Угрозы",
+  "Exit Space Missions": "Выйти из космических миссий",
+  "Left Space Missions to show {layer}.": "Режим космических миссий закрыт для отображения {layer}."
 }

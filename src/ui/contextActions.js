@@ -60,6 +60,42 @@ export function getContextModeState() {
   };
 }
 
+/** Share the normal exit transaction between the visible control and user enables. */
+export function exitSpaceMissions({ deferredEntry = false } = {}) {
+  if (this.destroyed || this._clearSelectedLayersPromise)
+    return Promise.resolve(false);
+  if (this._spaceMissionsExit?.generation === this._contextModeGeneration)
+    return this._spaceMissionsExit.promise;
+  if (
+    (this._contextModeEntering || this._contextMode) !== 'space-missions' &&
+    !(deferredEntry && this._contextSessionSnapshot)
+  )
+    return Promise.resolve(false);
+  this._claimContextVisualAuthority();
+  const exit = {
+    generation: this._contextModeGeneration + 1,
+    deferredLayerIds: new Set(this._pendingMissionLayerEnables.keys()),
+    promise: null,
+  };
+  this._spaceMissionsExit = exit;
+  exit.promise = this._runUserFacingContextAction(
+    (notificationToken) =>
+      this._deactivateContextForLayerChange({
+        notificationToken,
+        excludeLayerIds: exit.deferredLayerIds,
+        deferredLayerIds: exit.deferredLayerIds,
+      }),
+    undefined,
+    { falseIsFailure: false },
+  ).finally(() => {
+    if (this._spaceMissionsExit === exit) {
+      this._spaceMissionsExit = null;
+      this._syncContextModeButtons();
+    }
+  });
+  return exit.promise;
+}
+
 export async function setContextMode(
   mode,
   {
@@ -209,6 +245,7 @@ export function clearSelectedLayers() {
   this._contextModeEntering = null;
   this._contextModeEntryIntent = null;
   this._contextModeReplacementIntent = null;
+  this._pendingMissionLayerEnables?.clear();
   this._contextSessionSnapshot = null;
   this._contextRestoreState = null;
   this._preservePanelStateDuringLayerClear = true;

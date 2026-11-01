@@ -20,6 +20,34 @@ export function connectContextManager(manager) {
     this._dataManagerVisibilityRequestUnsubscribe =
       this._dataManager.subscribeVisibilityRequests((change) => {
         if (this.destroyed) return;
+        const exiting =
+          this._spaceMissionsExit?.generation === this._contextModeGeneration
+            ? this._spaceMissionsExit
+            : null;
+        if (
+          contextLayerEnableBlockReason({
+            contextMode: exiting
+              ? 'space-missions'
+              : this._contextModeEntering || this._contextMode,
+            change,
+          }) &&
+          isExplicitUserIntentOrigin(change.origin, change.layerId)
+        ) {
+          this._pendingMissionLayerEnables.set(change.layerId, {
+            intentEpoch: change.intentEpoch,
+            notify: false,
+            waitForClear: Boolean(
+              this._clearSelectedLayersPromise &&
+              this._contextModeDeferredEntryIntent,
+            ),
+          });
+          if (
+            this._clearSelectedLayersPromise &&
+            this._contextModeDeferredEntryIntent
+          )
+            this._contextModeDeferredEntryIntent = null;
+          exiting?.deferredLayerIds.add(change.layerId);
+        }
         if (shouldCaptureContextSession(change)) {
           // This event is synchronous with intent publication, before an
           // awaited guard or Clear All can alter the rest of the layer set.
@@ -63,12 +91,41 @@ export function connectContextManager(manager) {
         const layerName =
           this._dataManager?.layers?.get(change.layerId)?.module?.name ||
           change.layerId;
+        const exiting =
+          this._spaceMissionsExit?.generation === this._contextModeGeneration
+            ? this._spaceMissionsExit
+            : null;
         const reason = contextLayerEnableBlockReason({
-          contextMode: this._contextModeEntering || this._contextMode,
+          contextMode: exiting
+            ? 'space-missions'
+            : this._contextModeEntering || this._contextMode,
           change,
           layerName,
         });
-        if (reason) return reason;
+        const restoringExit =
+          exiting &&
+          ['context-restore', 'context-intent-replay'].includes(change.origin);
+        if (reason && !restoringExit) {
+          if (!isExplicitUserIntentOrigin(change.origin, change.layerId))
+            return reason;
+          const pending = this._pendingMissionLayerEnables.get(
+            change.layerId,
+          ) || { intentEpoch: change.intentEpoch };
+          pending.notify = true;
+          this._pendingMissionLayerEnables.set(change.layerId, pending);
+          if (this._clearSelectedLayersPromise && pending.waitForClear)
+            await this._clearSelectedLayersPromise;
+          const exited = await this.exitSpaceMissions({
+            deferredEntry: pending.waitForClear,
+          });
+          pending.exitFailed = exited !== true;
+          if (!exited || this.destroyed) return reason;
+          return contextLayerEnableBlockReason({
+            contextMode: this._contextModeEntering || this._contextMode,
+            change,
+            layerName,
+          });
+        }
         if (
           change.enabled &&
           ['military-awareness', 'rocket-launches'].includes(change.layerId) &&
@@ -88,6 +145,7 @@ export function connectContextManager(manager) {
           const priorChanging = deferredClearEntry
             ? false
             : this._contextModeChanging;
+          const generation = this._contextModeGeneration;
           const notificationToken =
             change.notificationToken || Symbol('direct-context-shell-entry');
           const ownsNotificationToken = !change.notificationToken;
@@ -112,6 +170,8 @@ export function connectContextManager(manager) {
             });
             if (this.destroyed) return false;
           } catch (error) {
+            if (this.destroyed || generation !== this._contextModeGeneration)
+              return false;
             this._contextModeEntering = null;
             console.warn(`[Context] ${change.layerId} isolation failed`, error);
             try {
@@ -140,7 +200,8 @@ export function connectContextManager(manager) {
                 notificationToken,
               );
             }
-            if (!this.destroyed) settleContextModeChange(this, priorChanging);
+            if (!this.destroyed && generation === this._contextModeGeneration)
+              settleContextModeChange(this, priorChanging);
           }
         }
         return null;

@@ -19,6 +19,7 @@ import {
   getContextModeState,
   setContextMode,
   clearSelectedLayers,
+  exitSpaceMissions,
 } from './contextActions.js';
 import { connectContextManager } from './contextSubscriptions.js';
 import { createStateChannel } from '../app/stateChannel.js';
@@ -41,6 +42,8 @@ export class ContextControls {
     this._contextModeEntryIntent = null;
     this._contextModeReplacementIntent = null;
     this._contextModeDeferredEntryIntent = null;
+    this._spaceMissionsExit = null;
+    this._pendingMissionLayerEnables = new Map();
     this._contextSessionSnapshot = null;
     this._contextRestoreState = null;
     this._contextLayerReactionPromises = new Set();
@@ -103,6 +106,7 @@ export class ContextControls {
     if (this.destroyed) return;
     this.destroyed = true;
     this._contextModeGeneration++;
+    this._pendingMissionLayerEnables.clear();
     this.listeners.abort();
     this.clearChannel?.destroy();
   }
@@ -155,6 +159,9 @@ export class ContextControls {
   }
   setContextMode(...args) {
     return setContextMode.call(this, ...args);
+  }
+  exitSpaceMissions(...args) {
+    return exitSpaceMissions.call(this, ...args);
   }
   clearSelectedLayers(...args) {
     return clearSelectedLayers.call(this, ...args);

@@ -1249,3 +1249,8 @@
   small::after {
   content: none;
 }
+
+#global-context-panel .context-exit-button {
+  width: 100%;
+  margin: 8px 0;
+}

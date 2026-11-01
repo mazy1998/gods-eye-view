@@ -44,6 +44,7 @@ export async function _restoreContextSession({
   excludeLayerIds = [],
   notificationToken = null,
   signal = null,
+  deferredLayerIds = null,
 } = {}) {
   const snapshot = this._contextSessionSnapshot;
   if (!snapshot || !this._dataManager) return;
@@ -60,6 +61,26 @@ export async function _restoreContextSession({
   }
   let restoreError = null;
   const restoreSnapshot = async (restoreSignal = null) => {
+    // Stop the mission/replay owner before bringing the previous live layers back.
+    const missionsId = 'rocket-launches';
+    if (
+      !restoreState.enabledLayerIds.has(missionsId) &&
+      !new Set(excludeLayerIds).has(missionsId) &&
+      this._dataManager.isEffectivelyEnabled(missionsId)
+    ) {
+      const stopped = await this._dataManager.setEnabled(missionsId, false, {
+        origin: 'context-restore',
+        ...(notificationToken ? { notificationToken } : {}),
+        ...(restoreSignal ? { signal: restoreSignal } : {}),
+      });
+      if (stopped === false) {
+        const error = new Error(
+          'Failed to settle Space Missions before restoring Context',
+        );
+        error.failedLayerIds = [missionsId];
+        throw error;
+      }
+    }
     // Contacts owns the dependency intents it starts. Settle that
     // coordinator before restoring the remaining snapshot, otherwise its
     // dependency releases can supersede the restore's same-target requests
@@ -97,6 +118,7 @@ export async function _restoreContextSession({
           ? [...excludeLayerIds, contactsCoordinatorId]
           : excludeLayerIds,
         notificationToken,
+        ...(deferredLayerIds ? { deferredLayerIds } : {}),
         ...(restoreSignal ? { signal: restoreSignal } : {}),
       },
     );
