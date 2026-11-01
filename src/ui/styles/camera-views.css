@@ -272,13 +272,13 @@
   > .panel-glow {
   display: none;
 }
+/* A rule divides Street Level from CCTV above it in Inspect; with CCTV in
+   the slot, or alone in the slot itself, it needs none. */
 :where(:root:not([data-ui-theme='cyber']))
-  :is(
-    .gev-legacy-host #context-cameras-view,
-    .mobile-shell #context-cameras-view,
-    .gev-slot-body
-  )
-  #street-level-panel {
+  :is(.gev-legacy-host, .mobile-shell)
+  #context-cameras-view
+  > #cctv-panel
+  + #street-level-panel {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--gev-border-subtle);
