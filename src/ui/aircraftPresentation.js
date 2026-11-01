@@ -1,4 +1,5 @@
 import { formatNumber, t } from '../i18n/index.js';
+import { formatQuantity } from './unitLabels.js';
 
 /** A selected owner's measurements, not values parsed from its on-globe label. */
 export function aircraftPresentation(info, now = Date.now()) {
@@ -8,7 +9,12 @@ export function aircraftPresentation(info, now = Date.now()) {
       ? formatNumber(value, { maximumFractionDigits: digits })
       : '—';
   const measure = (value, unit, digits = 0) =>
-    Number.isFinite(value) ? `${number(value, digits)} ${unit}` : '—';
+    Number.isFinite(value)
+      ? formatQuantity(value, unit, {
+          useGrouping: true,
+          maximumFractionDigits: digits,
+        })
+      : '—';
   const row = (label, value) => ({ label, value });
   const identity = [
     row('ICAO', text(info.icao24).toUpperCase()),
@@ -49,7 +55,7 @@ export function aircraftPresentation(info, now = Date.now()) {
             ),
       ),
       row(
-        t('Speed'),
+        t('Ground speed'),
         measure(
           Number.isFinite(info.velocityMps)
             ? info.velocityMps * 1.9438444924406

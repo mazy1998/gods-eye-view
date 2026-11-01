@@ -11,6 +11,7 @@ test('English readings and scales read exactly as the unit ids', () => {
   assert.equal(unitLabel(''), '');
   assert.equal(formatQuantity(95, 'kt'), '95 kt');
   assert.equal(formatQuantity(1006, 'hPa'), '1006 hPa');
+  assert.equal(formatQuantity(500, 'ft/min'), '500 ft/min');
   assert.equal(
     formatQuantity(22, 'km/h', {
       minimumFractionDigits: 1,
@@ -35,6 +36,7 @@ test('other languages get their decimal separator and no digit grouping', () => 
       /^22,0 \S+$/,
     );
     assert.match(formatQuantity(1050, 'hPa'), /^1050 /);
+    assert.equal(formatQuantity(500, 'ft/min'), '500 фт/мин');
     assert.deepEqual(['0.1', '-40', '1050+'].map(formatScaleLabel), [
       '0,1',
       '-40',

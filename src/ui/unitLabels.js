@@ -10,6 +10,7 @@ const UNIT_LABELS = Object.freeze({
   kt: msg('kt'),
   kts: msg('kts'),
   ft: msg('ft'),
+  'ft/min': msg('ft/min'),
   km: msg('km'),
   m: msg('m'),
   h: msg('h'),

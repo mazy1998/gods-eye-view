@@ -111,6 +111,19 @@ export function connectAircraftSlot({
     else withdraw();
   };
   const onTracked = () => {
+    if (viewer.trackedEntity?.gevSelectionOrigin === 'programmatic') {
+      revision++;
+      // An automatic handoff can invalidate an older card, but cannot claim
+      // the slot or disturb a camera or independently selected receiver.
+      if (
+        selected &&
+        selected.layerId !== 'local-adsb' &&
+        viewer.trackedEntity.gevTrackedId !==
+          `${selected.layerId}:${selected.icao}`
+      )
+        withdraw();
+      return;
+    }
     if (viewer.trackedEntity) selectEntity(viewer.trackedEntity);
     else if (selected && selected.layerId !== 'local-adsb') {
       revision++;
@@ -128,8 +141,9 @@ export function connectAircraftSlot({
   // The awareness event is emitted before its Context record is registered.
   // Its id already identifies the owner, so no stale Context snapshot is read.
   const onAircraft = (event) => {
-    const { layerId, id } = event.detail || {};
+    const { layerId, id, origin } = event.detail || {};
     const ticket = ++revision;
+    if (origin === 'programmatic') return;
     queueMicrotask(() => {
       if (!destroyed && ticket === revision) select(layerId, id);
     });

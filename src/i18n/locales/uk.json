@@ -3197,5 +3197,7 @@
   "Squawk": "Код транспондера",
   "Position": "Положення",
   "Received {seconds} s ago": "Отримано {seconds} с тому",
-  "Receive time unavailable": "Час приймання недоступний"
+  "Receive time unavailable": "Час приймання недоступний",
+  "Ground speed": "Шляхова швидкість",
+  "ft/min": "фт/хв"
 }

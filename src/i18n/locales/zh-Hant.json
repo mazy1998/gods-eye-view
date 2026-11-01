@@ -2975,5 +2975,7 @@
   "Squawk": "應答機編碼",
   "Position": "位置",
   "Received {seconds} s ago": "{seconds} 秒前接收",
-  "Receive time unavailable": "接收時間無法取得"
+  "Receive time unavailable": "接收時間無法取得",
+  "Ground speed": "地速",
+  "ft/min": "ft/分鐘"
 }

@@ -33,7 +33,7 @@ test('aircraft values are literal text, grouped and updated without new actions'
       stale: true,
     }),
   });
-  assert.match(document.querySelector('article').textContent, /10,000 ft/);
+  assert.match(document.querySelector('article').textContent, /10,000\u00a0ft/);
   assert.equal(document.querySelector('.gev-aircraft-route'), null);
   assert.match(document.querySelector('footer').textContent, /Stale source/);
 });

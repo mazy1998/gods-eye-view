@@ -3049,5 +3049,7 @@
   "Squawk": "Transpondercode",
   "Position": "Position",
   "Received {seconds} s ago": "Vor {seconds} s empfangen",
-  "Receive time unavailable": "Empfangszeit nicht verfügbar"
+  "Receive time unavailable": "Empfangszeit nicht verfügbar",
+  "Ground speed": "Geschwindigkeit über Grund",
+  "ft/min": "ft/min"
 }

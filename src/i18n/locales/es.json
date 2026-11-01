@@ -3123,5 +3123,7 @@
   "Squawk": "Código de transpondedor",
   "Position": "Posición",
   "Received {seconds} s ago": "Recibido hace {seconds} s",
-  "Receive time unavailable": "Hora de recepción no disponible"
+  "Receive time unavailable": "Hora de recepción no disponible",
+  "Ground speed": "Velocidad respecto al suelo",
+  "ft/min": "ft/min"
 }
