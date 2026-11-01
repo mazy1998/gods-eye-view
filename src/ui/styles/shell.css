@@ -1236,27 +1236,17 @@ body.scene-playback-mode .gev-map-controls {
    does, and in clean view, recording and embed. */
 :root {
   --gev-slot-width: 340px;
-  /* North, Tilt and Home: three buttons, their gaps, padding and border. */
-  --gev-map-controls-stack: calc(
-    3 * var(--gev-map-control-size) + 4 * var(--gev-space-1) + 2px
-  );
-  --gev-slot-bottom: calc(
-    var(--gev-status-height) + 3.25rem + var(--gev-map-controls-stack) +
-      var(--gev-space-3)
-  );
 }
-:root:not([data-ui-theme='cyber']) {
-  --gev-map-controls-stack: calc(3 * var(--gev-map-control-size) + 26px);
-  --gev-slot-bottom: calc(
-    var(--gev-status-height) + 16px + var(--gev-map-controls-stack) +
-      var(--gev-space-3)
-  );
-}
+/* The bottom clears the map controls: their offset, then North, Tilt and
+   Home with their gaps, padding and border, then a gap. */
 .gev-slot {
   position: fixed;
   top: calc(var(--gev-header-height) + var(--gev-drawer-inset));
   right: var(--gev-drawer-inset);
-  bottom: var(--gev-slot-bottom);
+  bottom: calc(
+    var(--gev-status-height) + 3.25rem + 3 * var(--gev-map-control-size) + 4 *
+      var(--gev-space-1) + 2px + var(--gev-space-3)
+  );
   z-index: 120;
   display: flex;
   flex-direction: column;
@@ -1270,6 +1260,12 @@ body.scene-playback-mode .gev-map-controls {
   box-shadow: var(--gev-elevation-2);
   backdrop-filter: var(--gev-backdrop-blur);
   overflow: hidden;
+}
+:where(:root:not([data-ui-theme='cyber'])) .gev-slot {
+  bottom: calc(
+    var(--gev-status-height) + 16px + 3 * var(--gev-map-control-size) + 26px +
+      var(--gev-space-3)
+  );
 }
 .gev-slot[hidden],
 body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
@@ -1313,16 +1309,20 @@ body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
 .gev-slot-actions {
   display: contents;
 }
-.gev-slot-header .gev-icon-button {
+/* Outside Cyber, Close is a quiet icon button, as in the drawer's header, and
+   Street Level's on/off switch, which rides beside it, matches it. Cyber
+   keeps both controls' own paint. */
+:where(:root:not([data-ui-theme='cyber'])) .gev-slot-header .gev-icon-button {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
 }
-.gev-slot-header .gev-icon-button:hover:not(:disabled) {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-slot-header
+  .gev-icon-button:hover:not(:disabled) {
   background: var(--gev-control-bg-hover);
 }
-/* Street Level's on/off switch rides in the header beside Close. */
-.gev-slot-actions > #sl-status {
+:where(:root:not([data-ui-theme='cyber'])) .gev-slot-actions > #sl-status {
   min-width: 32px;
   min-height: 32px;
   border: 1px solid var(--gev-border);
@@ -1334,12 +1334,16 @@ body:is(.ui-clean-view, .recording-mode, .ui-embed) .gev-slot {
   font: 600 var(--gev-font-size-xs) / 1.2 var(--gev-font-sans);
   letter-spacing: normal;
 }
-.gev-slot-actions > #sl-status[aria-pressed='true'] {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-slot-actions
+  > #sl-status[aria-pressed='true'] {
   border-color: var(--gev-accent-tint-border);
   background: var(--gev-accent-tint);
   color: var(--gev-accent-text);
 }
-.gev-slot-actions > #sl-status:focus-visible {
+:where(:root:not([data-ui-theme='cyber']))
+  .gev-slot-actions
+  > #sl-status:focus-visible {
   outline: 2px solid var(--gev-focus-ring);
   outline-offset: 2px;
 }
