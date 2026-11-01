@@ -366,6 +366,15 @@ try {
     element.scrollIntoView({ block: 'center' }),
   );
   await wait(400);
+  // Transport is a Layers category that starts closed: open it as a user
+  // would, and let the list paint.
+  await page.evaluate(async () => {
+    for (const category of document.querySelectorAll(
+      '[data-layer-group="transport"] > .layer-category[aria-expanded="false"]',
+    ))
+      category.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
   const before = transitRequests.length;
   await page.click(`${row} .data-toggle-btn`);
   await page.waitForFunction(

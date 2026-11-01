@@ -207,6 +207,19 @@ const checkResponsiveStyleFocus = async (width) => {
 
 // Start from an explicit boundary, then use real Tab events for every target.
 // No layer or location action is activated merely to establish keyboard focus.
+// Every Layers group is a category that starts closed: open the category
+// around each row for this layer as a user would (a re-render can leave more
+// than one list), and let the list paint. With `focus`, keyboard travel starts
+// from the first category's own button, just before its rows.
+const openLayerCategory = (id, { focus = false } = {}) => page.evaluate(async (layerId, focusButton) => {
+  const categories = [...document.querySelectorAll(`[data-layer-id="${layerId}"]`)]
+    .map((row) => row.closest('[data-layer-group]')?.querySelector(':scope > .layer-category'))
+    .filter(Boolean);
+  for (const category of categories)
+    if (category.getAttribute('aria-expanded') === 'false') category.click();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  if (focusButton) categories[0]?.focus();
+}, id, focus);
 const tabTo = async (selector, { backwards = false, limit = 160 } = {}) => {
   if (backwards) await page.keyboard.down('Shift');
   try {
@@ -1244,6 +1257,7 @@ try {
         await page.focus('.panel-collapse-btn[data-collapse-target="data-panel"]');
         const targets = [[dataSetup.offId, 'OFF', false], [dataSetup.fixtureIds[0], 'ON', true], [dataSetup.fixtureIds[1], 'STALE', true]];
         for (const [id, label, enabled] of targets) {
+          await openLayerCategory(id, { focus: true });
           const navigation = await tabTo(`[data-layer-id="${id}"] .data-toggle-btn`);
           const state = await layerFocusState(id);
           check(`Data Layers: ${width} px ${label} Tab focus ring is visible`,
@@ -1288,6 +1302,7 @@ try {
       await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
       await waitForShellSettled();
       await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('data-panel', false, { persist: false, syncShare: false }));
+      await openLayerCategory(dataSetup.transitionId);
       await page.focus('.panel-collapse-btn[data-collapse-target="data-panel"]');
       const transitionTab = await tabTo(`[data-layer-id="${dataSetup.transitionId}"] .data-toggle-btn`);
       const transitionBefore = await layerFocusState(dataSetup.transitionId);
