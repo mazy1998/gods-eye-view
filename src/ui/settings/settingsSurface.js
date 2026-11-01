@@ -58,6 +58,7 @@ export function createSettingsSurface({
     closeLanguage: () => !disposed && closeLanguage?.(),
     openProviders() {
       if (disposed) return;
+      // Native provider dialogs need the same landing as the embedded form.
       select('providers');
       return provider?.open?.();
     },

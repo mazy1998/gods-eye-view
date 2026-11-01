@@ -244,7 +244,13 @@ test('Map & Look geometry keeps the Display frame strict and exempts only its st
     ),
   );
   assert.ok(doc.querySelector('#pp-toggles > .pp-panel-body > .map-look'));
-  assert.equal(doc.querySelectorAll('.style-btn').length, 7);
+  assert.deepEqual(
+    [...doc.querySelectorAll('.map-look > .gev-tabs > .gev-tab')].map((tab) =>
+      tab.textContent.trim(),
+    ),
+    ['Map', 'Look', 'HUD & overlays'],
+  );
+  assert.equal(doc.querySelectorAll('.style-btn').length, 6);
   assert.equal(doc.querySelectorAll('.map-stack-chip').length, 5);
   dom.window.close();
   const reasons = new Set(fixture.structuralExceptions.map((e) => e.reason));

@@ -1,27 +1,41 @@
 [
   {
     "id": "map-look-tabs",
-    "reason": "Map & Look presents Map, Look and Display as tabs in every appearance; the Display groups, the parameter panel and the image adjustments move into tab panels. Cyber keeps its panel frame, DISPLAY header, palette and typography.",
-    "expected": { "tabs": ["Map", "Look", "Display"], "openingTab": "Look" }
+    "reason": "Map & Look presents Map, Look and HUD & overlays as tabs in every appearance; the Display groups, the parameter panel and the image adjustments move into tab panels. Cyber keeps its panel frame, DISPLAY header, palette and typography.",
+    "expected": {
+      "tabs": ["Map", "Look", "HUD & overlays"],
+      "openingTab": "Look"
+    }
   },
   {
     "id": "style-tiles",
-    "reason": "The seven style buttons move from the retired dock tray into the Look tab as two-column tiles with a drawn local picture and their 1–7 key. Cyber skins them with its existing style-button palette.",
-    "expected": { "columns": 2, "tiles": 7, "pictureAspectRatio": "16 / 7" }
+    "reason": "The six style buttons move from the retired dock tray into the Look tab as two-column tiles with a drawn local picture and their 1–6 key. Cyber skins them with its existing style-button palette.",
+    "expected": {
+      "columns": 2,
+      "tiles": 6,
+      "pictureAspectRatio": "16 / 7"
+    }
   },
   {
     "id": "map-source-tiles",
     "reason": "The five map-source chips move from the retired dock tray into the Map tab as two-column tiles under the MAP SOURCE heading and status. Cyber skins them with its existing chip palette.",
-    "expected": { "columns": 2, "minimumHeight": 44 }
+    "expected": {
+      "columns": 2,
+      "minimumHeight": 44
+    }
   },
   {
     "id": "image-adjustments",
     "reason": "Sharpen and Bloom sit under an Image adjustments heading in the Look tab. Cyber keeps their own toggle and slider rows.",
-    "expected": { "order": ["sharpen", "bloom"] }
+    "expected": {
+      "order": ["sharpen", "bloom"]
+    }
   },
   {
     "id": "panel-footer",
     "reason": "A style-shortcuts hint and, where Provider Settings works, a Configure map providers link close the panel; both are new text, without Cyber chrome.",
-    "expected": { "minimumHeight": 44 }
+    "expected": {
+      "minimumHeight": 44
+    }
   }
 ]

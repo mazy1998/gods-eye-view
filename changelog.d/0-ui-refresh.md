@@ -20,4 +20,3 @@
   owners, so layers, share links, voice actions and scenes behave as before,
   and hosts that build the published UI modules the earlier way keep working
   (#0).
-- Group Settings into Providers, Voice, General and Help, and label the map display tab HUD & overlays.
