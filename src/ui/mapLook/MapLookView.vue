@@ -44,7 +44,7 @@ const tabs = () => [
   },
   {
     value: 'display',
-    label: t('Display'),
+    label: t('HUD & overlays'),
     id: 'map-look-display-tab',
     controls: 'map-look-display',
   },

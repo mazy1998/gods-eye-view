@@ -3120,7 +3120,6 @@
   "Missions — launches and orbital assets": "Миссии — пуски и орбитальные аппараты",
   "Providers": "Поставщики",
   "Voice": "Голос",
-  "Language & help": "Язык и помощь",
   "The globe works without keys.": "Глобус работает без ключей.",
   "Loading provider settings…": "Загрузка настроек поставщиков…",
   "Provider keys can be configured on the machine running the app.": "Ключи поставщиков настраиваются на компьютере, где запущено приложение.",
@@ -3138,7 +3137,6 @@
   "Keys are saved on this machine.": "Ключи сохраняются на этом компьютере.",
   "Voice settings are unavailable.": "Настройки голоса недоступны.",
   "Look": "Вид",
-  "Display": "Экран",
   "Image adjustments": "Настройки изображения",
   "Style shortcuts 1–6": "Клавиши стилей 1–6",
   "Configure map providers": "Настроить поставщиков карт",
@@ -3186,5 +3184,7 @@
   "Tip: search for any place to fly straight to it.": "Совет: найдите любое место, чтобы сразу туда перелететь.",
   "ENTER GOD'S EYE VIEW": "ВОЙТИ В GOD'S EYE VIEW",
   "Internet radio": "Интернет-радио",
-  "Local receiver (RTL-SDR)": "Локальный приёмник (RTL-SDR)"
+  "Local receiver (RTL-SDR)": "Локальный приёмник (RTL-SDR)",
+  "General": "Общие",
+  "HUD & overlays": "HUD и наложения"
 }

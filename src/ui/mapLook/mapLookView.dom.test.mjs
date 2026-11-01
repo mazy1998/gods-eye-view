@@ -32,7 +32,7 @@ test('it opens on Look, and a tab shows its own panel only', (t) => {
     [
       ['Map', 'false', 'map-look-map'],
       ['Look', 'true', 'map-look-look'],
-      ['Display', 'false', 'map-look-display'],
+      ['HUD & overlays', 'false', 'map-look-display'],
     ],
   );
   assert.deepEqual(panels(view), {

@@ -6,6 +6,7 @@ import { container, mount } from '../../testSupport/componentDom.mjs';
 const { nextTick } = await import('vue');
 const { initKeySetup } = await import('../../keySetup.js');
 const { createSettingsSurface } = await import('./settingsSurface.js');
+const { createAppearance } = await import('../appearance.js');
 const { default: SettingsView } = await import('./SettingsView.vue');
 const template = readFileSync(
   new URL('../templates/provider-settings.html', import.meta.url),
@@ -26,7 +27,7 @@ const status = {
   total: 4,
 };
 
-async function fixture(t, saveResponse) {
+async function fixture(t, saveResponse, props = {}) {
   container.innerHTML = template;
   const picker = document.getElementById('locale-picker');
   picker.innerHTML = '<button>Language</button>';
@@ -38,7 +39,7 @@ async function fixture(t, saveResponse) {
     openVoice: () => actions.push('voice'),
     closeLanguage: () => actions.push('language-close'),
   });
-  const view = mount(SettingsView, { props: { surface } });
+  const view = mount(SettingsView, { props: { surface, ...props } });
   const provider = await initKeySetup({
     documentRef: document,
     fetchImpl: async (url, init) =>
@@ -88,7 +89,7 @@ test('sections lease one native provider form, preserving masked inputs and lang
     'none',
   );
   assert.equal(root.querySelector('[data-key-id=extra] input'), extra);
-  for (const section of ['voice', 'language', 'providers']) {
+  for (const section of ['voice', 'language', 'help', 'general', 'providers']) {
     f.surface.select(section);
     await nextTick();
     assert.equal(root.querySelector('input[data-env-var=OPENAI]'), field);
@@ -124,6 +125,49 @@ test('sections lease one native provider form, preserving masked inputs and lang
   assert.equal(f.picker.parentNode, f.originalHome);
   assert.deepEqual(f.actions, ['voice', 'open', 'close', 'language-close']);
   assert.equal(document.getElementById('key-setup-chip').hidden, false);
+});
+
+test('General groups language and appearance, Help stands alone, and provider setup keeps its landing', async (t) => {
+  const appearance = createAppearance({ storage: null });
+  const f = await fixture(t, undefined, { appearance });
+  t.after(() => appearance.destroy());
+  assert.equal(f.surface.channel.getSnapshot().section, 'providers');
+  const tabs = [...f.view.element.querySelectorAll('[role="tab"]')];
+  assert.deepEqual(
+    tabs.map((tab) => tab.textContent.trim()),
+    ['Providers', 'Voice', 'General', 'Help'],
+  );
+  const general = f.picker.closest('.gev-settings-section');
+  assert.equal(
+    document
+      .getElementById('gev-appearance-settings')
+      .closest('.gev-settings-section'),
+    general,
+  );
+  const docs = f.view.element.querySelector('a[href$="#readme"]');
+  const help = docs.closest('.gev-settings-section');
+  assert.notEqual(help, general);
+  tabs[2].click();
+  await nextTick();
+  assert.equal(f.surface.channel.getSnapshot().section, 'language');
+  assert.equal(general.style.display, '');
+  assert.equal(help.style.display, 'none');
+  tabs[3].click();
+  await nextTick();
+  assert.equal(general.style.display, 'none');
+  assert.equal(help.style.display, '');
+  assert.equal(docs.textContent.trim(), 'Help & documentation');
+  for (const alias of ['language', 'general']) {
+    f.surface.select(alias);
+    await nextTick();
+    assert.equal(tabs[2].getAttribute('aria-selected'), 'true');
+    assert.equal(general.style.display, '');
+  }
+  f.surface.select('help');
+  f.surface.openProviders();
+  await nextTick();
+  assert.equal(tabs[0].getAttribute('aria-selected'), 'true');
+  assert.deepEqual(f.actions, ['open']);
 });
 
 test('provider destruction and a late connection do not leave a borrowed or duplicate form', async (t) => {

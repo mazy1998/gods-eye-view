@@ -390,9 +390,13 @@
   margin: 0;
 }
 
+.gev-settings .gev-tab {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
 :where(:root:not([data-ui-theme='cyber'])) .gev-settings .gev-tab {
   padding: 12px 6px;
-  white-space: nowrap;
 }
 :where(:root:not([data-ui-theme='cyber']))
   #key-setup.key-setup-embedded

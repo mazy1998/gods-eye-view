@@ -47,7 +47,8 @@ onBeforeUnmount(() => {
       :tabs="[
         { value: 'providers', label: t('Providers') },
         { value: 'voice', label: t('Voice') },
-        { value: 'language', label: t('Language & help') },
+        { value: 'language', label: t('General') },
+        { value: 'help', label: t('Help') },
       ]"
       @update:model-value="surface.select($event)"
     />
@@ -96,11 +97,17 @@ onBeforeUnmount(() => {
     <section
       v-show="state.section === 'language'"
       class="gev-settings-section"
-      :aria-label="t('Language & help')"
+      :aria-label="t('General')"
     >
       <h3>{{ t('Language') }}</h3>
       <div ref="language" class="gev-settings-language"></div>
       <AppearancePicker v-if="appearance" :appearance="appearance" />
+    </section>
+    <section
+      v-show="state.section === 'help'"
+      class="gev-settings-section"
+      :aria-label="t('Help')"
+    >
       <h3>{{ t('Help') }}</h3>
       <a
         href="https://github.com/bilawalsidhu/gods-eye-view#readme"

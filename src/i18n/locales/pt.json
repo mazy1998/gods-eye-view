@@ -2959,7 +2959,6 @@
   "Destination": "Destino",
   "Destinations": "Destinos",
   "Details for {name}": "Detalhes de {name}",
-  "Display": "Exibição",
   "Distance from Earth": "Distância da Terra",
   "Drop map files onto the globe": "Solte arquivos de mapa no globo",
   "Enter cockpit": "Entrar no cockpit",
@@ -2984,7 +2983,6 @@
   "Intensity": "Intensidade",
   "Keys are saved on this machine.": "As chaves são salvas nesta máquina.",
   "Language": "Idioma",
-  "Language & help": "Idioma e ajuda",
   "Launch site": "Local de lançamento",
   "Launch time": "Horário de lançamento",
   "Light": "Claro",
@@ -3112,5 +3110,7 @@
   "Tip: search for any place to fly straight to it.": "Dica: pesquise qualquer lugar para voar direto até ele.",
   "ENTER GOD'S EYE VIEW": "ENTRAR NO GOD'S EYE VIEW",
   "Internet radio": "Rádio pela internet",
-  "Local receiver (RTL-SDR)": "Receptor local (RTL-SDR)"
+  "Local receiver (RTL-SDR)": "Receptor local (RTL-SDR)",
+  "General": "Geral",
+  "HUD & overlays": "HUD e sobreposições"
 }

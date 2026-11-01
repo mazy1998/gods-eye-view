@@ -2901,7 +2901,6 @@
   "Missions — launches and orbital assets": "任务：发射与在轨资产",
   "Providers": "提供商",
   "Voice": "语音",
-  "Language & help": "语言与帮助",
   "The globe works without keys.": "无需密钥也可使用地球视图。",
   "Loading provider settings…": "正在加载提供商设置…",
   "Provider keys can be configured on the machine running the app.": "可在运行此应用的计算机上配置提供商密钥。",
@@ -2919,7 +2918,6 @@
   "Keys are saved on this machine.": "密钥保存在此计算机上。",
   "Voice settings are unavailable.": "语音设置不可用。",
   "Look": "外观",
-  "Display": "显示",
   "Image adjustments": "图像调整",
   "Style shortcuts 1–6": "样式快捷键 1–6",
   "Configure map providers": "配置地图提供商",
@@ -2964,5 +2962,7 @@
   "Tip: search for any place to fly straight to it.": "提示：搜索任意地点即可直接飞往该处。",
   "ENTER GOD'S EYE VIEW": "进入 GOD'S EYE VIEW",
   "Internet radio": "网络电台",
-  "Local receiver (RTL-SDR)": "本地接收机 (RTL-SDR)"
+  "Local receiver (RTL-SDR)": "本地接收机 (RTL-SDR)",
+  "General": "常规",
+  "HUD & overlays": "HUD 与叠加层"
 }

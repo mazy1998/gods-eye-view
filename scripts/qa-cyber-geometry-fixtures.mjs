@@ -297,7 +297,7 @@ export function createFixtures(read) {
   }
   // Map & Look inside the real Display panel: its frame, DISPLAY header and
   // divider stay strict; the tabs, tiles and footer are its structural
-  // exceptions. Seven style tiles and five map-source tiles show the columns.
+  // exceptions. Six style tiles and five map-source tiles show the columns.
   const mapLook = palettes.find((f) => f.sheet === 'map-look');
   const display = load('src/ui/templates/display-controls.html', '#pp-toggles');
   const content = doc.createElement('template');
@@ -313,7 +313,7 @@ export function createFixtures(read) {
     )
       first.parentElement.append(first.cloneNode(true));
   };
-  grow('.style-btn', 7);
+  grow('.style-btn', 6);
   grow('.map-stack-chip:not(.unavailable)', 5);
   display.querySelector('.pp-panel-body').replaceChildren(view);
   display.dataset.geometry = 'frame';
@@ -591,15 +591,15 @@ export const exceptions = [
     reason: structureReasons[reason],
   })),
   ...[
-    ['frame', 'height', 1024.984375, 700, 'map-look-tabs'],
+    ['frame', 'height', 979.984375, 700, 'map-look-tabs'],
     ['tabs', 'display', 'block', 'flex', 'map-look-tabs'],
     ['tabs', 'width', 362, 354, 'map-look-tabs'],
-    ['tabs', 'height', 19, 40, 'map-look-tabs'],
+    ['tabs', 'height', 19, 51.78125, 'map-look-tabs'],
     ['tabs', 'x', 0, 4, 'map-look-tabs'],
     ['tabs', 'y', 0, 4, 'map-look-tabs'],
     ['style-grid', 'display', 'block', 'grid', 'style-tiles'],
     ['style-grid', 'width', 362, 354, 'style-tiles'],
-    ['style-grid', 'height', 315, 434.125, 'style-tiles'],
+    ['style-grid', 'height', 270, 322.59375, 'style-tiles'],
     ['style-tile', 'display', 'flex', 'grid', 'style-tiles'],
     ['style-tile', 'position', 'relative', 'static', 'style-tiles'],
     ['style-tile', 'width', 78, 171, 'style-tiles'],
@@ -621,12 +621,12 @@ export const exceptions = [
     ['adjustments', 'display', 'block', 'flex', 'image-adjustments'],
     ['adjustments', 'width', 362, 354, 'image-adjustments'],
     ['adjustments', 'height', 89, 103.59375, 'image-adjustments'],
-    ['adjustments', 'y', 315, 446.125, 'image-adjustments'],
+    ['adjustments', 'y', 270, 334.59375, 'image-adjustments'],
     ['adjustments', 'paddingTop', 0, 12, 'image-adjustments'],
     ['hint', 'display', 'block', 'flex', 'panel-footer'],
     ['hint', 'width', 362, 354, 'panel-footer'],
     ['hint', 'height', 272.390625, 27.59375, 'panel-footer'],
-    ['hint', 'y', 404, 561.71875, 'panel-footer'],
+    ['hint', 'y', 359, 450.1875, 'panel-footer'],
     ['hint', 'paddingTop', 0, 12, 'panel-footer'],
     ['source-chips', 'width', 362, 354, 'map-source-tiles'],
     ['source-chips', 'height', 20, 148, 'map-source-tiles'],
@@ -648,7 +648,7 @@ export const exceptions = [
     ['providers', 'width', 188.59375, 354, 'panel-footer'],
     ['providers', 'height', 203.59375, 44, 'panel-footer'],
     ['providers', 'x', 0, 4, 'panel-footer'],
-    ['providers', 'y', 764.390625, 864.5, 'panel-footer'],
+    ['providers', 'y', 719.390625, 764.75, 'panel-footer'],
     ['providers', 'paddingTop', 0, 8, 'panel-footer'],
     ['providers', 'paddingBottom', 0, 8, 'panel-footer'],
     ['providers', 'borderTopWidth', 2, 0, 'panel-footer'],
