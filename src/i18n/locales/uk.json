@@ -3062,7 +3062,6 @@
   "Loading missions from the last 30 days": "Завантаження місій за останні 30 днів",
   "Loading provider settings…": "Завантаження налаштувань постачальників…",
   "Local OAuth": "Локальний OAuth",
-  "Local RTL-SDR": "Локальний RTL-SDR",
   "Look": "Вигляд",
   "Manage voice preview, inactivity timeout and model tier.": "Керуйте показом відповідей асистента, тайм-аутом бездіяльності та рівнем моделі.",
   "Manage ↗": "Керування ↗",
@@ -3186,5 +3185,7 @@
   "Bilawal on YouTube": "Bilawal на YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Порада: знайдіть будь-яке місце, щоб одразу туди перелетіти.",
-  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "УВІЙТИ В GOD'S EYE VIEW",
+  "Internet radio": "Інтернет-радіо",
+  "Local receiver (RTL-SDR)": "Локальний приймач (RTL-SDR)"
 }

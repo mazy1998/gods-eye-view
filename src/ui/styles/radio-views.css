@@ -1,5 +1,25 @@
 /* The detailed view keeps Radio's compact geometry and native field padding.
    Cyber retains its existing Radio palette and control precedence. */
+.radio-internet-section {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  min-width: 0;
+}
+.radio-subsection-title {
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+}
+
+/* The same player returns to Context when Layers releases it. Only the
+   modern Inspect hosts conceal that retained launcher, not independent hosts. */
+:is(.gev-legacy-host, .phone-sheet-panels)
+  > #global-context-panel
+  #radio-panel {
+  display: none;
+}
+
 :root:not([data-ui-theme='cyber']) #radio-panel .radio-panel-inner.gev-surface {
   color: var(--gev-text);
   background: var(--gev-surface-base);

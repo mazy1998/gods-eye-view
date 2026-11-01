@@ -2511,7 +2511,6 @@
   "DIRECTORY: RADIO BROWSER": "目錄：RADIO BROWSER",
   "Audio connects directly to the broadcaster after you press play. Your IP is visible to that broadcaster.": "點擊播放後，音頻將直接連接到廣播方。廣播方可以看到你的 IP。",
   "Local RTL-SDR receiver": "本地 RTL-SDR 接收機",
-  "Local RTL-SDR": "本地 RTL-SDR",
   "Chrome/Edge · WebUSB · one local tuner shared by FM and the Local ADS-B layer.": "Chrome/Edge · WebUSB · 一個本地調諧器由 FM 與本地 ADS-B 圖層共享。",
   "Use your location for faster ADS-B position decoding": "使用你的位置，加快 ADS-B 位置解碼",
   "CHANGE DEVICE": "更換設備",
@@ -2964,5 +2963,7 @@
   "Bilawal on YouTube": "YouTube 上的 Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "提示：搜尋任何地點即可直接飛往該處。",
-  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "進入 GOD'S EYE VIEW",
+  "Internet radio": "網路電台",
+  "Local receiver (RTL-SDR)": "本機接收器 (RTL-SDR)"
 }

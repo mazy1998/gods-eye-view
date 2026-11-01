@@ -1,8 +1,66 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { radioDomFixture } from '../testSupport/radioDomFixture.mjs';
+import { readFileSync } from 'node:fs';
 const { RadioControls } = await import('./radioControls.js');
 const { LocalSdrControls } = await import('./localSdrControls.js');
+
+test('Radio labels its two sources and hides only the hosted Inspect stub in every theme', () => {
+  const f = radioDomFixture({ sdr: true });
+  const css = document.createElement('style');
+  css.textContent = readFileSync(
+    new URL('./styles/radio-views.css', import.meta.url),
+    'utf8',
+  );
+  document.head.append(css);
+  const panel = document.getElementById('radio-panel');
+  panel.classList.remove('collapsed');
+  const context = document.getElementById('global-context-panel');
+  const host = document.createElement('div');
+  f.container.append(host);
+  try {
+    assert.equal(
+      panel.querySelector('.radio-internet-section').getAttribute('aria-label'),
+      'Internet radio',
+    );
+    assert.equal(
+      panel.querySelector('.radio-subsection-title').textContent,
+      'Internet radio',
+    );
+    assert.equal(
+      panel.querySelector('.sdr-radio-heading strong').textContent,
+      'Local receiver (RTL-SDR)',
+    );
+    const player = document.getElementById('radio-play-btn');
+    for (const theme of ['', 'transparent', 'light', 'cyber']) {
+      document.documentElement.dataset.uiTheme = theme;
+      for (const hostClass of ['gev-legacy-host', 'phone-sheet-panels']) {
+        host.className = hostClass;
+        host.append(context);
+        context.querySelector('.cyber-panel-body').append(panel);
+        assert.equal(getComputedStyle(panel).display, 'none');
+        assert.ok(
+          context.contains(panel),
+          'the retained Context hierarchy stays intact',
+        );
+        host.append(panel);
+        assert.notEqual(getComputedStyle(panel).display, 'none');
+        assert.equal(document.getElementById('radio-play-btn'), player);
+      }
+      host.className = '';
+      context.querySelector('.cyber-panel-body').append(panel);
+      assert.notEqual(
+        getComputedStyle(panel).display,
+        'none',
+        'legacy and independent hosts retain Radio',
+      );
+    }
+  } finally {
+    delete document.documentElement.dataset.uiTheme;
+    css.remove();
+    f.dispose();
+  }
+});
 
 function internet() {
   const f = radioDomFixture();
@@ -307,7 +365,7 @@ test('the expanded Radio reads in the drawer language outside Cyber, and Cyber k
     // Acronyms stay as written.
     assert.equal(
       document.querySelector('.sdr-radio-heading strong').textContent.trim(),
-      'Local RTL-SDR',
+      'Local receiver (RTL-SDR)',
     );
     // The volume tracks fill to their value.
     assert.equal(

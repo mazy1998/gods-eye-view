@@ -19,4 +19,6 @@
   (`H` or Display turns it on). Most panels are now Vue views of the same
   owners, so layers, share links, voice actions and scenes behave as before,
   and hosts that build the published UI modules the earlier way keep working
+  Radio separates Internet stations from the local RTL-SDR receiver; Local ADS-B
+  details open the receiver, and phones keep Radio inside its Layers category.
   (#0).

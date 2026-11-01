@@ -11,7 +11,7 @@ defineProps({
 </script>
 <template>
   <div class="sdr-radio-heading">
-    <strong>{{ t('Local RTL-SDR') }}</strong>
+    <strong>{{ t('Local receiver (RTL-SDR)') }}</strong>
     <span
       id="sdr-connection-state"
       :class="{ active: view.connectionActive }"

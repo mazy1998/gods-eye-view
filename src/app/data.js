@@ -2,8 +2,34 @@ import { LayerLifecycle } from '../data/lifecycle.js';
 import { LayerPresentation } from './layerPresentation.js';
 import { createCyberSonarScene } from '../cyberSonarScene.js';
 import { panelAwareVisibility } from './embed.js';
+import { flushViews } from '../ui/ownerState.js';
 /** Reveal the existing details view, then focus its retained entry control. */
 export function revealLayerDetails(styleManager, panelId, doc = document) {
+  if (panelId === 'sdr-radio-card') {
+    const result = styleManager.setPanelCollapsed('radio-panel', false, {
+      explicit: true,
+    });
+    const focusOwner = doc.activeElement;
+    // Let the drawer/sheet reveal its category and finish its own scroll first.
+    void flushViews().then(() => {
+      const reveal = () => {
+        const card = doc.getElementById(panelId);
+        const panel = doc.getElementById('radio-panel');
+        if (
+          !card?.isConnected ||
+          panel?.classList.contains('collapsed') ||
+          (doc.activeElement !== focusOwner && doc.activeElement !== doc.body)
+        )
+          return;
+        doc.getElementById('sdr-connect-btn')?.focus({ preventScroll: true });
+        card.scrollIntoView?.({ block: 'start' });
+      };
+      if (doc.defaultView?.requestAnimationFrame)
+        doc.defaultView.requestAnimationFrame(reveal);
+      else reveal();
+    });
+    return result;
+  }
   if (panelId === 'directions-controls-body') {
     const phone = styleManager._mobileShell;
     const opened = phone?.channel.getSnapshot()?.active

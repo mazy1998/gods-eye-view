@@ -2852,7 +2852,6 @@
   "Loading missions from the last 30 days": "過去30日間のミッションを読み込み中",
   "Loading provider settings…": "プロバイダー設定を読み込み中…",
   "Local OAuth": "ローカルOAuth",
-  "Local RTL-SDR": "ローカルRTL-SDR",
   "Look": "外観",
   "Manage voice preview, inactivity timeout and model tier.": "音声プレビュー、無操作タイムアウト、モデルのティアを管理します。",
   "Manage ↗": "管理 ↗",
@@ -2964,5 +2963,7 @@
   "Bilawal on YouTube": "YouTube の Bilawal",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "ヒント：場所を検索すると、そこへ直接移動します。",
-  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る"
+  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW に入る",
+  "Internet radio": "インターネットラジオ",
+  "Local receiver (RTL-SDR)": "ローカル受信機 (RTL-SDR)"
 }

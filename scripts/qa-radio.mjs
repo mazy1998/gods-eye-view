@@ -4480,13 +4480,15 @@ async function main() {
         contactsNaturalHeight: contextView.clientHeight === contextView.scrollHeight,
         radioNaturalHeight: radio.clientHeight === radio.scrollHeight,
         separated: awarenessRect.bottom <= radioRect.top,
+        stubHidden: getComputedStyle(radio).display === 'none',
+        nested: contextView.closest('#global-context-panel').contains(radio),
         scrollable: scroller.scrollHeight > scroller.clientHeight,
       };
     });
     check(
-      'expanded Contacts and Radio remain separated in the shared Context scroller',
+      'expanded Contacts keeps its natural height and the retained Inspect Radio stub is hidden',
       companionStack.contactsNaturalHeight && companionStack.radioNaturalHeight
-        && companionStack.separated && companionStack.scrollable,
+        && companionStack.stubHidden && companionStack.nested,
       JSON.stringify(companionStack),
     );
 

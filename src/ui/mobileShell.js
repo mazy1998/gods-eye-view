@@ -14,6 +14,8 @@
 import { EXCLUSIVE_SURFACE_CLASSES } from '../exclusiveSurfaces.js';
 import { createStateChannel } from '../app/stateChannel.js';
 import { createPhoneChrome } from './phoneChrome.js';
+import { DRAWER_DESTINATIONS } from './drawerNavigation.js';
+import { flushViews } from './ownerState.js';
 import {
   MOBILE_SHEET_PANELS,
   MOBILE_SHEET_ELEMENTS,
@@ -224,7 +226,14 @@ export function initMobileShell({
       const home = documentRef.createComment('phone panel home');
       node.before(home);
       placed.push({ node, home });
-      chrome.host.append(node);
+      const selector =
+        sheet === 'layers'
+          ? DRAWER_DESTINATIONS.find((item) => item.id === 'layers')?.homes?.[
+              id
+            ]
+          : null;
+      const target = selector ? chrome.host.querySelector(selector) : null;
+      (target ?? chrome.host).append(node);
     }
     placeCollapseControls();
   };
@@ -440,6 +449,22 @@ export function initMobileShell({
       return item ? setDestination(item.id) : false;
     }
     const shown = setSheet(sheet, { revealPanelId: panelId });
+    if (shown && panelId === 'radio-panel') {
+      element(panelId)?.dispatchEvent(
+        new documentRef.defaultView.CustomEvent('gev:focus-layer-row', {
+          bubbles: true,
+          detail: 'radio',
+        }),
+      );
+      void flushViews().then(() =>
+        requestFrame?.(() => {
+          const node = element(panelId);
+          if (currentSheet === sheet && chrome.host?.contains(node))
+            node.scrollIntoView?.({ block: 'nearest' });
+        }),
+      );
+      return true;
+    }
     if (shown)
       requestFrame?.(() => {
         const anchor = {

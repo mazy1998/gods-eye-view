@@ -102,6 +102,7 @@ const DETAIL_PANELS = {
   cctv: 'cctv-panel',
   'street-level': 'street-level-panel',
   radio: 'radio-panel',
+  'local-adsb': 'sdr-radio-card',
 };
 
 function englishPanelLabel(layer) {

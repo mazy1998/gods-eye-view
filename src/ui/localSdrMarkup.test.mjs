@@ -19,10 +19,12 @@ const css = readFileSync(
 
 test('the Local RTL-SDR card lives inside the Radio panel with every control', () => {
   const html = renderedHtml();
-  const radioStart = html.indexOf('id="radio-panel"');
-  const cardStart = html.indexOf('id="sdr-radio-card"');
-  const radioEnd = html.indexOf('</section>', radioStart);
-  assert.ok(radioStart >= 0 && cardStart > radioStart && cardStart < radioEnd);
+  const markup = document.createElement('template');
+  markup.innerHTML = html;
+  assert.equal(
+    markup.content.querySelector('#sdr-radio-card').closest('#radio-panel'),
+    markup.content.querySelector('#radio-panel'),
+  );
   for (const id of [
     'sdr-connection-state',
     'sdr-connect-btn',

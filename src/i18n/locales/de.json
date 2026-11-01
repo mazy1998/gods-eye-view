@@ -2922,7 +2922,6 @@
   "Loading missions from the last 30 days": "Missionen der letzten 30 Tage laden",
   "Loading provider settings…": "Anbieter-Einstellungen laden…",
   "Local OAuth": "Lokales OAuth",
-  "Local RTL-SDR": "Lokaler RTL-SDR",
   "Look": "Darstellung",
   "Manage voice preview, inactivity timeout and model tier.": "Sprachvorschau, Zeitlimit bei Inaktivität und Modellstufe verwalten.",
   "Manage ↗": "Verwalten ↗",
@@ -3038,5 +3037,7 @@
   "Bilawal on YouTube": "Bilawal auf YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Tipp: Suche einen beliebigen Ort, um direkt dorthin zu fliegen.",
-  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW STARTEN"
+  "ENTER GOD'S EYE VIEW": "GOD'S EYE VIEW STARTEN",
+  "Internet radio": "Internetradio",
+  "Local receiver (RTL-SDR)": "Lokaler Empfänger (RTL-SDR)"
 }

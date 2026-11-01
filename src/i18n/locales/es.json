@@ -1576,7 +1576,6 @@
   "HEARD": "CAPTADAS",
   "POSITIONED": "POSICIONADAS",
   "SDR vol": "Vol. SDR",
-  "Local RTL-SDR": "RTL-SDR local",
   "Cyber sonar contact scanner": "Escáner de contactos del sonar Ciber",
   "Sonar ring count": "Número de anillos del sonar",
   "Sonar ring range": "Alcance de los anillos del sonar",
@@ -3112,5 +3111,7 @@
   "Bilawal on YouTube": "Bilawal en YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Consejo: busca cualquier lugar para volar directo allí.",
-  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ENTRAR EN GOD'S EYE VIEW",
+  "Internet radio": "Radio por internet",
+  "Local receiver (RTL-SDR)": "Receptor local (RTL-SDR)"
 }

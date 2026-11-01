@@ -143,6 +143,23 @@ test('My data uses the import owner channel and actions, without becoming a regi
   channel.destroy();
 });
 
+test('Local ADS-B details target the receiver without toggling the layer', (t) => {
+  const calls = [];
+  const { panel, layers } = fixture(t, {
+    openDetails: (id) => calls.push(id),
+    setEnabled: () =>
+      assert.fail('details must not connect or enable the receiver'),
+  });
+  layers[0].id = 'local-adsb';
+  panel._refreshTogglePanel();
+  const button = container.querySelector(
+    '[data-layer-id="local-adsb"] .layer-details',
+  );
+  assert.equal(button.getAttribute('aria-controls'), 'sdr-radio-card');
+  button.click();
+  assert.deepEqual(calls, ['sdr-radio-card']);
+});
+
 test('readout chevrons open the existing detail host and detached actions are revoked', (t) => {
   const calls = [];
   const { panel, layers } = fixture(t, {

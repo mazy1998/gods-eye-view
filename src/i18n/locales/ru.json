@@ -1604,7 +1604,6 @@
   "HEARD": "СЛЫШНО",
   "POSITIONED": "С КООРД.",
   "SDR vol": "Громк. SDR",
-  "Local RTL-SDR": "Локальный RTL-SDR",
   "Cyber sonar contact scanner": "Кибер-сонар: сканер контактов",
   "Sonar ring count": "Число колец сонара",
   "Sonar ring range": "Дальность колец сонара",
@@ -3186,5 +3185,7 @@
   "Bilawal on YouTube": "Bilawal на YouTube",
   "halfpixel.ai": "halfpixel.ai",
   "Tip: search for any place to fly straight to it.": "Совет: найдите любое место, чтобы сразу туда перелететь.",
-  "ENTER GOD'S EYE VIEW": "ВОЙТИ В GOD'S EYE VIEW"
+  "ENTER GOD'S EYE VIEW": "ВОЙТИ В GOD'S EYE VIEW",
+  "Internet radio": "Интернет-радио",
+  "Local receiver (RTL-SDR)": "Локальный приёмник (RTL-SDR)"
 }

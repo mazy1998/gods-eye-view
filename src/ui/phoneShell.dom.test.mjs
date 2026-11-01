@@ -6,6 +6,7 @@ const { initMobileShell } = await import('./mobileShell.js');
 const { createAppearance } = await import('./appearance.js');
 const { createStateChannel } = await import('../app/stateChannel.js');
 const { createShellChrome } = await import('./shellChrome.js');
+const { DRAWER_DESTINATIONS } = await import('./drawerNavigation.js');
 const { PanelChrome, SHARE_PANEL_STATE_SPECS } =
   await import('./panelChrome.js');
 
@@ -183,6 +184,38 @@ test('four tabs move the original destination nodes and restore them through des
   assert.equal(document.getElementById('mobile-sheet'), null);
 });
 
+test('phone Radio uses the drawer category home and returns the same node on close and resize', async (t) => {
+  const f = fixture(t);
+  const selector = DRAWER_DESTINATIONS.find((d) => d.id === 'layers').homes[
+    'radio-panel'
+  ];
+  const key = selector.match(/data-layer-group="([^"]+)"/)[1];
+  const group = document.createElement('section');
+  group.dataset.layerGroup = key;
+  group.innerHTML = '<div class="layer-group-home"></div>';
+  f.nodes.get('data-panel').append(group);
+  const expected = group.matches(selector)
+    ? group
+    : group.querySelector('.layer-group-home');
+  f.tab('layers').click();
+  const radio = f.nodes.get('radio-panel');
+  assert.equal(radio.parentElement, expected);
+  let revealed = null;
+  group.addEventListener('gev:focus-layer-row', (e) => {
+    revealed = e.detail;
+  });
+  f.owner.reveal('radio-panel');
+  await Promise.resolve();
+  assert.equal(revealed, 'radio');
+  f.tab('inspect').click();
+  assert.equal(radio.parentElement, f.parents.get('radio-panel'));
+  f.tab('layers').click();
+  assert.equal(radio.parentElement, expected);
+  f.resize(false);
+  assert.equal(radio.parentElement, f.parents.get('radio-panel'));
+  assert.equal(document.querySelectorAll('#radio-panel').length, 1);
+});
+
 test('More destinations reuse native controls and the existing appearance owner', async (t) => {
   const f = fixture(t);
   f.tab('more').click();
@@ -227,7 +260,7 @@ test('More destinations reuse native controls and the existing appearance owner'
   );
 });
 
-test('programmatic repeated reveals route to the sheet without the manual Inspect transaction', (t) => {
+test('programmatic repeated reveals route to the sheet without the manual Inspect transaction', async (t) => {
   const f = fixture(t);
   for (let count = 0; count < 2; count++) {
     f.panel.publish({ type: 'panel-revealed', panelId: 'cctv-panel' });
@@ -244,6 +277,7 @@ test('programmatic repeated reveals route to the sheet without the manual Inspec
   f.nodes.get('radio-panel').scrollIntoView = (options) =>
     scrolls.push(options);
   f.panel.publish({ type: 'panel-revealed', panelId: 'radio-panel' });
+  await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(f.owner.getSheet(), 'layers');
   assert.equal(f.nodes.get('radio-panel').parentNode, f.host());
   assert.deepEqual(scrolls, [{ block: 'nearest' }]);
