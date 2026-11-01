@@ -473,6 +473,37 @@ export function createFixtures(read) {
       html: `<style>.material-symbols-outlined{display:inline-block}</style><section id="gev-selection-slot" class="gev-slot" data-slot-item="${id}" data-geometry="slot"><div class="gev-slot-header gev-surface" data-geometry="slot-header"><span class="material-symbols-outlined gev-slot-icon" aria-hidden="true">${icon}</span><h2 class="gev-slot-title" data-geometry="slot-title">${title}</h2><span class="gev-slot-actions-home"><span class="gev-slot-actions">${moved.join('')}</span></span><button type="button" class="gev-icon-button gev-icon-button--sm gev-slot-close" aria-label="Close" data-geometry="slot-close"><span class="material-symbols-outlined">close</span></button></div><div class="gev-slot-scroll" data-geometry="slot-scroll"><div class="gev-slot-body">${panel.outerHTML}</div></div></section>`,
     });
   }
+  // A control the slot borrows keeps the paint it inherits at home: Street
+  // Level's switch, off and on, in its panel header and in the slot's header.
+  const markup = doc.createElement('template');
+  markup.innerHTML = read('src/ui/templates/context.html');
+  const street = markup.content.querySelector('#street-level-panel');
+  const status = street.querySelector('#sl-status');
+  const pair = (state) => {
+    const home = street.cloneNode(true);
+    home.classList.remove('collapsed');
+    for (const node of home.querySelectorAll('[data-geometry]'))
+      delete node.dataset.geometry;
+    const own = home.querySelector('#sl-status');
+    own.classList.toggle('is-on', state === 'on');
+    own.dataset.geometry = `home-${state}`;
+    const borrowed = status.cloneNode(true);
+    borrowed.classList.toggle('is-on', state === 'on');
+    borrowed.dataset.geometry = `slot-${state}`;
+    return `<div class="gev-rail-home">${home.outerHTML}</div><section class="gev-slot" style="position:relative;inset:auto"><div class="gev-slot-header gev-surface"><span class="gev-slot-actions-home"><span class="gev-slot-actions">${borrowed.outerHTML}</span></span></div></section>`;
+  };
+  result.push({
+    id: 'slot-borrowed-control-paint',
+    profile: 'default',
+    properties: ['visible'],
+    html: pair('off') + pair('on'),
+    sameStyle: ['off', 'on'].map((state) => ({
+      nodes: [`home-${state}`, `slot-${state}`],
+      properties: ['fontSize', 'color', 'borderTopColor', 'backgroundColor'],
+      reason:
+        'A control the selection slot borrows keeps the type and state colours it inherits in its own panel.',
+    })),
+  });
   return result;
 }
 const reasons = {
