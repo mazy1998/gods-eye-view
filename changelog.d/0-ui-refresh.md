@@ -17,9 +17,10 @@
   each appearance, and the camera panels in its left stack show only once
   opened. On desktop, a selected aircraft shows a card on the right with its
   route, altitude, speed and track, its details, the three nearest aircraft and
-  one-click Cockpit and Contacts; CCTV and Street Level open their viewers in
-  the same panel, so Layers stays open, and Layers → Imagery & cameras reopens
-  them (phones keep Inspect's Cameras tab). Turning on another layer during
+  one-click Cockpit and Contacts; CCTV, Street Level, Recent imagery and Radio
+  open in the same panel, one at a time, so Layers stays open (Radio keeps
+  playing when replaced), and Layers → Imagery & cameras reopens the camera
+  viewers (phones keep Inspect's Cameras tab). Turning on another layer during
   Space Missions now leaves the mode and restores the earlier layers first, and
   an Exit Space Missions button sits under the mode tabs. Phone Search is one
   field, and the voice sign-in choice reads as two radio options. The welcome
