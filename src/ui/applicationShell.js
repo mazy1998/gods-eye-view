@@ -36,7 +36,8 @@ import SettingsView from './settings/SettingsView.vue';
 import { createSettingsSurface } from './settings/settingsSurface.js';
 import { createDrawerNavigation } from './drawerNavigation.js';
 import { createSelectionSlot } from './selectionSlot.js';
-import { connectCameraSlot, SLOT_CAMERA_PANELS } from './cameraSlot.js';
+import { connectPanelSlot, SLOT_PANELS } from './panelSlot.js';
+import { syncRadioPanelPlacement } from './radioPanelPlacement.js';
 import { connectAircraftSlot } from './aircraftSlot.js';
 import AircraftCard from './AircraftCard.vue';
 import AircraftTypeBadge from './AircraftTypeBadge.vue';
@@ -1328,7 +1329,8 @@ export class StyleManager extends ShellFacade {
       phone: window.matchMedia?.(MOBILE_SHELL_MEDIA_QUERY) ?? null,
       isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
       onRevealPanel: (id) => this._revealInspectCameraPanel(id),
-      slotted: Object.keys(SLOT_CAMERA_PANELS),
+      slotted: Object.keys(SLOT_PANELS),
+      holds: (node) => Boolean(this._selectionSlot?.body.contains(node)),
     });
     const destinationViews = {
       settings: {
@@ -1423,8 +1425,8 @@ export class StyleManager extends ShellFacade {
   /**
    * The right-hand selection slot, beside the map controls. It rests where
    * the drawer does (phones, Cockpit) and paints each change before the
-   * operation that made it returns, as the drawer does. The camera viewers
-   * are its first items.
+   * operation that made it returns, as the drawer does. Its items are the
+   * borrowed panels (cameras, Recent imagery, Radio) and the aircraft card.
    */
   _initSelectionSlot(before) {
     const slot = createSelectionSlot({
@@ -1439,7 +1441,7 @@ export class StyleManager extends ShellFacade {
     });
     slot.channel.subscribe(({ state }) => view.update({ state }));
     this._drawer.channel.subscribe(({ state }) => slot.setActive(state.active));
-    this._disconnectCameraSlot = connectCameraSlot({
+    this._disconnectPanelSlot = connectPanelSlot({
       document,
       slot,
       panelChannel: this._panelChrome.channel,
@@ -1448,6 +1450,11 @@ export class StyleManager extends ShellFacade {
       restoreOrder: SHARE_PANEL_STATE_SPECS.map((spec) => spec.id),
       translate: t,
       isPhonePresenting: () => this._mobileShell?.isPresenting() ?? false,
+      // Radio lives in Context, and in the Layers list while Layers is open.
+      returnHome: (id, panel) => {
+        syncRadioPanelPlacement(document, panel);
+        this._drawer.adopt(id);
+      },
     });
     this._disconnectAircraftSlot = connectAircraftSlot({
       slot,
@@ -2226,7 +2233,7 @@ export class StyleManager extends ShellFacade {
     this._recording.destroy();
     this._mobileShell?.destroy();
     this._shellChrome?.destroy();
-    this._disconnectCameraSlot?.();
+    this._disconnectPanelSlot?.();
     this._disconnectAircraftSlot?.();
     this._selectionSlot?.destroy();
     this._statusReadout?.destroy();

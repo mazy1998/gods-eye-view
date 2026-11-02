@@ -214,9 +214,9 @@ test('every Layers category icon is in the icon_names subset', () => {
 
 test('every selection slot icon is in the icon_names subset', async () => {
   // The slot draws its item's icon from the state, which the text scan above
-  // cannot follow; the camera viewers name theirs in cameraSlot.js.
-  const { SLOT_CAMERA_PANELS } = await import('./ui/cameraSlot.js');
-  const icons = Object.values(SLOT_CAMERA_PANELS).map(({ icon }) => icon);
+  // cannot follow; the borrowed panels name theirs in panelSlot.js.
+  const { SLOT_PANELS } = await import('./ui/panelSlot.js');
+  const icons = Object.values(SLOT_PANELS).map(({ icon }) => icon);
   const subset = subsettedGlyphs();
   assert.deepEqual(
     icons.filter((icon) => !subset.has(icon)),

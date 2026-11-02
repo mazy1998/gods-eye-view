@@ -22,6 +22,7 @@ function fixture({
   isPhonePresenting,
   onRevealPanel,
   slotted,
+  holds,
 } = {}) {
   document.body.insertAdjacentHTML(
     'beforeend',
@@ -98,6 +99,7 @@ function fixture({
     isPhonePresenting,
     onRevealPanel,
     slotted,
+    holds,
   });
   document.body.append(drawer.host);
   // As PanelChrome restores a share or history state: the listed panels only.
@@ -1457,6 +1459,36 @@ test('a camera switched on from the Layers list is not held back when slotted', 
   setPanelCollapsed('cctv-panel', false, {});
   assert.equal(destination(drawer), 'layers', 'the list stays');
   assert.equal(cctvCollapsed(), false, 'the panel stays open for the slot');
+});
+
+test('Radio, slotted, still lives in Layers until the slot shows it', (t) => {
+  const slot = document.createElement('div');
+  const { drawer, setPanelCollapsed } = fixture({
+    slotted: ['radio-panel'],
+    holds: (node) => slot.contains(node),
+  });
+  t.after(() => {
+    drawer.destroy();
+    slot.remove();
+  });
+  document.body.append(slot);
+  const radio = document.getElementById('radio-panel');
+  const context = document.getElementById('global-context-panel');
+  drawer.open('layers');
+  assert.ok(drawer.host.contains(radio), 'in the list while collapsed');
+  setPanelCollapsed('radio-panel', false, { explicit: true });
+  assert.equal(destination(drawer), 'layers', 'the slot shows it, not Layers');
+  slot.append(radio);
+  drawer.close();
+  assert.equal(radio.parentElement, slot, 'closing leaves it in the slot');
+  drawer.open('layers');
+  assert.equal(radio.parentElement, slot, 'opening leaves it there too');
+  // The slot lets it go to Context; the open Layers takes it back.
+  context.append(radio);
+  drawer.adopt('radio-panel');
+  assert.ok(drawer.host.contains(radio));
+  drawer.close();
+  assert.equal(radio.parentElement, context);
 });
 
 test('phones still present a revealed slotted camera through Inspect', (t) => {

@@ -123,7 +123,11 @@ const HEADER_COLLAPSE_PANELS = Object.freeze([
  * @param {(panelId: string) => void} [options.onRevealPanel] Select a hosted view before scrolling to its panel.
  * @param {string[]} [options.slotted] Hosted panels the selection slot shows
  *   at desktop width instead: the drawer neither borrows them nor opens their
- *   destination for them there. The phone sheets still present them.
+ *   destination for them there. The phone sheets still present them. A
+ *   slotted element (Radio) still moves into its home while it is not shown
+ *   in the slot.
+ * @param {(node: Element) => boolean} [options.holds] Whether the selection
+ *   slot shows a node now: the drawer leaves it there.
  */
 export function createDrawerNavigation({
   document: doc,
@@ -134,6 +138,7 @@ export function createDrawerNavigation({
   isPhonePresenting = () => false,
   onRevealPanel = () => {},
   slotted = [],
+  holds = () => false,
 }) {
   const host = doc.createElement('div');
   host.id = 'gev-legacy-host';
@@ -283,23 +288,27 @@ export function createDrawerNavigation({
     if (!waiting.size) homeObserver?.disconnect();
   }
 
+  // Move a hosted node into the open destination behind a placeholder.
+  function place(destination, id) {
+    const node = doc.getElementById(id);
+    if (!node?.parentNode || holds(node)) return;
+    const placeholder = doc.createComment(`gev-drawer-home:${id}`);
+    node.before(placeholder);
+    const home = destination.homes?.[id];
+    const target = home ? host.querySelector(home) : host;
+    (target ?? host).append(node);
+    if (!target) {
+      waiting.set(node, home);
+      homeObserver?.observe(host, { childList: true, subtree: true });
+    }
+    borrowed.moved.push({ node, placeholder });
+  }
+
   function borrow(destination) {
     borrowed = { before: new Map(), applied: new Map(), moved: [] };
-    for (const id of [...destination.panels, ...(destination.elements ?? [])]) {
-      if (inSlot(id)) continue;
-      const node = doc.getElementById(id);
-      if (!node?.parentNode) continue;
-      const placeholder = doc.createComment(`gev-drawer-home:${id}`);
-      node.before(placeholder);
-      const home = destination.homes?.[id];
-      const target = home ? host.querySelector(home) : host;
-      (target ?? host).append(node);
-      if (!target) {
-        waiting.set(node, home);
-        homeObserver?.observe(host, { childList: true, subtree: true });
-      }
-      borrowed.moved.push({ node, placeholder });
-    }
+    for (const id of destination.panels)
+      if (!inSlot(id)) place(destination, id);
+    for (const id of destination.elements ?? []) place(destination, id);
     for (const id of destination.panels) {
       if (inSlot(id) || !doc.getElementById(id)) continue;
       borrowed.before.set(id, isCollapsed(id));
@@ -317,7 +326,9 @@ export function createDrawerNavigation({
     homeObserver?.disconnect();
     if (!previous) return;
     for (const { node, placeholder } of previous.moved)
-      if (placeholder.parentNode) {
+      // The slot shows it now, and puts it where it lives when it leaves.
+      if (holds(node)) placeholder.remove();
+      else if (placeholder.parentNode) {
         // A mounted view may already have removed its root during teardown.
         if (node.parentNode) placeholder.replaceWith(node);
         else placeholder.remove();
@@ -700,6 +711,28 @@ export function createDrawerNavigation({
     },
     /** Open the destination the panels already show, as a share restore does. */
     followPanels,
+    /**
+     * Move a hosted element back into the open destination that hosts it,
+     * after the selection slot let it go: Radio, back in the Layers list.
+     */
+    adopt(id) {
+      const destination = byId.get(current);
+      const node = doc.getElementById(id);
+      if (
+        !isActive() ||
+        !borrowed ||
+        !destination?.elements?.includes(id) ||
+        !node ||
+        host.contains(node)
+      )
+        return;
+      moving = true;
+      try {
+        place(destination, id);
+      } finally {
+        moving = false;
+      }
+    },
     /**
      * The open destination's list switches a layer on: the next expansion of
      * that layer's own collapsed panel, which the switch causes (a camera

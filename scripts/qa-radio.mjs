@@ -555,9 +555,12 @@ async function main() {
       gev.styleManager.setPanelCollapsed('global-context-panel', false);
       gev.styleManager.setPanelCollapsed('radio-panel', false);
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: the slot, Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-slot-scroll, .gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const radio = document.getElementById('radio-panel');
-      scroller.scrollTop = Math.max(0, scroller.scrollTop + radio.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientHeight + 70);
+      // Radio leads the slot's scroller: its directory starts scrolled past.
+      scroller.scrollTop = scroller.closest('.gev-slot')
+        ? scroller.scrollHeight
+        : Math.max(0, scroller.scrollTop + radio.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientHeight + 70);
       const camera = gev.viewer.camera.positionWC;
       return {
         scrollTop: scroller.scrollTop,
@@ -618,7 +621,7 @@ async function main() {
     await page.waitForFunction(() => window.__godsEyeView.dataManager.isEnabled('radio'));
     await page.evaluate(() => window.__qaRestoreRadioEnable?.());
     await page.waitForFunction(() => {
-      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: the slot, Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-slot-scroll, .gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const viewport = scroller.getBoundingClientRect();
       const directory = document.querySelector('#radio-panel .radio-directory-row').getBoundingClientRect();
       const play = document.getElementById('radio-play-btn').getBoundingClientRect();
@@ -627,7 +630,7 @@ async function main() {
     }, { timeout: 10_000 });
     const explicitRevealAfter = await page.evaluate(() => {
       const gev = window.__godsEyeView;
-      const scroller = /* Radio's own scroller: Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
+      const scroller = /* Radio's own scroller: the slot, Layers in the drawer, else Context */ document.getElementById('radio-panel')?.closest('.gev-slot-scroll, .gev-drawer-body .data-toggle-list, .gev-drawer-body') ?? document.querySelector('#global-context-panel .global-context-panel-inner');
       const viewport = scroller.getBoundingClientRect();
       const directory = document.querySelector('#radio-panel .radio-directory-row').getBoundingClientRect();
       const play = document.getElementById('radio-play-btn').getBoundingClientRect();
@@ -651,7 +654,7 @@ async function main() {
     );
     check(
       'expanded Radio Enable reveals the directory and Play inside Context without autoplay or focus/camera theft',
-      explicitRevealAfter.scrollTop > explicitRevealBefore.scrollTop
+      explicitRevealAfter.scrollTop !== explicitRevealBefore.scrollTop
         && explicitRevealAfter.directoryVisible && explicitRevealAfter.playVisible
         && explicitRevealAfter.focusId === 'radio-enable-btn'
         && explicitRevealAfter.pageY === explicitRevealBefore.pageY
@@ -1815,10 +1818,13 @@ async function main() {
         === String(!document.getElementById(id).classList.contains('collapsed'));
       const railButton = (destination) => document.querySelector(`.gev-rail-item[data-destination="${destination}"]`);
       const ids = ['data-panel', 'scene-panel', 'pp-toggles', 'global-context-panel', 'cctv-panel'];
+      // Classes as a set: whether an earlier step opened Layers (Radio no
+      // longer does) only changes their order.
+      const classes = (panel) => [...panel.classList].sort().join(' ');
       const snapshot = () => Object.fromEntries(ids.map((id) => {
         const panel = document.getElementById(id);
         return [id, {
-          className: panel.className,
+          className: classes(panel),
           style: panel.getAttribute('style'),
           ariaHidden: panel.getAttribute('aria-hidden'),
           parent: panel.parentElement?.id,
@@ -1868,7 +1874,7 @@ async function main() {
         destination: drawer.channel.getSnapshot().destination,
         scenesShown: fully(document.querySelector('[data-collapse-target="scene-panel"]')?.closest('.panel-header, .gev-drawer-header')) && !document.getElementById('scene-panel').classList.contains('collapsed'),
         dataHidden: hidden('data-panel'),
-        dataOwnState: data.className === prior.panels['data-panel'].className,
+        dataOwnState: classes(data) === prior.panels['data-panel'].className,
         dataDisclosureTruthful: truthful('data-panel'),
       };
       railButton('map').click();
@@ -4493,8 +4499,9 @@ async function main() {
         contactsNaturalHeight: contextView.clientHeight === contextView.scrollHeight,
         radioNaturalHeight: radio.clientHeight === radio.scrollHeight,
         separated: awarenessRect.bottom <= radioRect.top,
-        stubHidden: getComputedStyle(radio).display === 'none',
-        nested: contextView.closest('#global-context-panel').contains(radio),
+        // An expanded Radio shows in the selection slot, not in Inspect.
+        stubHidden: getComputedStyle(radio).display === 'none' || Boolean(radio.closest('.gev-slot-body')),
+        nested: contextView.closest('#global-context-panel').contains(radio) || Boolean(radio.closest('.gev-slot-body')),
         scrollable: scroller.scrollHeight > scroller.clientHeight,
       };
     });
@@ -4532,8 +4539,8 @@ async function main() {
     await page.screenshot({ path: path.join(SHOTS_DIR, 'desktop.png') });
     const desktop = await page.$eval('#radio-panel', (element) => {
       const rect = element.getBoundingClientRect();
-      // Radio's desktop host: Layers in the drawer, else Context.
-      const contextRect = (element.closest('.gev-drawer') ?? element.closest('#global-context-panel')).getBoundingClientRect();
+      // Radio's desktop host: the slot, Layers in the drawer, else Context.
+      const contextRect = (element.closest('.gev-slot') ?? element.closest('.gev-drawer') ?? element.closest('#global-context-panel')).getBoundingClientRect();
       const tunerRect = element.querySelector('.radio-tuner').getBoundingClientRect();
       const innerRect = element.querySelector('.radio-panel-inner').getBoundingClientRect();
       return {

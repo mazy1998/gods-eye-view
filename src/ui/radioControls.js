@@ -84,7 +84,7 @@ export class RadioControls {
    */
   _radioScroller() {
     const hosted = this._radioPanel?.closest?.(
-      '.gev-drawer-body .data-toggle-list, .gev-drawer-body',
+      '.gev-slot-scroll, .gev-drawer-body .data-toggle-list, .gev-drawer-body',
     );
     if (hosted) return hosted;
     const contextPanel = document.getElementById('global-context-panel');

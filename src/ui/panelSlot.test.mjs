@@ -4,8 +4,7 @@ import '../testSupport/componentDom.mjs';
 
 const { createStateChannel } = await import('../app/stateChannel.js');
 const { createSelectionSlot } = await import('./selectionSlot.js');
-const { connectCameraSlot, SLOT_CAMERA_PANELS } =
-  await import('./cameraSlot.js');
+const { connectPanelSlot, SLOT_PANELS } = await import('./panelSlot.js');
 
 const ORDER = ['data-panel', 'cctv-panel', 'street-level-panel'];
 
@@ -25,7 +24,11 @@ function fixture({
          <div class="panel-header"><button id="sl-status">OFF</button><button class="panel-collapse-btn"></button></div>
        </div>
      </section>
-     <div id="data-panel" data-panel-id="data-panel" class="panel-collapsible collapsed"></div>`,
+     <div id="data-panel" data-panel-id="data-panel" class="panel-collapsible collapsed"></div>
+     <div id="recent-imagery-panel" data-panel-id="recent-imagery-panel" class="panel-collapsible collapsed" hidden></div>
+     <section id="context-home">
+       <section id="radio-panel" data-panel-id="radio-panel" class="panel-collapsible collapsed"><button id="radio-play">Play</button></section>
+     </section>`,
   );
   for (const id of expanded)
     document.getElementById(id).classList.remove('collapsed');
@@ -53,7 +56,8 @@ function fixture({
   };
   const slot = createSelectionSlot({ document, active });
   document.body.append(slot.body, slot.actions);
-  const disconnect = connectCameraSlot({
+  const returned = [];
+  const disconnect = connectPanelSlot({
     document,
     slot,
     panelChannel,
@@ -61,6 +65,11 @@ function fixture({
     restoreOrder: ORDER,
     translate: (key) => `t:${key}`,
     isPhonePresenting: presenting,
+    returnHome: (id, panel) => {
+      returned.push(id);
+      if (!panel.isConnected || slot.body.contains(panel))
+        $('context-home').append(panel);
+    },
   });
   const restore = (open) => {
     restoring = true;
@@ -73,7 +82,15 @@ function fixture({
     slot.destroy();
     document.body.replaceChildren();
   };
-  return { slot, panelChannel, setPanelCollapsed, calls, restore, cleanup };
+  return {
+    slot,
+    panelChannel,
+    setPanelCollapsed,
+    calls,
+    restore,
+    returned,
+    cleanup,
+  };
 }
 
 const $ = (id) => document.getElementById(id);
@@ -265,13 +282,77 @@ test('an item shown while the slot rests collapses no camera', (t) => {
   assert.equal($('cctv-panel').classList.contains('collapsed'), false);
 });
 
-test('the slot names a translated title and a subset glyph for each viewer', () => {
-  assert.deepEqual(Object.keys(SLOT_CAMERA_PANELS), [
+test('the slot names a translated title and a subset glyph for each panel', () => {
+  assert.deepEqual(Object.keys(SLOT_PANELS), [
     'cctv-panel',
     'street-level-panel',
+    'recent-imagery-panel',
+    'radio-panel',
   ]);
-  for (const { title, icon } of Object.values(SLOT_CAMERA_PANELS)) {
+  for (const { title, icon } of Object.values(SLOT_PANELS)) {
     assert.equal(typeof title, 'string');
     assert.match(icon, /^[a-z_]+$/);
   }
+});
+
+const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+test('Recent imagery shows while its layer shows it, and leaves when hidden', async (t) => {
+  const { slot, setPanelCollapsed, cleanup } = fixture();
+  t.after(cleanup);
+  const panel = $('recent-imagery-panel');
+  setPanelCollapsed('recent-imagery-panel', false, {});
+  assert.equal(slot.current(), null, 'hidden while the layer is off');
+  panel.hidden = false;
+  await settle();
+  assert.equal(slot.current(), 'recent-imagery-panel');
+  assert.ok(inSlot(slot, 'recent-imagery-panel'));
+  panel.hidden = true;
+  await settle();
+  assert.equal(slot.current(), null);
+  assert.ok(!inSlot(slot, 'recent-imagery-panel'));
+  assert.equal(panel.classList.contains('collapsed'), false, 'kept as it was');
+});
+
+test('Radio replaced or closed collapses and goes back through its placement', (t) => {
+  const { slot, setPanelCollapsed, calls, returned, cleanup } = fixture();
+  t.after(cleanup);
+  setPanelCollapsed('radio-panel', false, { explicit: true });
+  assert.equal(slot.current(), 'radio-panel');
+  assert.ok(inSlot(slot, 'radio-panel'));
+  setPanelCollapsed('cctv-panel', false, { explicit: true });
+  assert.deepEqual(calls.at(-1), ['radio-panel', true, { explicit: true }]);
+  assert.deepEqual(returned, ['radio-panel']);
+  assert.equal($('radio-panel').parentElement, $('context-home'));
+  // Details expands it again, into the slot.
+  setPanelCollapsed('radio-panel', false, { explicit: true });
+  assert.equal(slot.current(), 'radio-panel');
+  slot.close();
+  assert.deepEqual(returned, ['radio-panel', 'radio-panel']);
+  assert.equal($('radio-panel').parentElement, $('context-home'));
+  assert.ok($('radio-panel').classList.contains('collapsed'));
+});
+
+test('Radio whose old spot has gone still leaves the slot', (t) => {
+  const { slot, setPanelCollapsed, cleanup } = fixture();
+  t.after(cleanup);
+  const list = document.createElement('div');
+  document.body.append(list);
+  list.append($('radio-panel'));
+  setPanelCollapsed('radio-panel', false, { explicit: true });
+  list.remove();
+  slot.close();
+  assert.equal($('radio-panel').parentElement, $('context-home'));
+});
+
+test('Radio a phone sheet took is left where it is', (t) => {
+  const { slot, setPanelCollapsed, returned, cleanup } = fixture();
+  t.after(cleanup);
+  setPanelCollapsed('radio-panel', false, { explicit: true });
+  const sheet = document.createElement('div');
+  document.body.append(sheet);
+  sheet.append($('radio-panel'));
+  slot.setActive(false);
+  assert.equal($('radio-panel').parentElement, sheet);
+  assert.deepEqual(returned, ['radio-panel']);
 });
